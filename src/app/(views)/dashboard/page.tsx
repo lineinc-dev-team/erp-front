@@ -1,9 +1,9 @@
-import DashboardView from "@/components/dashboard/DashboardView";
+import DashboardView from '@/components/dashboard/DashboardView'
 
-export default function page() {
+export default function Page() {
   return (
     <div>
       <DashboardView />
     </div>
-  );
+  )
 }
