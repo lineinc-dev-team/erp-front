@@ -1,61 +1,57 @@
-import { SearchField } from "@/types/search";
-import {
-  TextField,
-  Select,
-  MenuItem,
-  FormControlLabel,
-  Checkbox,
-} from "@mui/material";
+import { TextField } from "@mui/material";
+import React from "react";
+
+type CommonInputProps = {
+  label?: string;
+  value: string;
+  error: boolean;
+  helperText?: string;
+  onChange: (vale: string) => void;
+  type?: string;
+  fullWidth?: boolean;
+  required?: boolean;
+  placeholder: string;
+  className: string;
+};
 
 export default function CommonInput({
-  field,
   value,
+  error,
+  helperText = "",
   onChange,
-}: {
-  field: SearchField;
-  value: string | number;
-  onChange: (v: React.ChangeEvent<HTMLInputElement>) => void;
-}) {
-  switch (field.type) {
-    case "text":
-      return (
-        <TextField
-          label={field.label}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      );
-    case "date":
-      return (
-        <DatePicker label={field.label} value={value} onChange={onChange} />
-      );
-    case "select":
-      return (
-        <Select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          label={field.label}
-        >
-          {field.options?.map((opt) => (
-            <MenuItem key={opt} value={opt}>
-              {opt}
-            </MenuItem>
-          ))}
-        </Select>
-      );
-    case "checkbox":
-      return (
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={!!value}
-              onChange={(e) => onChange(e.target.checked)}
-            />
-          }
-          label={field.label}
-        />
-      );
-    default:
-      return null;
-  }
+  type = "text",
+  placeholder,
+  fullWidth = true,
+  required = false,
+  className,
+}: CommonInputProps) {
+  return (
+    <TextField
+      variant="outlined"
+      value={value}
+      error={error}
+      placeholder={placeholder}
+      helperText={helperText}
+      onChange={(e) => onChange(e.target.value)}
+      type={type}
+      className={className}
+      fullWidth={fullWidth}
+      required={required}
+      size="small"
+      sx={{
+        my: 1,
+        "& .MuiOutlinedInput-root": {
+          "& fieldset": {
+            borderColor: "black",
+          },
+          "&:hover fieldset": {
+            borderColor: "black",
+          },
+          "&.Mui-focused fieldset": {
+            borderColor: "black",
+          },
+        },
+      }}
+    />
+  );
 }
