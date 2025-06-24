@@ -1,3 +1,7 @@
 export default function Header() {
-  return <div>공통 헤더입니다.</div>;
+  return (
+    <div>
+      <h1>라인공영 Intra</h1>
+    </div>
+  );
 }
