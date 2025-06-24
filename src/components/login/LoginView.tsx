@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import CommonInput from '../common/Input'
 import CommonButton from '../common/Button'
+import { useRouter } from 'next/navigation'
 
 export default function LoginView() {
   const [useId, setUseId] = useState('')
@@ -11,6 +12,8 @@ export default function LoginView() {
 
   const [userErrorId, setUserErrorId] = useState(false)
   const [userErrorPassword, setUserErrorPassword] = useState(false)
+
+  const router = useRouter()
 
   const handleLogin = () => {
     if (useId === '' || password === '') {
@@ -21,6 +24,7 @@ export default function LoginView() {
     }
 
     alert(`로그인\n자동로그인: ${autoLogin ? 'ON' : 'OFF'}`)
+    router.push('/business')
   }
 
   return (
