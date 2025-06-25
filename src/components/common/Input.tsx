@@ -1,25 +1,25 @@
-import { TextField } from "@mui/material";
-import React from "react";
+import { TextField } from '@mui/material'
+import React from 'react'
 
 type CommonInputProps = {
-  label?: string;
-  value: string;
-  error: boolean;
-  helperText?: string;
-  onChange: (vale: string) => void;
-  type?: string;
-  fullWidth?: boolean;
-  required?: boolean;
-  placeholder: string;
-  className: string;
-};
+  label?: string
+  value: string
+  error?: boolean
+  helperText?: string
+  onChange: (vale: string) => void
+  type?: string
+  fullWidth?: boolean
+  required?: boolean
+  placeholder?: string
+  className: string
+}
 
 export default function CommonInput({
   value,
   error,
-  helperText = "",
+  helperText = '',
   onChange,
-  type = "text",
+  type = 'text',
   placeholder,
   fullWidth = true,
   required = false,
@@ -40,18 +40,18 @@ export default function CommonInput({
       size="small"
       sx={{
         my: 1,
-        "& .MuiOutlinedInput-root": {
-          "& fieldset": {
-            borderColor: "black",
+        '& .MuiOutlinedInput-root': {
+          '& fieldset': {
+            borderColor: 'black',
           },
-          "&:hover fieldset": {
-            borderColor: "black",
+          '&:hover fieldset': {
+            borderColor: 'black',
           },
-          "&.Mui-focused fieldset": {
-            borderColor: "black",
+          '&.Mui-focused fieldset': {
+            borderColor: 'black',
           },
         },
       }}
     />
-  );
+  )
 }
