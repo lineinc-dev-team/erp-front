@@ -2,7 +2,7 @@ type CommonButtonProps = {
   label: string
   onClick?: () => void
   disabled?: boolean
-  variant?: 'primary' | 'secondary' | 'danger'
+  variant?: 'reset' | 'primary' | 'secondary' | 'danger'
   fullWidth?: boolean
   type?: 'button' | 'submit' | 'reset'
   className?: string
@@ -21,6 +21,7 @@ export default function CommonButton({
   const baseStyle = 'px-4 py-2 rounded cursor-pointer border border-black font-medium transition'
 
   const variants = {
+    reset: 'bg-white text-black hover:bg-white-700 disabled:opacity-50',
     primary: 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50',
     secondary: 'bg-gray-300 text-black hover:bg-gray-300 disabled:opacity-50',
     danger: 'bg-red-600 text-white hover:bg-red-700 disabled:opacity-50',
