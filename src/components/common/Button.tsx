@@ -18,7 +18,7 @@ export default function CommonButton({
   className,
   type = 'button',
 }: CommonButtonProps) {
-  const baseStyle = 'px-4 py-2 rounded cursor-pointer border border-black font-medium transition'
+  const baseStyle = 'px-4 py-1 rounded cursor-pointer border border-black font-bold transition'
 
   const variants = {
     reset: 'bg-white text-black hover:bg-white-700 disabled:opacity-50',
