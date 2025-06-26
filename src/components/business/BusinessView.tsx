@@ -3,27 +3,15 @@
 import CommonButton from '../common/Button'
 import CommonInput from '../common/Input'
 import CommonSelect from '../common/Select'
-// import { LocationStatusOptions, ProcessStatusOptions, statusOptions } from '@/config/business.confing'
 import CommonDatePicker from '../common/DatePicker'
-import { BusinessService } from '@/services/businessService'
+import { BusinessService } from '@/services/business/businessService'
 import { DataGrid } from '@mui/x-data-grid'
 import { BusinessDataList } from '@/config/business.confing'
 import { Pagination } from '@mui/material'
+import { useBusinessStore } from '@/stores/businessStore'
 
 export default function BusinessView() {
   const {
-    businessInfo,
-    status,
-    setStatus,
-    location,
-    setLocation,
-    process,
-    setProcess,
-    startDate,
-    setStartDate,
-    endDate,
-    setEndDate,
-    handleChange,
     handleCreate,
     handleReset,
     handleListRemove,
@@ -33,16 +21,30 @@ export default function BusinessView() {
     ProcessStatusOptions,
     statusOptions,
     ArrayStatusOptions,
-    sortList,
-    setSortList,
     displayedRows,
     page,
+    sortList,
+    setSortList,
     setPage,
     // pageSize,
-    totalPages,
-    // selectedIds,
     setSelectedIds,
+    totalPages,
   } = BusinessService()
+
+  const {
+    businessInfo,
+    status,
+    setStatus,
+    setField,
+    location,
+    setLocation,
+    process,
+    setProcess,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+  } = useBusinessStore()
 
   return (
     <>
@@ -55,7 +57,7 @@ export default function BusinessView() {
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
                 value={businessInfo.name}
-                onChange={(value) => handleChange('name', value)}
+                onChange={(value) => setField('name', value)}
                 className=" flex-1"
               />
             </div>
@@ -66,11 +68,7 @@ export default function BusinessView() {
               현장코드
             </label>
             <div className="border border-gray-400 px-2 w-full">
-              <CommonInput
-                value={businessInfo.code}
-                onChange={(value) => handleChange('code', value)}
-                className="flex-1"
-              />
+              <CommonInput value={businessInfo.code} onChange={(value) => setField('code', value)} className="flex-1" />
             </div>
           </div>
 
@@ -119,7 +117,7 @@ export default function BusinessView() {
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonInput
                 value={businessInfo.description}
-                onChange={(value) => handleChange('description', value)}
+                onChange={(value) => setField('description', value)}
                 className=" flex-1"
               />
             </div>
