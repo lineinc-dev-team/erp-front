@@ -17,6 +17,7 @@
     "date-fns": "^4.1.0",
     "next": "15.3.4",
     "react": "^19.0.0",
+    "react-daum-postcode": "^3.2.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
@@ -28,6 +29,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "zustand": "^5.0.5"
   }
 }
