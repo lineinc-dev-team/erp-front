@@ -8,19 +8,13 @@ import {
   ArrayStatusOptions,
 } from '@/config/business.confing'
 import { GridRowSelectionModel } from '@mui/x-data-grid'
+import { useRouter } from 'next/navigation'
+import { useBusinessStore } from '@/stores/businessStore'
 
 export function BusinessService() {
-  const [businessInfo, setBusinessInfo] = useState<BusinessInfoProps>({
-    name: '',
-    code: '',
-    description: '',
-  })
-  const [status, setStatus] = useState('전체')
-  const [location, setLocation] = useState('전체')
-  const [process, setProcess] = useState('전체')
-  const [sortList, setSortList] = useState('최근순')
-  const [startDate, setStartDate] = useState<Date | null>(null)
-  const [endDate, setEndDate] = useState<Date | null>(null)
+  const { status, businessInfo, location, process, startDate, endDate, resetFields } = useBusinessStore()
+
+  const router = useRouter()
 
   // 추후 api를 통해 데이터를 불러올 예정
   const allRows = [
@@ -233,11 +227,9 @@ export function BusinessService() {
   // 사업장 리스트에 있는 체크박스 선택 시 체크된 값을 저장하는 상태 값
   const [selectedIds, setSelectedIds] = useState<GridRowSelectionModel>()
 
-  const handleChange = (field: keyof BusinessInfoProps, value: string) => {
-    setBusinessInfo((prev) => ({ ...prev, [field]: value }))
-  }
+  const [sortList, setSortList] = useState('최근순')
 
-  console.log('@@', selectedIds)
+  console.log('이 값을 가지고 나중에 어떤것들을 체크 했는지 확인 가능함', selectedIds)
 
   const handleCreate = () => {
     // 비즈니스 데이터 수집
@@ -247,12 +239,7 @@ export function BusinessService() {
   }
 
   const handleReset = () => {
-    setBusinessInfo({ name: '', code: '', description: '' })
-    setStatus('전체')
-    setLocation('전체')
-    setProcess('전체')
-    setStartDate(null)
-    setEndDate(null)
+    resetFields()
   }
 
   const handleListRemove = () => {
@@ -264,24 +251,10 @@ export function BusinessService() {
   }
 
   const handleNewBusinessCreate = () => {
-    alert('새로운 리스트 추가')
+    router.push('/business/registration')
   }
 
   return {
-    businessInfo,
-    status,
-    setStatus,
-    location,
-    setLocation,
-    process,
-    setProcess,
-    sortList,
-    setSortList,
-    startDate,
-    setStartDate,
-    endDate,
-    setEndDate,
-    handleChange,
     handleCreate,
     handleReset,
     handleListRemove,
@@ -294,6 +267,8 @@ export function BusinessService() {
     displayedRows,
     page,
     setPage,
+    sortList,
+    setSortList,
     pageSize,
     totalPages,
     setSelectedIds,
