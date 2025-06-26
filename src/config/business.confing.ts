@@ -14,7 +14,7 @@ export const LocationStatusOptions = [
 export const ProcessStatusOptions = [
   { label: '전체', value: '전체' },
   { label: '미정', value: '미정' },
-  { label: '진행중', value: '진행중' },
+  { label: '진행 중', value: '진행중' },
   { label: '완료', value: '완료' },
 ]
 
