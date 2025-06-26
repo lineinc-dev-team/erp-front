@@ -34,16 +34,6 @@ export default function CommonDatePicker({
             size: 'small',
             sx: {
               width: '140px',
-              '& .MuiInputBase-input': {
-                fontSize: '12px !important', // ⭐ 반드시 !important 지정
-                padding: '4px 8px !important',
-              },
-              '& .MuiInputLabel-root': {
-                fontSize: '12px',
-              },
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'gray',
-              },
             },
           },
         }}
