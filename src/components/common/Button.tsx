@@ -10,7 +10,6 @@ type CommonButtonProps = {
 
 export default function CommonButton({
   onClick,
-
   label,
   disabled = false,
   variant = 'primary',

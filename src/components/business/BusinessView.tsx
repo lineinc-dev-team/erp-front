@@ -68,7 +68,11 @@ export default function BusinessView() {
               현장코드
             </label>
             <div className="border border-gray-400 px-2 w-full">
-              <CommonInput value={businessInfo.code} onChange={(value) => setField('code', value)} className="flex-1" />
+              <CommonInput
+                value={businessInfo.code}
+                onChange={(value) => setField('code', value)}
+                className="flex-1"
+              />
             </div>
           </div>
 
@@ -77,7 +81,11 @@ export default function BusinessView() {
               위치 (지역)
             </label>
             <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
-              <CommonSelect value={location} onChange={setLocation} options={LocationStatusOptions} />
+              <CommonSelect
+                value={location}
+                onChange={setLocation}
+                options={LocationStatusOptions}
+              />
             </div>
           </div>
 
@@ -138,9 +146,19 @@ export default function BusinessView() {
           </div>
         </div>
         <div className="flex items-center justify-center gap-6">
-          <CommonButton label="초기화" variant="reset" onClick={handleReset} className="mt-3 px-20" />
+          <CommonButton
+            label="초기화"
+            variant="reset"
+            onClick={handleReset}
+            className="mt-3 px-20"
+          />
 
-          <CommonButton label="검색" variant="secondary" onClick={handleCreate} className="mt-3 px-20" />
+          <CommonButton
+            label="검색"
+            variant="secondary"
+            onClick={handleCreate}
+            className="mt-3 px-20"
+          />
         </div>
       </div>
 
@@ -157,18 +175,43 @@ export default function BusinessView() {
             {/* 정렬 */}
             <div className="flex items-center gap-2">
               <span className="text-base font-medium text-gray-600">정렬</span>
-              <CommonSelect value={sortList} fullWidth={false} onChange={setSortList} options={ArrayStatusOptions} />
+              <CommonSelect
+                value={sortList}
+                fullWidth={false}
+                onChange={setSortList}
+                options={ArrayStatusOptions}
+              />
             </div>
 
             <div className="flex items-center gap-2">
               <span className="text-base font-medium text-gray-600">페이지당 목록 수</span>
-              <CommonSelect value={sortList} fullWidth={false} onChange={setSortList} options={ArrayStatusOptions} />
+              <CommonSelect
+                value={sortList}
+                fullWidth={false}
+                onChange={setSortList}
+                options={ArrayStatusOptions}
+              />
             </div>
 
             <div className="flex items-center gap-2">
-              <CommonButton label="삭제" variant="reset" onClick={handleListRemove} className="px-3" />
-              <CommonButton label="엑셀 다운로드" variant="reset" onClick={handleDownloadExcel} className="px-3" />
-              <CommonButton label="+ 신규등록" variant="secondary" onClick={handleNewBusinessCreate} className="px-3" />
+              <CommonButton
+                label="삭제"
+                variant="reset"
+                onClick={handleListRemove}
+                className="px-3"
+              />
+              <CommonButton
+                label="엑셀 다운로드"
+                variant="reset"
+                onClick={handleDownloadExcel}
+                className="px-3"
+              />
+              <CommonButton
+                label="+ 신규등록"
+                variant="secondary"
+                onClick={handleNewBusinessCreate}
+                className="px-3"
+              />
             </div>
           </div>
         </div>
