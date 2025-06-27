@@ -6,5 +6,9 @@ import Header from './Header'
 export default function HeaderWrapper() {
   const pathName = usePathname()
 
-  return <>{pathName !== '/' && <Header />}</>
+  const hideHederPaths = ['/', '/errorPage']
+
+  const showHeader = !hideHederPaths.includes(pathName)
+
+  return <>{showHeader && <Header />}</>
 }
