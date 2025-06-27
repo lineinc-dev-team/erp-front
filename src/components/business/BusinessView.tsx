@@ -224,6 +224,7 @@ export default function BusinessView() {
             sortable: false,
             headerAlign: 'center',
             align: 'center',
+            flex: 1,
           }))}
           checkboxSelection
           disableRowSelectionOnClick

@@ -80,10 +80,10 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
           </div>
 
           <div className="flex">
-            <label className="w-35 flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
+            <label className="w-44 flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
               위치(주소)
             </label>
-            <div className="border border-gray-400 flex-1 flex flex-col gap-2 p-2">
+            <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
               <div className="flex gap-2">
                 <input
                   value={address}
@@ -213,14 +213,14 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
             </div>
           </div>
           <div className="flex col-span-2">
-            <label className="w-[140px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+            <label className="w-44  flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               사업자 설명
             </label>
-            <div className="border flex-1  border-gray-400 px-2">
+            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
               <CommonInput
                 value={businessInfo.description}
                 onChange={(value) => setField('description', value)}
-                className=" w-full"
+                className=" w-auto"
               />
             </div>
           </div>
