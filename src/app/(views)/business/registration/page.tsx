@@ -1,4 +1,4 @@
-import BusinessRegistrationView from '@/components/businessRegistration/BusinessRegistrationView'
+import BusinessRegistrationView from '@/components/business/BusinessRegistrationView'
 
 export default function page() {
   return (

@@ -1,16 +1,9 @@
-'use client'
-
-import { useParams } from 'next/navigation'
+import BusinessModifyView from '@/components/business/BusinessModifyView'
 
 export default function RegistrationDetail() {
-  const params = useParams()
-  const { id } = params
-
-  console.log('너 머야!!', id)
-
   return (
-    <div>
-      <h1>등록 ID: {id}</h1>
-    </div>
+    <>
+      <BusinessModifyView />
+    </>
   )
 }

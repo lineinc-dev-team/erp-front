@@ -10,7 +10,7 @@ import DaumPostcodeEmbed from 'react-daum-postcode'
 import { getTodayDateString } from '@/utils/formatters'
 import CommonFileInput from '../common/FileInput'
 
-export default function BusinessRegistrationView() {
+export default function BusinessRegistrationView({ isEditMode = false }) {
   const {
     businessInfo,
     setField,
@@ -46,6 +46,8 @@ export default function BusinessRegistrationView() {
     handleCancelData,
     handleNewBusiness,
   } = BusinessRegistrationService()
+
+  // 수정과 등록을 같이 사용함
 
   return (
     <>
@@ -343,7 +345,7 @@ export default function BusinessRegistrationView() {
       <div className="flex justify-center gap-10 mt-10">
         <CommonButton label="취소" variant="reset" className="px-10" onClick={handleCancelData} />
         <CommonButton
-          label="+ 등록"
+          label={isEditMode ? '+ 수정' : '+ 등록'}
           className="px-10 font-bold"
           variant="secondary"
           onClick={handleNewBusiness}
