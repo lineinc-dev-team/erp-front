@@ -27,6 +27,7 @@ export function useLoginForm() {
 
     try {
       await loginService({ loginId, password, autoLogin })
+
       router.push('/business')
     } catch (err) {
       if (err instanceof Error) setErrorMessage(err.message)

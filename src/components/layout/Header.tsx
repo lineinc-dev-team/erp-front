@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import CommonButton from '../common/Button'
-import { API } from '@/config/env'
+import { API } from '@/api/config/env'
 
 export default function Header() {
   const router = useRouter()
