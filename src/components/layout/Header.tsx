@@ -2,13 +2,37 @@
 
 import { useRouter } from 'next/navigation'
 import CommonButton from '../common/Button'
+import { API } from '@/config/env'
 
 export default function Header() {
   const router = useRouter()
 
-  const handleLogout = () => {
-    if (confirm('정말 로그아웃하시겠습니까?')) {
-      router.push('/')
+  const handleLogout = async () => {
+    if (confirm('정말 로그아웃 하시겠습니까?')) {
+      try {
+        const response = await fetch(API.LOGOUT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          cache: 'no-store',
+        })
+
+        alert('로그아웃 되었습니다.')
+
+        if (!response.ok) {
+          const data = await response.json()
+          alert(data.message || '로그아웃에 실패했습니다.')
+          return
+        }
+
+        router.push('/')
+      } catch (err) {
+        if (err instanceof Error) {
+          alert('네트워크 에러입니다.')
+        }
+      }
     }
   }
 
@@ -42,7 +66,12 @@ export default function Header() {
 
         <div className="flex items-center space-x-4">
           <p className="text-sm text-white">이경호(로그인한 ID)</p>
-          <CommonButton label="로그아웃" variant="secondary" onClick={handleLogout} className="text-sm" />
+          <CommonButton
+            label="로그아웃"
+            variant="secondary"
+            onClick={handleLogout}
+            className="text-sm"
+          />
         </div>
       </div>
     </header>
