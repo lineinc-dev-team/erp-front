@@ -1,11 +1,15 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useParams, usePathname, useRouter } from 'next/navigation'
 import CommonButton from '../common/Button'
 import { API } from '@/api/config/env'
 
 export default function Header() {
   const router = useRouter()
+
+  const params = useParams()
+  const urlName = usePathname()
+  const { id } = params
 
   const handleLogout = async () => {
     if (confirm('정말 로그아웃 하시겠습니까?')) {
@@ -56,11 +60,21 @@ export default function Header() {
               <option>사업장 관리</option>
               <option>외주 관리</option>
             </select>
-            <span className="text-black">&gt;&gt;</span>
-            <select className="bg-white border font-bold border-gray-300 rounded px-2 py-1 w-52 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400">
-              <option>등록</option>
-              <option>수정</option>
-            </select>
+            {id ? (
+              <>
+                <span className="text-black">&gt;&gt;</span>
+                <select className="bg-white border font-bold border-gray-300 rounded px-2 py-1 w-52 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400">
+                  <option>수정</option>
+                </select>
+              </>
+            ) : urlName === '/business/registration' ? (
+              <>
+                <span className="text-black">&gt;&gt;</span>
+                <select className="bg-white border font-bold border-gray-300 rounded px-2 py-1 w-52 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400">
+                  <option>등록</option>
+                </select>
+              </>
+            ) : null}
           </nav>
         </div>
 
