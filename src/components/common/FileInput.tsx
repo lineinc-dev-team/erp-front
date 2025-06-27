@@ -22,7 +22,7 @@ export default function CommonFileInput({ acceptedExtensions, files, onChange }:
         <ul>
           {files.map((file, index) => (
             <li className="flex gap-2 items-center mb-1" key={index}>
-              <span>{file.name}</span>
+              <span className="w-[420px] break-words whitespace-normal">{file.name}</span>
               <button
                 onClick={() => removeFile(index)}
                 className="

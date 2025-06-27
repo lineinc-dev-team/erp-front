@@ -51,7 +51,7 @@ export default function BusinessView() {
       <div className="border-10 border-gray-400 p-4">
         <div className="grid grid-cols-3">
           <div className="flex">
-            <label className="w-36 flex items-center border border-gray-400  justify-center bg-gray-100 font-bold text-center">
+            <label className="w-36 flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               사업자명
             </label>
             <div className="border border-gray-400 px-2 w-full">
@@ -64,7 +64,7 @@ export default function BusinessView() {
           </div>
 
           <div className="flex">
-            <label className="w-36  border border-gray-400  flex items-center justify-center bg-gray-100 font-bold text-center">
+            <label className="w-36  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               현장코드
             </label>
             <div className="border border-gray-400 px-2 w-full">
@@ -77,7 +77,7 @@ export default function BusinessView() {
           </div>
 
           <div className="flex">
-            <label className="w-36  border border-gray-400  flex items-center justify-center bg-gray-100 font-bold text-center">
+            <label className="w-36  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               위치 (지역)
             </label>
             <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
@@ -90,7 +90,7 @@ export default function BusinessView() {
           </div>
 
           <div className="flex">
-            <label className="w-36  border border-gray-400 flex items-center justify-center bg-gray-100 font-bold text-center">
+            <label className="w-36  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
               사업장 유형
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
@@ -99,7 +99,7 @@ export default function BusinessView() {
           </div>
 
           <div className="flex">
-            <label className="w-36  border border-gray-400  flex items-center justify-center bg-gray-100 font-bold text-center">
+            <label className="w-36  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               사업기간
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
@@ -109,7 +109,7 @@ export default function BusinessView() {
             </div>
           </div>
           <div className="flex">
-            <label className="w-36 border border-gray-400  flex items-center justify-center bg-gray-100 font-bold text-center">
+            <label className="w-36 border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               진행 상태
             </label>
             <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
@@ -118,7 +118,7 @@ export default function BusinessView() {
           </div>
 
           <div className="flex">
-            <label className="w-36  border border-gray-400  flex items-center justify-center bg-gray-100 font-bold text-center">
+            <label className="w-36  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               등록자
             </label>
 
@@ -131,7 +131,7 @@ export default function BusinessView() {
             </div>
           </div>
           <div className="flex">
-            <label className="w-36 border border-gray-400  flex items-center justify-center bg-gray-100 font-bold text-center">
+            <label className="w-36 border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               등록일자
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
@@ -141,7 +141,7 @@ export default function BusinessView() {
             </div>
           </div>
           <div className="flex">
-            <label className="w-36 border border-gray-400  flex items-center justify-center bg-gray-100 font-bold text-center"></label>
+            <label className="w-36 border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center"></label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center "></div>
           </div>
         </div>

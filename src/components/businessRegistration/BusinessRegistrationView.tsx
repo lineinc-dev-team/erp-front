@@ -53,7 +53,7 @@ export default function BusinessRegistrationView() {
         <span className="font-bold border-b-2 mb-4">기본 정보</span>
         <div className="grid grid-cols-2 mt-1">
           <div className="flex">
-            <label className="w-44 flex items-center border border-gray-400  justify-center bg-gray-100 font-bold text-center">
+            <label className="w-44 flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               사업자명
             </label>
             <div className="border border-gray-400 px-2 w-full">
@@ -65,7 +65,7 @@ export default function BusinessRegistrationView() {
             </div>
           </div>
           <div className="flex">
-            <label className="w-44 flex items-center border border-gray-400  justify-center bg-gray-100 font-bold text-center">
+            <label className="w-44 flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               사업장 코드
             </label>
             <div className="border border-gray-400 px-2 w-full">
@@ -78,7 +78,7 @@ export default function BusinessRegistrationView() {
           </div>
 
           <div className="flex">
-            <label className="w-35 flex items-center border border-gray-400 justify-center bg-gray-100 font-bold text-center">
+            <label className="w-35 flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
               위치(주소)
             </label>
             <div className="border border-gray-400 flex-1 flex flex-col gap-2 p-2">
@@ -92,7 +92,7 @@ export default function BusinessRegistrationView() {
                 <CommonButton
                   label="주소찾기"
                   variant="secondary"
-                  className="bg-gray-500 text-white px-3 rounded"
+                  className="bg-gray-400 text-white px-3 rounded"
                   onClick={() => setIsModalOpen(true)}
                 />
               </div>
@@ -105,8 +105,15 @@ export default function BusinessRegistrationView() {
 
               {isModalOpen && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                  <div className="bg-white w-full max-w-lg p-4 rounded-xl shadow-lg relative">
-                    <CommonButton label="X" onClick={() => setIsModalOpen(false)} />
+                  <div className="bg-white w-full max-w-lg p-4 rounded-xl shadow-lg relative flex flex-col">
+                    <div className="flex justify-end w-full">
+                      <CommonButton
+                        className=" mb-2"
+                        label="X"
+                        variant="danger"
+                        onClick={() => setIsModalOpen(false)}
+                      />
+                    </div>
                     <DaumPostcodeEmbed
                       onComplete={(data) => {
                         setAddress(data.address)
@@ -121,7 +128,7 @@ export default function BusinessRegistrationView() {
           </div>
 
           <div className="flex">
-            <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-100 font-bold text-center">
+            <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
               사업장 유형
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
@@ -130,7 +137,7 @@ export default function BusinessRegistrationView() {
           </div>
 
           <div className="flex">
-            <label className="w-44  border border-gray-400  flex items-center justify-center bg-gray-100 font-bold text-center">
+            <label className="w-44  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               사업시작 / 종료일
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
@@ -141,7 +148,7 @@ export default function BusinessRegistrationView() {
           </div>
 
           <div className="flex">
-            <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-100 font-bold text-center">
+            <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
               발주처
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
@@ -156,7 +163,7 @@ export default function BusinessRegistrationView() {
           </div>
 
           <div className="flex">
-            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-100 font-bold text-center">
+            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               진행 상태
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
@@ -164,7 +171,7 @@ export default function BusinessRegistrationView() {
             </div>
           </div>
           <div className="flex">
-            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-100 font-bold text-center">
+            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               현장소장
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
@@ -172,7 +179,7 @@ export default function BusinessRegistrationView() {
             </div>
           </div>
           <div className="flex">
-            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-100 font-bold text-center">
+            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               외주 등록 여부
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
@@ -180,7 +187,7 @@ export default function BusinessRegistrationView() {
             </div>
           </div>
           <div className="flex">
-            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-100 font-bold text-center">
+            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               본사 담당자
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
@@ -188,7 +195,7 @@ export default function BusinessRegistrationView() {
             </div>
           </div>
           <div className="flex">
-            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-100 font-bold text-center">
+            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               정산 주기
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
@@ -196,7 +203,7 @@ export default function BusinessRegistrationView() {
             </div>
           </div>
           <div className="flex">
-            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-100 font-bold text-center">
+            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               주요 공정
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
@@ -204,7 +211,7 @@ export default function BusinessRegistrationView() {
             </div>
           </div>
           <div className="flex col-span-2">
-            <label className="w-[140px] flex items-center border border-gray-400  justify-center bg-gray-100 font-bold text-center">
+            <label className="w-[140px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               사업자 설명
             </label>
             <div className="border flex-1  border-gray-400 px-2">
@@ -224,7 +231,7 @@ export default function BusinessRegistrationView() {
 
       <div className="grid grid-cols-2 mt-1">
         <div className="flex">
-          <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-100 font-bold text-center">
+          <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
             계약서
           </label>
           <div className="border border-gray-400 px-2 p-2 w-full flex gap-2.5 items-center">
@@ -238,7 +245,7 @@ export default function BusinessRegistrationView() {
         </div>
 
         <div className="flex">
-          <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-100 font-bold text-center">
+          <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
             현장도면
           </label>
           <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
@@ -251,7 +258,7 @@ export default function BusinessRegistrationView() {
           </div>
         </div>
         <div className="flex">
-          <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-100 font-bold text-center">
+          <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
             인허가 서류
           </label>
           <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
@@ -264,7 +271,7 @@ export default function BusinessRegistrationView() {
           </div>
         </div>
         <div className="flex">
-          <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-100 font-bold text-center">
+          <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
             기타파일
           </label>
           <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
@@ -277,7 +284,7 @@ export default function BusinessRegistrationView() {
           </div>
         </div>
         <div className="flex">
-          <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-100 font-bold text-center">
+          <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
             첨부일자
           </label>
           <div className="border border-gray-400 px-2 p-2 w-full flex gap-2.5 items-center">
@@ -285,10 +292,49 @@ export default function BusinessRegistrationView() {
           </div>
         </div>
         <div className="flex">
-          <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-100 font-bold text-center">
+          <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
             등록자
           </label>
           <div className="border border-gray-400 px-2 p-2 w-full flex  gap-2.5 items-center">
+            <p>이경호</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <span className="font-bold border-b-2 mb-4">변경이력</span>
+      </div>
+
+      <div className="flex mt-1">
+        <div className="flex flex-col w-1/4">
+          <label className=" border border-gray-400 w-full flex items-center justify-center bg-gray-300  font-bold text-center">
+            변경일시
+          </label>
+          <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
+            <p>이경호</p>
+          </div>
+        </div>
+        <div className="flex flex-col w-1/4">
+          <label className="w-full  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+            변경 항목
+          </label>
+          <div className="border border-gray-400 px-2 p-2 w-full flex justify-center  gap-2.5 items-center">
+            <p>이경호</p>
+          </div>
+        </div>
+        <div className="flex flex-col w-1/4">
+          <label className="w-full  border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
+            변경자
+          </label>
+          <div className="border border-gray-400 px-2 p-2 flex w-full justify-center  gap-2.5 items-center">
+            <p>이경호</p>
+          </div>
+        </div>
+        <div className="flex flex-col w-1/4">
+          <label className="w-full  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+            수정 사유
+          </label>
+          <div className="border border-gray-400 px-2 p-2 w-full flex justify-center  gap-2.5 items-center">
             <p>이경호</p>
           </div>
         </div>
