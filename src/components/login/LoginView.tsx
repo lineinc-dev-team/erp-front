@@ -1,31 +1,23 @@
 'use client'
 
-import { useState } from 'react'
 import CommonInput from '../common/Input'
 import CommonButton from '../common/Button'
-import { useRouter } from 'next/navigation'
+import { useLoginForm } from '@/hooks/useLoginForm'
 
 export default function LoginView() {
-  const [useId, setUseId] = useState('')
-  const [password, setPassword] = useState('')
-  const [autoLogin, setAutoLogin] = useState(false)
-
-  const [userErrorId, setUserErrorId] = useState(false)
-  const [userErrorPassword, setUserErrorPassword] = useState(false)
-
-  const router = useRouter()
-
-  const handleLogin = () => {
-    if (useId === '' || password === '') {
-      setUserErrorId(true)
-      setUserErrorPassword(true)
-
-      return
-    }
-
-    alert(`로그인\n자동로그인: ${autoLogin ? 'ON' : 'OFF'}`)
-    router.push('/business')
-  }
+  const {
+    loginId,
+    setLoginId,
+    password,
+    setPassword,
+    autoLogin,
+    setAutoLogin,
+    userErrorId,
+    setUserErrorId,
+    setUserErrorPassword,
+    userErrorPassword,
+    handleLogin,
+  } = useLoginForm()
 
   return (
     <div>
@@ -33,9 +25,12 @@ export default function LoginView() {
 
       <div className="w-88 flex flex-col gap-2 m-0">
         <CommonInput
-          value={useId}
+          value={loginId}
           placeholder="아이디를 입력하세요."
-          onChange={setUseId}
+          onChange={(value) => {
+            setLoginId(value)
+            setUserErrorId(value === '') // 빈 값이면 에러 표시
+          }}
           error={userErrorId}
           helperText={userErrorId ? '아이디를 입력해주세요.' : ''}
           required
@@ -47,7 +42,10 @@ export default function LoginView() {
           error={userErrorPassword}
           helperText={userErrorPassword ? '비밀번호를 입력해주세요.' : ''}
           placeholder="비밀번호를 입력하세요."
-          onChange={setPassword}
+          onChange={(value) => {
+            setPassword(value)
+            setUserErrorPassword(value === '')
+          }}
           type="password"
           required
           className="m-0"
