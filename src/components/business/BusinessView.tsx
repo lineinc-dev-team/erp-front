@@ -9,7 +9,7 @@ import { DataGrid } from '@mui/x-data-grid'
 import { BusinessDataList } from '@/config/business.confing'
 import { Pagination } from '@mui/material'
 import { useBusinessStore } from '@/stores/businessStore'
-// import Loading from '@/app/loading'
+// import LoadingSkeletion from '@/app/(views)/business/loadingSkeletion'
 
 export default function BusinessView() {
   const {
@@ -47,7 +47,7 @@ export default function BusinessView() {
     setEndDate,
   } = useBusinessStore()
 
-  // if (isLoading) return <Loading />
+  // if (isLoading) return <LoadingSkeletion />
   // if (error) throw error
 
   // alert(data)

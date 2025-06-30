@@ -3,6 +3,7 @@
 import { useParams, usePathname, useRouter } from 'next/navigation'
 import CommonButton from '../common/Button'
 import { API } from '@/api/config/env'
+import Link from 'next/link'
 
 export default function Header() {
   const router = useRouter()
@@ -47,13 +48,9 @@ export default function Header() {
           <h1 className="text-2xl font-bold text-white">라인공영 Intra</h1>
 
           <nav className="flex items-center space-x-4 text-sm text-gray-600">
-            <span
-              className="text-white border-b-2 transition"
-              // hover:text-black
-              // onClick={() => router.push('/')}
-            >
+            <Link href="/business" className="text-white border-b-2 transition hover:text-black">
               Home
-            </span>
+            </Link>
 
             <span className="text-black">&gt;&gt;</span>
             <select className="bg-white border font-bold border-gray-300 rounded px-2 py-1 w-52 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400">
