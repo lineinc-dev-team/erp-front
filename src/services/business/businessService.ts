@@ -10,9 +10,50 @@ import {
 import { GridRowSelectionModel } from '@mui/x-data-grid'
 import { useRouter } from 'next/navigation'
 import { useBusinessStore } from '@/stores/businessStore'
+import { useQuery } from '@tanstack/react-query'
+import { API } from '@/api/config/env'
+// import { API } from '@/api/config/env'
 
 export function BusinessService() {
-  const { status, businessInfo, location, process, startDate, endDate, resetFields } = useBusinessStore()
+  const { status, businessInfo, location, process, startDate, endDate, resetFields } =
+    useBusinessStore()
+
+  // useQuery를 이용해 데이터를 불러옴 ..
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['businessList'],
+    queryFn: async () => {
+      const res = await fetch(API.LOGOUT, { cache: 'no-store' })
+      if (!res.ok) throw new Error('서버 에러')
+      return res.json()
+    },
+  })
+
+  // const [authData, setAuthData] = useState(null)
+
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const authRes = await fetch(API.AUTH, {
+  //         method: 'GET',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //         credentials: 'include',
+  //         cache: 'no-store',
+  //       })
+  //       const authData = await authRes.json()
+  //       setAuthData(authData)
+
+  //       console.log('정보 데이터 확인', authData.data)
+  //     } catch (err) {
+  //       alert(err)
+  //     }
+  //   }
+
+  //   fetchData()
+  // }, [])
+
+  // console.log('정보 확인 @', authData)
 
   const router = useRouter()
 
@@ -272,5 +313,8 @@ export function BusinessService() {
     pageSize,
     totalPages,
     setSelectedIds,
+    data,
+    isLoading,
+    error,
   }
 }

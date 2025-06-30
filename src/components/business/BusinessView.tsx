@@ -9,6 +9,7 @@ import { DataGrid } from '@mui/x-data-grid'
 import { BusinessDataList } from '@/config/business.confing'
 import { Pagination } from '@mui/material'
 import { useBusinessStore } from '@/stores/businessStore'
+// import Loading from '@/app/loading'
 
 export default function BusinessView() {
   const {
@@ -45,6 +46,11 @@ export default function BusinessView() {
     endDate,
     setEndDate,
   } = useBusinessStore()
+
+  // if (isLoading) return <Loading />
+  // if (error) throw error
+
+  // alert(data)
 
   return (
     <>
@@ -102,7 +108,7 @@ export default function BusinessView() {
             <label className="w-36  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               사업기간
             </label>
-            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
+            <div className="border border-gray-400  px-2 w-full flex gap-3 items-center ">
               <CommonDatePicker value={startDate} onChange={setStartDate} />
               ~
               <CommonDatePicker value={endDate} onChange={setEndDate} />
