@@ -26,9 +26,15 @@ export function useLoginForm() {
     if (!validate()) return
 
     try {
-      await loginService({ loginId, password, autoLogin })
+      const resultValue = await loginService({ loginId, password, autoLogin })
 
-      router.push('/business')
+      console.log('해당 결과 깂이..', resultValue)
+
+      if (resultValue === 200) {
+        router.push('/business')
+      } else {
+        return
+      }
     } catch (err) {
       if (err instanceof Error) setErrorMessage(err.message)
     }

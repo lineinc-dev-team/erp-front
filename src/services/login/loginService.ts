@@ -34,6 +34,8 @@ export async function loginService({
       return
     } else {
       alert('로그인에 성공했습니다.')
+
+      return res.status
     }
   } catch (err) {
     if (err instanceof Error) {
