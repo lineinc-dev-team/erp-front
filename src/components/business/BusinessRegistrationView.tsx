@@ -212,17 +212,26 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
               <CommonButton label="추가" variant="secondary" onClick={handleAddProcess} />
             </div>
           </div>
-          <div className="flex col-span-2">
-            <label className="w-44  flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              사업자 설명
-            </label>
-            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonInput
-                value={businessInfo.description}
-                onChange={(value) => setField('description', value)}
-                className=" w-auto"
-              />
-            </div>
+        </div>
+        <div className="flex">
+          <div
+            className="
+                        w-[8rem]
+                        [@media(min-width:1455px)]:w-[9.7rem]
+                        [@media(min-width:1900px)]:w-[10.05rem]
+                        flex items-center border border-gray-400 justify-center 
+                        bg-gray-300 font-bold text-center
+                      "
+          >
+            사업자 설명
+          </div>
+
+          <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
+            <CommonInput
+              value={businessInfo.description}
+              onChange={(value) => setField('description', value)}
+              className=" w-full"
+            />
           </div>
         </div>
       </div>
