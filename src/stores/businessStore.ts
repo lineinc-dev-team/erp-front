@@ -8,7 +8,8 @@ export const useBusinessStore = create<BusinessState>((set) => ({
   startDate: null,
   endDate: null,
 
-  setField: (field, value) => set((state) => ({ businessInfo: { ...state.businessInfo, [field]: value } })),
+  setField: (field, value) =>
+    set((state) => ({ businessInfo: { ...state.businessInfo, [field]: value } })),
   setStatus: (status) => set({ status }),
   setLocation: (location) => set({ location }),
   setProcess: (process) => set({ process }),

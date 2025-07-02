@@ -1,0 +1,273 @@
+'use client'
+
+import CommonButton from '../common/Button'
+import CommonInput from '../common/Input'
+import CommonSelect from '../common/Select'
+import CommonDatePicker from '../common/DatePicker'
+import { DataGrid } from '@mui/x-data-grid'
+import { BusinessDataList } from '@/config/business.confing'
+import { Pagination } from '@mui/material'
+import { useOrderingStore } from '@/stores/orderingStore'
+import { OrderingService } from '@/services/ordering/orderingService'
+// import LoadingSkeletion from '@/app/(views)/business/loadingSkeletion'
+
+export default function OrderingView() {
+  const {
+    handleSearch,
+    handleReset,
+    handleListRemove,
+    handleDownloadExcel,
+    handleNewOrderCreate,
+    LocationStatusOptions,
+    ArrayStatusOptions,
+    displayedRows,
+    page,
+    sortList,
+    setSortList,
+    setPage,
+    // pageSize,
+    setSelectedIds,
+    totalPages,
+  } = OrderingService()
+
+  const {
+    orderInfo,
+    setField,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    useORnot,
+    setUseORnot,
+  } = useOrderingStore()
+
+  // if (isLoading) return <LoadingSkeletion />
+  // if (error) throw error
+
+  // alert(data)
+
+  return (
+    <>
+      <div className="border-10 border-gray-400 p-4">
+        <div className="grid grid-cols-3">
+          <div className="flex">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+              발주처명
+            </label>
+            <div className="border border-gray-400 px-2 w-full">
+              <CommonInput
+                value={orderInfo.orderName}
+                onChange={(value) => setField('orderName', value)}
+                className=" flex-1"
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              사업자등록번호
+            </label>
+            <div className="border border-gray-400 px-2 w-full">
+              <CommonInput
+                value={orderInfo.businessNumber}
+                onChange={(value) => setField('businessNumber', value)}
+                className="flex-1"
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              대표자명
+            </label>
+            <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
+              <CommonInput
+                value={orderInfo.ceoName}
+                onChange={(value) => setField('ceoName', value)}
+                className="flex-1"
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              전화번호
+            </label>
+            <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
+              <CommonInput
+                value={orderInfo.phoneNumber}
+                onChange={(value) => setField('phoneNumber', value)}
+                className="flex-1"
+              />
+            </div>
+          </div>
+          <div className="flex">
+            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              발주처 담당자명
+            </label>
+            <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
+              <CommonInput
+                value={orderInfo.chargeName}
+                onChange={(value) => setField('chargeName', value)}
+                className="flex-1"
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              이메일
+            </label>
+            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
+              <CommonInput
+                value={orderInfo.email}
+                onChange={(value) => setField('email', value)}
+                className=" flex-1"
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              등록일자
+            </label>
+            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
+              <CommonDatePicker value={startDate} onChange={setStartDate} />
+              ~
+              <CommonDatePicker value={endDate} onChange={setEndDate} />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              본사 담당자명
+            </label>
+            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
+              <CommonInput
+                value={orderInfo.companyName}
+                onChange={(value) => setField('companyName', value)}
+                className=" flex-1"
+              />
+            </div>
+          </div>
+          <div className="flex">
+            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              사용 여부
+            </label>
+
+            <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
+              <CommonSelect
+                value={useORnot}
+                onChange={setUseORnot}
+                options={LocationStatusOptions}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-center gap-6">
+          <CommonButton
+            label="초기화"
+            variant="reset"
+            onClick={handleReset}
+            className="mt-3 px-20"
+          />
+
+          <CommonButton
+            label="검색"
+            variant="secondary"
+            onClick={handleSearch}
+            className="mt-3 px-20"
+          />
+        </div>
+      </div>
+
+      <div className="mt-6 mb-4">
+        <div className="bg-white flex justify-between items-center">
+          {/* 왼쪽 상태 요약 */}
+          <div className="flex items-center gap-2 text-sm text-gray-700">
+            <span className="font-medium">전체 999개</span>
+            <span className="text-gray-500">(진행중 000 / 종료 000)</span>
+          </div>
+
+          {/* 오른쪽 컨트롤 영역 */}
+          <div className="flex items-center gap-4">
+            {/* 정렬 */}
+            <div className="flex items-center gap-2">
+              <span className="text-base font-medium text-gray-600">정렬</span>
+              <CommonSelect
+                value={sortList}
+                fullWidth={false}
+                onChange={setSortList}
+                options={ArrayStatusOptions}
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-base font-medium text-gray-600">페이지당 목록 수</span>
+              <CommonSelect
+                value={sortList}
+                fullWidth={false}
+                onChange={setSortList}
+                options={ArrayStatusOptions}
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <CommonButton
+                label="삭제"
+                variant="reset"
+                onClick={handleListRemove}
+                className="px-3"
+              />
+              <CommonButton
+                label="엑셀 다운로드"
+                variant="reset"
+                onClick={handleDownloadExcel}
+                className="px-3"
+              />
+              <CommonButton
+                label="+ 신규등록"
+                variant="secondary"
+                onClick={handleNewOrderCreate}
+                className="px-3"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={{ height: 500, width: '100%' }}>
+        <DataGrid
+          rows={displayedRows}
+          columns={BusinessDataList.map((col) => ({
+            ...col,
+            sortable: false,
+            headerAlign: 'center',
+            align: 'center',
+            flex: 1,
+          }))}
+          checkboxSelection
+          disableRowSelectionOnClick
+          keepNonExistentRowsSelected
+          showToolbar
+          disableColumnFilter // 필터 비활성화
+          hideFooter
+          disableColumnMenu
+          hideFooterPagination
+          // pageSize={pageSize}
+          rowHeight={60}
+          // selectionMode={selectedIds}
+          onRowSelectionModelChange={(newSelection) => setSelectedIds(newSelection)}
+        />
+        <div className="flex justify-center mt-4 pb-6">
+          <Pagination
+            count={totalPages}
+            page={page}
+            onChange={(_, newPage) => setPage(newPage)}
+            shape="rounded"
+            color="primary"
+          />
+        </div>
+      </div>
+    </>
+  )
+}

@@ -1,27 +1,21 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  LocationStatusOptions,
-  ProcessStatusOptions,
-  statusOptions,
-  ArrayStatusOptions,
-} from '@/config/business.confing'
+import { LocationStatusOptions, ArrayStatusOptions } from '@/config/business.confing'
 import { GridRowSelectionModel } from '@mui/x-data-grid'
 import { useRouter } from 'next/navigation'
-import { useBusinessStore } from '@/stores/businessStore'
+import { useOrderingStore } from '@/stores/orderingStore'
 // import { useQuery } from '@tanstack/react-query'
 // import { API } from '@/api/config/env'
 // import { API } from '@/api/config/env'
 
-export function BusinessService() {
-  const { status, businessInfo, location, process, startDate, endDate, resetFields } =
-    useBusinessStore()
+export function OrderingService() {
+  const { orderInfo, startDate, endDate, resetFields } = useOrderingStore()
 
   // useQuery를 이용해 데이터를 불러옴 ..
   // const { data, isLoading, error } = useQuery({
   //   queryKey: ['businessList'],
-  //   queryFn: async () => {
+  //   queryFn: ahandleNewOrderCreateync () => {
   //     const res = await fetch(API.LOGOUT, { cache: 'no-store' })
   //     if (!res.ok) throw new Error('서버 에러')
   //     return res.json()
@@ -272,9 +266,9 @@ export function BusinessService() {
 
   console.log('이 값을 가지고 나중에 어떤것들을 체크 했는지 확인 가능함', selectedIds)
 
-  const handleCreate = () => {
+  const handleSearch = () => {
     // 비즈니스 데이터 수집
-    const payload = { ...businessInfo, status, location, process, startDate, endDate }
+    const payload = { ...orderInfo, startDate, endDate }
     // API 호출 or 다른 작업
     alert(`검색 실행:\n${JSON.stringify(payload, null, 2)}`)
   }
@@ -291,19 +285,17 @@ export function BusinessService() {
     alert('엑셀 다운로드 로직이 들어감')
   }
 
-  const handleNewBusinessCreate = () => {
-    router.push('/business/registration')
+  const handleNewOrderCreate = () => {
+    router.push('/ordering/registration')
   }
 
   return {
-    handleCreate,
+    handleSearch,
     handleReset,
     handleListRemove,
     handleDownloadExcel,
-    handleNewBusinessCreate,
+    handleNewOrderCreate,
     LocationStatusOptions,
-    ProcessStatusOptions,
-    statusOptions,
     ArrayStatusOptions,
     displayedRows,
     page,

@@ -247,6 +247,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
           </label>
           <div className="border border-gray-400 px-2 p-2 w-full flex gap-2.5 items-center">
             <CommonFileInput
+              className=" w-[420px] break-words whitespace-normal"
               label="계약서"
               acceptedExtensions={['pdf', 'hwp']}
               files={contractFiles}
@@ -262,6 +263,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
           <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
             <CommonFileInput
               label="현장도면"
+              className=" w-[420px] break-words whitespace-normal"
               acceptedExtensions={['pdf', 'hwp']}
               files={siteDrawFiles}
               onChange={setSiteDrawFiles}
@@ -274,6 +276,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
           </label>
           <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
             <CommonFileInput
+              className=" w-[420px] break-words whitespace-normal"
               label="인허가 서류"
               acceptedExtensions={['pdf', 'hwp']}
               files={permitFiles}
@@ -287,6 +290,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
           </label>
           <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
             <CommonFileInput
+              className=" w-[420px] break-words whitespace-normal"
               label="기타파일"
               acceptedExtensions={['zip', 'xlsx', 'doc']}
               files={etcFiles}
