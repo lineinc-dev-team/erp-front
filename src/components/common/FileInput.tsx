@@ -1,4 +1,9 @@
-export default function CommonFileInput({ acceptedExtensions, files, onChange }: FileUploadProps) {
+export default function CommonFileInput({
+  acceptedExtensions,
+  files,
+  className,
+  onChange,
+}: FileUploadProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return
     const newFiles = Array.from(e.target.files)
@@ -22,7 +27,7 @@ export default function CommonFileInput({ acceptedExtensions, files, onChange }:
         <ul>
           {files.map((file, index) => (
             <li className="flex gap-2 items-center mb-1" key={index}>
-              <span className="w-[420px] break-words whitespace-normal">{file.name}</span>
+              <span className={className}>{file.name}</span>
               <button
                 onClick={() => removeFile(index)}
                 className="
