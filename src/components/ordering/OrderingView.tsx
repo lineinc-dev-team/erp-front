@@ -5,41 +5,28 @@ import CommonInput from '../common/Input'
 import CommonSelect from '../common/Select'
 import CommonDatePicker from '../common/DatePicker'
 import { DataGrid } from '@mui/x-data-grid'
-import { BusinessDataList } from '@/config/business.confing'
+import {
+  ArrayStatusOptions,
+  BusinessDataList,
+  PageCount,
+  UseORnotOptions,
+} from '@/config/erp.confing'
 import { Pagination } from '@mui/material'
-import { useOrderingStore } from '@/stores/orderingStore'
+import { useOrderingSearchStore } from '@/stores/orderingStore'
 import { OrderingService } from '@/services/ordering/orderingService'
-// import LoadingSkeletion from '@/app/(views)/business/loadingSkeletion'
 
 export default function OrderingView() {
   const {
-    handleSearch,
-    handleReset,
-    handleListRemove,
     handleDownloadExcel,
     handleNewOrderCreate,
-    LocationStatusOptions,
-    ArrayStatusOptions,
     displayedRows,
     page,
-    sortList,
-    setSortList,
     setPage,
-    // pageSize,
     setSelectedIds,
     totalPages,
   } = OrderingService()
 
-  const {
-    orderInfo,
-    setField,
-    startDate,
-    setStartDate,
-    endDate,
-    setEndDate,
-    useORnot,
-    setUseORnot,
-  } = useOrderingStore()
+  const { search } = useOrderingSearchStore()
 
   // if (isLoading) return <LoadingSkeletion />
   // if (error) throw error
@@ -56,8 +43,8 @@ export default function OrderingView() {
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
-                value={orderInfo.orderName}
-                onChange={(value) => setField('orderName', value)}
+                value={search.name}
+                onChange={(value) => search.setField('name', value)}
                 className=" flex-1"
               />
             </div>
@@ -69,8 +56,8 @@ export default function OrderingView() {
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
-                value={orderInfo.businessNumber}
-                onChange={(value) => setField('businessNumber', value)}
+                value={search.businessNumber}
+                onChange={(value) => search.setField('businessNumber', value)}
                 className="flex-1"
               />
             </div>
@@ -82,8 +69,8 @@ export default function OrderingView() {
             </label>
             <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
               <CommonInput
-                value={orderInfo.ceoName}
-                onChange={(value) => setField('ceoName', value)}
+                value={search.ceoName}
+                onChange={(value) => search.setField('ceoName', value)}
                 className="flex-1"
               />
             </div>
@@ -95,8 +82,8 @@ export default function OrderingView() {
             </label>
             <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
               <CommonInput
-                value={orderInfo.phoneNumber}
-                onChange={(value) => setField('phoneNumber', value)}
+                value={search.landlineNumber}
+                onChange={(value) => search.setField('landlineNumber', value)}
                 className="flex-1"
               />
             </div>
@@ -107,8 +94,8 @@ export default function OrderingView() {
             </label>
             <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
               <CommonInput
-                value={orderInfo.chargeName}
-                onChange={(value) => setField('chargeName', value)}
+                value={search.orderCEOname}
+                onChange={(value) => search.setField('orderCEOname', value)}
                 className="flex-1"
               />
             </div>
@@ -120,8 +107,8 @@ export default function OrderingView() {
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonInput
-                value={orderInfo.email}
-                onChange={(value) => setField('email', value)}
+                value={search.email}
+                onChange={(value) => search.setField('email', value)}
                 className=" flex-1"
               />
             </div>
@@ -132,9 +119,15 @@ export default function OrderingView() {
               등록일자
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
-              <CommonDatePicker value={startDate} onChange={setStartDate} />
+              <CommonDatePicker
+                value={search.startDate}
+                onChange={(value) => search.setField('startDate', value)}
+              />
               ~
-              <CommonDatePicker value={endDate} onChange={setEndDate} />
+              <CommonDatePicker
+                value={search.startDate}
+                onChange={(value) => search.setField('startDate', value)}
+              />
             </div>
           </div>
 
@@ -144,8 +137,8 @@ export default function OrderingView() {
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonInput
-                value={orderInfo.companyName}
-                onChange={(value) => setField('companyName', value)}
+                value={search.bossName}
+                onChange={(value) => search.setField('bossName', value)}
                 className=" flex-1"
               />
             </div>
@@ -154,12 +147,13 @@ export default function OrderingView() {
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               사용 여부
             </label>
-
-            <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
+            <div className="border border-gray-400 px-2 w-full flex items-center">
               <CommonSelect
-                value={useORnot}
-                onChange={setUseORnot}
-                options={LocationStatusOptions}
+                className="text-2xl w-full"
+                value={search.isActive}
+                onChange={(value) => search.setField('isActive', value)}
+                options={UseORnotOptions}
+                fullWidth={true}
               />
             </div>
           </div>
@@ -168,14 +162,14 @@ export default function OrderingView() {
           <CommonButton
             label="초기화"
             variant="reset"
-            onClick={handleReset}
+            onClick={search.reset}
             className="mt-3 px-20"
           />
 
           <CommonButton
             label="검색"
             variant="secondary"
-            onClick={handleSearch}
+            onClick={search.handleSearch}
             className="mt-3 px-20"
           />
         </div>
@@ -191,13 +185,12 @@ export default function OrderingView() {
 
           {/* 오른쪽 컨트롤 영역 */}
           <div className="flex items-center gap-4">
-            {/* 정렬 */}
             <div className="flex items-center gap-2">
               <span className="text-base font-medium text-gray-600">정렬</span>
               <CommonSelect
-                value={sortList}
-                fullWidth={false}
-                onChange={setSortList}
+                value={search.arraySort}
+                className="text-2xl w-full"
+                onChange={(value) => search.setField('arraySort', value)}
                 options={ArrayStatusOptions}
               />
             </div>
@@ -205,10 +198,10 @@ export default function OrderingView() {
             <div className="flex items-center gap-2">
               <span className="text-base font-medium text-gray-600">페이지당 목록 수</span>
               <CommonSelect
-                value={sortList}
-                fullWidth={false}
-                onChange={setSortList}
-                options={ArrayStatusOptions}
+                value={search.pageCount}
+                className="text-2xl w-full"
+                onChange={(value) => search.setField('pageCount', value)}
+                options={PageCount}
               />
             </div>
 
@@ -216,7 +209,7 @@ export default function OrderingView() {
               <CommonButton
                 label="삭제"
                 variant="reset"
-                onClick={handleListRemove}
+                onClick={search.handleOrderingListRemove}
                 className="px-3"
               />
               <CommonButton

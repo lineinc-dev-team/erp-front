@@ -1,17 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { LocationStatusOptions, ArrayStatusOptions } from '@/config/business.confing'
 import { GridRowSelectionModel } from '@mui/x-data-grid'
 import { useRouter } from 'next/navigation'
-import { useOrderingStore } from '@/stores/orderingStore'
-// import { useQuery } from '@tanstack/react-query'
-// import { API } from '@/api/config/env'
-// import { API } from '@/api/config/env'
 
 export function OrderingService() {
-  const { orderInfo, startDate, endDate, resetFields } = useOrderingStore()
-
   // useQuery를 이용해 데이터를 불러옴 ..
   // const { data, isLoading, error } = useQuery({
   //   queryKey: ['businessList'],
@@ -266,21 +259,6 @@ export function OrderingService() {
 
   console.log('이 값을 가지고 나중에 어떤것들을 체크 했는지 확인 가능함', selectedIds)
 
-  const handleSearch = () => {
-    // 비즈니스 데이터 수집
-    const payload = { ...orderInfo, startDate, endDate }
-    // API 호출 or 다른 작업
-    alert(`검색 실행:\n${JSON.stringify(payload, null, 2)}`)
-  }
-
-  const handleReset = () => {
-    resetFields()
-  }
-
-  const handleListRemove = () => {
-    alert('리스트에 대한 삭제가 됩니다.')
-  }
-
   const handleDownloadExcel = () => {
     alert('엑셀 다운로드 로직이 들어감')
   }
@@ -290,13 +268,8 @@ export function OrderingService() {
   }
 
   return {
-    handleSearch,
-    handleReset,
-    handleListRemove,
     handleDownloadExcel,
     handleNewOrderCreate,
-    LocationStatusOptions,
-    ArrayStatusOptions,
     displayedRows,
     page,
     setPage,

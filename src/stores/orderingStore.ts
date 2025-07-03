@@ -1,5 +1,71 @@
 import { create } from 'zustand'
-import type { FormState, Manager, AttachedFile } from '@/types/ordering'
+import type { FormState, Manager, AttachedFile, OrderingSearchState } from '@/types/ordering'
+
+export const useOrderingSearchStore = create<{ search: OrderingSearchState }>((set) => ({
+  search: {
+    name: '',
+    businessNumber: '',
+    ceoName: '',
+    landlineNumber: '',
+    orderCEOname: '',
+    email: '',
+    startDate: null,
+    endDate: null,
+    bossName: '',
+    isActive: '선택',
+    arraySort: '최신순',
+    pageCount: '10',
+
+    setField: (field, value) =>
+      set((state) => ({
+        search: { ...state.search, [field]: value },
+      })),
+
+    handleSearch: () =>
+      set((state) => {
+        const search = state.search
+
+        const payload = {
+          name: search.name,
+          businessNumber: search.businessNumber,
+          ceoName: search.ceoName,
+          landlineNumber: search.landlineNumber,
+          orderCEOname: search.orderCEOname,
+          email: search.email,
+          startDate: search.startDate,
+          endDate: search.endDate,
+          bossName: search.bossName,
+          isActive: search.isActive === '사용' ? true : false,
+        }
+        alert(JSON.stringify(payload, null, 2))
+
+        return state
+      }),
+    reset: () =>
+      set((state) => ({
+        search: {
+          ...state.search,
+          name: '',
+          businessNumber: '',
+          ceoName: '',
+          areaNumber: '',
+          landlineNumber: '',
+          orderCEOname: '',
+          email: '',
+          startDate: null,
+          endDate: null,
+          bossName: '',
+          arraySort: '최신순',
+          pageCount: '10',
+          isActive: '선택',
+        },
+      })),
+
+    handleOrderingListRemove: () => {
+      alert('리스트에 대한 삭제가 됩니다.')
+    },
+  },
+}))
 
 export const useOrderingStore = create<{ form: FormState }>((set) => ({
   form: {
@@ -7,7 +73,7 @@ export const useOrderingStore = create<{ form: FormState }>((set) => ({
     businessNumber: '',
     ceoName: '',
     address: '',
-    detaileAddress: '',
+    detailAddress: '',
     areaNumber: '지역번호',
     landlineNumber: '',
     isModalOpen: false,
@@ -22,30 +88,6 @@ export const useOrderingStore = create<{ form: FormState }>((set) => ({
     checkedAttachedFileIds: [],
     modificationHistory: [],
 
-    reset: () =>
-      set((state) => ({
-        form: {
-          ...state.form,
-          name: '',
-          businessNumber: '',
-          ceoName: '',
-          address: '',
-          detaileAddress: '',
-          areaNumber: '지역번호',
-          landlineNumber: '',
-          isModalOpen: false,
-          email: '',
-          paymentMethod: '선택',
-          paymentPeriod: '',
-          memo: '',
-          isActive: '선택',
-          headManagers: [],
-          checkedManagerIds: [],
-          attachedFiles: [],
-          checkedAttachedFileIds: [],
-          modificationHistory: [],
-        },
-      })),
     setField: (field, value) =>
       set((state) => ({
         form: { ...state.form, [field]: value },
@@ -173,7 +215,7 @@ export const useOrderingStore = create<{ form: FormState }>((set) => ({
           name: form.name,
           businessNumber: form.businessNumber,
           ceoName: form.ceoName,
-          address: `${form.address} ${form.detaileAddress || ''}`.trim(),
+          address: `${form.address} ${form.detailAddress || ''}`.trim(),
           landlineNumber: `${form.areaNumber}-${form.landlineNumber}`,
           email: form.email,
           paymentMethod: form.paymentMethod,
@@ -203,6 +245,10 @@ export const useOrderingStore = create<{ form: FormState }>((set) => ({
       }),
 
     handleCancelData: () => {
+      alert('이전 페이지 등록')
+    },
+
+    handleSearch: () => {
       alert('이전 페이지 등록')
     },
   },

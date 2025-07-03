@@ -1,12 +1,12 @@
 import { TextField } from '@mui/material'
 import React from 'react'
 
-type CommonInputProps = {
+type CommonInputProps<T> = {
   label?: string
-  value: string
+  value: T
   error?: boolean
   helperText?: string
-  onChange: (vale: string) => void
+  onChange: (vale: T) => void
   type?: string
   fullWidth?: boolean
   required?: boolean
@@ -14,7 +14,7 @@ type CommonInputProps = {
   className: string
 }
 
-export default function CommonInput({
+export default function CommonInput<T>({
   value,
   error,
   helperText = '',
@@ -24,7 +24,7 @@ export default function CommonInput({
   fullWidth = true,
   required = false,
   className,
-}: CommonInputProps) {
+}: CommonInputProps<T>) {
   return (
     <TextField
       variant="outlined"
@@ -32,7 +32,13 @@ export default function CommonInput({
       error={error}
       placeholder={placeholder}
       helperText={helperText}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(e) => {
+        if (type === 'number') {
+          onChange(Number(e.target.value) as T)
+        } else {
+          onChange(e.target.value as T)
+        }
+      }}
       type={type}
       className={className}
       fullWidth={fullWidth}

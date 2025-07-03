@@ -15,15 +15,40 @@ export type AttachedFile = {
   files: File[]
 }
 
+export type OrderingSearchState = {
+  name: string
+  businessNumber: string
+  ceoName: string
+  landlineNumber: string
+  orderCEOname: string
+  email: string
+  startDate: Date | null
+  endDate: Date | null
+  bossName: string
+  isActive: string
+  arraySort: string
+  pageCount: string
+
+  reset: () => void
+
+  setField: <K extends keyof Omit<OrderingSearchState, 'reset' | 'setField'>>(
+    field: K,
+    value: OrderingSearchState[K],
+  ) => void
+
+  handleSearch: () => void
+  handleOrderingListRemove: () => void
+}
+
 export type FormState = {
   // 기존 필드들
   name: string
   businessNumber: string
   ceoName: string
   address: string
-  detaileAddress: string
-  landlineNumber: string
+  detailAddress: string
   areaNumber: string
+  landlineNumber: string
   isModalOpen: boolean
   email: string
   paymentMethod: string
@@ -50,7 +75,6 @@ export type FormState = {
   }[]
 
   // methods
-  reset: () => void
   setField: <K extends keyof Omit<FormState, 'reset' | 'setField'>>(
     field: K,
     value: FormState[K],

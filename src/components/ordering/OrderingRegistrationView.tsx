@@ -81,8 +81,8 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                 />
               </div>
               <input
-                value={form.detaileAddress}
-                onChange={(e) => form.setField('detaileAddress', e.target.value)}
+                value={form.detailAddress}
+                onChange={(e) => form.setField('detailAddress', e.target.value)}
                 placeholder="상세주소"
                 className="w-full border px-3 py-2 rounded"
               />
