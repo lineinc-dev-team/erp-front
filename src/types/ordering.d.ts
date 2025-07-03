@@ -1,62 +1,68 @@
-type OrderInfoProps = {
-  orderName: string
-  businessNumber: string
-  ceoName: string
-  phoneNumber: string
-  chargeName: string
-  email: string
-  companyName: string
-}
-
-type OrderState = {
-  orderInfo: OrderInfoProps
-  startDate: Date | null
-  endDate: Date | null
-  useORnot: string
-
-  setField: <K extends keyof OrderInfoProps>(field: K, value: OrderInfoProps[K]) => void
-  setStartDate: (date: Date | null) => void
-  setEndDate: (date: Date | null) => void
-  setUseORnot: (useORnot: string) => void
-  resetFields: () => void
-}
-
-type OrderInfo = {
-  orderName: string
-  businessNumber: string
-  ceoName: string
-  phoneNumber: string
-  chargeName: string
-  email: string
-  companyName: string
-}
-
-type OrderState = {
-  orderInfo: OrderInfo
-  startDate: Date | null
-  endDate: Date | null
-  useORnot: string
-
-  setField: (field: keyof OrderInfo, value: string) => void
-  setStartDate: (date: Date | null) => void
-  setEndDate: (date: Date | null) => void
-  setUseORnot: (useORnot: string) => void
-  resetFields: () => void
-}
-
-type Manager = {
+export type Manager = {
   id: number
   name: string
-  department: string
-  contact: string
-  mobile: string
+  position: string
+  tel: string
+  phone: string
   email: string
   memo: string
 }
 
-type AttachedFileProps = {
+export type AttachedFile = {
   id: number
   fileName: string
-  fileInfo: FileUploadProps
   memo: string
+  files: File[]
+}
+
+export type FormState = {
+  // 기존 필드들
+  name: string
+  businessNumber: string
+  ceoName: string
+  address: string
+  detaileAddress: string
+  landlineNumber: string
+  areaNumber: string
+  isModalOpen: boolean
+  email: string
+  paymentMethod: string
+  paymentPeriod: string
+  memo: string
+  isActive: string
+
+  // 담당자 배열
+  headManagers: Manager[]
+
+  // 선택된 체크박스 id
+  checkedManagerIds: number[]
+
+  // 파일첨부, 수정이력
+  attachedFiles: AttachedFile[]
+  checkedAttachedFileIds: number[]
+
+  //수정페이지에서 이력 조회 시 사용
+  modificationHistory: {
+    modifiedAt: Date | null
+    modifiedField: string
+    modifiedBy: string
+    note: string
+  }[]
+
+  // methods
+  reset: () => void
+  setField: <K extends keyof Omit<FormState, 'reset' | 'setField'>>(
+    field: K,
+    value: FormState[K],
+  ) => void
+
+  addItem: (type: 'manager' | 'attachedFile') => void
+  updateItemField: (type: 'manager' | 'attachedFile', id: number, field: string, value: T) => void
+  toggleCheckItem: (ype: 'manager' | 'attachedFile', id: number, checked: boolean) => void
+  toggleCheckAllItems: (ype: 'manager' | 'attachedFile', checked: boolean) => void
+  removeCheckedItems: (ype: 'manager' | 'attachedFile') => void
+
+  //발주처 등록하기
+  newOrderingData: () => void
+  handleCancelData: () => void
 }
