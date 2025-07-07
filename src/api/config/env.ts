@@ -1,4 +1,4 @@
-const apiBaseUrl = process.env.NEXT_PUBLIC_DEV_API
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL
 
 if (!apiBaseUrl) {
   throw new Error('환경 변수 NEXT_PUBLIC_DEV_API가 설정되지 않았습니다.')

@@ -14,7 +14,7 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body>
+      <body className="mt-20">
         <HeaderWrapper />
 
         <QueryClientProvider client={queryClient}>
