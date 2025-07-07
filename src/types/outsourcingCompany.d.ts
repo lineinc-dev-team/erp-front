@@ -66,3 +66,26 @@ export type FormState = {
   newOutsouringCompany: () => void
   handleCancelData: () => void
 }
+
+export type outSourcingCompanySearchProps = {
+  companyName: string
+  businessNumber: string
+  ceoName: string
+  phoneNumber: string
+  contractorName: string
+  email: string
+  startDate: Date | null
+  endDate: Date | null
+  bossName: string
+  isSubmit: string
+  isActive: string
+  arraySort: string
+  pageCount: string
+
+  reset: () => void
+  setField: <K extends keyof Omit<outSourcingCompanySearchProps, 'reset' | 'setField'>>(
+    field: K,
+    value: outSourcingCompanySearchProps[K],
+  ) => void
+  handleSearch: () => void
+}

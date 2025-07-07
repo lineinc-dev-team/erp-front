@@ -1,16 +1,93 @@
 'use client'
 
-import { useParams, usePathname, useRouter } from 'next/navigation'
+import React from 'react'
+import {
+  Drawer,
+  List,
+  ListItemButton,
+  ListItemText,
+  IconButton,
+  AppBar,
+  Toolbar,
+  ListItemIcon,
+  Collapse,
+} from '@mui/material'
+import {
+  Menu as MenuIcon,
+  Business,
+  Settings,
+  ExpandLess,
+  ExpandMore,
+  Dashboard,
+  Groups,
+  AssignmentInd,
+  Inventory,
+  Description,
+} from '@mui/icons-material'
+import { useRouter } from 'next/navigation'
 import CommonButton from '../common/Button'
 import { API } from '@/api/config/env'
-import Link from 'next/link'
 
+const menuItems = [
+  {
+    title: '대쉬보드',
+    icon: <Dashboard />,
+    children: [],
+  },
+  {
+    title: '사업장 관리',
+    icon: <Business />,
+    children: [
+      { label: '- 사업장 조회', path: '/business/view' },
+      { label: '- 사업장 등록', path: '/business/register' },
+    ],
+  },
+  {
+    title: '외주 관리',
+    icon: <Groups />,
+    children: [
+      { label: '- 외주 조회', path: '/outsourcing/view' },
+      { label: '- 외주 등록', path: '/outsourcing/register' },
+    ],
+  },
+  {
+    title: '노무 관리',
+    icon: <AssignmentInd />,
+    children: [
+      { label: '- 노무 조회', path: '/labor/view' },
+      { label: '- 노무 등록', path: '/labor/register' },
+    ],
+  },
+  {
+    title: '자재 관리',
+    icon: <Inventory />,
+    children: [
+      { label: '- 자재 조회', path: '/materials/view' },
+      { label: '- 자재 등록', path: '/materials/register' },
+    ],
+  },
+  {
+    title: '계약/증빙',
+    icon: <Description />,
+    children: [
+      { label: '- 계약서 조회', path: '/contracts/view' },
+      { label: '- 계약서 등록', path: '/contracts/register' },
+    ],
+  },
+  {
+    title: '설정',
+    icon: <Settings />,
+    children: [{ label: '- 계정 관리', path: '/settings/account' }],
+  },
+]
 export default function Header() {
+  const [open, setOpen] = React.useState(false)
+  const [openSections, setOpenSections] = React.useState<Record<string, boolean>>({})
   const router = useRouter()
 
-  const params = useParams()
-  const urlName = usePathname()
-  const { id } = params
+  const handleToggleSection = (title: string) => {
+    setOpenSections((prev) => ({ ...prev, [title]: !prev[title] }))
+  }
 
   const handleLogout = async () => {
     if (confirm('정말 로그아웃 하시겠습니까?')) {
@@ -42,49 +119,59 @@ export default function Header() {
   }
 
   return (
-    <header className="top-0 left-0 w-full bg-primaryBlue border-b border-gray-200 shadow-sm z-50">
-      <div className="mx-auto flex items-center justify-between px-6 h-16">
-        <div className="flex items-center space-x-6">
-          <h1 className="text-2xl font-bold text-white">라인공영 Intra</h1>
+    <>
+      <AppBar position="fixed">
+        <Toolbar>
+          <div className="flex justify-between w-full">
+            <div>
+              <IconButton edge="start" color="inherit" onClick={() => setOpen(true)}>
+                <MenuIcon />
+              </IconButton>
+              <span>LineInc ERP MENU</span>
+            </div>
 
-          <nav className="flex items-center space-x-4 text-sm text-gray-600">
-            <Link href="/business" className="text-white border-b-2 transition hover:text-black">
-              Home
-            </Link>
+            <div className="flex items-center space-x-4">
+              <p className="text-sm text-white">이경호(로그인한 ID)</p>
+              <CommonButton
+                label="로그아웃"
+                variant="secondary"
+                onClick={handleLogout}
+                className="text-sm"
+              />
+            </div>
+          </div>
+        </Toolbar>
+      </AppBar>
 
-            <span className="text-black">&gt;&gt;</span>
-            <select className="bg-white border font-bold border-gray-300 rounded px-2 py-1 w-52 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400">
-              <option>사업장 관리</option>
-              <option>외주 관리</option>
-            </select>
-            {id ? (
-              <>
-                <span className="text-black">&gt;&gt;</span>
-                <select className="bg-white border font-bold border-gray-300 rounded px-2 py-1 w-52 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400">
-                  <option>수정</option>
-                </select>
-              </>
-            ) : urlName === '/business/registration' ? (
-              <>
-                <span className="text-black">&gt;&gt;</span>
-                <select className="bg-white border font-bold border-gray-300 rounded px-2 py-1 w-52 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400">
-                  <option>등록</option>
-                </select>
-              </>
-            ) : null}
-          </nav>
-        </div>
-
-        <div className="flex items-center space-x-4">
-          <p className="text-sm text-white">이경호(로그인한 ID)</p>
-          <CommonButton
-            label="로그아웃"
-            variant="secondary"
-            onClick={handleLogout}
-            className="text-sm"
-          />
-        </div>
-      </div>
-    </header>
+      <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
+        <List sx={{ width: 240 }}>
+          {menuItems.map((menu) => (
+            <React.Fragment key={menu.title}>
+              <ListItemButton onClick={() => handleToggleSection(menu.title)}>
+                <ListItemIcon>{menu.icon}</ListItemIcon>
+                <ListItemText primary={menu.title} />
+                {openSections[menu.title] ? <ExpandLess /> : <ExpandMore />}
+              </ListItemButton>
+              <Collapse in={openSections[menu.title]} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  {menu.children.map((child) => (
+                    <ListItemButton
+                      key={child.label}
+                      sx={{ pl: 4 }}
+                      onClick={() => {
+                        router.push(child.path)
+                        setOpen(false)
+                      }}
+                    >
+                      <ListItemText primary={child.label} />
+                    </ListItemButton>
+                  ))}
+                </List>
+              </Collapse>
+            </React.Fragment>
+          ))}
+        </List>
+      </Drawer>
+    </>
   )
 }

@@ -4,29 +4,98 @@ import CommonButton from '../common/Button'
 import CommonInput from '../common/Input'
 import CommonSelect from '../common/Select'
 import CommonDatePicker from '../common/DatePicker'
-import { DataGrid } from '@mui/x-data-grid'
-import {
-  ArrayStatusOptions,
-  BusinessDataList,
-  PageCount,
-  UseORnotOptions,
-} from '@/config/erp.confing'
-import { Pagination } from '@mui/material'
+import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
+import { ArrayStatusOptions, PageCount, UseORnotOptions } from '@/config/erp.confing'
+import { Button, Checkbox, FormControlLabel, Grid, Pagination } from '@mui/material'
 import { useOrderingSearchStore } from '@/stores/orderingStore'
 import { OrderingService } from '@/services/ordering/orderingService'
+import CommonModal from '../common/Modal'
+import ContractHistory from '../common/ContractHistory'
+import { useRouter } from 'next/navigation'
 
 export default function OrderingView() {
   const {
-    handleDownloadExcel,
+    modalOpen,
+    setModalOpen,
+    selectedFields,
+    handleToggleField,
+    handleSelectAll,
+    handleReset,
+    excelFields,
+    printMode,
+    handlePrint,
     handleNewOrderCreate,
     displayedRows,
+    contract,
+    setContract,
     page,
     setPage,
-    setSelectedIds,
     totalPages,
+    filteredColumns,
+    handleExcelDownload,
   } = OrderingService()
 
   const { search } = useOrderingSearchStore()
+
+  const router = useRouter()
+
+  const enhancedColumns = filteredColumns.map((col): GridColDef => {
+    if (col.field === 'siteCode') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 1,
+
+        renderCell: (params: GridRenderCellParams) => {
+          if (params.field === 'siteCode') {
+            return (
+              <div
+                onClick={() => router.push(`/ordering/registration/20`)}
+                className="flex justify-center items-center cursor-pointer"
+              >
+                <span className="text-orange-500 font-bold">{params.value}</span>
+              </div>
+            )
+          }
+        },
+      }
+    }
+    console.log('@24@', col)
+    if (col.field === 'remark') {
+      return {
+        ...col,
+        sortable: false,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 1,
+        renderCell: (params: GridRenderCellParams) => {
+          console.log('@@@', params)
+          if (params.value === '확인') {
+            return (
+              <div
+                onClick={(e) => {
+                  e.preventDefault()
+                  setContract(true)
+                }}
+                className="flex justify-center items-center cursor-pointer"
+              >
+                <button className=" text-blue-500 font-bold">{params.value}</button>
+              </div>
+            )
+          }
+          return <span>{params.value}</span>
+        },
+      }
+    }
+    return {
+      ...col,
+      sortable: false,
+      headerAlign: 'center',
+      align: 'center',
+      flex: 1,
+    }
+  })
 
   // if (isLoading) return <LoadingSkeletion />
   // if (error) throw error
@@ -215,7 +284,7 @@ export default function OrderingView() {
               <CommonButton
                 label="엑셀 다운로드"
                 variant="reset"
-                onClick={handleDownloadExcel}
+                onClick={() => setModalOpen(true)}
                 className="px-3"
               />
               <CommonButton
@@ -231,26 +300,18 @@ export default function OrderingView() {
       <div style={{ height: 500, width: '100%' }}>
         <DataGrid
           rows={displayedRows}
-          columns={BusinessDataList.map((col) => ({
-            ...col,
-            sortable: false,
-            headerAlign: 'center',
-            align: 'center',
-            flex: 1,
-          }))}
-          checkboxSelection
+          columns={enhancedColumns}
+          checkboxSelection={!printMode} // 프린트 시 체크박스 제거
           disableRowSelectionOnClick
           keepNonExistentRowsSelected
           showToolbar
-          disableColumnFilter // 필터 비활성화
+          disableColumnFilter
           hideFooter
           disableColumnMenu
           hideFooterPagination
-          // pageSize={pageSize}
           rowHeight={60}
-          // selectionMode={selectedIds}
-          onRowSelectionModelChange={(newSelection) => setSelectedIds(newSelection)}
         />
+
         <div className="flex justify-center mt-4 pb-6">
           <Pagination
             count={totalPages}
@@ -261,6 +322,49 @@ export default function OrderingView() {
           />
         </div>
       </div>
+
+      {/* 엑셀 모달 */}
+
+      <CommonModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title="발주처 관리 - 엑셀 출력 항목 선택"
+        actions={
+          <>
+            <Button onClick={handlePrint}>프린트</Button>
+            <Button variant="contained" onClick={handleExcelDownload}>
+              엑셀 다운로드
+            </Button>
+            <Button onClick={() => setModalOpen(false)}>닫기</Button>
+          </>
+        }
+      >
+        <Grid container spacing={1}>
+          {excelFields.map((field) => (
+            <Grid key={field}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={selectedFields.includes(field)}
+                    onChange={() => handleToggleField(field)}
+                  />
+                }
+                label={field}
+              />
+            </Grid>
+          ))}
+        </Grid>
+        <div className="flex gap-2 mt-4">
+          <Button variant="outlined" onClick={handleReset}>
+            초기화
+          </Button>
+          <Button variant="outlined" onClick={handleSelectAll}>
+            전체 선택
+          </Button>
+        </div>
+      </CommonModal>
+
+      <ContractHistory open={contract} onClose={() => setContract(false)} />
     </>
   )
 }

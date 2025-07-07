@@ -16,11 +16,11 @@ import {
   TableRow,
   TextField,
 } from '@mui/material'
-import { useOutsourcingStore } from '@/stores/outsourcingStore'
 import { AreaCode, GuaranteeInfo, UseORnotOptions } from '@/config/erp.confing'
+import { useOutsourcingCompanyStore } from '@/stores/outsourcingCompanyStore'
 
 export default function OutsourcingCompanyRegistrationView({ isEditMode = false }) {
-  const { form } = useOutsourcingStore()
+  const { form } = useOutsourcingCompanyStore()
 
   const managers = form.headManagers
   const checkedIds = form.checkedManagerIds

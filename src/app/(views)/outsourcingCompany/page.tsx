@@ -1,9 +1,9 @@
-import OutsourcingView from '@/components/outsourcing/OutsourcingView'
+import OutsourcingCompanyView from '@/components/outsourcing/OutsourcingCompanyView'
 
 export default function page() {
   return (
     <div>
-      <OutsourcingView />
+      <OutsourcingCompanyView />
     </div>
   )
 }

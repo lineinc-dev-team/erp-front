@@ -1,7 +1,80 @@
 import { create } from 'zustand'
-import type { FormState, Manager, AttachedFile } from '@/types/outsourcingCompany'
+import type {
+  FormState,
+  Manager,
+  AttachedFile,
+  outSourcingCompanySearchProps,
+} from '@/types/outsourcingCompany'
 
-export const useOutsourcingStore = create<{ form: FormState }>((set) => ({
+export const useOrderingSearchStore = create<{ search: outSourcingCompanySearchProps }>((set) => ({
+  search: {
+    companyName: '',
+    businessNumber: '',
+    ceoName: '',
+    phoneNumber: '',
+    contractorName: '',
+    email: '',
+    startDate: null,
+    endDate: null,
+    bossName: '',
+    isSubmit: '전체',
+    isActive: '선택',
+    arraySort: '최신순',
+    pageCount: '10',
+
+    setField: (field, value) =>
+      set((state) => ({
+        search: { ...state.search, [field]: value },
+      })),
+
+    handleSearch: () =>
+      set((state) => {
+        const search = state.search
+
+        const payload = {
+          companyName: search.companyName,
+          businessNumber: search.businessNumber,
+          ceoName: search.ceoName,
+          phoneNumber: search.phoneNumber,
+          contractorName: search.contractorName,
+          email: search.email,
+          startDate: search.startDate,
+          endDate: search.endDate,
+          bossName: search.bossName,
+          isActive: search.isActive === '사용' ? true : false,
+          isSubmit: search.isSubmit === '제출' ? true : false,
+        }
+        alert(JSON.stringify(payload, null, 2))
+
+        return state
+      }),
+    reset: () =>
+      set((state) => ({
+        search: {
+          ...state.search,
+          name: '',
+          businessNumber: '',
+          ceoName: '',
+          phoneNumber: '',
+          contractorName: '',
+          email: '',
+          startDate: null,
+          endDate: null,
+          bossName: '',
+          arraySort: '최신순',
+          pageCount: '10',
+          isActive: '선택',
+          isSubmit: '전체',
+        },
+      })),
+
+    handleOrderingListRemove: () => {
+      alert('리스트에 대한 삭제가 됩니다.')
+    },
+  },
+}))
+
+export const useOutsourcingCompanyStore = create<{ form: FormState }>((set) => ({
   form: {
     companyName: '',
     businessNumber: '',

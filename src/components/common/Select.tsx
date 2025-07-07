@@ -8,7 +8,7 @@ type CommonSelectProps<T extends string | number> = {
   fullWidth?: boolean
   required?: boolean
   disabled?: boolean
-  className: string
+  className?: string
 }
 
 export default function CommonSelect<T extends string | number>({

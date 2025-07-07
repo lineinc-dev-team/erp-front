@@ -1,6 +1,6 @@
 'use client'
 
-import { ProcessStatusOptions, statusOptions } from '@/config/business.confing'
+import { ProcessStatusOptions, statusOptions } from '@/config/erp.confing'
 import { useRouter } from 'next/navigation'
 // import { useBusinessStore } from '@/stores/businessStore'
 import { useState } from 'react'

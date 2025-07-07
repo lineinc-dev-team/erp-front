@@ -6,7 +6,7 @@ import CommonSelect from '../common/Select'
 import CommonDatePicker from '../common/DatePicker'
 import { BusinessService } from '@/services/business/businessService'
 import { DataGrid } from '@mui/x-data-grid'
-import { BusinessDataList } from '@/config/business.confing'
+import { BusinessDataList } from '@/config/erp.confing'
 import { Pagination } from '@mui/material'
 import { useBusinessStore } from '@/stores/businessStore'
 // import LoadingSkeletion from '@/app/(views)/business/loadingSkeletion'
@@ -88,6 +88,7 @@ export default function BusinessView() {
             </label>
             <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
               <CommonSelect
+                fullWidth={true}
                 value={location}
                 onChange={setLocation}
                 options={LocationStatusOptions}
@@ -100,7 +101,12 @@ export default function BusinessView() {
               사업장 유형
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
-              <CommonSelect value={status} onChange={setStatus} options={statusOptions} />
+              <CommonSelect
+                fullWidth={true}
+                value={status}
+                onChange={setStatus}
+                options={statusOptions}
+              />
             </div>
           </div>
 
@@ -119,7 +125,12 @@ export default function BusinessView() {
               진행 상태
             </label>
             <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
-              <CommonSelect value={process} onChange={setProcess} options={ProcessStatusOptions} />
+              <CommonSelect
+                fullWidth={true}
+                value={process}
+                onChange={setProcess}
+                options={ProcessStatusOptions}
+              />
             </div>
           </div>
 

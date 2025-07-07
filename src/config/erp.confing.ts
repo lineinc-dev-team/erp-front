@@ -1,3 +1,5 @@
+import { GridColDef } from '@mui/x-data-grid'
+
 export const statusOptions = [
   { label: '전체', value: '전체' },
   { label: '토목', value: '토목' },
@@ -15,6 +17,12 @@ export const UseORnotOptions = [
   { label: '선택', value: '선택' },
   { label: '사용', value: '사용' },
   { label: '미사용', value: '미사용' },
+]
+
+export const SubmitOptions = [
+  { label: '전체', value: '전체' },
+  { label: '제출', value: '제출' },
+  { label: '미제출', value: '미제출' },
 ]
 
 export const ProcessStatusOptions = [
@@ -36,7 +44,7 @@ export const PageCount = [
   { label: '50', value: '50' },
 ]
 
-export const BusinessDataList = [
+export const BusinessDataList: GridColDef[] = [
   { field: 'id', headerName: 'No', width: 70 },
   { field: 'siteCode', headerName: '현장코드', width: 130 },
   { field: 'location', headerName: '위치', width: 130 },
@@ -47,7 +55,7 @@ export const BusinessDataList = [
   { field: 'registeredDate', headerName: '등록일', width: 120 },
   { field: 'modifiedDate', headerName: '수정일', width: 120 },
   { field: 'attachments', headerName: '첨부파일', width: 100 },
-  { field: 'remark', headerName: '비고', width: 100 },
+  { field: 'remark', headerName: '계약이력', width: 100 },
 ]
 
 export const AreaCode = [

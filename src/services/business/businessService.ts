@@ -6,18 +6,14 @@ import {
   ProcessStatusOptions,
   statusOptions,
   ArrayStatusOptions,
-} from '@/config/business.confing'
+} from '@/config/erp.confing'
 import { GridRowSelectionModel } from '@mui/x-data-grid'
 import { useRouter } from 'next/navigation'
-import { useBusinessStore } from '@/stores/businessStore'
 // import { useQuery } from '@tanstack/react-query'
 // import { API } from '@/api/config/env'
 // import { API } from '@/api/config/env'
 
 export function BusinessService() {
-  const { status, businessInfo, location, process, startDate, endDate, resetFields } =
-    useBusinessStore()
-
   // useQuery를 이용해 데이터를 불러옴 ..
   // const { data, isLoading, error } = useQuery({
   //   queryKey: ['businessList'],
@@ -70,7 +66,7 @@ export function BusinessService() {
       registeredDate: '2025-01-01',
       modifiedDate: '2025-01-15',
       attachments: '파일1.pdf',
-      remark: '비고 없음',
+      remark: '확인',
     },
     {
       id: 2,
@@ -83,7 +79,7 @@ export function BusinessService() {
       registeredDate: '2025-01-02',
       modifiedDate: '2025-01-10',
       attachments: '파일2.xlsx',
-      remark: '중단됨',
+      remark: '확인',
     },
     {
       id: 3,
@@ -96,7 +92,7 @@ export function BusinessService() {
       registeredDate: '2025-01-02',
       modifiedDate: '2025-01-10',
       attachments: '파일2.xlsx',
-      remark: '중단됨',
+      remark: '확인',
     },
     {
       id: 4,
@@ -272,17 +268,6 @@ export function BusinessService() {
 
   console.log('이 값을 가지고 나중에 어떤것들을 체크 했는지 확인 가능함', selectedIds)
 
-  const handleCreate = () => {
-    // 비즈니스 데이터 수집
-    const payload = { ...businessInfo, status, location, process, startDate, endDate }
-    // API 호출 or 다른 작업
-    alert(`검색 실행:\n${JSON.stringify(payload, null, 2)}`)
-  }
-
-  const handleReset = () => {
-    resetFields()
-  }
-
   const handleListRemove = () => {
     alert('리스트에 대한 삭제가 됩니다.')
   }
@@ -296,8 +281,6 @@ export function BusinessService() {
   }
 
   return {
-    handleCreate,
-    handleReset,
     handleListRemove,
     handleDownloadExcel,
     handleNewBusinessCreate,
