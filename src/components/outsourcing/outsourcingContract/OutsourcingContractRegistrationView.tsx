@@ -16,7 +16,6 @@ import {
 } from '@mui/material'
 import { UseORnotOptions } from '@/config/erp.confing'
 import CommonInput from '@/components/common/Input'
-import CommonDatePicker from '@/components/common/DatePicker'
 import { useOrderingContractStore } from '@/stores/outsourcingContractStore'
 
 export default function OutsourcingContractRegistrationView({ isEditMode = false }) {
@@ -113,7 +112,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
               계약기간 (시작/종료)
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
-              <CommonDatePicker
+              {/* <CommonDatePicker
                 value={form.startDate}
                 onChange={(value) => form.setField('startDate', value)}
               />
@@ -121,7 +120,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
               <CommonDatePicker
                 value={form.endDate}
                 onChange={(value) => form.setField('endDate', value)}
-              />
+              /> */}
             </div>
           </div>
 

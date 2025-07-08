@@ -5,7 +5,6 @@ import CommonButton from '@/components/common/Button'
 import CommonFileInput from '@/components/common/FileInput'
 import {
   Checkbox,
-  FormControlLabel,
   Paper,
   Table,
   TableBody,
@@ -17,7 +16,6 @@ import {
 } from '@mui/material'
 import { UseORnotOptions } from '@/config/erp.confing'
 import CommonInput from '@/components/common/Input'
-import CommonDatePicker from '@/components/common/DatePicker'
 import { useOrderingContractStore } from '@/stores/outsourcingContractStore'
 
 export default function OutsourcingEquipmentRegistrationView({ isEditMode = false }) {
@@ -133,7 +131,7 @@ export default function OutsourcingEquipmentRegistrationView({ isEditMode = fals
                 options={UseORnotOptions}
               />
 
-              <FormControlLabel
+              {/* <FormControlLabel
                 control={
                   <Checkbox
                     checked={form.sameAsOwner}
@@ -141,7 +139,7 @@ export default function OutsourcingEquipmentRegistrationView({ isEditMode = fals
                   />
                 }
                 label="사업주 동일"
-              />
+              /> */}
             </div>
           </div>
           <div className="flex">
@@ -310,7 +308,7 @@ export default function OutsourcingEquipmentRegistrationView({ isEditMode = fals
               교육 수료일
             </label>
             <div className="border border-gray-400  px-2 w-full flex gap-3 items-center ">
-              <CommonDatePicker
+              {/* <CommonDatePicker
                 value={form.startDate}
                 onChange={(value) => form.setField('startDate', value)}
               />
@@ -318,7 +316,7 @@ export default function OutsourcingEquipmentRegistrationView({ isEditMode = fals
               <CommonDatePicker
                 value={form.endDate}
                 onChange={(value) => form.setField('endDate', value)}
-              />
+              /> */}
             </div>
           </div>
 
@@ -327,10 +325,10 @@ export default function OutsourcingEquipmentRegistrationView({ isEditMode = fals
               유효기간
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full p-2">
-              <CommonDatePicker
+              {/* <CommonDatePicker
                 value={form.endDate}
                 onChange={(value) => form.setField('endDate', value)}
-              />
+              /> */}
             </div>
           </div>
 
@@ -360,7 +358,7 @@ export default function OutsourcingEquipmentRegistrationView({ isEditMode = fals
                 options={UseORnotOptions}
               />
 
-              <FormControlLabel
+              {/* <FormControlLabel
                 control={
                   <Checkbox
                     checked={form.sameAsOwner}
@@ -368,7 +366,7 @@ export default function OutsourcingEquipmentRegistrationView({ isEditMode = fals
                   />
                 }
                 label="사업주 동일"
-              />
+              /> */}
             </div>
           </div>
           <div className="flex">

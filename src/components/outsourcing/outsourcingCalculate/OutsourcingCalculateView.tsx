@@ -4,7 +4,6 @@ import { DataGrid } from '@mui/x-data-grid'
 import { BusinessDataList, SubmitOptions, UseORnotOptions } from '@/config/erp.confing'
 import { Pagination } from '@mui/material'
 import CommonInput from '@/components/common/Input'
-import CommonDatePicker from '@/components/common/DatePicker'
 import CommonSelect from '@/components/common/Select'
 import CommonButton from '@/components/common/Button'
 import { useOrderingContractSearchStore } from '@/stores/outsourcingContractStore'
@@ -83,7 +82,7 @@ export default function OutsourcingCalculateView() {
               정산기간
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
-              <CommonDatePicker
+              {/* <CommonDatePicker
                 value={search.startDate}
                 onChange={(value) => search.setField('startDate', value)}
               />
@@ -91,7 +90,7 @@ export default function OutsourcingCalculateView() {
               <CommonDatePicker
                 value={search.endDate}
                 onChange={(value) => search.setField('endDate', value)}
-              />
+              /> */}
             </div>
           </div>
           <div className="flex">

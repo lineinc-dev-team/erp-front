@@ -4,7 +4,7 @@ import CommonSelect from '@/components/common/Select'
 import CommonButton from '@/components/common/Button'
 
 import CommonInput from '@/components/common/Input'
-import CommonDatePicker from '@/components/common/DatePicker'
+// import  from '@/components/common/DatePicker'
 import { useOrderingContractStore } from '@/stores/outsourcingContractStore'
 import DaumPostcodeEmbed from 'react-daum-postcode'
 import { UseORnotOptions } from '@/config/erp.confing'
@@ -140,7 +140,7 @@ export default function WorkforceHoursRegistrationView({ isEditMode = false }) {
               입사일
             </label>
             <div className="border border-gray-400 p-3 px-2 w-full flex gap-3 items-center ">
-              <CommonDatePicker
+              {/* <CommonDatePicker
                 value={form.startDate}
                 onChange={(value) => form.setField('startDate', value)}
               />
@@ -148,7 +148,7 @@ export default function WorkforceHoursRegistrationView({ isEditMode = false }) {
               <CommonDatePicker
                 value={form.endDate}
                 onChange={(value) => form.setField('endDate', value)}
-              />
+              /> */}
             </div>
           </div>
           <div className="flex">
@@ -156,7 +156,7 @@ export default function WorkforceHoursRegistrationView({ isEditMode = false }) {
               퇴사일
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
-              <CommonDatePicker
+              {/* <CommonDatePicker
                 value={form.startDate}
                 onChange={(value) => form.setField('startDate', value)}
               />
@@ -164,7 +164,7 @@ export default function WorkforceHoursRegistrationView({ isEditMode = false }) {
               <CommonDatePicker
                 value={form.endDate}
                 onChange={(value) => form.setField('endDate', value)}
-              />
+              /> */}
             </div>
           </div>
         </div>

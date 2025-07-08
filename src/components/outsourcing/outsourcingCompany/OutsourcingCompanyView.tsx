@@ -2,7 +2,6 @@
 
 import CommonInput from '@/components/common/Input'
 import CommonSelect from '@/components/common/Select'
-import CommonDatePicker from '@/components/common/DatePicker'
 import { DataGrid } from '@mui/x-data-grid'
 import { BusinessDataList, SubmitOptions, UseORnotOptions } from '@/config/erp.confing'
 import { Pagination } from '@mui/material'
@@ -118,7 +117,7 @@ export default function OutsourcingCompanyView() {
             <label className="w-36  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               등록일자
             </label>
-            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
+            {/* <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonDatePicker
                 value={search.startDate}
                 onChange={(value) => search.setField('startDate', value)}
@@ -128,7 +127,7 @@ export default function OutsourcingCompanyView() {
                 value={search.endDate}
                 onChange={(value) => search.setField('endDate', value)}
               />
-            </div>
+            </div> */}
           </div>
 
           <div className="flex">

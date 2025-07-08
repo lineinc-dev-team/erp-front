@@ -16,7 +16,6 @@ import {
 } from '@mui/material'
 import { useOutsourcingCompanyStore } from '@/stores/outsourcingCompanyStore'
 import CommonInput from '@/components/common/Input'
-import CommonDatePicker from '@/components/common/DatePicker'
 import { AreaCode, UseORnotOptions } from '@/config/erp.confing'
 
 export default function OutsourcingHumanRegistrationView({ isEditMode = false }) {
@@ -111,10 +110,10 @@ export default function OutsourcingHumanRegistrationView({ isEditMode = false })
               입사일
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
-              <CommonDatePicker
-              // value={form.startDate}
-              // onChange={(value) => search.setField('startDate', value)}
-              />
+              {/* <CommonDatePicker
+              value={form.startDate}
+              onChange={(value) => search.setField('startDate', value)}
+              /> */}
             </div>
           </div>
 
@@ -123,10 +122,10 @@ export default function OutsourcingHumanRegistrationView({ isEditMode = false })
               퇴사일
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
-              <CommonDatePicker
-              // value={form.startDate}
-              // onChange={(value) => search.setField('startDate', value)}
-              />
+              {/* <CommonDatePicker
+              value={form.startDate}
+              onChange={(value) => search.setField('startDate', value)}
+              /> */}
             </div>
           </div>
           <div className="flex">

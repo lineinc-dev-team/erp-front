@@ -2,7 +2,6 @@
 
 import CommonSelect from '@/components/common/Select'
 import CommonButton from '@/components/common/Button'
-// import CommonFileInput from '@/components/common/FileInput'
 import {
   Checkbox,
   Paper,
@@ -12,11 +11,9 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
 } from '@mui/material'
 import { UseORnotOptions } from '@/config/erp.confing'
 import CommonInput from '@/components/common/Input'
-// import CommonDatePicker from '@/components/common/DatePicker'
 import { useOrderingContractStore } from '@/stores/outsourcingContractStore'
 
 export default function OutsourcingCalculateRegistrationView({ isEditMode = false }) {
@@ -253,7 +250,7 @@ export default function OutsourcingCalculateRegistrationView({ isEditMode = fals
                     onChange={(e) => form.toggleCheckItem('attachedFile', m.id, e.target.checked)}
                   />
                 </TableCell>
-                <TableCell sx={{ border: '1px solid #9CA3AF', textAlign: 'center' }}>
+                {/* <TableCell sx={{ border: '1px solid #9CA3AF', textAlign: 'center' }}>
                   <TextField
                     size="small"
                     value={m.inputLabor}
@@ -299,7 +296,7 @@ export default function OutsourcingCalculateRegistrationView({ isEditMode = fals
                       form.updateItemField('attachedFile', m.id, 'actualPayment', e.target.value)
                     }
                   />
-                </TableCell>
+                </TableCell> */}
               </TableRow>
             ))}
           </TableBody>

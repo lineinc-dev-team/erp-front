@@ -3,8 +3,6 @@
 import { DataGrid } from '@mui/x-data-grid'
 import { BusinessDataList, SubmitOptions, UseORnotOptions } from '@/config/erp.confing'
 import { Pagination } from '@mui/material'
-import CommonInput from '@/components/common/Input'
-// import CommonDatePicker from '@/components/common/DatePicker'
 import CommonSelect from '@/components/common/Select'
 import CommonButton from '@/components/common/Button'
 import { useOrderingContractSearchStore } from '@/stores/outsourcingContractStore'
@@ -84,11 +82,11 @@ export default function WorkForceHoursView() {
               이름
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
-              <CommonInput
+              {/* <CommonInput
                 value={search.companyName}
                 onChange={(value) => setField('companyName', value)}
                 className=" flex-1"
-              />
+              /> */}
             </div>
           </div>
           <div className="flex">
@@ -96,11 +94,11 @@ export default function WorkForceHoursView() {
               인력코드
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
-              <CommonInput
+              {/* <CommonInput
                 value={search.companyName}
                 onChange={(value) => setField('companyName', value)}
                 className=" flex-1"
-              />
+              /> */}
             </div>
           </div>
 

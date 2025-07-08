@@ -1,7 +1,6 @@
 'use client'
 
 import CommonSelect from '@/components/common/Select'
-import CommonDatePicker from '@/components/common/DatePicker'
 import { DataGrid } from '@mui/x-data-grid'
 import { Pagination } from '@mui/material'
 import { useOrderingSearchStore } from '@/stores/outsourcingCompanyStore'
@@ -124,7 +123,7 @@ export default function OutsourcingEquipmentView() {
               교육 수료일
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
-              <CommonDatePicker
+              {/* <CommonDatePicker
                 value={search.startDate}
                 onChange={(value) => search.setField('startDate', value)}
               />
@@ -132,7 +131,7 @@ export default function OutsourcingEquipmentView() {
               <CommonDatePicker
                 value={search.endDate}
                 onChange={(value) => search.setField('endDate', value)}
-              />
+              /> */}
             </div>
           </div>
 
