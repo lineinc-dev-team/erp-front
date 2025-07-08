@@ -28,7 +28,15 @@ import { useRouter } from 'next/navigation'
 import CommonButton from '../common/Button'
 import { API } from '@/api/config/env'
 
-const menuItems = [
+interface MenuItem {
+  title?: string // 1 depth에서만 사용
+  icon?: React.ReactNode
+  label?: string
+  path?: string
+  children?: MenuItem[]
+}
+
+const menuItems: MenuItem[] = [
   {
     title: '대쉬보드',
     icon: <Dashboard />,
@@ -38,24 +46,76 @@ const menuItems = [
     title: '사업장 관리',
     icon: <Business />,
     children: [
-      { label: '- 사업장 조회', path: '/business/view' },
-      { label: '- 사업장 등록', path: '/business/register' },
+      {
+        label: '↳ 발주처 관리',
+        children: [
+          { label: '- 조회', path: '/ordering' },
+          { label: '- 등록', path: '/ordering/registration' },
+        ],
+      },
+      { label: '- 조회', path: '/business' },
+      { label: '- 등록', path: '/business/registration' },
     ],
   },
   {
     title: '외주 관리',
     icon: <Groups />,
     children: [
-      { label: '- 외주 조회', path: '/outsourcing/view' },
-      { label: '- 외주 등록', path: '/outsourcing/register' },
+      {
+        label: '↳ 외주 업체관리',
+        children: [
+          { label: '- 조회', path: '/outsourcingCompany' },
+          { label: '- 등록', path: '/outsourcingCompany/registration' },
+        ],
+      },
+      {
+        label: '↳ 외주 계약관리',
+        children: [
+          { label: '- 조회', path: '/outsourcingContract' },
+          { label: '- 등록', path: '/outsourcingContract/registration' },
+        ],
+      },
+      {
+        label: '↳ 외주 인력관리',
+        children: [
+          { label: '- 조회', path: '/outsourcingHuman' },
+          { label: '- 등록', path: '/outsourcingHuman/registration' },
+        ],
+      },
+      {
+        label: '↳ 외주 장비관리',
+        children: [
+          { label: '- 조회', path: '/outsourcingEquipment' },
+          { label: '- 등록', path: '/outsourcingEquipment/registration' },
+        ],
+      },
+      {
+        label: '↳ 외주 정산관리',
+        children: [
+          { label: '- 조회', path: '/outsourcingCalculate' },
+          { label: '- 등록', path: '/outsourcingCalculate/registration' },
+        ],
+      },
     ],
   },
   {
     title: '노무 관리',
     icon: <AssignmentInd />,
     children: [
-      { label: '- 노무 조회', path: '/labor/view' },
-      { label: '- 노무 등록', path: '/labor/register' },
+      {
+        label: '↳ 인력 및 공수 관리',
+        children: [
+          { label: '- 조회', path: '/laborWorkForce' },
+          { label: '- 등록', path: '/laborWorkForce/registration' },
+        ],
+      },
+      {
+        label: '↳ 퇴직금 대상자 조회',
+        children: [
+          { label: '- 조회', path: '/outsourcingCalculate' },
+          // { label: '- 등록', path: '/outsourcingCalculate/registration' },
+        ],
+      },
     ],
   },
   {
@@ -80,13 +140,14 @@ const menuItems = [
     children: [{ label: '- 계정 관리', path: '/settings/account' }],
   },
 ]
+
 export default function Header() {
   const [open, setOpen] = React.useState(false)
   const [openSections, setOpenSections] = React.useState<Record<string, boolean>>({})
   const router = useRouter()
 
-  const handleToggleSection = (title: string) => {
-    setOpenSections((prev) => ({ ...prev, [title]: !prev[title] }))
+  const handleToggleSection = (key: string) => {
+    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
   }
 
   const handleLogout = async () => {
@@ -118,6 +179,50 @@ export default function Header() {
     }
   }
 
+  // 재귀 렌더링 함수
+  // level이 높아질수록 paddingLeft 증가
+  const renderMenu = (items: MenuItem[], level = 1) => {
+    return items.map((item) => {
+      const key = item.label || item.title || 'unknown'
+      const hasChildren = !!item.children && item.children.length > 0
+      const isOpen = openSections[key]
+
+      if (hasChildren) {
+        return (
+          <React.Fragment key={key}>
+            <ListItemButton sx={{ pl: level * 3 }} onClick={() => handleToggleSection(key)}>
+              {/* 1depth에서는 아이콘 렌더링 */}
+              {level === 1 && item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
+              <ListItemText primary={key} />
+              {isOpen ? <ExpandLess /> : <ExpandMore />}
+            </ListItemButton>
+            <Collapse in={isOpen} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                {renderMenu(item.children!, level + 1)}
+              </List>
+            </Collapse>
+          </React.Fragment>
+        )
+      }
+
+      return (
+        <ListItemButton
+          key={key}
+          sx={{ pl: level * 3 }}
+          onClick={() => {
+            if (item.path) {
+              router.push(item.path)
+              setOpen(false)
+            }
+          }}
+        >
+          {level === 1 && item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
+          <ListItemText primary={key} />
+        </ListItemButton>
+      )
+    })
+  }
+
   return (
     <>
       <AppBar position="fixed">
@@ -144,33 +249,7 @@ export default function Header() {
       </AppBar>
 
       <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
-        <List sx={{ width: 240 }}>
-          {menuItems.map((menu) => (
-            <React.Fragment key={menu.title}>
-              <ListItemButton onClick={() => handleToggleSection(menu.title)}>
-                <ListItemIcon>{menu.icon}</ListItemIcon>
-                <ListItemText primary={menu.title} />
-                {openSections[menu.title] ? <ExpandLess /> : <ExpandMore />}
-              </ListItemButton>
-              <Collapse in={openSections[menu.title]} timeout="auto" unmountOnExit>
-                <List component="div" disablePadding>
-                  {menu.children.map((child) => (
-                    <ListItemButton
-                      key={child.label}
-                      sx={{ pl: 4 }}
-                      onClick={() => {
-                        router.push(child.path)
-                        setOpen(false)
-                      }}
-                    >
-                      <ListItemText primary={child.label} />
-                    </ListItemButton>
-                  ))}
-                </List>
-              </Collapse>
-            </React.Fragment>
-          ))}
-        </List>
+        <List sx={{ width: 240 }}>{renderMenu(menuItems)}</List>
       </Drawer>
     </>
   )

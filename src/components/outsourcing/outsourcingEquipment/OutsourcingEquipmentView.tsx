@@ -1,26 +1,19 @@
 'use client'
 
-import CommonButton from '../common/Button'
-import CommonInput from '../common/Input'
-import CommonSelect from '../common/Select'
-import CommonDatePicker from '../common/DatePicker'
-import { BusinessService } from '@/services/business/businessService'
+import CommonSelect from '@/components/common/Select'
+import CommonDatePicker from '@/components/common/DatePicker'
 import { DataGrid } from '@mui/x-data-grid'
-import { BusinessDataList } from '@/config/erp.confing'
 import { Pagination } from '@mui/material'
-import { useBusinessStore } from '@/stores/businessStore'
-// import LoadingSkeletion from '@/app/(views)/business/loadingSkeletion'
+import { useOrderingSearchStore } from '@/stores/outsourcingCompanyStore'
+import CommonButton from '@/components/common/Button'
+import { BusinessDataList, SubmitOptions } from '@/config/erp.confing'
+import { OutsourcingEquipmentService } from '@/services/outsourcingEquipment/outsourcingEquipmentService'
 
-export default function BusinessView() {
+export default function OutsourcingEquipmentView() {
   const {
-    handleCreate,
-    handleReset,
     handleListRemove,
     handleDownloadExcel,
-    handleNewBusinessCreate,
-    LocationStatusOptions,
-    ProcessStatusOptions,
-    statusOptions,
+    handleNewEquipmentCreate,
     ArrayStatusOptions,
     displayedRows,
     page,
@@ -30,22 +23,9 @@ export default function BusinessView() {
     // pageSize,
     setSelectedIds,
     totalPages,
-  } = BusinessService()
+  } = OutsourcingEquipmentService()
 
-  const {
-    businessInfo,
-    status,
-    setStatus,
-    setField,
-    location,
-    setLocation,
-    process,
-    setProcess,
-    startDate,
-    setStartDate,
-    endDate,
-    setEndDate,
-  } = useBusinessStore()
+  const { search } = useOrderingSearchStore()
 
   // if (isLoading) return <LoadingSkeletion />
   // if (error) throw error
@@ -57,123 +37,136 @@ export default function BusinessView() {
       <div className="border-10 border-gray-400 p-4">
         <div className="grid grid-cols-3">
           <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              사업자명
+            <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+              장비명
             </label>
-            <div className="border border-gray-400 px-2 w-full">
-              <CommonInput
-                value={businessInfo.name}
-                onChange={(value) => setField('name', value)}
-                className=" flex-1"
-              />
-            </div>
-          </div>
-
-          <div className="flex">
-            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              현장코드
-            </label>
-            <div className="border border-gray-400 px-2 w-full">
-              <CommonInput
-                value={businessInfo.code}
-                onChange={(value) => setField('code', value)}
-                className="flex-1"
-              />
-            </div>
-          </div>
-
-          <div className="flex">
-            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              위치 (지역)
-            </label>
-            <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
+            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
               <CommonSelect
                 fullWidth={true}
-                value={location}
-                onChange={setLocation}
-                options={LocationStatusOptions}
+                value={search.isSubmit}
+                onChange={(value) => search.setField('isSubmit', value)}
+                options={SubmitOptions}
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              번호판
+            </label>
+            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
+              <CommonSelect
+                fullWidth={true}
+                value={search.isSubmit}
+                onChange={(value) => search.setField('isSubmit', value)}
+                options={SubmitOptions}
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              장비유형
+            </label>
+            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
+              <CommonSelect
+                fullWidth={true}
+                value={search.isSubmit}
+                onChange={(value) => search.setField('isSubmit', value)}
+                options={SubmitOptions}
               />
             </div>
           </div>
 
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              사업장 유형
+              외주업체
             </label>
-            <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
+            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
               <CommonSelect
                 fullWidth={true}
-                value={status}
-                onChange={setStatus}
-                options={statusOptions}
+                value={search.isSubmit}
+                onChange={(value) => search.setField('isSubmit', value)}
+                options={SubmitOptions}
               />
             </div>
           </div>
 
           <div className="flex">
-            <label className="w-36  text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              사업기간
+            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              기사명
             </label>
-            <div className="border border-gray-400  px-2 w-full flex gap-3 items-center ">
-              <CommonDatePicker value={startDate} onChange={setStartDate} />
-              ~
-              <CommonDatePicker value={endDate} onChange={setEndDate} />
-            </div>
-          </div>
-          <div className="flex">
-            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              진행 상태
-            </label>
-            <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
+            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
               <CommonSelect
                 fullWidth={true}
-                value={process}
-                onChange={setProcess}
-                options={ProcessStatusOptions}
-              />
-            </div>
-          </div>
-
-          <div className="flex">
-            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              등록자
-            </label>
-
-            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
-              <CommonInput
-                value={businessInfo.description}
-                onChange={(value) => setField('description', value)}
-                className=" flex-1"
+                value={search.isSubmit}
+                onChange={(value) => search.setField('isSubmit', value)}
+                options={SubmitOptions}
               />
             </div>
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              등록일자
+              교육 이수 여부
+            </label>
+            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
+              <CommonSelect
+                fullWidth={true}
+                value={search.isSubmit}
+                onChange={(value) => search.setField('isSubmit', value)}
+                options={SubmitOptions}
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              교육 수료일
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
-              <CommonDatePicker value={startDate} onChange={setStartDate} />
+              <CommonDatePicker
+                value={search.startDate}
+                onChange={(value) => search.setField('startDate', value)}
+              />
               ~
-              <CommonDatePicker value={endDate} onChange={setEndDate} />
+              <CommonDatePicker
+                value={search.endDate}
+                onChange={(value) => search.setField('endDate', value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              상태
+            </label>
+            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
+              <CommonSelect
+                fullWidth={true}
+                value={search.isSubmit}
+                onChange={(value) => search.setField('isSubmit', value)}
+                options={SubmitOptions}
+              />
             </div>
           </div>
           <div className="flex">
-            <label className="w-36 border text-[14px] border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center"></label>
-            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center "></div>
+            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center"></label>
+
+            <div className="border border-gray-400 px-2 w-full flex justify-center items-center"></div>
           </div>
         </div>
         <div className="flex items-center justify-center gap-6">
           <CommonButton
             label="초기화"
             variant="reset"
-            onClick={handleReset}
+            onClick={search.reset}
             className="mt-3 px-20"
           />
 
           <CommonButton
             label="검색"
             variant="secondary"
-            onClick={handleCreate}
+            onClick={search.handleSearch}
             className="mt-3 px-20"
           />
         </div>
@@ -226,7 +219,7 @@ export default function BusinessView() {
               <CommonButton
                 label="+ 신규등록"
                 variant="secondary"
-                onClick={handleNewBusinessCreate}
+                onClick={handleNewEquipmentCreate}
                 className="px-3"
               />
             </div>

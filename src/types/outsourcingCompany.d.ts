@@ -21,6 +21,8 @@ export type FormState = {
   businessNumber: string
   address: string
   detailAddress: string
+  startDate?: Date | null | undefined
+  endDate?: Date | null | undefined
   ceoName: string
   areaNumber: string
   isModalOpen: boolean
@@ -74,8 +76,8 @@ export type outSourcingCompanySearchProps = {
   phoneNumber: string
   contractorName: string
   email: string
-  startDate: Date | null
-  endDate: Date | null
+  startDate: Date | null | undefined
+  endDate: Date | null | undefined
   bossName: string
   isSubmit: string
   isActive: string

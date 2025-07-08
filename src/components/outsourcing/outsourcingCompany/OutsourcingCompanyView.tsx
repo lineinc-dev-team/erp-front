@@ -1,14 +1,14 @@
 'use client'
 
-import CommonButton from '../common/Button'
-import CommonInput from '../common/Input'
-import CommonSelect from '../common/Select'
-import CommonDatePicker from '../common/DatePicker'
+import CommonInput from '@/components/common/Input'
+import CommonSelect from '@/components/common/Select'
+import CommonDatePicker from '@/components/common/DatePicker'
 import { DataGrid } from '@mui/x-data-grid'
 import { BusinessDataList, SubmitOptions, UseORnotOptions } from '@/config/erp.confing'
 import { Pagination } from '@mui/material'
 import { useOrderingSearchStore } from '@/stores/outsourcingCompanyStore'
 import { OutsourcingCompanyService } from '@/services/outsourcingCompany/outsourcingCompanyService'
+import CommonButton from '@/components/common/Button'
 
 export default function OutsourcingCompanyView() {
   const {

@@ -10,5 +10,15 @@ export default function HeaderWrapper() {
 
   const showHeader = !hideHederPaths.includes(pathName)
 
-  return <>{showHeader && <Header />}</>
+  console.log('헤더 데이터 ', pathName, showHeader)
+
+  return (
+    <>
+      {showHeader && (
+        <div className="mt-20">
+          <Header />
+        </div>
+      )}
+    </>
+  )
 }

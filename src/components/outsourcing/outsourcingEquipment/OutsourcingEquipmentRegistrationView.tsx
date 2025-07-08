@@ -1,12 +1,11 @@
 'use client'
 
-import CommonInput from '../common/Input'
-import CommonSelect from '../common/Select'
-import CommonButton from '../common/Button'
-import DaumPostcodeEmbed from 'react-daum-postcode'
-import CommonFileInput from '../common/FileInput'
+import CommonSelect from '@/components/common/Select'
+import CommonButton from '@/components/common/Button'
+import CommonFileInput from '@/components/common/FileInput'
 import {
   Checkbox,
+  FormControlLabel,
   Paper,
   Table,
   TableBody,
@@ -16,108 +15,45 @@ import {
   TableRow,
   TextField,
 } from '@mui/material'
-import { AreaCode, GuaranteeInfo, UseORnotOptions } from '@/config/erp.confing'
-import { useOutsourcingCompanyStore } from '@/stores/outsourcingCompanyStore'
+import { UseORnotOptions } from '@/config/erp.confing'
+import CommonInput from '@/components/common/Input'
+import CommonDatePicker from '@/components/common/DatePicker'
+import { useOrderingContractStore } from '@/stores/outsourcingContractStore'
 
-export default function OutsourcingCompanyRegistrationView({ isEditMode = false }) {
-  const { form } = useOutsourcingCompanyStore()
-
-  const managers = form.headManagers
-  const checkedIds = form.checkedManagerIds
-  const isAllChecked = managers.length > 0 && checkedIds.length === managers.length
+export default function OutsourcingEquipmentRegistrationView({ isEditMode = false }) {
+  const { form } = useOrderingContractStore()
 
   const attachedFiles = form.attachedFiles
   const fileCheckIds = form.checkedAttachedFileIds
   const isFilesAllChecked = attachedFiles.length > 0 && fileCheckIds.length === attachedFiles.length
 
-  console.log('number', form.areaNumber, form.phoneNumber, managers)
+  console.log('number', form.areaNumber, form.phoneNumber)
 
   return (
     <>
       <div>
-        <span className="font-bold border-b-2 mb-4">기본 정보</span>
+        <span className="font-bold border-b-2 mb-4">장비 기본 정보</span>
         <div className="grid grid-cols-2 mt-1">
           <div className="flex">
-            <label className="w-44 flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              업체명
-            </label>
-            <div className="border border-gray-400 px-2 w-full">
-              <CommonInput
-                value={form.companyName}
-                onChange={(value) => form.setField('companyName', value)}
-                className=" flex-1"
-              />
-            </div>
-          </div>
-          <div className="flex">
-            <label className="w-44 flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              사업장등록번호
-            </label>
-            <div className="border border-gray-400 px-2 w-full">
-              <CommonInput
-                value={form.businessNumber}
-                onChange={(value) => form.setField('businessNumber', value)}
-                className=" flex-1"
-              />
-            </div>
-          </div>
-
-          <div className="flex">
-            <label className="w-44 flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
-              업체 주소
-            </label>
-            <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
-              <div className="flex gap-2">
-                <input
-                  value={form.address}
-                  readOnly
-                  placeholder="주소를 검색해 주세요."
-                  className="flex-1 border px-3 py-2 rounded"
-                />
-                <CommonButton
-                  label="주소찾기"
-                  variant="secondary"
-                  className="bg-gray-400 text-white px-3 rounded"
-                  onClick={() => form.setField('isModalOpen', true)}
-                />
-              </div>
-              <input
-                value={form.detailAddress}
-                onChange={(e) => form.setField('detailAddress', e.target.value)}
-                placeholder="상세주소"
-                className="w-full border px-3 py-2 rounded"
-              />
-
-              {form.isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                  <div className="bg-white w-full max-w-lg p-4 rounded-xl shadow-lg relative flex flex-col">
-                    <div className="flex justify-end w-full">
-                      <CommonButton
-                        className=" mb-2"
-                        label="X"
-                        variant="danger"
-                        onClick={() => form.setField('isModalOpen', false)}
-                      />
-                    </div>
-                    <DaumPostcodeEmbed
-                      onComplete={(data) => {
-                        form.setField('address', data.address)
-                        form.setField('isModalOpen', false)
-                      }}
-                      autoClose={false}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="flex">
-            <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              대표자명
+            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+              장비명
             </label>
             <div className="border border-gray-400 flex items-center px-2 w-full">
               <CommonInput
+                placeholder="텍스트 입력"
+                value={form.ceoName}
+                onChange={(value) => form.setField('ceoName', value)}
+                className=" flex-1"
+              />
+            </div>
+          </div>
+          <div className="flex">
+            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+              번호판
+            </label>
+            <div className="border border-gray-400 flex items-center px-2 w-full">
+              <CommonInput
+                placeholder="012가3456"
                 value={form.ceoName}
                 onChange={(value) => form.setField('ceoName', value)}
                 className=" flex-1"
@@ -126,76 +62,12 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
           </div>
 
           <div className="flex">
-            <label className="w-44  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              연락처
+            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
+              장비유형
             </label>
-            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
+            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full p-2">
               <CommonSelect
-                className="text-2xl"
-                value={form.areaNumber}
-                onChange={(value) => form.setField('areaNumber', value)}
-                options={AreaCode}
-              />
-
-              <CommonInput
-                value={form.phoneNumber}
-                onChange={(value) => form.setField('phoneNumber', value)}
-                className=" flex-1"
-              />
-            </div>
-          </div>
-
-          <div className="flex">
-            <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              이메일(대표)
-            </label>
-            <div className="border border-gray-400 px-2 w-full">
-              <CommonInput
-                value={form.email}
-                onChange={(value) => form.setField('email', value)}
-                className=" flex-1"
-              />
-            </div>
-          </div>
-
-          <div className="flex">
-            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              공제 항목 기본값
-            </label>
-            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
-              <CommonSelect
-                className="text-2xl"
-                value={form.areaNumber}
-                onChange={(value) => form.setField('areaNumber', value)}
-                options={AreaCode}
-              />
-
-              <CommonInput
-                value={form.phoneNumber}
-                onChange={(value) => form.setField('phoneNumber', value)}
-                className=" flex-1"
-              />
-            </div>
-          </div>
-          <div className="flex">
-            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              보증서 제출
-            </label>
-            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
-              <CommonSelect
-                className="text-2xl"
-                value={form.guaranteeType}
-                onChange={(value) => form.setField('guaranteeType', value)}
-                options={GuaranteeInfo}
-              />
-            </div>
-          </div>
-          <div className="flex">
-            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              사용 여부
-            </label>
-            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
-              <CommonSelect
+                fullWidth={true}
                 className="text-2xl"
                 value={form.isActive}
                 onChange={(value) => form.setField('isActive', value)}
@@ -203,11 +75,80 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
               />
             </div>
           </div>
+
           <div className="flex">
-            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36  text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+              장비규격
+            </label>
+            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full p-2">
+              <CommonSelect
+                fullWidth={true}
+                className="text-2xl"
+                value={form.isActive}
+                onChange={(value) => form.setField('isActive', value)}
+                options={UseORnotOptions}
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36  text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              외주업체
+            </label>
+            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full p-2">
+              <CommonSelect
+                fullWidth={true}
+                className="text-2xl"
+                value={form.isActive}
+                onChange={(value) => form.setField('isActive', value)}
+                options={UseORnotOptions}
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36  text-[13px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+              사용상태
+            </label>
+            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full p-2">
+              <CommonSelect
+                fullWidth={true}
+                className="text-2xl"
+                value={form.isActive}
+                onChange={(value) => form.setField('isActive', value)}
+                options={UseORnotOptions}
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36  text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              담당 기사
+            </label>
+            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full p-2">
+              <CommonSelect
+                className="text-2xl w-3xs"
+                value={form.isActive}
+                onChange={(value) => form.setField('isActive', value)}
+                options={UseORnotOptions}
+              />
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={form.sameAsOwner}
+                    onChange={(e) => form.setField('sameAsOwner', e.target.checked)}
+                  />
+                }
+                label="사업주 동일"
+              />
+            </div>
+          </div>
+          <div className="flex">
+            <label className="w-36  text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               비고 / 메모
             </label>
-            <div className="border border-gray-400 px-2 w-full">
+            <div className="border border-gray-400 px-2 w-full ">
               <CommonInput
                 value={form.memo}
                 onChange={(value) => form.setField('memo', value)}
@@ -221,20 +162,20 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
       <div>
         <div className="flex justify-between items-center mt-10 mb-2">
           <div className="mt-4">
-            <span className="font-bold border-b-2 mb-4">담당자</span>
+            <span className="font-bold border-b-2 mb-4">장비 첨부파일</span>
           </div>
           <div className="flex gap-4">
             <CommonButton
-              label="담당자 삭제"
+              label="삭제"
               className="px-7"
               variant="danger"
-              onClick={() => form.removeCheckedItems('manager')}
+              onClick={() => form.removeCheckedItems('attachedFile')}
             />
             <CommonButton
-              label="담당자 추가"
+              label="추가"
               className="px-7"
               variant="secondary"
-              onClick={() => form.addItem('manager')}
+              onClick={() => form.addItem('attachedFile')}
             />
           </div>
         </div>
@@ -244,13 +185,13 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
               <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
                 <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
                   <Checkbox
-                    checked={isAllChecked}
-                    indeterminate={checkedIds.length > 0 && !isAllChecked}
-                    onChange={(e) => form.toggleCheckAllItems('manager', e.target.checked)}
+                    checked={isFilesAllChecked}
+                    indeterminate={fileCheckIds.length > 0 && !isFilesAllChecked}
+                    onChange={(e) => form.toggleCheckAllItems('attachedFile', e.target.checked)}
                     sx={{ color: 'black' }}
                   />
                 </TableCell>
-                {['이름', '부서/직급', '연락처', '휴대폰', '이메일', '비고'].map((label) => (
+                {['문서명', '첨부', '비고'].map((label) => (
                   <TableCell
                     key={label}
                     align="center"
@@ -267,7 +208,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
               </TableRow>
             </TableHead>
             <TableBody>
-              {managers.map((m) => (
+              {attachedFiles.map((m) => (
                 <TableRow key={m.id} sx={{ border: '1px solid  #9CA3AF' }}>
                   <TableCell
                     padding="checkbox"
@@ -275,59 +216,40 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                     sx={{ border: '1px solid  #9CA3AF' }}
                   >
                     <Checkbox
-                      checked={checkedIds.includes(m.id)}
-                      onChange={(e) => form.toggleCheckItem('manager', m.id, e.target.checked)}
+                      checked={fileCheckIds.includes(m.id)}
+                      onChange={(e) => form.toggleCheckItem('attachedFile', m.id, e.target.checked)}
                     />
                   </TableCell>
                   <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
                     <TextField
                       size="small"
-                      value={m.name}
+                      sx={{ width: '100%' }}
+                      value={m.fileName}
                       onChange={(e) =>
-                        form.updateItemField('manager', m.id, 'name', e.target.value)
+                        form.updateItemField('attachedFile', m.id, 'fileName', e.target.value)
                       }
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      value={m.department}
-                      onChange={(e) =>
-                        form.updateItemField('manager', m.id, 'department', e.target.value)
-                      }
-                    />
+                    <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                      <CommonFileInput
+                        className=" break-words whitespace-normal"
+                        label="계약서"
+                        acceptedExtensions={['pdf', 'hwp']}
+                        files={form.attachedFiles.find((f) => f.id === m.id)?.files || []}
+                        onChange={(newFiles) =>
+                          form.updateItemField('attachedFile', m.id, 'files', newFiles)
+                        }
+                      />
+                    </div>
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
-                      value={m.tel}
-                      onChange={(e) => form.updateItemField('manager', m.id, 'tel', e.target.value)}
-                    />
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      value={m.phone}
-                      onChange={(e) =>
-                        form.updateItemField('manager', m.id, 'phone', e.target.value)
-                      }
-                    />
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      value={m.email}
-                      onChange={(e) =>
-                        form.updateItemField('manager', m.id, 'email', e.target.value)
-                      }
-                    />
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
+                      sx={{ width: '100%' }}
                       value={m.memo}
                       onChange={(e) =>
-                        form.updateItemField('manager', m.id, 'memo', e.target.value)
+                        form.updateItemField('attachedFile', m.id, 'memo', e.target.value)
                       }
                     />
                   </TableCell>
@@ -338,10 +260,136 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
         </TableContainer>
       </div>
 
+      <div className="mt-10">
+        <span className="font-bold border-b-2 mb-4">기사 기본 정보</span>
+        <div className="grid grid-cols-2 mt-1">
+          <div className="flex">
+            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+              기사명
+            </label>
+            <div className="border border-gray-400 flex items-center px-2 w-full">
+              <CommonInput
+                placeholder="기사를 입력해!"
+                value={form.ceoName}
+                onChange={(value) => form.setField('ceoName', value)}
+                className=" flex-1"
+              />
+            </div>
+          </div>
+          <div className="flex">
+            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+              소속 외주업체
+            </label>
+            <div className="border border-gray-400 flex items-center px-2 w-full">
+              <CommonInput
+                placeholder="소속외주업체 입력해!"
+                value={form.ceoName}
+                onChange={(value) => form.setField('ceoName', value)}
+                className=" flex-1"
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
+              교육 이수 여부
+            </label>
+            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full p-2">
+              <CommonSelect
+                fullWidth={true}
+                className="text-2xl"
+                value={form.isActive}
+                onChange={(value) => form.setField('isActive', value)}
+                options={UseORnotOptions}
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36  text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+              교육 수료일
+            </label>
+            <div className="border border-gray-400  px-2 w-full flex gap-3 items-center ">
+              <CommonDatePicker
+                value={form.startDate}
+                onChange={(value) => form.setField('startDate', value)}
+              />
+              ~
+              <CommonDatePicker
+                value={form.endDate}
+                onChange={(value) => form.setField('endDate', value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36  text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              유효기간
+            </label>
+            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full p-2">
+              <CommonDatePicker
+                value={form.endDate}
+                onChange={(value) => form.setField('endDate', value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36  text-[13px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+              교육기관
+            </label>
+            <div className="border border-gray-400 flex items-center px-2 w-full">
+              <CommonInput
+                placeholder="소속외주업체 입력해!"
+                value={form.ceoName}
+                onChange={(value) => form.setField('ceoName', value)}
+                className=" flex-1"
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36  text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              상태
+            </label>
+            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full p-2">
+              <CommonSelect
+                className="text-2xl w-3xs"
+                value={form.isActive}
+                onChange={(value) => form.setField('isActive', value)}
+                options={UseORnotOptions}
+              />
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={form.sameAsOwner}
+                    onChange={(e) => form.setField('sameAsOwner', e.target.checked)}
+                  />
+                }
+                label="사업주 동일"
+              />
+            </div>
+          </div>
+          <div className="flex">
+            <label className="w-36  text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              비고 / 메모
+            </label>
+            <div className="border border-gray-400 px-2 w-full ">
+              <CommonInput
+                value={form.memo}
+                onChange={(value) => form.setField('memo', value)}
+                className=" flex-1"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div>
         <div className="flex justify-between items-center mt-10 mb-2">
           <div className="mt-4">
-            <span className="font-bold border-b-2 mb-4">첨부파일</span>
+            <span className="font-bold border-b-2 mb-4">기사 첨부파일</span>
           </div>
           <div className="flex gap-4">
             <CommonButton

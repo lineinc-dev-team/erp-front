@@ -1,4 +1,4 @@
-import OutsourcingCompanyView from '@/components/outsourcing/OutsourcingCompanyView'
+import OutsourcingCompanyView from '@/components/outsourcing/outsourcingCompany/OutsourcingCompanyView'
 
 export default function page() {
   return (

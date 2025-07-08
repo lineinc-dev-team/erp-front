@@ -1,11 +1,10 @@
 'use client'
 
-import CommonInput from '../common/Input'
-import CommonSelect from '../common/Select'
-import CommonButton from '../common/Button'
+import CommonInput from '../../common/Input'
+import CommonSelect from '../../common/Select'
+import CommonButton from '../../common/Button'
 import DaumPostcodeEmbed from 'react-daum-postcode'
-import CommonFileInput from '../common/FileInput'
-import { useOrderingStore } from '@/stores/orderingStore'
+import CommonFileInput from '../../common/FileInput'
 import {
   Checkbox,
   Paper,
@@ -17,10 +16,11 @@ import {
   TableRow,
   TextField,
 } from '@mui/material'
-import { AreaCode, PayInfo, UseORnotOptions } from '@/config/erp.confing'
+import { AreaCode, GuaranteeInfo, UseORnotOptions } from '@/config/erp.confing'
+import { useOutsourcingCompanyStore } from '@/stores/outsourcingCompanyStore'
 
-export default function OrderingRegistrationView({ isEditMode = false }) {
-  const { form } = useOrderingStore()
+export default function OutsourcingCompanyRegistrationView({ isEditMode = false }) {
+  const { form } = useOutsourcingCompanyStore()
 
   const managers = form.headManagers
   const checkedIds = form.checkedManagerIds
@@ -30,40 +30,41 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
   const fileCheckIds = form.checkedAttachedFileIds
   const isFilesAllChecked = attachedFiles.length > 0 && fileCheckIds.length === attachedFiles.length
 
+  console.log('number', form.areaNumber, form.phoneNumber, managers)
+
   return (
     <>
       <div>
         <span className="font-bold border-b-2 mb-4">기본 정보</span>
-        <div className="grid grid-cols-2 mt-1 ">
+        <div className="grid grid-cols-2 mt-1">
           <div className="flex">
-            <label className=" text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300 font-bold text-center">
-              발주처명
+            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+              업체명
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
-                placeholder="텍스트 입력"
-                value={form.name}
-                onChange={(value) => form.setField('name', value)}
-                className="flex-1"
+                value={form.companyName}
+                onChange={(value) => form.setField('companyName', value)}
+                className=" flex-1"
               />
             </div>
           </div>
           <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               사업장등록번호
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
-                placeholder="'-'없이 숫자만 입력"
                 value={form.businessNumber}
                 onChange={(value) => form.setField('businessNumber', value)}
-                className="flex-1"
+                className=" flex-1"
               />
             </div>
           </div>
+
           <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              본사 주소
+            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
+              업체 주소
             </label>
             <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
               <div className="flex gap-2">
@@ -86,12 +87,13 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                 placeholder="상세주소"
                 className="w-full border px-3 py-2 rounded"
               />
+
               {form.isModalOpen && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                   <div className="bg-white w-full max-w-lg p-4 rounded-xl shadow-lg relative flex flex-col">
                     <div className="flex justify-end w-full">
                       <CommonButton
-                        className="mb-2"
+                        className=" mb-2"
                         label="X"
                         variant="danger"
                         onClick={() => form.setField('isModalOpen', false)}
@@ -109,22 +111,23 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
               )}
             </div>
           </div>
+
           <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+            <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
               대표자명
             </label>
-            <div className="border flex  items-center border-gray-400 px-2 w-full">
+            <div className="border border-gray-400 flex items-center px-2 w-full">
               <CommonInput
-                placeholder="텍스트 입력"
                 value={form.ceoName}
                 onChange={(value) => form.setField('ceoName', value)}
-                className="flex-1"
+                className=" flex-1"
               />
             </div>
           </div>
+
           <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              전화번호
+            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              연락처
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
@@ -135,54 +138,65 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
               />
 
               <CommonInput
-                placeholder="'-'없이 숫자만 입력"
-                value={form.landlineNumber}
-                onChange={(value) => form.setField('landlineNumber', value)}
+                value={form.phoneNumber}
+                onChange={(value) => form.setField('phoneNumber', value)}
                 className=" flex-1"
               />
             </div>
           </div>
+
           <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+            <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
               이메일(대표)
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
-                placeholder="텍스트 입력"
                 value={form.email}
                 onChange={(value) => form.setField('email', value)}
-                className="flex-1"
+                className=" flex-1"
               />
             </div>
           </div>
+
           <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              결제정보
+            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              공제 항목 기본값
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
                 className="text-2xl"
-                value={form.paymentMethod}
-                onChange={(value) => form.setField('paymentMethod', value)}
-                options={PayInfo}
+                value={form.areaNumber}
+                onChange={(value) => form.setField('areaNumber', value)}
+                options={AreaCode}
               />
 
               <CommonInput
-                placeholder="텍스트 입력"
-                value={form.paymentPeriod}
-                onChange={(value) => form.setField('paymentPeriod', value)}
+                value={form.phoneNumber}
+                onChange={(value) => form.setField('phoneNumber', value)}
                 className=" flex-1"
               />
             </div>
           </div>
           <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+            <label className="w-36  text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              보증서 제출
+            </label>
+            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
+              <CommonSelect
+                className="text-2xl"
+                value={form.guaranteeType}
+                onChange={(value) => form.setField('guaranteeType', value)}
+                options={GuaranteeInfo}
+              />
+            </div>
+          </div>
+          <div className="flex">
+            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               사용 여부
             </label>
-            <div className="border border-gray-400 px-2 w-full flex items-center">
+            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
-                fullWidth={false}
-                className="text-xl"
+                className="text-2xl"
                 value={form.isActive}
                 onChange={(value) => form.setField('isActive', value)}
                 options={UseORnotOptions}
@@ -190,33 +204,34 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
             </div>
           </div>
           <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              비교 / 메모
+            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              비고 / 메모
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
                 value={form.memo}
                 onChange={(value) => form.setField('memo', value)}
-                className="flex-1"
+                className=" flex-1"
               />
             </div>
           </div>
         </div>
       </div>
 
-      {/* 담당자 */}
       <div>
         <div className="flex justify-between items-center mt-10 mb-2">
-          <span className="font-bold border-b-2 mb-4">담당자</span>
+          <div className="mt-4">
+            <span className="font-bold border-b-2 mb-4">담당자</span>
+          </div>
           <div className="flex gap-4">
             <CommonButton
-              label="삭제"
+              label="담당자 삭제"
               className="px-7"
               variant="danger"
               onClick={() => form.removeCheckedItems('manager')}
             />
             <CommonButton
-              label="추가"
+              label="담당자 추가"
               className="px-7"
               variant="secondary"
               onClick={() => form.addItem('manager')}
@@ -253,7 +268,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
             </TableHead>
             <TableBody>
               {managers.map((m) => (
-                <TableRow key={m.id}>
+                <TableRow key={m.id} sx={{ border: '1px solid  #9CA3AF' }}>
                   <TableCell
                     padding="checkbox"
                     align="center"
@@ -264,9 +279,8 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       onChange={(e) => form.toggleCheckItem('manager', m.id, e.target.checked)}
                     />
                   </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                  <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
                     <TextField
-                      placeholder="텍스트 입력"
                       size="small"
                       value={m.name}
                       onChange={(e) =>
@@ -276,18 +290,16 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
-                      placeholder="텍스트 입력"
                       size="small"
-                      value={m.position}
+                      value={m.department}
                       onChange={(e) =>
-                        form.updateItemField('manager', m.id, 'position', e.target.value)
+                        form.updateItemField('manager', m.id, 'department', e.target.value)
                       }
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder="'-'없이 숫자만 입력"
                       value={m.tel}
                       onChange={(e) => form.updateItemField('manager', m.id, 'tel', e.target.value)}
                     />
@@ -295,7 +307,6 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder="'-'없이 숫자만 입력"
                       value={m.phone}
                       onChange={(e) =>
                         form.updateItemField('manager', m.id, 'phone', e.target.value)
@@ -305,7 +316,6 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder="텍스트 입력"
                       value={m.email}
                       onChange={(e) =>
                         form.updateItemField('manager', m.id, 'email', e.target.value)
@@ -315,7 +325,6 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder="텍스트 입력"
                       value={m.memo}
                       onChange={(e) =>
                         form.updateItemField('manager', m.id, 'memo', e.target.value)
@@ -329,10 +338,11 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
         </TableContainer>
       </div>
 
-      {/* 첨부파일 */}
       <div>
         <div className="flex justify-between items-center mt-10 mb-2">
-          <span className="font-bold border-b-2 mb-4">첨부파일</span>
+          <div className="mt-4">
+            <span className="font-bold border-b-2 mb-4">첨부파일</span>
+          </div>
           <div className="flex gap-4">
             <CommonButton
               label="삭제"
@@ -392,7 +402,6 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                   <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
                     <TextField
                       size="small"
-                      placeholder="텍스트 입력"
                       sx={{ width: '100%' }}
                       value={m.fileName}
                       onChange={(e) =>
@@ -416,7 +425,6 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder="텍스트 입력"
                       sx={{ width: '100%' }}
                       value={m.memo}
                       onChange={(e) =>
@@ -431,18 +439,94 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
         </TableContainer>
       </div>
 
+      <div className="mt-4">
+        <span className="font-bold border-b-2 mb-4">계약이력</span>
+      </div>
+      <div className="flex mt-1">
+        <div className="flex flex-col w-1/4">
+          <label className=" border border-gray-400 w-full flex items-center justify-center bg-gray-300  font-bold text-center">
+            변경일시
+          </label>
+          <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
+            <p>이경호</p>
+          </div>
+        </div>
+        <div className="flex flex-col w-1/4">
+          <label className="w-full  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+            변경 항목
+          </label>
+          <div className="border border-gray-400 px-2 p-2 w-full flex justify-center  gap-2.5 items-center">
+            <p>이경호</p>
+          </div>
+        </div>
+        <div className="flex flex-col w-1/4">
+          <label className="w-full  border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
+            변경자
+          </label>
+          <div className="border border-gray-400 px-2 p-2 flex w-full justify-center  gap-2.5 items-center">
+            <p>이경호</p>
+          </div>
+        </div>
+        <div className="flex flex-col w-1/4">
+          <label className="w-full  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+            수정 사유
+          </label>
+          <div className="border border-gray-400 px-2 p-2 w-full flex justify-center  gap-2.5 items-center">
+            <p>이경호</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <span className="font-bold border-b-2 mb-4">수정이력</span>
+      </div>
+      <div className="flex mt-1">
+        <div className="flex flex-col w-1/4">
+          <label className=" border border-gray-400 w-full flex items-center justify-center bg-gray-300  font-bold text-center">
+            변경일시
+          </label>
+          <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
+            <p>이경호</p>
+          </div>
+        </div>
+        <div className="flex flex-col w-1/4">
+          <label className="w-full  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+            변경 항목
+          </label>
+          <div className="border border-gray-400 px-2 p-2 w-full flex justify-center  gap-2.5 items-center">
+            <p>이경호</p>
+          </div>
+        </div>
+        <div className="flex flex-col w-1/4">
+          <label className="w-full  border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
+            변경자
+          </label>
+          <div className="border border-gray-400 px-2 p-2 flex w-full justify-center  gap-2.5 items-center">
+            <p>이경호</p>
+          </div>
+        </div>
+        <div className="flex flex-col w-1/4">
+          <label className="w-full  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+            수정 사유
+          </label>
+          <div className="border border-gray-400 px-2 p-2 w-full flex justify-center  gap-2.5 items-center">
+            <p>이경호</p>
+          </div>
+        </div>
+      </div>
+
       <div className="flex justify-center gap-10 mt-10">
         <CommonButton
           label="취소"
           variant="reset"
           className="px-10"
-          onClick={() => console.log('취소')}
+          onClick={form.handleCancelData}
         />
         <CommonButton
           label={isEditMode ? '+ 수정' : '+ 등록'}
           className="px-10 font-bold"
           variant="secondary"
-          onClick={form.newOrderingData}
+          onClick={form.newOutsouringCompany}
         />
       </div>
     </>

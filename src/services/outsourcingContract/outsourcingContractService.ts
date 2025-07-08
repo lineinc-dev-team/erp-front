@@ -1,13 +1,56 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import {
+  LocationStatusOptions,
+  ProcessStatusOptions,
+  statusOptions,
+  ArrayStatusOptions,
+} from '@/config/erp.confing'
 import { GridRowSelectionModel } from '@mui/x-data-grid'
-import { BusinessDataList } from '@/config/erp.confing'
+import { useRouter } from 'next/navigation'
 
-export function OrderingService() {
+export function OutsourcingContractService() {
+  // useQuery를 이용해 데이터를 불러옴 ..
+  // const { data, isLoading, error } = useQuery({
+  //   queryKey: ['businessList'],
+  //   queryFn: async () => {
+  //     const res = await fetch(API.LOGOUT, { cache: 'no-store' })
+  //     if (!res.ok) throw new Error('서버 에러')
+  //     return res.json()
+  //   },
+  // })
+
+  // const [authData, setAuthData] = useState(null)
+
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const authRes = await fetch(API.AUTH, {
+  //         method: 'GET',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //         credentials: 'include',
+  //         cache: 'no-store',
+  //       })
+  //       const authData = await authRes.json()
+  //       setAuthData(authData)
+
+  //       console.log('정보 데이터 확인', authData.data)
+  //     } catch (err) {
+  //       alert(err)
+  //     }
+  //   }
+
+  //   fetchData()
+  // }, [])
+
+  // console.log('정보 확인 @', authData)
+
   const router = useRouter()
 
+  // 추후 api를 통해 데이터를 불러올 예정
   const allRows = [
     {
       id: 1,
@@ -20,7 +63,7 @@ export function OrderingService() {
       registeredDate: '2025-01-01',
       modifiedDate: '2025-01-15',
       attachments: '파일1.pdf',
-      remark: '확인', // 버튼 텍스트만 보관
+      remark: '확인',
     },
     {
       id: 2,
@@ -206,96 +249,49 @@ export function OrderingService() {
     },
   ]
 
-  const [page, setPage] = useState(1)
-  const [pageSize] = useState(10)
-  const totalPages = Math.ceil(allRows.length / pageSize)
+  // 페이지네이션 상태관리
+  const [page, setPage] = useState(1) // 현재 페이지
+  const [pageSize] = useState(10) // 페이지당 수
+  const totalCount = allRows.length
+  const totalPages = Math.ceil(totalCount / pageSize)
+
+  // 현재 페이지에 맞는 데이터만 slice
   const displayedRows = allRows.slice((page - 1) * pageSize, page * pageSize)
 
+  // 사업장 리스트에 있는 체크박스 선택 시 체크된 값을 저장하는 상태 값
   const [selectedIds, setSelectedIds] = useState<GridRowSelectionModel>()
-  const [modalOpen, setModalOpen] = useState(false)
-  const [selectedFields, setSelectedFields] = useState<string[]>([])
-  const [printMode, setPrintMode] = useState(false)
 
-  // 계약 이력
-  const [contract, setContract] = useState(false)
+  const [sortList, setSortList] = useState('최근순')
 
-  console.log('선택한 데이터', selectedIds)
+  console.log('이 값을 가지고 나중에 어떤것들을 체크 했는지 확인 가능함', selectedIds)
 
-  const filteredColumns = printMode
-    ? BusinessDataList.filter((col) => {
-        if (col.headerName) {
-          return selectedFields.includes(col.headerName)
-        }
-      })
-    : BusinessDataList
-
-  const excelFields = [
-    '현장코드',
-    '위치',
-    '사업장유형',
-    '본사 주소',
-    '전화번호',
-    '담당자명',
-    '직급/부서',
-    '담당자 연락처/이메일',
-    '본사 담당자',
-    '사용 여부',
-    '등록일/수정일',
-    '첨부파일 유무',
-    '비고 / 메모',
-  ]
-
-  const handleToggleField = (field: string) => {
-    setSelectedFields((prev) =>
-      prev.includes(field) ? prev.filter((f) => f !== field) : [...prev, field],
-    )
+  const handleListRemove = () => {
+    alert('리스트에 대한 삭제가 됩니다.')
   }
 
-  const handleSelectAll = () => setSelectedFields(excelFields)
-  const handleReset = () => setSelectedFields([])
-
-  const handlePrint = () => {
-    if (selectedFields.length === 0) {
-      alert('출력할 항목을 선택하세요.')
-      return
-    }
-    setModalOpen(false)
-    setPrintMode(true)
-    setTimeout(() => {
-      window.print()
-      setPrintMode(false)
-    }, 300)
+  const handleDownloadExcel = () => {
+    alert('엑셀 다운로드 로직이 들어감')
   }
 
-  console.log('체크된 데이터 확인', selectedFields, filteredColumns)
-
-  const handleExcelDownload = () => {
-    alert('엑셀 배열 로직')
-    console.log('데이터 확인 !!', selectedFields)
-    // 엑셀 데이터 다운로드 가능 하게 api 적용 ~
+  const handleNewBusinessCreate = () => {
+    router.push('/outsourcingContract/registration')
   }
-
-  const handleNewOrderCreate = () => router.push('/ordering/registration')
 
   return {
-    modalOpen,
-    setModalOpen,
-    selectedFields,
-    handleToggleField,
-    handleSelectAll,
-    handleReset,
-    excelFields,
-    handlePrint,
-    printMode,
-    handleNewOrderCreate,
+    handleListRemove,
+    handleDownloadExcel,
+    handleNewBusinessCreate,
+    LocationStatusOptions,
+    ProcessStatusOptions,
+    statusOptions,
+    ArrayStatusOptions,
     displayedRows,
     page,
     setPage,
+    sortList,
+    setSortList,
+    pageSize,
     totalPages,
     setSelectedIds,
-    filteredColumns,
-    setContract,
-    handleExcelDownload,
-    contract,
   }
 }

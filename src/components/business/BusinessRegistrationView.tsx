@@ -55,7 +55,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
         <span className="font-bold border-b-2 mb-4">기본 정보</span>
         <div className="grid grid-cols-2 mt-1">
           <div className="flex">
-            <label className="w-44 flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36 text-[14px]  flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               사업자명
             </label>
             <div className="border border-gray-400 px-2 w-full">
@@ -67,7 +67,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
             </div>
           </div>
           <div className="flex">
-            <label className="w-44 flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               사업장 코드
             </label>
             <div className="border border-gray-400 px-2 w-full">
@@ -80,7 +80,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
           </div>
 
           <div className="flex">
-            <label className="w-44 flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
               위치(주소)
             </label>
             <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
@@ -130,7 +130,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
           </div>
 
           <div className="flex">
-            <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36  text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
               사업장 유형
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
@@ -139,7 +139,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
           </div>
 
           <div className="flex">
-            <label className="w-44  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               사업시작 / 종료일
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
@@ -150,7 +150,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
           </div>
 
           <div className="flex">
-            <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
               발주처
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
@@ -165,7 +165,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
           </div>
 
           <div className="flex">
-            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               진행 상태
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
@@ -173,7 +173,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
             </div>
           </div>
           <div className="flex">
-            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               현장소장
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
@@ -181,7 +181,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
             </div>
           </div>
           <div className="flex">
-            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               외주 등록 여부
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
@@ -189,7 +189,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
             </div>
           </div>
           <div className="flex">
-            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               본사 담당자
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
@@ -197,7 +197,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
             </div>
           </div>
           <div className="flex">
-            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               정산 주기
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
@@ -205,7 +205,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
             </div>
           </div>
           <div className="flex">
-            <label className="w-44 border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               주요 공정
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
@@ -242,7 +242,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
 
       <div className="grid grid-cols-2 mt-1">
         <div className="flex">
-          <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+          <label className="w-36  text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
             계약서
           </label>
           <div className="border border-gray-400 px-2 p-2 w-full flex gap-2.5 items-center">
@@ -257,7 +257,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
         </div>
 
         <div className="flex">
-          <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+          <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
             현장도면
           </label>
           <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
@@ -271,7 +271,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
           </div>
         </div>
         <div className="flex">
-          <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+          <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
             인허가 서류
           </label>
           <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
@@ -285,7 +285,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
           </div>
         </div>
         <div className="flex">
-          <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+          <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
             기타파일
           </label>
           <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
@@ -299,7 +299,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
           </div>
         </div>
         <div className="flex">
-          <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+          <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
             첨부일자
           </label>
           <div className="border border-gray-400 px-2 p-2 w-full flex gap-2.5 items-center">
@@ -307,7 +307,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
           </div>
         </div>
         <div className="flex">
-          <label className="w-44  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+          <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
             등록자
           </label>
           <div className="border border-gray-400 px-2 p-2 w-full flex  gap-2.5 items-center">
@@ -322,7 +322,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
 
       <div className="flex mt-1">
         <div className="flex flex-col w-1/4">
-          <label className=" border border-gray-400 w-full flex items-center justify-center bg-gray-300  font-bold text-center">
+          <label className=" border text-[14px] border-gray-400 w-full flex items-center justify-center bg-gray-300  font-bold text-center">
             변경일시
           </label>
           <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
@@ -330,7 +330,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
           </div>
         </div>
         <div className="flex flex-col w-1/4">
-          <label className="w-full  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+          <label className="w-full text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
             변경 항목
           </label>
           <div className="border border-gray-400 px-2 p-2 w-full flex justify-center  gap-2.5 items-center">
@@ -338,7 +338,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
           </div>
         </div>
         <div className="flex flex-col w-1/4">
-          <label className="w-full  border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
+          <label className="w-full text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
             변경자
           </label>
           <div className="border border-gray-400 px-2 p-2 flex w-full justify-center  gap-2.5 items-center">
@@ -346,7 +346,7 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
           </div>
         </div>
         <div className="flex flex-col w-1/4">
-          <label className="w-full  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+          <label className="w-full text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
             수정 사유
           </label>
           <div className="border border-gray-400 px-2 p-2 w-full flex justify-center  gap-2.5 items-center">
