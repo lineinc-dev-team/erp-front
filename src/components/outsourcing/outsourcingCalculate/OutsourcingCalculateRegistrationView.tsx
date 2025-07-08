@@ -2,7 +2,7 @@
 
 import CommonSelect from '@/components/common/Select'
 import CommonButton from '@/components/common/Button'
-import CommonFileInput from '@/components/common/FileInput'
+// import CommonFileInput from '@/components/common/FileInput'
 import {
   Checkbox,
   Paper,
