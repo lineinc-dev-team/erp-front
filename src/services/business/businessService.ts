@@ -280,8 +280,17 @@ export function BusinessService() {
     router.push('/business/registration')
   }
 
+  const handleCreate = () => {
+    alert('@@')
+  }
+
+  const handleReset = () => {
+    alert('@@')
+  }
   return {
     handleListRemove,
+    handleCreate,
+    handleReset,
     handleDownloadExcel,
     handleNewBusinessCreate,
     LocationStatusOptions,
