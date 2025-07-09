@@ -26,7 +26,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: yourdockerid/erp-next-front:latest
+          tags: kyoungholee/docker-example:latest
           platforms: linux/amd64
           build-args: |
             NEXT_PUBLIC_API_URL=http://192.168.0.22:8080/api/v1
@@ -38,7 +38,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_FRONT_PEM_KEY }}
           script: |
-            docker pull yourdockerid/erp-next-front:latest
+            docker pull kyoungholee/docker-example:latest
             docker stop erp-next-front || true
             docker rm erp-next-front || true
-            docker run -d -p 80:3000 --name erp-next-front yourdockerid/erp-next-front:latest
+            docker run -d -p 80:3000 --name erp-next-front kyoungholee/docker-example:latest
