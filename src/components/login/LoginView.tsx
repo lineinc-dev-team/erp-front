@@ -21,7 +21,7 @@ export default function LoginView() {
 
   return (
     <div>
-      <h1 className="text-[42px] mb-4">라인공영 관리 시스템T2T</h1>
+      <h1 className="text-[42px] mb-4">라인공영 관리 시스템Tgg2T</h1>
 
       <div className="w-88 flex flex-col gap-2 m-0">
         <CommonInput
