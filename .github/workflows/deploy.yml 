@@ -19,8 +19,8 @@ jobs:
     - name: Login to DockerHub
       uses: docker/login-action@v3
       with:
-        username: ${{ DOCKERHUB_USERNAME }}
-        password: ${{ DOCKERHUB_TOKEN }}
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
@@ -32,9 +32,9 @@ jobs:
     - name: SSH to EC2 and deploy
       uses: appleboy/ssh-action@v1.0.0
       with:
-        host: ${{ EC2_HOST}}
+        host: ${{ secrets.EC2_HOST}}
         username: ubuntu
-        key: ${{ EC2_FRONT_PEM_KEY }}
+        key: ${{ secrets.EC2_FRONT_PEM_KEY }}
         script: |
           docker pull yourdockerid/erp-next-front:latest
           docker stop erp-next-front || true
