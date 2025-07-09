@@ -26,7 +26,19 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: kyoungholee/docker-example:latest
+          tags: kyoungholee/erp-next-front:latest
           platforms: linux/amd64
           build-args: |
             NEXT_PUBLIC_API_URL=http://192.168.0.22:8080/api/v1
+
+      - name: SSH to EC2 and deploy
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_FRONT_PEM_KEY }}
+          script: |
+            docker pull kyoungholee/erp-next-front:latest
+            docker stop erp-next-front || true
+            docker rm erp-next-front || true
+            docker run -d -p 80:3000 --name erp-next-front kyoungholee/erp-next-front:latest
