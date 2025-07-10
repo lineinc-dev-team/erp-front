@@ -17,7 +17,7 @@ export async function loginService({
       },
       credentials: 'include',
       body: JSON.stringify({ loginId, password, autoLogin }),
-      cache: 'no-store',
+      // cache: 'no-store',
     })
 
     if (!res.ok) {

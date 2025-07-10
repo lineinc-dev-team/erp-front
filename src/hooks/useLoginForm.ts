@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { loginService } from '@/services/login/loginService'
+import { MyInfoService } from '@/services/myInfo/myInfoService'
 
 export function useLoginForm() {
   const [loginId, setLoginId] = useState('')
@@ -28,11 +29,12 @@ export function useLoginForm() {
     try {
       const resultValue = await loginService({ loginId, password, autoLogin })
 
-      console.log('해당 결과 깂이..', resultValue)
-
       if (resultValue === 200) {
+        await MyInfoService()
+
         router.push('/business')
       } else {
+        // 로그인 실패 (200이 아닐 때)
         return
       }
     } catch (err) {
