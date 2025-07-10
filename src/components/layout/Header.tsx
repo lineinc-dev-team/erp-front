@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import {
   Drawer,
   List,
@@ -15,7 +15,7 @@ import {
 import {
   Menu as MenuIcon,
   Business,
-  Settings,
+  ManageAccounts,
   ExpandLess,
   ExpandMore,
   Dashboard,
@@ -135,15 +135,25 @@ const menuItems: MenuItem[] = [
     ],
   },
   {
-    title: '설정',
-    icon: <Settings />,
-    children: [{ label: '- 계정 관리', path: '/settings/account' }],
+    title: '계정 관리',
+    icon: <ManageAccounts />,
+    children: [
+      {
+        label: '↳ 권한 그룹 관리',
+        children: [
+          { label: '- 조회', path: '/permissionGroup' },
+          { label: '- 등록', path: '/permissionGroup/registration' },
+        ],
+      },
+      { label: '- 조회', path: '/account' },
+      { label: '- 등록', path: '/account/registration' },
+    ],
   },
 ]
 
 export default function Header() {
-  const [open, setOpen] = React.useState(false)
-  const [openSections, setOpenSections] = React.useState<Record<string, boolean>>({})
+  const [open, setOpen] = useState(false)
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
   const router = useRouter()
 
   const handleToggleSection = (key: string) => {
