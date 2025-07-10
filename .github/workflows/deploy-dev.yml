@@ -41,4 +41,4 @@ jobs:
             docker pull kyoungholee/docker-example:latest
             docker stop erp-next-front || true
             docker rm erp-next-front || true
-            docker run -d -p 80:3000 --name erp-next-front kyoungholee/docker-example:latest
+            docker run -d --restart=always -p 80:3000 --name erp-next-front kyoungholee/docker-example:latest
