@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Drawer,
   List,
@@ -156,6 +156,18 @@ export default function Header() {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
   const router = useRouter()
 
+  // 세션스토리지 데이터
+  const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
+
+  useEffect(() => {
+    const headerData = sessionStorage.getItem('myInfo')
+    if (headerData) {
+      setMyInfo(JSON.parse(headerData))
+    }
+  }, [])
+
+  console.log('!23', myInfo)
+
   const handleToggleSection = (key: string) => {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
   }
@@ -171,6 +183,8 @@ export default function Header() {
           credentials: 'include',
           cache: 'no-store',
         })
+
+        sessionStorage.removeItem('myInfo')
 
         alert('로그아웃 되었습니다.')
 
@@ -246,7 +260,13 @@ export default function Header() {
             </div>
 
             <div className="flex items-center space-x-4">
-              <p className="text-sm text-white">이경호(로그인한 ID)</p>
+              {myInfo ? (
+                <p className="text-sm text-white">
+                  {myInfo.username}({myInfo.loginId})
+                </p>
+              ) : (
+                <p className="text-sm text-white">로그인 정보를 불러오는 중...</p>
+              )}
               <CommonButton
                 label="로그아웃"
                 variant="secondary"
