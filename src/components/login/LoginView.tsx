@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import CommonInput from '../common/Input'
 import CommonButton from '../common/Button'
 import { useLoginForm } from '@/hooks/useLoginForm'
@@ -14,10 +15,14 @@ export default function LoginView() {
     setAutoLogin,
     userErrorId,
     setUserErrorId,
-    setUserErrorPassword,
     userErrorPassword,
+    setUserErrorPassword,
     handleLogin,
   } = useLoginForm()
+
+  const onLogin = async () => {
+    await handleLogin()
+  }
 
   return (
     <div>
@@ -29,7 +34,7 @@ export default function LoginView() {
           placeholder="아이디를 입력하세요."
           onChange={(value) => {
             setLoginId(value)
-            setUserErrorId(value === '') // 빈 값이면 에러 표시
+            setUserErrorId(value === '')
           }}
           error={userErrorId}
           helperText={userErrorId ? '아이디를 입력해주세요.' : ''}
@@ -57,11 +62,11 @@ export default function LoginView() {
             checked={autoLogin}
             onChange={() => setAutoLogin((prev) => !prev)}
             className="
-                      appearance-none w-5 h-5 border border-black rounded-full 
-                      checked:bg-blue-600 checked:border-blue-600 
-                      relative transition-all
-                      after:content-[''] after:block after:w-2.5 after:h-2.5 after:bg-white after:rounded-full after:absolute after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:scale-0 checked:after:scale-100 after:transition
-                    "
+              appearance-none w-5 h-5 border border-black rounded-full 
+              checked:bg-blue-600 checked:border-blue-600 
+              relative transition-all
+              after:content-[''] after:block after:w-2.5 after:h-2.5 after:bg-white after:rounded-full after:absolute after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:scale-0 checked:after:scale-100 after:transition
+            "
           />
           <span>자동 로그인</span>
         </label>
@@ -69,7 +74,7 @@ export default function LoginView() {
         <CommonButton
           label="로그인"
           variant="secondary"
-          onClick={handleLogin}
+          onClick={onLogin}
           fullWidth
           className="mb-3"
         />

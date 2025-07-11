@@ -27,6 +27,10 @@ import {
 import { useRouter } from 'next/navigation'
 import CommonButton from '../common/Button'
 import { API } from '@/api/config/env'
+import { MenuService } from '@/services/sideMenu/menuService'
+import { useQuery } from '@tanstack/react-query'
+import { myInfoProps } from '@/types/user'
+import { useSnackbarStore } from '@/stores/useSnackbarStore'
 
 interface MenuItem {
   title?: string // 1 depth에서만 사용
@@ -156,6 +160,10 @@ export default function Header() {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
   const router = useRouter()
 
+  // 전역 알림 메시지
+
+  const { showSnackbar } = useSnackbarStore()
+
   // 세션스토리지 데이터
   const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
 
@@ -166,7 +174,20 @@ export default function Header() {
     }
   }, [])
 
-  console.log('!23', myInfo)
+  // react-query로 메뉴 호출
+  const {
+    data: menuData,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['MenuService'],
+    queryFn: MenuService,
+  })
+
+  if (isLoading) return <div>로딩중...</div>
+  if (isError) return <div>권한이 없거나 에러 발생</div>
+
+  console.log('menuData:', menuData)
 
   const handleToggleSection = (key: string) => {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
@@ -186,18 +207,15 @@ export default function Header() {
 
         sessionStorage.removeItem('myInfo')
 
-        alert('로그아웃 되었습니다.')
-
-        if (!response.ok) {
-          const data = await response.json()
-          alert(data.message || '로그아웃에 실패했습니다.')
-          return
+        if (response.status === 200) {
+          showSnackbar('로그아웃 되었습니다.', 'success')
+        } else {
+          showSnackbar('로그아웃에 실패했습니다.', 'error')
         }
-
         router.push('/')
       } catch (err) {
         if (err instanceof Error) {
-          alert('네트워크 에러입니다.')
+          showSnackbar('네트워크 에러입니다.', 'warning')
         }
       }
     }
@@ -279,7 +297,12 @@ export default function Header() {
       </AppBar>
 
       <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
-        <List sx={{ width: 240 }}>{renderMenu(menuItems)}</List>
+        <List sx={{ width: 240 }}>
+          {!isLoading && !isError && renderMenu(menuItems)}
+
+          {isLoading && <div>메뉴를 불러오는 중 </div>}
+          {isError && <div>에러 발생했습니다.</div>}
+        </List>
       </Drawer>
     </>
   )

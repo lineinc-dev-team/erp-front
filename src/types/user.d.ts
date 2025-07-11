@@ -1,4 +1,4 @@
-interface myInfoProps {
+export interface myInfoProps {
   id: number
   loginId: string
   roles: string[]

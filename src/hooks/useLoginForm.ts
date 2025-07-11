@@ -3,18 +3,15 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { loginService } from '@/services/login/loginService'
-// import { API } from '@/api/config/env'
 import { MyInfoService } from '@/services/myInfo/myInfoService'
-// import { MyInfoService } from '@/services/myInfo/myInfoService'
+import { useSnackbarStore } from '@/stores/useSnackbarStore'
 
 export function useLoginForm() {
   const [loginId, setLoginId] = useState('')
   const [password, setPassword] = useState('')
   const [autoLogin, setAutoLogin] = useState(false)
-
   const [userErrorId, setUserErrorId] = useState(false)
   const [userErrorPassword, setUserErrorPassword] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const router = useRouter()
 
@@ -25,28 +22,25 @@ export function useLoginForm() {
     return !hasError
   }
 
+  const { showSnackbar } = useSnackbarStore()
+
   const handleLogin = async () => {
-    if (!validate()) return
-
-    try {
-      const resultValue = await loginService({ loginId, password, autoLogin })
-
-      console.log('로그인 상태 값', resultValue)
-      if (resultValue === 200) {
-        try {
-          await MyInfoService()
-          router.push('/business')
-        } catch (err) {
-          console.error('내 정보 불러오기 실패, 라우팅 중단', err)
-          // 실패 시 라우팅 안함
-        }
-      } else {
-        // 로그인 실패 (200이 아닐 때)
-        return
-      }
-    } catch (err) {
-      if (err instanceof Error) setErrorMessage(err.message)
+    if (!validate()) {
+      showSnackbar('아이디와 비밀번호를 모두 입력해주세요.', 'error')
     }
+
+    const result = await loginService({ loginId, password, autoLogin })
+    showSnackbar(result.message, result.status)
+    if (result.status === 'success') {
+      try {
+        await MyInfoService()
+        router.push('/business')
+      } catch (err) {
+        console.error('내 정보를 불러 올 권한이 없습니다.', err)
+      }
+    }
+
+    return result
   }
 
   return {
@@ -58,7 +52,6 @@ export function useLoginForm() {
     setAutoLogin,
     userErrorId,
     userErrorPassword,
-    errorMessage,
     setUserErrorId,
     setUserErrorPassword,
     handleLogin,

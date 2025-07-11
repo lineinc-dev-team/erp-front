@@ -27,23 +27,19 @@ export async function loginService({
       console.log('API 응답 에러', res.status, data)
 
       if (res.status === 401 || res.status === 403) {
-        alert(data.message || '아이디 또는 비밀번호가 잘못되었습니다.')
-        return
+        return {
+          status: 'error',
+          message: data.message || '아이디 또는 비밀번호가 잘못되었습니다.',
+        }
       }
-      alert(data.message || '로그인에 실패했습니다.')
-      return
-    } else {
-      alert('로그인에 성공했습니다.')
-
-      return res.status
+      return { status: 'error', message: data.message || '로그인에 실패했습니다.' }
     }
+
+    return { status: 'success', message: '로그인에 성공했습니다.' }
   } catch (err) {
     if (err instanceof Error) {
-      alert('네트워크 에러입니다.')
-      throw err
-    } else {
-      alert('알 수 없는 에러가 발생했습니다.')
-      throw new Error('알 수 없는 에러가 발생했습니다.')
+      return { status: 'error', message: '네트워크 에러입니다.' }
     }
+    return { status: 'error', message: '알 수 없는 에러가 발생했습니다.' }
   }
 }

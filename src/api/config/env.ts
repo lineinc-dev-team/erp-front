@@ -9,5 +9,6 @@ export const API = {
   LOGIN: `${apiBaseUrl}/auth/login`,
   LOGOUT: `${apiBaseUrl}/auth/logout`,
   MYINFO: `${apiBaseUrl}/auth/me`,
+  SIDEMENU: `${apiBaseUrl}/menus/permissions`,
   // 다른 API endpoint도 여기에 추가 가능
 }

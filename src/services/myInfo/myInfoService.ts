@@ -8,7 +8,7 @@ export async function MyInfoService() {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      // cache: 'no-store',
+      cache: 'no-store',
     })
 
     if (!res.ok) {
