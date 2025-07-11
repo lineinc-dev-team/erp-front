@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { loginService } from '@/services/login/loginService'
-import { API } from '@/api/config/env'
+// import { API } from '@/api/config/env'
+import { MyInfoService } from '@/services/myInfo/myInfoService'
 // import { MyInfoService } from '@/services/myInfo/myInfoService'
 
 export function useLoginForm() {
@@ -33,37 +34,11 @@ export function useLoginForm() {
       console.log('로그인 상태 값', resultValue)
       if (resultValue === 200) {
         try {
-          const res = await fetch(API.MYINFO, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: '*/*',
-            },
-            credentials: 'include', // 쿠키 포함 필수
-            cache: 'no-store',
-          })
-
-          if (!res.ok) {
-            throw new Error(`서버 에러: ${res.status}`)
-          }
-
-          const text = await res.text()
-          const data = text ? JSON.parse(text) : null
-
-          console.log(' 내정 보 데이터', data)
-
-          if (data?.data) {
-            sessionStorage.setItem('myInfo', JSON.stringify(data.data))
-            router.push('/business')
-          } else {
-            alert('세션이 없거나 데이터가 없습니다.')
-            return
-          }
+          await MyInfoService()
+          router.push('/business')
         } catch (err) {
-          if (err instanceof Error) {
-            alert(`내 정보 불러오기 실패: ${err.message}`)
-          }
-          return
+          console.error('내 정보 불러오기 실패, 라우팅 중단', err)
+          // 실패 시 라우팅 안함
         }
       } else {
         // 로그인 실패 (200이 아닐 때)

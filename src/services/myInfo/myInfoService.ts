@@ -21,13 +21,12 @@ export async function MyInfoService() {
     if (data?.data) {
       sessionStorage.setItem('myInfo', JSON.stringify(data.data))
     } else {
-      alert('세션이 없거나 데이터가 없습니다.')
-      return
+      throw new Error('세션이 없거나 데이터가 없습니다.')
     }
   } catch (err) {
     if (err instanceof Error) {
-      alert(`내 정보 불러오기 실패: ${err.message}`)
+      alert(`내 정보를 불러올 수 있는 권한이 없습니다.`)
     }
-    return
+    throw err
   }
 }
