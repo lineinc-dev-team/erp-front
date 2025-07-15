@@ -17,12 +17,12 @@ import {
   PermissionSingleService,
 } from '@/services/permission/permissonService'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
-// import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 export function usePermission() {
   const queryClient = useQueryClient()
   const { showSnackbar } = useSnackbarStore()
-  // const router = useRouter()
+  const router = useRouter()
 
   //권한 그룹에 필요한 상태 관리
 
@@ -37,10 +37,19 @@ export function usePermission() {
     { id: number; menuId: number; action: string }[]
   >([])
 
-  const { data, isLoading, isError } = useQuery<PermissionResponse>({
+  const { data, isLoading, isError, error } = useQuery<PermissionResponse, Error>({
     queryKey: ['PermissionService'],
     queryFn: PermissionService,
   })
+
+  useEffect(() => {
+    if (isError) {
+      if (error instanceof Error && error.message === '권한이 없습니다.') {
+        showSnackbar('접근 권한이 없습니다.', 'warning')
+        router.push('/business')
+      }
+    }
+  }, [isError, error])
 
   // 권한 메뉴별 권한 조회
   const {

@@ -17,6 +17,9 @@ export async function PermissionService(): Promise<PermissionResponse> {
   })
 
   if (!res.ok) {
+    if (res.status === 403) {
+      throw new Error('권한이 없습니다.')
+    }
     throw new Error(`서버 에러: ${res.status}`)
   }
 
