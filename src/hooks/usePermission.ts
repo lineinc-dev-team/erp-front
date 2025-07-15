@@ -40,9 +40,6 @@ export function usePermission() {
   const { data, isLoading, isError } = useQuery<PermissionResponse>({
     queryKey: ['PermissionService'],
     queryFn: PermissionService,
-    staleTime: 0, // 0이면 바로 stale, 기본값도 0이긴 함
-    refetchOnWindowFocus: true,
-    refetchOnMount: 'always',
   })
 
   // 권한 메뉴별 권한 조회
@@ -97,11 +94,10 @@ export function usePermission() {
     mutationFn: (name: string) => PermissionGroupAdd(name),
     onSuccess: () => {
       showSnackbar('그룹이 추가되었습니다.', 'success')
-
       queryClient.invalidateQueries({
         queryKey: ['PermissionService'],
+        refetchType: 'active', // optional, active가 default
       })
-
       handleClose()
     },
     onError: () => {

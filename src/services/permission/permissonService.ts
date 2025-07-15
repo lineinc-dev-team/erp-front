@@ -14,7 +14,6 @@ export async function PermissionService(): Promise<PermissionResponse> {
       'Content-Type': 'application/json',
     },
     credentials: 'include',
-    cache: 'no-store',
   })
 
   if (!res.ok) {
@@ -34,7 +33,6 @@ export async function PermissionGroupRemove(removId: number[]) {
     }),
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    cache: 'no-store',
   })
 
   if (!res.ok) {
@@ -53,7 +51,6 @@ export async function PermissionGroupAdd(groupName: string) {
     }),
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    cache: 'no-store',
   })
 
   if (!res.ok) {
@@ -75,7 +72,6 @@ export async function PermissionSingleService(id: number): Promise<PermissionSin
       'Content-Type': 'application/json',
     },
     credentials: 'include',
-    cache: 'no-store',
   })
 
   if (!res.ok) {
@@ -94,7 +90,6 @@ export async function MenuPermissionService(groupId: number): Promise<MenuPermis
       'Content-Type': 'application/json',
     },
     credentials: 'include',
-    cache: 'no-store',
   })
 
   if (!res.ok) {
@@ -113,7 +108,6 @@ export async function GroupUserList(userId: number): Promise<GroupUserResponse> 
       'Content-Type': 'application/json',
     },
     credentials: 'include',
-    cache: 'no-store',
   })
 
   if (!res.ok) {
@@ -133,7 +127,6 @@ export async function GroupUserRemove(userId: number, removId: number[]) {
     }),
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    cache: 'no-store',
   })
 
   if (!res.ok) {

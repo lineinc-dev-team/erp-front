@@ -3,16 +3,17 @@
 import './globals.css'
 import HeaderWrapper from '@/components/layout/HeaderWrapper'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { Snackbar, Alert } from '@mui/material'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
+import { useState } from 'react'
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const queryClient = new QueryClient()
+  // QueryClient를 useState로 딱 한 번만 생성
+  const [queryClient] = useState(() => new QueryClient())
   const { open, message, severity, closeSnackbar } = useSnackbarStore()
 
   return (
@@ -21,7 +22,6 @@ export default function RootLayout({
         <QueryClientProvider client={queryClient}>
           <HeaderWrapper />
           {children}
-          <ReactQueryDevtools initialIsOpen={false} />
 
           <Snackbar
             open={open}
