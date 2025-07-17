@@ -3,22 +3,15 @@
 import CommonSelect from '@/components/common/Select'
 import CommonButton from '@/components/common/Button'
 
-import { useOutsourcingCompanyStore } from '@/stores/outsourcingCompanyStore'
 import CommonInput from '@/components/common/Input'
 import { AreaCode, UseORnotOptions } from '@/config/erp.confing'
+import { useAccountFormStore } from '@/stores/accountManagementStore'
+import { useUserMg } from '@/hooks/useUserMg'
 
 export default function ManagementRegistrationView({ isEditMode = false }) {
-  const { form } = useOutsourcingCompanyStore()
+  const { createUserMutation } = useUserMg()
 
-  // const managers = form.headManagers
-  // const checkedIds = form.checkedManagerIds
-  // const isAllChecked = managers.length > 0 && checkedIds.length === managers.length
-
-  // const attachedFiles = form.attachedFiles
-  // const fileCheckIds = form.checkedAttachedFileIds
-  // const isFilesAllChecked = attachedFiles.length > 0 && fileCheckIds.length === attachedFiles.length
-
-  console.log('number', form.areaNumber, form.phoneNumber)
+  const { form, setField, handleCancelData } = useAccountFormStore()
 
   return (
     <>
@@ -32,8 +25,8 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
                 placeholder="텍스트 입력"
-                value={form.companyName}
-                onChange={(value) => form.setField('companyName', value)}
+                value={form.loginId}
+                onChange={(value) => setField('loginId', value)}
                 className=" flex-1"
               />
             </div>
@@ -45,8 +38,8 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
                 placeholder="홍길동"
-                value={form.businessNumber}
-                onChange={(value) => form.setField('businessNumber', value)}
+                value={form.username}
+                onChange={(value) => setField('username', value)}
                 className=" flex-1"
               />
             </div>
@@ -61,7 +54,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
                 fullWidth={true}
                 className="text-2xl"
                 value={form.areaNumber}
-                onChange={(value) => form.setField('areaNumber', value)}
+                onChange={(value) => setField('areaNumber', value)}
                 options={AreaCode}
               />
             </div>
@@ -75,7 +68,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
               <CommonSelect
                 fullWidth={true}
                 value={form.areaNumber}
-                onChange={(value) => form.setField('areaNumber', value)}
+                onChange={(value) => setField('areaNumber', value)}
                 options={AreaCode}
               />
             </div>
@@ -89,7 +82,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
               <CommonSelect
                 fullWidth={true}
                 value={form.areaNumber}
-                onChange={(value) => form.setField('areaNumber', value)}
+                onChange={(value) => setField('areaNumber', value)}
                 options={AreaCode}
               />
             </div>
@@ -103,7 +96,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
               <CommonSelect
                 fullWidth={true}
                 value={form.areaNumber}
-                onChange={(value) => form.setField('areaNumber', value)}
+                onChange={(value) => setField('areaNumber', value)}
                 options={AreaCode}
               />
             </div>
@@ -116,8 +109,8 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
                 placeholder="텍스트 입력"
-                value={form.companyName}
-                onChange={(value) => form.setField('companyName', value)}
+                value={form.phoneNumber}
+                onChange={(value) => setField('phoneNumber', value)}
                 className=" flex-1"
               />
             </div>
@@ -129,8 +122,8 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
                 placeholder="텍스트 입력"
-                value={form.businessNumber}
-                onChange={(value) => form.setField('businessNumber', value)}
+                value={form.landlineNumber}
+                onChange={(value) => setField('landlineNumber', value)}
                 className=" flex-1"
               />
             </div>
@@ -142,8 +135,8 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
                 placeholder="텍스트 입력"
-                value={form.businessNumber}
-                onChange={(value) => form.setField('businessNumber', value)}
+                value={form.email}
+                onChange={(value) => setField('email', value)}
                 className=" flex-1"
               />
             </div>
@@ -157,7 +150,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
                 fullWidth={true}
                 className="text-2xl"
                 value={form.isActive}
-                onChange={(value) => form.setField('isActive', value)}
+                onChange={(value) => setField('isActive', value)}
                 options={UseORnotOptions}
               />
             </div>
@@ -171,7 +164,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
                 fullWidth={true}
                 className="text-2xl"
                 value={form.isActive}
-                onChange={(value) => form.setField('isActive', value)}
+                onChange={(value) => setField('isActive', value)}
                 options={UseORnotOptions}
               />
             </div>
@@ -184,7 +177,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
               <CommonInput
                 placeholder="날짜 형태로 입력??"
                 value={form.memo}
-                onChange={(value) => form.setField('memo', value)}
+                onChange={(value) => setField('memo', value)}
                 className=" flex-1"
               />
             </div>
@@ -197,7 +190,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
               <CommonInput
                 placeholder="날짜 형태로 입력??"
                 value={form.memo}
-                onChange={(value) => form.setField('memo', value)}
+                onChange={(value) => setField('memo', value)}
                 className=" flex-1"
               />
             </div>
@@ -216,8 +209,8 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
               <CommonInput
                 placeholder="비밀번호를 입력해주세요."
                 type="password"
-                value={form.companyName}
-                onChange={(value) => form.setField('companyName', value)}
+                value={form.password}
+                onChange={(value) => setField('password', value)}
                 className=" flex-1"
               />
             </div>
@@ -230,8 +223,8 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
               <CommonInput
                 placeholder="비밀번호를 입력해주세요."
                 type="password"
-                value={form.businessNumber}
-                onChange={(value) => form.setField('businessNumber', value)}
+                value={form.password}
+                onChange={(value) => setField('password', value)}
                 className=" flex-1"
               />
             </div>
@@ -240,17 +233,12 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
       </div>
 
       <div className="flex justify-center gap-10 mt-10">
-        <CommonButton
-          label="취소"
-          variant="reset"
-          className="px-10"
-          onClick={form.handleCancelData}
-        />
+        <CommonButton label="취소" variant="reset" className="px-10" onClick={handleCancelData} />
         <CommonButton
           label={isEditMode ? '+ 수정' : '+ 등록'}
           className="px-10 font-bold"
           variant="secondary"
-          onClick={form.newOutsouringCompany}
+          onClick={() => createUserMutation.mutate()}
         />
       </div>
     </>

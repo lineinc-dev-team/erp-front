@@ -46,16 +46,30 @@ export const PageCount = [
 
 export const BusinessDataList: GridColDef[] = [
   { field: 'id', headerName: 'No', width: 70 },
-  { field: 'siteCode', headerName: '현장코드', width: 130 },
-  { field: 'location', headerName: '위치', width: 130 },
-  { field: 'siteType', headerName: '사업장유형', width: 130 },
-  { field: 'period', headerName: '기간', width: 180 },
-  { field: 'status', headerName: '상태', width: 100 },
-  { field: 'registrar', headerName: '등록자', width: 100 },
-  { field: 'registeredDate', headerName: '등록일', width: 120 },
+  { field: 'loginId', headerName: '현장코드', width: 130 },
+  { field: 'username', headerName: '위치', width: 130 },
+  { field: 'phoneNumber', headerName: '사업장유형', width: 130 },
+  { field: 'email', headerName: '기간', width: 180 },
+  { field: 'isActive', headerName: '상태', width: 100 },
+  { field: 'createdAt', headerName: '등록자', width: 100 },
+  { field: 'updatedAt', headerName: '등록일', width: 120 },
   { field: 'modifiedDate', headerName: '수정일', width: 120 },
   { field: 'attachments', headerName: '첨부파일', width: 100 },
   { field: 'remark', headerName: '계약이력', width: 100 },
+]
+
+export const UserDataList: GridColDef[] = [
+  { field: 'id', headerName: 'No', width: 70 },
+  { field: 'loginId', headerName: '사용자 ID', width: 130 },
+  { field: 'username', headerName: '사용자 이름', width: 130 },
+  { field: 'phoneNumber', headerName: '소속 (부서/현장)', width: 130 },
+  { field: 'email', headerName: '직책', width: 180 },
+  { field: 'isActive', headerName: '계정상태', width: 100 },
+  { field: 'createdAt', headerName: '생성일자', width: 100 },
+  { field: 'lastLoginAt', headerName: '최종접속일', width: 120 },
+  { field: 'updatedAt', headerName: '최종수정일', width: 100 },
+  { field: 'updatedBy', headerName: '수정자', width: 100 },
+  { field: 'memo', headerName: '비고', width: 100 },
 ]
 
 export const AreaCode = [

@@ -1,32 +1,42 @@
 'use client'
 
 import { DataGrid } from '@mui/x-data-grid'
-import { BusinessDataList, SubmitOptions, UseORnotOptions } from '@/config/erp.confing'
+import { UserDataList, SubmitOptions, UseORnotOptions } from '@/config/erp.confing'
 import { Pagination } from '@mui/material'
 import CommonInput from '@/components/common/Input'
 import CommonSelect from '@/components/common/Select'
 import CommonButton from '@/components/common/Button'
 import { useOrderingContractSearchStore } from '@/stores/outsourcingContractStore'
 import { AccountManagementService } from '@/services/account/accountManagementService'
+import { usePagination } from '@/hooks/usePagination'
+import { useUserMg } from '@/hooks/useUserMg'
+import { useAccountStore } from '@/stores/accountManagementStore'
+// import { useAccountStore } from '@/stores/accountManagementStore'
 
 export default function ManagementView() {
   const {
-    handleListRemove,
     handleDownloadExcel,
     handleNewAccountCreate,
     ArrayStatusOptions,
-    displayedRows,
-    page,
     sortList,
     setSortList,
-    setPage,
     // pageSize,
-    setSelectedIds,
-    totalPages,
   } = AccountManagementService()
 
   const { search } = useOrderingContractSearchStore()
+  const { userQuery, deleteMutation } = useUserMg()
 
+  const UserInfoList = userQuery.data?.data.content ?? []
+
+  console.log('data@@!!', UserInfoList)
+
+  // const arr = [1, 2, 3]
+
+  const { page, setPage, totalPages, displayedRows } = usePagination(UserInfoList, 10)
+
+  const { selectedIds, setSelectedIds } = useAccountStore()
+
+  console.log('1234', displayedRows)
   // if (isLoading) return <LoadingSkeletion />
   // if (error) throw error
 
@@ -198,7 +208,16 @@ export default function ManagementView() {
               <CommonButton
                 label="삭제"
                 variant="reset"
-                onClick={handleListRemove}
+                onClick={() => {
+                  const idsArray = [...selectedIds.ids] // Set → Array
+                  if (!selectedIds.ids || selectedIds.length === 0) {
+                    alert('체크박스를 선택해주세요.')
+                    return
+                  }
+                  deleteMutation.mutate({
+                    userIds: idsArray, // 이건 number[] 또는 string[]이겠죠
+                  })
+                }}
                 className="px-3"
               />
               <CommonButton
@@ -220,7 +239,7 @@ export default function ManagementView() {
       <div style={{ height: 500, width: '100%' }}>
         <DataGrid
           rows={displayedRows}
-          columns={BusinessDataList.map((col) => ({
+          columns={UserDataList.map((col) => ({
             ...col,
             sortable: false,
             headerAlign: 'center',
@@ -237,8 +256,10 @@ export default function ManagementView() {
           hideFooterPagination
           // pageSize={pageSize}
           rowHeight={60}
-          // selectionMode={selectedIds}
-          onRowSelectionModelChange={(newSelection) => setSelectedIds(newSelection)}
+          onRowSelectionModelChange={(newSelection) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            setSelectedIds(newSelection as any) // 타입 보장된다면 사용 가능
+          }}
         />
         <div className="flex justify-center mt-4 pb-6">
           <Pagination
