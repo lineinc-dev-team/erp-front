@@ -1,3 +1,4 @@
+import { useAccountFormStore } from '@/stores/accountManagementStore'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { useRouter } from 'next/navigation'
@@ -12,6 +13,8 @@ import {
 
 export function useUserMg() {
   const { showSnackbar } = useSnackbarStore()
+  const { reset } = useAccountFormStore()
+
   const router = useRouter()
   const queryClient = useQueryClient()
 
@@ -24,8 +27,10 @@ export function useUserMg() {
     mutationFn: CreateAccount,
     onSuccess: () => {
       showSnackbar('계정이 추가되었습니다.', 'success')
+      // 초기화 로직
+      reset()
       queryClient.invalidateQueries({ queryKey: ['userInfo'] })
-      router.push('/account/registration')
+      router.push('/account')
     },
     onError: () => {
       showSnackbar('계정 추가에 실패했습니다.', 'error')
