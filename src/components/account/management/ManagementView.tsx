@@ -28,15 +28,12 @@ export default function ManagementView() {
 
   const UserInfoList = userQuery.data?.data.content ?? []
 
-  console.log('data@@!!', UserInfoList)
-
   // const arr = [1, 2, 3]
 
   const { page, setPage, totalPages, displayedRows } = usePagination(UserInfoList, 10)
 
   const { selectedIds, setSelectedIds } = useAccountStore()
 
-  console.log('1234', displayedRows)
   // if (isLoading) return <LoadingSkeletion />
   // if (error) throw error
 
@@ -207,15 +204,21 @@ export default function ManagementView() {
             <div className="flex items-center gap-2">
               <CommonButton
                 label="삭제"
-                variant="reset"
+                variant="danger"
                 onClick={() => {
-                  const idsArray = [...selectedIds.ids] // Set → Array
-                  if (!selectedIds.ids || selectedIds.length === 0) {
+                  if (!selectedIds || !(selectedIds.ids instanceof Set)) {
                     alert('체크박스를 선택해주세요.')
                     return
                   }
+
+                  const idsArray = [...selectedIds.ids]
+                  if (idsArray.length === 0) {
+                    alert('체크박스를 선택해주세요.')
+                    return
+                  }
+
                   deleteMutation.mutate({
-                    userIds: idsArray, // 이건 number[] 또는 string[]이겠죠
+                    userIds: idsArray,
                   })
                 }}
                 className="px-3"
