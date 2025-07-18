@@ -1,5 +1,5 @@
-export const getTodayDateString = (): string => {
-  const today = new Date()
+export const getTodayDateString = (dataString: string) => {
+  const today = new Date(dataString)
 
   const year = today.getFullYear()
   const month = String(today.getMonth() + 1).padStart(2, '0') // 두 자리 수

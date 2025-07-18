@@ -1,55 +1,77 @@
+'use client'
+
+import { getPresignedUrl, uploadToS3 } from '@/services/ordering/orderingRegistrationService'
+import { useState } from 'react'
+
 export default function CommonFileInput({
   acceptedExtensions,
   files,
   className,
   onChange,
+  uploadTarget,
 }: FileUploadProps) {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [loading, setLoading] = useState(false)
+
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return
     const newFiles = Array.from(e.target.files)
 
-    const validFiles = newFiles.filter((item) => {
-      const ext = item.name.split('.').pop()?.toLocaleLowerCase() || ''
+    const validFiles = newFiles.filter((file) => {
+      const ext = file.name.split('.').pop()?.toLowerCase() || ''
       return acceptedExtensions.includes(ext)
     })
 
-    // files와  validFiles이 둘다 배열이니 둘다 펼쳐서 하나의 배열에 담으려고 한 것!!
-    onChange([...files, ...validFiles])
+    setLoading(true)
+
+    const uploadedFiles: FileUploadInfo[] = []
+
+    for (const file of validFiles) {
+      try {
+        const { publicUrl, uploadUrl } = await getPresignedUrl(file.type, uploadTarget)
+
+        console.log('s3 요청 @@', uploadUrl, file, publicUrl)
+        await uploadToS3(uploadUrl, file)
+
+        uploadedFiles.push({ publicUrl, file })
+      } catch (error) {
+        console.error('업로드 실패:', error)
+        alert(`"${file.name}" 업로드에 실패했습니다.`)
+      }
+    }
+
+    onChange([...files, ...uploadedFiles])
+    setLoading(false)
   }
 
   const removeFile = (index: number) => {
-    onChange(files.filter((_, idx) => idx !== index))
+    onChange(files.filter((_, i) => i !== index))
   }
 
   return (
     <div className="flex w-full">
       <div className="flex items-center gap-2 justify-between w-full">
         <ul>
-          {files.map((file, index) => (
-            <li className="flex gap-2 items-center mb-1" key={index}>
+          {files.map(({ file }, index) => (
+            <li key={index} className="flex items-center gap-2 mb-1">
               <span className={className}>{file.name}</span>
               <button
                 onClick={() => removeFile(index)}
-                className="
-                px-2  rounded cursor-pointer border border-gray-400 font-medium transition
-              text-red-500"
+                className="text-red-500 border border-gray-400 rounded px-2"
               >
                 X
               </button>
             </li>
           ))}
         </ul>
-        <label className="px-4 py-2 rounded cursor-pointer border border-black font-medium transition  bg-gray-300 text-black">
+        <label className="cursor-pointer bg-gray-300 text-black font-medium border border-black px-4 py-2 rounded">
           <input
             type="file"
             multiple
-            // acceptedExtensions 배열에 있는 확장자들(['pdf', 'hwp']등)을 .pdf,.hwp 형태의 문자열로 변환
-            // 업로드 가능한 파일 확장자만 선택할 수 있게 제한
             accept={acceptedExtensions.map((ext) => `.${ext}`).join(',')}
             className="hidden"
             onChange={handleChange}
           />
-          첨부
+          {loading ? '업로드 중...' : '첨부'}
         </label>
       </div>
     </div>

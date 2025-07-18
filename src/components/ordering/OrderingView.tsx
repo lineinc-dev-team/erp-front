@@ -6,24 +6,17 @@ import CommonSelect from '../common/Select'
 import CommonDatePicker from '../common/DatePicker'
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { ArrayStatusOptions, PageCount, UseORnotOptions } from '@/config/erp.confing'
-import { Button, Checkbox, FormControlLabel, Grid, Pagination } from '@mui/material'
+import { Pagination } from '@mui/material'
 import { useOrderingSearchStore } from '@/stores/orderingStore'
 import { OrderingService } from '@/services/ordering/orderingService'
-import CommonModal from '../common/Modal'
 import ContractHistory from '../common/ContractHistory'
 import { useRouter } from 'next/navigation'
 
 export default function OrderingView() {
   const {
-    modalOpen,
     setModalOpen,
-    selectedFields,
-    handleToggleField,
-    handleSelectAll,
-    handleReset,
-    excelFields,
+
     printMode,
-    handlePrint,
     handleNewOrderCreate,
     displayedRows,
     contract,
@@ -32,7 +25,6 @@ export default function OrderingView() {
     setPage,
     totalPages,
     filteredColumns,
-    handleExcelDownload,
   } = OrderingService()
 
   const { search } = useOrderingSearchStore()
@@ -322,47 +314,6 @@ export default function OrderingView() {
           />
         </div>
       </div>
-
-      {/* 엑셀 모달 */}
-
-      <CommonModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title="발주처 관리 - 엑셀 출력 항목 선택"
-        actions={
-          <>
-            <Button onClick={handlePrint}>프린트</Button>
-            <Button variant="contained" onClick={handleExcelDownload}>
-              엑셀 다운로드
-            </Button>
-            <Button onClick={() => setModalOpen(false)}>닫기</Button>
-          </>
-        }
-      >
-        <Grid container spacing={1}>
-          {excelFields.map((field) => (
-            <Grid key={field}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={selectedFields.includes(field)}
-                    onChange={() => handleToggleField(field)}
-                  />
-                }
-                label={field}
-              />
-            </Grid>
-          ))}
-        </Grid>
-        <div className="flex gap-2 mt-4">
-          <Button variant="outlined" onClick={handleReset}>
-            초기화
-          </Button>
-          <Button variant="outlined" onClick={handleSelectAll}>
-            전체 선택
-          </Button>
-        </div>
-      </CommonModal>
 
       <ContractHistory open={contract} onClose={() => setContract(false)} />
     </>

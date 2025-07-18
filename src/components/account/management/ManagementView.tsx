@@ -4,40 +4,61 @@ import { DataGrid } from '@mui/x-data-grid'
 import { UserDataList, SubmitOptions, UseORnotOptions } from '@/config/erp.confing'
 import { Pagination } from '@mui/material'
 import CommonInput from '@/components/common/Input'
+import { userExcelFieldMap } from '@/utils/userExcelField'
+
 import CommonSelect from '@/components/common/Select'
 import CommonButton from '@/components/common/Button'
 import { useOrderingContractSearchStore } from '@/stores/outsourcingContractStore'
-import { AccountManagementService } from '@/services/account/accountManagementService'
+import {
+  AccountManagementService,
+  UserDataExcelDownload,
+} from '@/services/account/accountManagementService'
 import { usePagination } from '@/hooks/usePagination'
 import { useUserMg } from '@/hooks/useUserMg'
 import { useAccountStore } from '@/stores/accountManagementStore'
-// import { useAccountStore } from '@/stores/accountManagementStore'
+import { getTodayDateString } from '@/utils/formatters'
+import { UserInfoProps } from '@/types/accountManagement'
+import { useState } from 'react'
+import ExcelModal from '@/components/common/ExcelModal'
 
 export default function ManagementView() {
-  const {
-    handleDownloadExcel,
-    handleNewAccountCreate,
-    ArrayStatusOptions,
-    sortList,
-    setSortList,
-    // pageSize,
-  } = AccountManagementService()
+  const { ArrayStatusOptions, sortList, setSortList } = AccountManagementService()
 
   const { search } = useOrderingContractSearchStore()
-  const { userQuery, deleteMutation } = useUserMg()
+  const { userQuery, deleteMutation, handleNewAccountCreate } = useUserMg()
+
+  const [modalOpen, setModalOpen] = useState(false)
 
   const UserInfoList = userQuery.data?.data.content ?? []
 
-  // const arr = [1, 2, 3]
-
-  const { page, setPage, totalPages, displayedRows } = usePagination(UserInfoList, 10)
+  const { page, setPage, totalPages, displayedRows } = usePagination<UserInfoProps>(
+    UserInfoList,
+    10,
+  )
 
   const { selectedIds, setSelectedIds } = useAccountStore()
 
-  // if (isLoading) return <LoadingSkeletion />
-  // if (error) throw error
+  console.log('displayedRows', displayedRows)
 
-  // alert(data)
+  // 필드 값 데이터 가공
+  // userExcelFieldMap 객체를 { label: string, value: string }[] 배열로 바꿔줍니다.
+  const fieldMapArray = Object.entries(userExcelFieldMap).map(([label, value]) => ({
+    label,
+    value,
+  }))
+
+  // 가공 로직
+  const updatedUsers = displayedRows.map((user) => ({
+    ...user,
+    isActive: 'Y',
+    createdAt: getTodayDateString(user.createdAt),
+    updatedAt: getTodayDateString(user.updatedAt),
+    lastLoginAt: getTodayDateString(user.lastLoginAt),
+  }))
+
+  const handleDownloadExcel = async (fields: string[]) => {
+    await UserDataExcelDownload({ fields })
+  }
 
   return (
     <>
@@ -226,9 +247,19 @@ export default function ManagementView() {
               <CommonButton
                 label="엑셀 다운로드"
                 variant="reset"
-                onClick={handleDownloadExcel}
+                onClick={() => setModalOpen(true)}
                 className="px-3"
               />
+
+              {/* <ExcelModal open={modalOpen} onClose={() => setModalOpen(false)} /> */}
+              <ExcelModal
+                open={modalOpen}
+                onClose={() => setModalOpen(false)}
+                title="사용자 관리 - 엑셀 항목 선택"
+                fieldMap={fieldMapArray}
+                onDownload={handleDownloadExcel}
+              />
+
               <CommonButton
                 label="+ 신규등록"
                 variant="secondary"
@@ -241,7 +272,7 @@ export default function ManagementView() {
       </div>
       <div style={{ height: 500, width: '100%' }}>
         <DataGrid
-          rows={displayedRows}
+          rows={updatedUsers}
           columns={UserDataList.map((col) => ({
             ...col,
             sortable: false,

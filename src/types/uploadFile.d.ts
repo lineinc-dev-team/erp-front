@@ -1,7 +1,15 @@
+type FileUploadInfo = {
+  file: File
+  // cdnAccessUrl: string
+  // key: string
+  // uploadUrl: string
+  publicUrl: string
+}
+
 type FileUploadProps = {
-  label: string
   acceptedExtensions: string[]
-  className: string
-  files: File[]
-  onChange: (files: File[]) => void
+  files: FileUploadInfo[]
+  className?: string
+  onChange: (files: FileUploadInfo[]) => void
+  uploadTarget: string
 }

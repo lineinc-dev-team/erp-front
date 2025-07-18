@@ -12,5 +12,6 @@ export const API = {
   SIDEMENU: `${apiBaseUrl}/menus/permissions`,
   SINGLEROLE: `${apiBaseUrl}/roles`,
   USER: `${apiBaseUrl}/users`,
+  FILEUPLOAD: `${apiBaseUrl}/files`,
   // 다른 API endpoint도 여기에 추가 가능
 }

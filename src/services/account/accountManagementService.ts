@@ -8,7 +8,6 @@ import {
   ArrayStatusOptions,
 } from '@/config/erp.confing'
 // import { GridRowSelectionModel } from '@mui/x-data-grid'
-import { useRouter } from 'next/navigation'
 import { API } from '@/api/config/env'
 import { useAccountFormStore } from '@/stores/accountManagementStore'
 
@@ -36,21 +35,9 @@ export async function UserInfoService() {
 }
 
 export function AccountManagementService() {
-  const router = useRouter()
-
   const [sortList, setSortList] = useState('최근순')
 
-  const handleDownloadExcel = () => {
-    alert('엑셀 다운로드 로직이 들어감')
-  }
-
-  const handleNewAccountCreate = () => {
-    router.push('/account/registration')
-  }
-
   return {
-    handleDownloadExcel,
-    handleNewAccountCreate,
     LocationStatusOptions,
     ProcessStatusOptions,
     statusOptions,
@@ -84,7 +71,6 @@ export async function CreateAccount() {
 
 // 유저 삭제
 export async function UserRemoveService(userIds: number[]) {
-  console.log('유저 접오!!!', userIds)
   const res = await fetch(API.USER, {
     method: 'DELETE',
     headers: {
@@ -98,6 +84,67 @@ export async function UserRemoveService(userIds: number[]) {
   }
 
   return await res.status
+}
+
+// 엑셀 다운로드
+export async function UserDataExcelDownload({
+  sort = '',
+  username = '',
+  roleId,
+  isActive,
+  createdStartDate,
+  createdEndDate,
+  lastLoginStartDate,
+  lastLoginEndDate,
+  fields,
+}: {
+  sort?: string
+  username?: string
+  roleId?: number
+  isActive?: boolean
+  createdStartDate?: string
+  createdEndDate?: string
+  lastLoginStartDate?: string
+  lastLoginEndDate?: string
+  fields?: string[]
+}) {
+  const queryParams = new URLSearchParams()
+
+  queryParams.append('sort', sort)
+  if (username) queryParams.append('username', username)
+  if (roleId !== undefined) queryParams.append('roleId', String(roleId))
+  if (isActive !== undefined) queryParams.append('isActive', String(isActive))
+  if (createdStartDate) queryParams.append('createdStartDate', createdStartDate)
+  if (createdEndDate) queryParams.append('createdEndDate', createdEndDate)
+  if (lastLoginStartDate) queryParams.append('lastLoginStartDate', lastLoginStartDate)
+  if (lastLoginEndDate) queryParams.append('lastLoginEndDate', lastLoginEndDate)
+
+  if (fields && fields.length > 0) {
+    queryParams.append('fields', fields.join(','))
+  }
+
+  const res = await fetch(`${API.USER}/download?${queryParams.toString()}`, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    },
+
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    throw new Error(`서버 오류: ${res.status}`)
+  }
+
+  const blob = await res.blob()
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'export23test.xlsx'
+  a.click()
+  window.URL.revokeObjectURL(url)
+
+  return res.status
 }
 
 // 유저 수정

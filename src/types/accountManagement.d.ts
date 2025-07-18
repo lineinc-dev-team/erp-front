@@ -88,6 +88,22 @@ export type AttachedFile = {
   files: File[]
 }
 
+export type UserInfoProps = {
+  id: number
+  loginId: string
+  username: string
+  phoneNumber: string | null
+  landlineNumber: string | null
+  email: string
+  memo: string | null
+  createdAt: string
+  updatedAt: string
+  lastLoginAt: string
+  updatedBy: string
+  isActive: boolean
+  roles?: string[]
+}
+
 export type FormState = {
   loginId: string
   username: string

@@ -6,9 +6,6 @@ import {
   CreateAccount,
   UserInfoService,
   UserRemoveService,
-  // UpdateAccount,
-  // DeleteAccount,
-  // ResetPassword,
 } from '@/services/account/accountManagementService'
 
 export function useUserMg() {
@@ -63,6 +60,10 @@ export function useUserMg() {
     },
   })
 
+  const handleNewAccountCreate = () => {
+    router.push('/account/registration')
+  }
+
   // ✅ 비밀번호 초기화
   // const resetPasswordMutation = useMutation({
   //   mutationFn: ResetPassword,
@@ -78,6 +79,8 @@ export function useUserMg() {
     userQuery,
     createUserMutation,
     deleteMutation,
+    handleNewAccountCreate,
+
     // updateMutation,
     // deleteMutation,
     // resetPasswordMutation,

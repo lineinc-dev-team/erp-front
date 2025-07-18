@@ -18,9 +18,12 @@ import {
   TextField,
 } from '@mui/material'
 import { AreaCode, PayInfo, UseORnotOptions } from '@/config/erp.confing'
+import { useState } from 'react'
 
 export default function OrderingRegistrationView({ isEditMode = false }) {
   const { form } = useOrderingStore()
+
+  const [uploadedFiles, setUploadedFiles] = useState<FileUploadInfo[]>([])
 
   const managers = form.headManagers
   const checkedIds = form.checkedManagerIds
@@ -402,7 +405,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
-                      <CommonFileInput
+                      {/* <CommonFileInput
                         className=" break-words whitespace-normal"
                         label="계약서"
                         acceptedExtensions={['pdf', 'hwp']}
@@ -410,6 +413,22 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                         onChange={(newFiles) =>
                           form.updateItemField('attachedFile', m.id, 'files', newFiles)
                         }
+                      />
+                       */}
+                      <CommonFileInput
+                        acceptedExtensions={[
+                          'pdf',
+                          'jpg',
+                          'png',
+                          'hwp',
+                          'xlsx',
+                          'zip',
+                          'jpeg',
+                          'ppt',
+                        ]}
+                        files={uploadedFiles}
+                        onChange={setUploadedFiles}
+                        uploadTarget={'CLIENT_COMPANY'}
                       />
                     </div>
                   </TableCell>
