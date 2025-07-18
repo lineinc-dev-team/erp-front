@@ -6,6 +6,7 @@ if (!apiBaseUrl) {
 
 export const API = {
   BASE_URL: apiBaseUrl,
+  CLIENTCOMPANY: `${apiBaseUrl}/client-companies`,
   LOGIN: `${apiBaseUrl}/auth/login`,
   LOGOUT: `${apiBaseUrl}/auth/logout`,
   MYINFO: `${apiBaseUrl}/auth/me`,

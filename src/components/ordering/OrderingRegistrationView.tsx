@@ -5,7 +5,7 @@ import CommonSelect from '../common/Select'
 import CommonButton from '../common/Button'
 import DaumPostcodeEmbed from 'react-daum-postcode'
 import CommonFileInput from '../common/FileInput'
-import { useOrderingStore } from '@/stores/orderingStore'
+import { useOrderingFormStore } from '@/stores/orderingStore'
 import {
   Checkbox,
   Paper,
@@ -18,12 +18,26 @@ import {
   TextField,
 } from '@mui/material'
 import { AreaCode, PayInfo, UseORnotOptions } from '@/config/erp.confing'
-import { useState } from 'react'
+import { useClientCompany } from '@/hooks/useClientCompany'
+import { useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useParams } from 'next/navigation'
+import { AttachedFile, Manager } from '@/types/ordering'
+import { ClientDetailService } from '@/services/ordering/orderingRegistrationService'
 
 export default function OrderingRegistrationView({ isEditMode = false }) {
-  const { form } = useOrderingStore()
+  const {
+    setField,
+    form,
+    updateItemField,
+    removeCheckedItems,
+    reset,
+    addItem,
+    toggleCheckItem,
+    toggleCheckAllItems,
+  } = useOrderingFormStore()
 
-  const [uploadedFiles, setUploadedFiles] = useState<FileUploadInfo[]>([])
+  const { createClientMutation, ClientModifyMutation } = useClientCompany()
 
   const managers = form.headManagers
   const checkedIds = form.checkedManagerIds
@@ -33,20 +47,83 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
   const fileCheckIds = form.checkedAttachedFileIds
   const isFilesAllChecked = attachedFiles.length > 0 && fileCheckIds.length === attachedFiles.length
 
+  // 상세페이지 로직
+
+  const params = useParams()
+  const clientCompanyId = Number(params?.id)
+
+  const { data } = useQuery({
+    queryKey: ['ClientDetailInfo'],
+    queryFn: () => ClientDetailService(clientCompanyId),
+    enabled: isEditMode && !!clientCompanyId, // 수정 모드일 때만 fetch
+  })
+
+  console.log('상세데이터', data)
+
+  useEffect(() => {
+    if (data && isEditMode === true) {
+      const client = data.data
+
+      // 담당자 데이터 가공
+      const formattedContacts = (client.contacts ?? []).map((c: Manager) => ({
+        id: c.id,
+        name: c.name,
+        position: c.position,
+        phoneNumber: c.phoneNumber,
+        landlineNumber: c.landlineNumber,
+        email: c.email,
+        memo: c.memo,
+      }))
+
+      // 첨부파일 데이터 가공
+      const formattedFiles = (client.files ?? []).map((item: AttachedFile) => ({
+        id: item.id,
+        name: item.name,
+        memo: item.memo,
+        files: [
+          {
+            publicUrl: item.fileUrl,
+            file: {
+              name: item.originalFileName,
+            },
+          },
+        ],
+      }))
+
+      // 각 필드에 set
+      setField('name', client.name)
+      setField('businessNumber', client.businessNumber)
+      setField('address', client.address)
+      setField('detailAddress', client.detailAddress)
+      setField('ceoName', client.ceoName)
+      setField('areaNumber', client.areaNumber)
+      setField('landlineNumber', client.landlineNumber)
+      setField('email', client.email)
+      setField('paymentMethod', client.paymentMethod)
+      setField('paymentPeriod', client.paymentPeriod)
+      setField('isActive', client.isActive)
+      setField('memo', client.memo)
+      setField('headManagers', formattedContacts)
+      setField('attachedFiles', formattedFiles)
+    } else {
+      reset()
+    }
+  }, [data])
+
   return (
     <>
       <div>
         <span className="font-bold border-b-2 mb-4">기본 정보</span>
         <div className="grid grid-cols-2 mt-1 ">
           <div className="flex">
-            <label className=" text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300 font-bold text-center">
+            <label className=" w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300 font-bold text-center">
               발주처명
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
                 placeholder="텍스트 입력"
                 value={form.name}
-                onChange={(value) => form.setField('name', value)}
+                onChange={(value) => setField('name', value)}
                 className="flex-1"
               />
             </div>
@@ -59,7 +136,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
               <CommonInput
                 placeholder="'-'없이 숫자만 입력"
                 value={form.businessNumber}
-                onChange={(value) => form.setField('businessNumber', value)}
+                onChange={(value) => setField('businessNumber', value)}
                 className="flex-1"
               />
             </div>
@@ -80,12 +157,12 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                   label="주소찾기"
                   variant="secondary"
                   className="bg-gray-400 text-white px-3 rounded"
-                  onClick={() => form.setField('isModalOpen', true)}
+                  onClick={() => setField('isModalOpen', true)}
                 />
               </div>
               <input
                 value={form.detailAddress}
-                onChange={(e) => form.setField('detailAddress', e.target.value)}
+                onChange={(e) => setField('detailAddress', e.target.value)}
                 placeholder="상세주소"
                 className="w-full border px-3 py-2 rounded"
               />
@@ -97,13 +174,13 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                         className="mb-2"
                         label="X"
                         variant="danger"
-                        onClick={() => form.setField('isModalOpen', false)}
+                        onClick={() => setField('isModalOpen', false)}
                       />
                     </div>
                     <DaumPostcodeEmbed
                       onComplete={(data) => {
-                        form.setField('address', data.address)
-                        form.setField('isModalOpen', false)
+                        setField('address', data.address)
+                        setField('isModalOpen', false)
                       }}
                       autoClose={false}
                     />
@@ -120,7 +197,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
               <CommonInput
                 placeholder="텍스트 입력"
                 value={form.ceoName}
-                onChange={(value) => form.setField('ceoName', value)}
+                onChange={(value) => setField('ceoName', value)}
                 className="flex-1"
               />
             </div>
@@ -133,14 +210,14 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
               <CommonSelect
                 className="text-2xl"
                 value={form.areaNumber}
-                onChange={(value) => form.setField('areaNumber', value)}
+                onChange={(value) => setField('areaNumber', value)}
                 options={AreaCode}
               />
 
               <CommonInput
                 placeholder="'-'없이 숫자만 입력"
                 value={form.landlineNumber}
-                onChange={(value) => form.setField('landlineNumber', value)}
+                onChange={(value) => setField('landlineNumber', value)}
                 className=" flex-1"
               />
             </div>
@@ -153,7 +230,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
               <CommonInput
                 placeholder="텍스트 입력"
                 value={form.email}
-                onChange={(value) => form.setField('email', value)}
+                onChange={(value) => setField('email', value)}
                 className="flex-1"
               />
             </div>
@@ -166,14 +243,14 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
               <CommonSelect
                 className="text-2xl"
                 value={form.paymentMethod}
-                onChange={(value) => form.setField('paymentMethod', value)}
+                onChange={(value) => setField('paymentMethod', value)}
                 options={PayInfo}
               />
 
               <CommonInput
                 placeholder="텍스트 입력"
                 value={form.paymentPeriod}
-                onChange={(value) => form.setField('paymentPeriod', value)}
+                onChange={(value) => setField('paymentPeriod', value)}
                 className=" flex-1"
               />
             </div>
@@ -187,7 +264,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                 fullWidth={false}
                 className="text-xl"
                 value={form.isActive}
-                onChange={(value) => form.setField('isActive', value)}
+                onChange={(value) => setField('isActive', value)}
                 options={UseORnotOptions}
               />
             </div>
@@ -199,7 +276,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
                 value={form.memo}
-                onChange={(value) => form.setField('memo', value)}
+                onChange={(value) => setField('memo', value)}
                 className="flex-1"
               />
             </div>
@@ -216,13 +293,13 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
               label="삭제"
               className="px-7"
               variant="danger"
-              onClick={() => form.removeCheckedItems('manager')}
+              onClick={() => removeCheckedItems('manager')}
             />
             <CommonButton
               label="추가"
               className="px-7"
               variant="secondary"
-              onClick={() => form.addItem('manager')}
+              onClick={() => addItem('manager')}
             />
           </div>
         </div>
@@ -234,7 +311,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                   <Checkbox
                     checked={isAllChecked}
                     indeterminate={checkedIds.length > 0 && !isAllChecked}
-                    onChange={(e) => form.toggleCheckAllItems('manager', e.target.checked)}
+                    onChange={(e) => toggleCheckAllItems('manager', e.target.checked)}
                     sx={{ color: 'black' }}
                   />
                 </TableCell>
@@ -264,7 +341,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                   >
                     <Checkbox
                       checked={checkedIds.includes(m.id)}
-                      onChange={(e) => form.toggleCheckItem('manager', m.id, e.target.checked)}
+                      onChange={(e) => toggleCheckItem('manager', m.id, e.target.checked)}
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -272,9 +349,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       placeholder="텍스트 입력"
                       size="small"
                       value={m.name}
-                      onChange={(e) =>
-                        form.updateItemField('manager', m.id, 'name', e.target.value)
-                      }
+                      onChange={(e) => updateItemField('manager', m.id, 'name', e.target.value)}
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -282,27 +357,23 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       placeholder="텍스트 입력"
                       size="small"
                       value={m.position}
-                      onChange={(e) =>
-                        form.updateItemField('manager', m.id, 'position', e.target.value)
-                      }
+                      onChange={(e) => updateItemField('manager', m.id, 'position', e.target.value)}
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
                       placeholder="'-'없이 숫자만 입력"
-                      value={m.tel}
-                      onChange={(e) => form.updateItemField('manager', m.id, 'tel', e.target.value)}
+                      value={m.landlineNumber}
+                      onChange={(e) => updateItemField('manager', m.id, 'tel', e.target.value)}
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
                       placeholder="'-'없이 숫자만 입력"
-                      value={m.phone}
-                      onChange={(e) =>
-                        form.updateItemField('manager', m.id, 'phone', e.target.value)
-                      }
+                      value={m.phoneNumber}
+                      onChange={(e) => updateItemField('manager', m.id, 'phone', e.target.value)}
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -310,9 +381,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       size="small"
                       placeholder="텍스트 입력"
                       value={m.email}
-                      onChange={(e) =>
-                        form.updateItemField('manager', m.id, 'email', e.target.value)
-                      }
+                      onChange={(e) => updateItemField('manager', m.id, 'email', e.target.value)}
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -320,9 +389,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       size="small"
                       placeholder="텍스트 입력"
                       value={m.memo}
-                      onChange={(e) =>
-                        form.updateItemField('manager', m.id, 'memo', e.target.value)
-                      }
+                      onChange={(e) => updateItemField('manager', m.id, 'memo', e.target.value)}
                     />
                   </TableCell>
                 </TableRow>
@@ -341,13 +408,13 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
               label="삭제"
               className="px-7"
               variant="danger"
-              onClick={() => form.removeCheckedItems('attachedFile')}
+              onClick={() => removeCheckedItems('attachedFile')}
             />
             <CommonButton
               label="추가"
               className="px-7"
               variant="secondary"
-              onClick={() => form.addItem('attachedFile')}
+              onClick={() => addItem('attachedFile')}
             />
           </div>
         </div>
@@ -359,7 +426,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                   <Checkbox
                     checked={isFilesAllChecked}
                     indeterminate={fileCheckIds.length > 0 && !isFilesAllChecked}
-                    onChange={(e) => form.toggleCheckAllItems('attachedFile', e.target.checked)}
+                    onChange={(e) => toggleCheckAllItems('attachedFile', e.target.checked)}
                     sx={{ color: 'black' }}
                   />
                 </TableCell>
@@ -389,7 +456,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                   >
                     <Checkbox
                       checked={fileCheckIds.includes(m.id)}
-                      onChange={(e) => form.toggleCheckItem('attachedFile', m.id, e.target.checked)}
+                      onChange={(e) => toggleCheckItem('attachedFile', m.id, e.target.checked)}
                     />
                   </TableCell>
                   <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
@@ -397,9 +464,9 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       size="small"
                       placeholder="텍스트 입력"
                       sx={{ width: '100%' }}
-                      value={m.fileName}
+                      value={m.name}
                       onChange={(e) =>
-                        form.updateItemField('attachedFile', m.id, 'fileName', e.target.value)
+                        updateItemField('attachedFile', m.id, 'fileName', e.target.value)
                       }
                     />
                   </TableCell>
@@ -426,10 +493,27 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                           'jpeg',
                           'ppt',
                         ]}
+                        files={m.files} // 각 항목별 files
+                        onChange={
+                          (newFiles) => updateItemField('attachedFile', m.id, 'files', newFiles) //  해당 항목만 업데이트
+                        }
+                        uploadTarget="CLIENT_COMPANY"
+                      />
+                      {/* <CommonFileInput
+                        acceptedExtensions={[
+                          'pdf',
+                          'jpg',
+                          'png',
+                          'hwp',
+                          'xlsx',
+                          'zip',
+                          'jpeg',
+                          'ppt',
+                        ]}
                         files={uploadedFiles}
                         onChange={setUploadedFiles}
                         uploadTarget={'CLIENT_COMPANY'}
-                      />
+                      /> */}
                     </div>
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -439,7 +523,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       sx={{ width: '100%' }}
                       value={m.memo}
                       onChange={(e) =>
-                        form.updateItemField('attachedFile', m.id, 'memo', e.target.value)
+                        updateItemField('attachedFile', m.id, 'memo', e.target.value)
                       }
                     />
                   </TableCell>
@@ -461,7 +545,13 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
           label={isEditMode ? '+ 수정' : '+ 등록'}
           className="px-10 font-bold"
           variant="secondary"
-          onClick={form.newOrderingData}
+          onClick={() => {
+            if (isEditMode) {
+              ClientModifyMutation.mutate(clientCompanyId)
+            } else {
+              createClientMutation.mutate()
+            }
+          }}
         />
       </div>
     </>

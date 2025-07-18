@@ -38,15 +38,6 @@ export default function ManagementView() {
 
   const { selectedIds, setSelectedIds } = useAccountStore()
 
-  console.log('displayedRows', displayedRows)
-
-  // 필드 값 데이터 가공
-  // userExcelFieldMap 객체를 { label: string, value: string }[] 배열로 바꿔줍니다.
-  const fieldMapArray = Object.entries(userExcelFieldMap).map(([label, value]) => ({
-    label,
-    value,
-  }))
-
   // 가공 로직
   const updatedUsers = displayedRows.map((user) => ({
     ...user,
@@ -54,6 +45,13 @@ export default function ManagementView() {
     createdAt: getTodayDateString(user.createdAt),
     updatedAt: getTodayDateString(user.updatedAt),
     lastLoginAt: getTodayDateString(user.lastLoginAt),
+  }))
+
+  // 필드 값 데이터 가공
+  // userExcelFieldMap 객체를 { label: string, value: string }[] 배열로 바꿔줍니다.
+  const fieldMapArray = Object.entries(userExcelFieldMap).map(([label, value]) => ({
+    label,
+    value,
   }))
 
   const handleDownloadExcel = async (fields: string[]) => {

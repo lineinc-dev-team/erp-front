@@ -72,6 +72,22 @@ export const UserDataList: GridColDef[] = [
   { field: 'memo', headerName: '비고', width: 100 },
 ]
 
+export const clientCompanyList: GridColDef[] = [
+  { field: 'id', headerName: 'No', width: 70 },
+  { field: 'businessNumber', headerName: '사업자등록번호', width: 130 },
+  { field: 'name', headerName: '발주처', width: 130 },
+  { field: 'ceoName', headerName: '대표자명', width: 130 },
+  { field: 'address', headerName: '본사 주소', width: 180 },
+  { field: 'landlineNumber', headerName: '전화번호', width: 100 },
+  // { field: 'createdAt', headerName: '담당자명', width: 100 },
+  // { field: 'lastLoginAt', headerName: '부서/직급', width: 120 },
+  { field: 'phoneNumber', headerName: '담당자 연락처/이메일', width: 100 },
+  // { field: 'updatedBy', headerName: '본사 담당자', width: 100 },
+  { field: 'createdAt', headerName: '등록일/수정일', width: 100 },
+  { field: 'hasFile', headerName: '첨부파일 유부', width: 100 },
+  { field: 'memo', headerName: '비고', width: 100 },
+]
+
 export const AreaCode = [
   { label: '지역번호', value: '지역번호' },
   { label: '서울', value: '02' },

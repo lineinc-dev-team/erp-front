@@ -5,34 +5,44 @@ import CommonInput from '../common/Input'
 import CommonSelect from '../common/Select'
 import CommonDatePicker from '../common/DatePicker'
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-import { ArrayStatusOptions, PageCount, UseORnotOptions } from '@/config/erp.confing'
+import {
+  ArrayStatusOptions,
+  clientCompanyList,
+  PageCount,
+  UseORnotOptions,
+} from '@/config/erp.confing'
 import { Pagination } from '@mui/material'
 import { useOrderingSearchStore } from '@/stores/orderingStore'
 import { OrderingService } from '@/services/ordering/orderingService'
 import ContractHistory from '../common/ContractHistory'
+import { useClientCompany } from '@/hooks/useClientCompany'
+import { usePagination } from '@/hooks/usePagination'
+import { OrderingSearchState } from '@/types/ordering'
+import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
 
 export default function OrderingView() {
-  const {
-    setModalOpen,
-
-    printMode,
-    handleNewOrderCreate,
-    displayedRows,
-    contract,
-    setContract,
-    page,
-    setPage,
-    totalPages,
-    filteredColumns,
-  } = OrderingService()
+  const { setModalOpen, handleNewOrderCreate, contract, setContract } = OrderingService()
 
   const { search } = useOrderingSearchStore()
 
+  const { ClientQuery, ClientDeleteMutation } = useClientCompany()
+
+  const ClientCompanyList = ClientQuery.data?.data.content ?? []
+
+  const { page, setPage, totalPages, displayedRows } = usePagination<OrderingSearchState>(
+    ClientCompanyList,
+    10,
+  )
+
+  const { selectedIds, setSelectedIds } = useAccountStore()
+
   const router = useRouter()
 
-  const enhancedColumns = filteredColumns.map((col): GridColDef => {
-    if (col.field === 'siteCode') {
+  // 그리도 라우팅 로직!
+  const enhancedColumns = clientCompanyList.map((col): GridColDef => {
+    console.log('2324', col)
+    if (col.field === 'name') {
       return {
         ...col,
         headerAlign: 'center',
@@ -40,20 +50,18 @@ export default function OrderingView() {
         flex: 1,
 
         renderCell: (params: GridRenderCellParams) => {
-          if (params.field === 'siteCode') {
-            return (
-              <div
-                onClick={() => router.push(`/ordering/registration/20`)}
-                className="flex justify-center items-center cursor-pointer"
-              >
-                <span className="text-orange-500 font-bold">{params.value}</span>
-              </div>
-            )
-          }
+          const clientId = params.row.id // ✅ 여기서 추출
+          return (
+            <div
+              onClick={() => router.push(`/ordering/registration/${clientId}`)}
+              className="flex justify-center items-center cursor-pointer"
+            >
+              <span className="text-orange-500 font-bold">{params.value}</span>
+            </div>
+          )
         },
       }
     }
-    console.log('@24@', col)
     if (col.field === 'remark') {
       return {
         ...col,
@@ -269,8 +277,23 @@ export default function OrderingView() {
             <div className="flex items-center gap-2">
               <CommonButton
                 label="삭제"
-                variant="reset"
-                onClick={search.handleOrderingListRemove}
+                variant="danger"
+                onClick={() => {
+                  if (!selectedIds || !(selectedIds.ids instanceof Set)) {
+                    alert('체크박스를 선택해주세요.')
+                    return
+                  }
+
+                  const idsArray = [...selectedIds.ids]
+                  if (idsArray.length === 0) {
+                    alert('체크박스를 선택해주세요.')
+                    return
+                  }
+
+                  ClientDeleteMutation.mutate({
+                    userIds: idsArray,
+                  })
+                }}
                 className="px-3"
               />
               <CommonButton
@@ -292,18 +315,28 @@ export default function OrderingView() {
       <div style={{ height: 500, width: '100%' }}>
         <DataGrid
           rows={displayedRows}
-          columns={enhancedColumns}
-          checkboxSelection={!printMode} // 프린트 시 체크박스 제거
+          columns={enhancedColumns.map((col) => ({
+            ...col,
+            sortable: false,
+            headerAlign: 'center',
+            align: 'center',
+            flex: 1,
+          }))}
+          checkboxSelection
           disableRowSelectionOnClick
           keepNonExistentRowsSelected
           showToolbar
-          disableColumnFilter
+          disableColumnFilter // 필터 비활성화
           hideFooter
           disableColumnMenu
           hideFooterPagination
+          // pageSize={pageSize}
           rowHeight={60}
+          onRowSelectionModelChange={(newSelection) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            setSelectedIds(newSelection as any) // 타입 보장된다면 사용 가능
+          }}
         />
-
         <div className="flex justify-center mt-4 pb-6">
           <Pagination
             count={totalPages}

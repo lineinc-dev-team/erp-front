@@ -4,213 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { GridRowSelectionModel } from '@mui/x-data-grid'
 import { BusinessDataList } from '@/config/erp.confing'
+import { API } from '@/api/config/env'
 
 export function OrderingService() {
   const router = useRouter()
-
-  const allRows = [
-    {
-      id: 1,
-      siteCode: 'A123',
-      location: '서울',
-      siteType: '본사',
-      period: '2025-01-01~2025-12-31',
-      status: '운영중',
-      registrar: '홍길동',
-      registeredDate: '2025-01-01',
-      modifiedDate: '2025-01-15',
-      attachments: '파일1.pdf',
-      remark: '확인', // 버튼 텍스트만 보관
-    },
-    {
-      id: 2,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '확인',
-    },
-    {
-      id: 3,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '확인',
-    },
-    {
-      id: 4,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 5,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 6,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 7,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 8,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 9,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 10,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 11,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 12,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 13,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 14,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 15,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-  ]
-
-  const [page, setPage] = useState(1)
-  const [pageSize] = useState(10)
-  const totalPages = Math.ceil(allRows.length / pageSize)
-  const displayedRows = allRows.slice((page - 1) * pageSize, page * pageSize)
-
   const [selectedIds, setSelectedIds] = useState<GridRowSelectionModel>()
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedFields, setSelectedFields] = useState<string[]>([])
@@ -229,29 +26,12 @@ export function OrderingService() {
       })
     : BusinessDataList
 
-  const excelFields = [
-    '현장코드',
-    '위치',
-    '사업장유형',
-    '본사 주소',
-    '전화번호',
-    '담당자명',
-    '직급/부서',
-    '담당자 연락처/이메일',
-    '본사 담당자',
-    '사용 여부',
-    '등록일/수정일',
-    '첨부파일 유무',
-    '비고 / 메모',
-  ]
-
   const handleToggleField = (field: string) => {
     setSelectedFields((prev) =>
       prev.includes(field) ? prev.filter((f) => f !== field) : [...prev, field],
     )
   }
 
-  const handleSelectAll = () => setSelectedFields(excelFields)
   const handleReset = () => setSelectedFields([])
 
   const handlePrint = () => {
@@ -282,20 +62,55 @@ export function OrderingService() {
     setModalOpen,
     selectedFields,
     handleToggleField,
-    handleSelectAll,
     handleReset,
-    excelFields,
+
     handlePrint,
     printMode,
     handleNewOrderCreate,
-    displayedRows,
-    page,
-    setPage,
-    totalPages,
     setSelectedIds,
     filteredColumns,
     setContract,
     handleExcelDownload,
     contract,
   }
+}
+
+// 발주처 조회
+
+export async function ClientCompanyInfoService() {
+  const resData = await fetch(API.CLIENTCOMPANY, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      throw new Error('권한이 없습니다.')
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  console.log('파싱된 유저 데이터', data)
+  return data
+}
+
+// 발주처 삭제
+export async function ClientRemoveService(clientCompanyIds: number[]) {
+  const res = await fetch(API.CLIENTCOMPANY, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ clientCompanyIds }),
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    throw new Error(`서버 오류: ${res.status}`)
+  }
+
+  return await res.status
 }

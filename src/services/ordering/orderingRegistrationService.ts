@@ -1,4 +1,5 @@
 import { API } from '@/api/config/env'
+import { useOrderingFormStore } from '@/stores/orderingStore'
 
 type PresignedUrlResponse = {
   uploadUrl: string
@@ -38,4 +39,62 @@ export async function uploadToS3(uploadUrl: string, file: File) {
   if (!res.ok) {
     throw new Error(`S3 업로드 실패: ${res.statusText}`)
   }
+}
+// 발주처 생성 엔드포인트
+
+export async function CreateClientCompany() {
+  const { newClientCompanyData } = useOrderingFormStore.getState()
+  const payload = newClientCompanyData()
+
+  const res = await fetch(API.CLIENTCOMPANY, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    throw new Error(`서버 오류: ${res.status}`)
+  }
+
+  return await res.status
+}
+
+// 발주처 상세
+export async function ClientDetailService(clientCompanyId: number) {
+  const res = await fetch(`${API.CLIENTCOMPANY}/${clientCompanyId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    throw new Error(`서버 오류: ${res.status}`)
+  }
+
+  return await res.json()
+}
+
+//  수정
+export async function ModifyClientCompany(clientModifyId: number) {
+  const { newClientCompanyData } = useOrderingFormStore.getState()
+  const payload = newClientCompanyData()
+
+  const res = await fetch(`${API.CLIENTCOMPANY}/${clientModifyId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    throw new Error(`서버 오류: ${res.status}`)
+  }
+
+  return await res.status
 }

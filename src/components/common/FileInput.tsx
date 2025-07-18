@@ -40,6 +40,7 @@ export default function CommonFileInput({
     }
 
     onChange([...files, ...uploadedFiles])
+
     setLoading(false)
   }
 
@@ -53,7 +54,7 @@ export default function CommonFileInput({
         <ul>
           {files.map(({ file }, index) => (
             <li key={index} className="flex items-center gap-2 mb-1">
-              <span className={className}>{file.name}</span>
+              <span className={className}>{file?.name}</span>
               <button
                 onClick={() => removeFile(index)}
                 className="text-red-500 border border-gray-400 rounded px-2"

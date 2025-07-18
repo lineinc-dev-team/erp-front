@@ -2,17 +2,19 @@ export type Manager = {
   id: number
   name: string
   position: string
-  tel: string
-  phone: string
+  landlineNumber: string
+  phoneNumber: string
   email: string
   memo: string
 }
 
 export type AttachedFile = {
   id: number
-  fileName: string
+  name: string
   memo: string
-  files: File[]
+  fileUrl?: string
+  originalFileName?: string
+  files: FileUploadInfo[]
 }
 
 export type OrderingSearchState = {
@@ -73,6 +75,12 @@ export type FormState = {
     modifiedBy: string
     note: string
   }[]
+}
+
+type ClientCompanyFormStore = {
+  form: FormState
+
+  reset: () => void
 
   // methods
   setField: <K extends keyof Omit<FormState, 'reset' | 'setField'>>(
@@ -82,11 +90,16 @@ export type FormState = {
 
   addItem: (type: 'manager' | 'attachedFile') => void
   updateItemField: (type: 'manager' | 'attachedFile', id: number, field: string, value: T) => void
-  toggleCheckItem: (ype: 'manager' | 'attachedFile', id: number, checked: boolean) => void
-  toggleCheckAllItems: (ype: 'manager' | 'attachedFile', checked: boolean) => void
-  removeCheckedItems: (ype: 'manager' | 'attachedFile') => void
+  toggleCheckItem: (type: 'manager' | 'attachedFile', id: number, checked: boolean) => void
+  toggleCheckAllItems: (type: 'manager' | 'attachedFile', checked: boolean) => void
+  removeCheckedItems: (type: 'manager' | 'attachedFile') => void
+  // updateAttachedFileUploads: (id: number, newFiles: FileUploadInfo[]) => void
 
   //발주처 등록하기
+
+  //payload 값
+  newClientCompanyData: () => void
+
   newOrderingData: () => void
   handleCancelData: () => void
 }
