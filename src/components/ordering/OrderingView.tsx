@@ -13,16 +13,19 @@ import {
 } from '@/config/erp.confing'
 import { Pagination } from '@mui/material'
 import { useOrderingSearchStore } from '@/stores/orderingStore'
-import { OrderingService } from '@/services/ordering/orderingService'
+import { ClientCompanyExcelDownload, OrderingService } from '@/services/ordering/orderingService'
 import ContractHistory from '../common/ContractHistory'
 import { useClientCompany } from '@/hooks/useClientCompany'
 import { usePagination } from '@/hooks/usePagination'
 import { OrderingSearchState } from '@/types/ordering'
 import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
+import ExcelModal from '../common/ExcelModal'
+import { useState } from 'react'
+import { clientCompanyExcelFieldMap } from '@/utils/userExcelField'
 
 export default function OrderingView() {
-  const { setModalOpen, handleNewOrderCreate, contract, setContract } = OrderingService()
+  const { handleNewOrderCreate, contract, setContract } = OrderingService()
 
   const { search } = useOrderingSearchStore()
 
@@ -101,7 +104,17 @@ export default function OrderingView() {
   // if (error) throw error
 
   // alert(data)
+  // 엑셀 다운로드에 필요한 로직
+  const [modalOpen, setModalOpen] = useState(false)
+  // userExcelFieldMap 객체를 { label: string, value: string }[] 배열로 바꿔줍니다.
+  const fieldMapArray = Object.entries(clientCompanyExcelFieldMap).map(([label, value]) => ({
+    label,
+    value,
+  }))
 
+  const handleDownloadExcel = async (fields: string[]) => {
+    await ClientCompanyExcelDownload({ fields })
+  }
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
@@ -301,6 +314,15 @@ export default function OrderingView() {
                 variant="reset"
                 onClick={() => setModalOpen(true)}
                 className="px-3"
+              />
+
+              {/* <ExcelModal open={modalOpen} onClose={() => setModalOpen(false)} /> */}
+              <ExcelModal
+                open={modalOpen}
+                onClose={() => setModalOpen(false)}
+                title="발주처 관리 - 엑셀 항목 선택"
+                fieldMap={fieldMapArray}
+                onDownload={handleDownloadExcel}
               />
               <CommonButton
                 label="+ 신규등록"

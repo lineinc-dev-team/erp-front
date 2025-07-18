@@ -20,19 +20,13 @@ export type UserExcelFieldKey = (typeof userExcelFieldMap)[UserExcelFieldLabel]
 
 // 다음 페이지  필드 체크
 // utils/worksiteExcelField.ts
-export const worksiteExcelFieldMap = {
+export const clientCompanyExcelFieldMap = {
   No: 'id',
-  사업장명: 'name',
-  주소: 'address',
-  연락처: 'phoneNumber',
-  사용여부: 'isActive',
-  생성일: 'createdAt',
+  사업자등록번호: 'businessNumber',
+  대표자명: 'ceoName',
+  본사주소: 'address',
+  전화번호: 'phoneNumber',
 } as const
 
-export type WorksiteExcelFieldLabel = keyof typeof worksiteExcelFieldMap
-export type WorksiteExcelFieldKey = (typeof worksiteExcelFieldMap)[WorksiteExcelFieldLabel]
-
-export const worksiteFieldArray = Object.entries(worksiteExcelFieldMap).map(([label, value]) => ({
-  label,
-  value,
-}))
+export type WorksiteExcelFieldLabel = keyof typeof clientCompanyExcelFieldMap
+export type WorksiteExcelFieldKey = (typeof clientCompanyExcelFieldMap)[WorksiteExcelFieldLabel]
