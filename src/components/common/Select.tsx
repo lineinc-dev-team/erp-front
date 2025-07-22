@@ -9,6 +9,10 @@ type CommonSelectProps<T extends string | number> = {
   required?: boolean
   disabled?: boolean
   className?: string
+  displayLabel?: boolean
+  onScrollToBottom?: () => void
+  onInputChange?: (value: string) => void
+  loading?: boolean
 }
 
 export default function CommonSelect<T extends string | number>({
@@ -17,14 +21,31 @@ export default function CommonSelect<T extends string | number>({
   options,
   fullWidth,
   className,
+  displayLabel,
   required = false,
   disabled = false,
 }: CommonSelectProps<T>) {
+  console.log('해당 데이터', value, onChange)
   return (
     <FormControl fullWidth={fullWidth} required={required} disabled={disabled} size="small">
       <Select
         value={value}
         className={className}
+        onChange={(e) => onChange(e.target.value as T)}
+        MenuProps={{
+          PaperProps: {
+            sx: {
+              maxHeight: 200, // 스크롤 생기게
+            },
+          },
+          // MenuListProps: {
+          //   onScroll: (e: React.UIEvent<HTMLUListElement>) => {
+          //     const target = e.currentTarget
+          //     if (target.scrollHeight - target.scrollTop === target.clientHeight) {
+          //     }
+          //   },
+          // },
+        }}
         sx={{
           '& .MuiOutlinedInput-notchedOutline': {
             borderColor: 'black',
@@ -36,11 +57,10 @@ export default function CommonSelect<T extends string | number>({
             borderColor: 'black',
           },
         }}
-        onChange={(e) => onChange(e.target.value as T)}
       >
         {options.map((opt) => (
           <MenuItem key={opt.value} value={opt.value}>
-            {opt.value}
+            {displayLabel ? opt.label : opt.value}
           </MenuItem>
         ))}
       </Select>

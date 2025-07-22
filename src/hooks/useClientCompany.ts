@@ -1,12 +1,14 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { useRouter } from 'next/navigation'
 import { useOrderingFormStore } from '@/stores/orderingStore'
 import {
   CreateClientCompany,
   ModifyClientCompany,
+  OrderingInfoNameScroll,
 } from '@/services/ordering/orderingRegistrationService'
 import { ClientCompanyInfoService, ClientRemoveService } from '@/services/ordering/orderingService'
+import { useMemo, useState } from 'react'
 
 export function useClientCompany() {
   const { showSnackbar } = useSnackbarStore()
@@ -72,10 +74,65 @@ export function useClientCompany() {
     },
   })
 
+  // 발주처 본사 담당자
+  // 조회에서 이름 검색 스크롤
+  const useUserOrderingInfiniteScroll = (keyword: string) => {
+    return useInfiniteQuery({
+      queryKey: ['userInfo', keyword],
+      queryFn: ({ pageParam }) => OrderingInfoNameScroll({ pageParam, keyword }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        const nextPage = sliceInfo.page + 1
+
+        return sliceInfo.hasNext ? nextPage : undefined
+      },
+    })
+  }
+
+  const [userSearch, setUserSearch] = useState('')
+
+  const {
+    data: userData,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isLoading,
+  } = useInfiniteQuery({
+    queryKey: ['userInfo', userSearch],
+    queryFn: ({ pageParam }) => OrderingInfoNameScroll({ pageParam, keyword: userSearch }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      const nextPage = sliceInfo.page + 1
+      return sliceInfo.hasNext ? nextPage : undefined
+    },
+  })
+
+  console.log('12345', userData)
+  const userOptions = useMemo(() => {
+    return (userData?.pages || [])
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        label: user.username,
+        value: user.id,
+      }))
+  }, [userData])
+
   return {
     ClientQuery,
     createClientMutation,
     ClientDeleteMutation,
     ClientModifyMutation,
+    useUserOrderingInfiniteScroll,
+
+    // 본사 담당자 관련
+    userSearch,
+    setUserSearch,
+    userOptions,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isLoading,
   }
 }

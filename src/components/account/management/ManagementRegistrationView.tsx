@@ -20,7 +20,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
         <div className="grid grid-cols-2 mt-1">
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              로그인 ID
+              ID
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -62,7 +62,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              담당현장
+              직급
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
               <CommonSelect
@@ -90,7 +90,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              직급
+              권한그룹
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
               <CommonSelect
@@ -141,7 +141,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
               />
             </div>
           </div>
-          <div className="flex">
+          {/* <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               권한 그룹
             </label>
@@ -154,7 +154,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
                 options={UseORnotOptions}
               />
             </div>
-          </div>
+          </div> */}
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               계정 상태
@@ -169,7 +169,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
               />
             </div>
           </div>
-          <div className="flex">
+          {/* <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               최종 로그인
             </label>
@@ -181,8 +181,8 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
                 className=" flex-1"
               />
             </div>
-          </div>
-          <div className="flex">
+          </div> */}
+          {/* <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               계정 생성일
             </label>
@@ -194,7 +194,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
                 className=" flex-1"
               />
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
 

@@ -51,12 +51,14 @@ export type FormState = {
   detailAddress: string
   areaNumber: string
   landlineNumber: string
+  phoneNumber: string
   isModalOpen: boolean
   email: string
   paymentMethod: string
   paymentPeriod: string
   memo: string
   isActive: string
+  userId: number
 
   // 담당자 배열
   headManagers: Manager[]

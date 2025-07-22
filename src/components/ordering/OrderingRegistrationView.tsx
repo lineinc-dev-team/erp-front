@@ -37,7 +37,16 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
     toggleCheckAllItems,
   } = useOrderingFormStore()
 
-  const { createClientMutation, ClientModifyMutation } = useClientCompany()
+  const {
+    createClientMutation,
+    ClientModifyMutation,
+    setUserSearch,
+    userOptions,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isLoading,
+  } = useClientCompany()
 
   const managers = form.headManagers
   const checkedIds = form.checkedManagerIds
@@ -90,18 +99,45 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
         ],
       }))
 
+      if (client.paymentMethod === 'BILL') {
+        setField('paymentMethod', '어음')
+      }
+      if (client.paymentMethod === 'CASH') {
+        setField('paymentMethod', '현금')
+      }
+      if (client.isActive === false) {
+        setField('isActive', '미사용')
+      }
+
+      if (client.landlineNumber) {
+        const parts = client.landlineNumber.split('-')
+        if (parts.length >= 2) {
+          const area = parts[0] // 지역번호
+          const number = parts.slice(1).join('-') // 나머지 번호
+          setField('areaNumber', area)
+          setField('landlineNumber', number)
+        } else {
+          // fallback (예외 처리)
+          setField('landlineNumber', client.landlineNumber)
+        }
+      } else {
+        setField('landlineNumber', '')
+        setField('areaNumber', '')
+      }
+
       // 각 필드에 set
       setField('name', client.name)
       setField('businessNumber', client.businessNumber)
       setField('address', client.address)
+      setField('phoneNumber', client.phoneNumber)
       setField('detailAddress', client.detailAddress)
       setField('ceoName', client.ceoName)
-      setField('areaNumber', client.areaNumber)
-      setField('landlineNumber', client.landlineNumber)
       setField('email', client.email)
-      setField('paymentMethod', client.paymentMethod)
       setField('paymentPeriod', client.paymentPeriod)
-      setField('isActive', client.isActive)
+      setField('isActive', client.isActive ? '사용' : '미사용')
+
+      setField('userId', client.user.id)
+
       setField('memo', client.memo)
       setField('headManagers', formattedContacts)
       setField('attachedFiles', formattedFiles)
@@ -222,6 +258,27 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
               />
             </div>
           </div>
+
+          <div className="flex">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+              휴대폰
+            </label>
+            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
+              {/* <CommonSelect
+                className="text-2xl"
+                value={form.areaNumber}
+                onChange={(value) => setField('areaNumber', value)}
+                options={AreaCode}
+              /> */}
+
+              <CommonInput
+                placeholder="'-'없이 숫자만 입력"
+                value={form.phoneNumber}
+                onChange={(value) => setField('phoneNumber', value)}
+                className=" flex-1"
+              />
+            </div>
+          </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               이메일(대표)
@@ -255,6 +312,44 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
               />
             </div>
           </div>
+          {/* <div className="flex">
+            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+              본사 담당자명
+            </label>
+            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
+              <CommonSelect
+                fullWidth={true}
+                className="text-xl"
+                value={form.isActive}
+                onChange={(value) => setField('isActive', value)}
+                options={UseORnotOptions}
+              />
+            </div>
+          </div>
+          
+          */}
+
+          <div className="flex">
+            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+              본사 담당자명
+            </label>
+            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
+              <CommonSelect
+                fullWidth
+                className="text-xl"
+                value={form.userId}
+                onChange={(value) => setField('userId', value)}
+                options={userOptions}
+                displayLabel
+                onScrollToBottom={() => {
+                  if (hasNextPage && !isFetching) fetchNextPage()
+                }}
+                onInputChange={(value) => setUserSearch(value)}
+                loading={isLoading}
+              />
+            </div>
+          </div>
+
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               사용 여부
@@ -365,7 +460,9 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       size="small"
                       placeholder="'-'없이 숫자만 입력"
                       value={m.landlineNumber}
-                      onChange={(e) => updateItemField('manager', m.id, 'tel', e.target.value)}
+                      onChange={(e) =>
+                        updateItemField('manager', m.id, 'landlineNumber', e.target.value)
+                      }
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -373,7 +470,9 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       size="small"
                       placeholder="'-'없이 숫자만 입력"
                       value={m.phoneNumber}
-                      onChange={(e) => updateItemField('manager', m.id, 'phone', e.target.value)}
+                      onChange={(e) =>
+                        updateItemField('manager', m.id, 'phoneNumber', e.target.value)
+                      }
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>

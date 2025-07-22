@@ -1,9 +1,10 @@
 import { useAccountFormStore } from '@/stores/accountManagementStore'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { useRouter } from 'next/navigation'
 import {
   CreateAccount,
+  UserInfoNameScroll,
   UserInfoService,
   UserRemoveService,
 } from '@/services/account/accountManagementService'
@@ -20,6 +21,22 @@ export function useUserMg() {
     queryFn: UserInfoService,
   })
 
+  // 조회에서 이름 검색 스크롤
+  const useUserInfiniteScroll = (keyword: string) => {
+    return useInfiniteQuery({
+      queryKey: ['userInfo', keyword],
+      queryFn: ({ pageParam }) => UserInfoNameScroll({ pageParam, keyword }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        const nextPage = sliceInfo.page + 1
+
+        return sliceInfo.hasNext ? nextPage : undefined
+      },
+    })
+  }
+
+  // 계정 추가
   const createUserMutation = useMutation({
     mutationFn: CreateAccount,
     onSuccess: () => {
@@ -80,6 +97,7 @@ export function useUserMg() {
     createUserMutation,
     deleteMutation,
     handleNewAccountCreate,
+    useUserInfiniteScroll,
 
     // updateMutation,
     // deleteMutation,

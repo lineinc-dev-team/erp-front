@@ -34,6 +34,29 @@ export async function UserInfoService() {
   return data
 }
 
+// 키워드 - 이름 검색 시 무한 스크롤
+export async function UserInfoNameScroll({ pageParam = 0, size = 5, keyword = '', sort = '' }) {
+  const resData = await fetch(
+    `${API.USER}/search?page=${pageParam}&size=${size}&keyword=${keyword}&sort=${sort}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    },
+  )
+
+  if (!resData.ok) {
+    if (resData.status === 401) throw new Error('권한이 없습니다.')
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  console.log('파싱된 유저 데이터', data)
+  return data
+}
+
 export function AccountManagementService() {
   const [sortList, setSortList] = useState('최근순')
 

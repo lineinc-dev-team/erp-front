@@ -3,7 +3,7 @@
 import { DataGrid } from '@mui/x-data-grid'
 import { UserDataList, SubmitOptions, UseORnotOptions } from '@/config/erp.confing'
 import { Pagination } from '@mui/material'
-import CommonInput from '@/components/common/Input'
+// import CommonInput from '@/components/common/Input'
 import { userExcelFieldMap } from '@/utils/userExcelField'
 
 import CommonSelect from '@/components/common/Select'
@@ -20,6 +20,8 @@ import { getTodayDateString } from '@/utils/formatters'
 import { UserInfoProps } from '@/types/accountManagement'
 import { useState } from 'react'
 import ExcelModal from '@/components/common/ExcelModal'
+import InfiniteScrollSelect from '@/components/common/InfiniteScrollSelect'
+import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 
 export default function ManagementView() {
   const { ArrayStatusOptions, sortList, setSortList } = AccountManagementService()
@@ -58,6 +60,22 @@ export default function ManagementView() {
     await UserDataExcelDownload({ fields })
   }
 
+  const [keyword, setKeyword] = useState('')
+
+  const { useUserInfiniteScroll } = useUserMg()
+
+  const handleSelectUser = (user: UserInfoProps) => {
+    setKeyword(user.username)
+    search.setField('ceoName', user.username)
+  }
+
+  const debouncedKeyword = useDebouncedValue(keyword, 300)
+
+  const { data, fetchNextPage, hasNextPage, isFetching, isLoading } =
+    useUserInfiniteScroll(debouncedKeyword)
+
+  const userList = data?.pages.flatMap((page) => page.data.content) ?? []
+
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
@@ -66,7 +84,7 @@ export default function ManagementView() {
             <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               이름
             </label>
-            <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
+            {/* <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
               <CommonInput
                 placeholder="텍스트 입력"
                 value={search.ceoName}
@@ -74,6 +92,25 @@ export default function ManagementView() {
                 className="flex-1"
               />
             </div>
+            
+            */}
+            <InfiniteScrollSelect<UserInfoProps>
+              placeholder="이름을 입력하세요"
+              keyword={keyword}
+              onChangeKeyword={setKeyword}
+              items={userList}
+              hasNextPage={hasNextPage ?? false}
+              fetchNextPage={fetchNextPage}
+              renderItem={(item, isHighlighted) => (
+                <div className={isHighlighted ? 'font-bold text-white p-1  bg-blue-600' : ''}>
+                  {item.username}
+                </div>
+              )}
+              onSelect={handleSelectUser}
+              shouldShowList={true}
+              isLoading={isLoading || isFetching}
+              debouncedKeyword={debouncedKeyword}
+            />
           </div>
 
           <div className="flex">

@@ -6,22 +6,26 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Snackbar, Alert } from '@mui/material'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  // QueryClient를 useState로 딱 한 번만 생성
   const [queryClient] = useState(() => new QueryClient())
   const { open, message, severity, closeSnackbar } = useSnackbarStore()
+
+  const pathname = usePathname()
+  const isLoginPage = pathname === '/'
 
   return (
     <html lang="ko">
       <body>
         <QueryClientProvider client={queryClient}>
           <HeaderWrapper />
-          {children}
+
+          <div className={isLoginPage ? '' : 'mt-32'}>{children}</div>
 
           <Snackbar
             open={open}
