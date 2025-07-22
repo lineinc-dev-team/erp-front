@@ -25,7 +25,6 @@ export default function CommonSelect<T extends string | number>({
   required = false,
   disabled = false,
 }: CommonSelectProps<T>) {
-  console.log('해당 데이터', value, onChange)
   return (
     <FormControl fullWidth={fullWidth} required={required} disabled={disabled} size="small">
       <Select

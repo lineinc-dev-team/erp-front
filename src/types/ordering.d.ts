@@ -17,10 +17,47 @@ export type AttachedFile = {
   files: FileUploadInfo[]
 }
 
+// 발주처 조회 리스트 가져오는 타입들
+
+export interface Contact {
+  id: number
+  name: string
+  phoneNumber: string
+  landlineNumber: string
+  email: string
+  memo?: string
+}
+
+export interface User {
+  id: number
+  username: string
+}
+
+export interface ClientCompany {
+  id: number
+  name: string // 발주처 이름
+  businessNumber: string
+  ceoName: string
+  address: string
+  detailAddress: string
+  landlineNumber: string
+  phoneNumber: string
+  email: string
+  memo: string
+  isActive: boolean
+  hasFile: boolean
+  contacts: Contact[]
+  createdAt: string // ISO 날짜 문자열
+  updatedAt: string
+  user: User
+}
+
 export type OrderingSearchState = {
+  searchTrigger: number
   name: string
   businessNumber: string
   ceoName: string
+  currentPage: number
   landlineNumber: string
   orderCEOname: string
   email: string

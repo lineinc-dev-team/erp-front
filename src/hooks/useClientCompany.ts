@@ -1,14 +1,15 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { useRouter } from 'next/navigation'
-import { useOrderingFormStore } from '@/stores/orderingStore'
+import { useOrderingFormStore, useOrderingSearchStore } from '@/stores/orderingStore'
 import {
   CreateClientCompany,
   ModifyClientCompany,
   OrderingInfoNameScroll,
 } from '@/services/ordering/orderingRegistrationService'
 import { ClientCompanyInfoService, ClientRemoveService } from '@/services/ordering/orderingService'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { getTodayDateString } from '@/utils/formatters'
 
 export function useClientCompany() {
   const { showSnackbar } = useSnackbarStore()
@@ -18,9 +19,61 @@ export function useClientCompany() {
   const queryClient = useQueryClient()
 
   // 발주처 조회
+  const search = useOrderingSearchStore((state) => state.search)
+
+  // 초기 화면에 들어왔을 때 currentPage 1로 세팅 (예: useEffect 등에서)
+  useEffect(() => {
+    if (search.currentPage !== 1) {
+      search.setField('currentPage', 1)
+    }
+  }, [])
+
+  // useQuery 쪽 수정
   const ClientQuery = useQuery({
-    queryKey: ['ClientInfo'],
-    queryFn: ClientCompanyInfoService,
+    queryKey: [
+      'ClientInfo',
+      search.searchTrigger,
+      search.currentPage,
+      search.pageCount,
+      search.arraySort /* 필요한 상태들 추가 */,
+    ],
+    queryFn: () => {
+      const rawParams = {
+        name: search.name,
+        businessNumber: search.businessNumber,
+        ceoName: search.ceoName,
+        phoneNumber: search.landlineNumber,
+        contactName: search.orderCEOname,
+        email: search.email,
+        createdStartDate: getTodayDateString(search.startDate),
+        createdEndDate: getTodayDateString(search.endDate),
+        isActive:
+          search.isActive === '사용' ? true : search.isActive === '미사용' ? false : undefined,
+        page: search.currentPage - 1, // 항상 현재 페이지에 맞춤
+        size: Number(search.pageCount) || 10,
+        sort:
+          search.arraySort === '최신순'
+            ? 'id,desc'
+            : search.arraySort === '날짜순'
+            ? 'createdAt.desc'
+            : 'id.asc',
+      }
+
+      const filteredParams = Object.fromEntries(
+        Object.entries(rawParams).filter(
+          ([, value]) =>
+            value !== undefined &&
+            value !== null &&
+            value !== '' &&
+            !(typeof value === 'number' && isNaN(value)),
+        ),
+      )
+
+      console.log('검색 파라미터', filteredParams)
+
+      return ClientCompanyInfoService(filteredParams)
+    },
+    staleTime: 1000 * 30,
   })
 
   // 발주처 등록
@@ -109,14 +162,16 @@ export function useClientCompany() {
     },
   })
 
-  console.log('12345', userData)
   const userOptions = useMemo(() => {
-    return (userData?.pages || [])
+    const defaultOption = { label: '선택', value: '0' }
+    const options = (userData?.pages || [])
       .flatMap((page) => page.data.content)
       .map((user) => ({
         label: user.username,
         value: user.id,
       }))
+
+    return [defaultOption, ...options]
   }, [userData])
 
   return {

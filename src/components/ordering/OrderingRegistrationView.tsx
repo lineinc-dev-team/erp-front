@@ -565,7 +565,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       sx={{ width: '100%' }}
                       value={m.name}
                       onChange={(e) =>
-                        updateItemField('attachedFile', m.id, 'fileName', e.target.value)
+                        updateItemField('attachedFile', m.id, 'name', e.target.value)
                       }
                     />
                   </TableCell>

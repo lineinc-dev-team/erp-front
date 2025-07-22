@@ -1,3 +1,4 @@
+import { getTodayDateString } from '@/utils/formatters'
 import { create } from 'zustand'
 import type {
   Manager,
@@ -8,7 +9,9 @@ import type {
 
 export const useOrderingSearchStore = create<{ search: OrderingSearchState }>((set) => ({
   search: {
+    searchTrigger: 0,
     name: '',
+    currentPage: 0,
     businessNumber: '',
     ceoName: '',
     landlineNumber: '',
@@ -37,21 +40,30 @@ export const useOrderingSearchStore = create<{ search: OrderingSearchState }>((s
           landlineNumber: search.landlineNumber,
           orderCEOname: search.orderCEOname,
           email: search.email,
-          startDate: search.startDate,
-          endDate: search.endDate,
+          startDate: getTodayDateString(search.startDate),
+          endDate: getTodayDateString(search.endDate),
           bossName: search.bossName,
-          isActive: search.isActive === '사용' ? true : false,
+          isActive:
+            search.isActive === '사용' ? true : search.isActive === '미사용' ? false : undefined,
         }
+
         alert(JSON.stringify(payload, null, 2))
 
-        return state
+        return {
+          search: {
+            ...search,
+            searchTrigger: (search.searchTrigger || 0) + 1,
+          },
+        }
       }),
+
     reset: () =>
       set((state) => ({
         search: {
           ...state.search,
           name: '',
           businessNumber: '',
+          currentPage: 0,
           ceoName: '',
           areaNumber: '',
           landlineNumber: '',

@@ -23,9 +23,9 @@ export type UserInfoProps = {
   landlineNumber: string | null
   email: string
   memo: string | null
-  createdAt: string
-  updatedAt: string
-  lastLoginAt: string
+  createdAt: Date
+  updatedAt: Date
+  lastLoginAt: Date
   updatedBy: string
   isActive: boolean
   roles?: string[]

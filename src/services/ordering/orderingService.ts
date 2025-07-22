@@ -31,8 +31,10 @@ export function OrderingService() {
 
 // 발주처 조회
 
-export async function ClientCompanyInfoService() {
-  const resData = await fetch(API.CLIENTCOMPANY, {
+export async function ClientCompanyInfoService(params = {}) {
+  const query = new URLSearchParams(params).toString()
+
+  const resData = await fetch(`${API.CLIENTCOMPANY}?${query}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

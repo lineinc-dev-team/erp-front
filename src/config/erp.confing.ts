@@ -35,11 +35,12 @@ export const ProcessStatusOptions = [
 export const ArrayStatusOptions = [
   { label: '최신순', value: '최신순' },
   { label: '날짜순', value: '날짜순' },
-  { label: '이름순', value: '이름순' },
+  // { label: '이름순', value: '이름순' },
 ]
 
 export const PageCount = [
   { label: '10', value: '10' },
+  { label: '20', value: '20' },
   { label: '30', value: '30' },
   { label: '50', value: '50' },
 ]
@@ -79,10 +80,11 @@ export const clientCompanyList: GridColDef[] = [
   { field: 'ceoName', headerName: '대표자명', width: 130 },
   { field: 'address', headerName: '본사 주소', width: 180 },
   { field: 'landlineNumber', headerName: '전화번호', width: 100 },
-  // { field: 'createdAt', headerName: '담당자명', width: 100 },
+  { field: 'contactName', headerName: '담당자명', width: 100 },
   // { field: 'lastLoginAt', headerName: '부서/직급', width: 120 },
-  { field: 'phoneNumber', headerName: '담당자 연락처/이메일', width: 100 },
-  // { field: 'updatedBy', headerName: '본사 담당자', width: 100 },
+  { field: 'contactInfo', headerName: '담당자 연락처/이메일', width: 100 },
+  { field: 'headquarter', headerName: '본사담당자명', width: 100 },
+  { field: 'isActive', headerName: '사용여부', width: 100 },
   { field: 'createdAt', headerName: '등록일/수정일', width: 100 },
   { field: 'hasFile', headerName: '첨부파일 유부', width: 100 },
   { field: 'memo', headerName: '비고', width: 100 },
