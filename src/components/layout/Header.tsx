@@ -53,11 +53,11 @@ const menuItems: MenuItem[] = [
   },
 
   {
-    title: '사업장 관리',
+    title: '현장 관리',
     icon: <Apartment />, // 사업장: 건물 관련
     children: [
-      { label: ' - 조회', path: '/business' },
-      { label: ' - 등록', path: '/business/registration' },
+      { label: ' - 조회', path: '/sites' },
+      { label: ' - 등록', path: '/sites/registration' },
     ],
   },
 

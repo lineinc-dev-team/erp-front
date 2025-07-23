@@ -9,7 +9,7 @@ export const SiteOptions = [
 
 export const SiteProgressing = [
   { id: 0, label: '선택', value: '선택' },
-  { id: 1, label: '미시작', value: 'NOT_STARTED' },
+  { id: 1, label: '준비중', value: 'NOT_STARTED' },
   { id: 2, label: '진행중', value: 'IN_PROGRESS' },
   { id: 3, label: '완료', value: 'COMPLETED' },
 ]
@@ -59,10 +59,10 @@ export const SiteColumnList: GridColDef[] = [
   // { field: 'username', headerName: '공정명', width: 130 },
   { field: 'address', headerName: '위치', width: 130 },
   { field: 'type', headerName: '현장유형', width: 180 },
-  { field: 'clientCompany', headerName: '발주처명', width: 100 },
+  { field: 'clientCompanyName', headerName: '발주처명', width: 100 },
   // { field: 'createdAt', headerName: '현장소장', width: 100 },
-  { field: 'startedAt', headerName: '사업기간', width: 120 },
-  { field: 'process', headerName: '진행상태', width: 120 },
+  { field: 'period', headerName: '사업기간', width: 120 },
+  { field: 'processStatuses', headerName: '진행상태', width: 120 },
   { field: 'createdBy', headerName: '등록자', width: 100 },
   { field: 'createdAt', headerName: '등록일자', width: 100 },
   { field: 'hasFile', headerName: '첨부파일', width: 100 },

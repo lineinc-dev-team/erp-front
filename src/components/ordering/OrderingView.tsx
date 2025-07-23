@@ -43,7 +43,7 @@ export default function OrderingView() {
     contactInfo: `${user.contacts?.[0]?.phoneNumber || '-'}<br/>${
       user.contacts?.[0]?.email || '-'
     }`,
-    headquarter: user.user.username,
+    headquarter: user.user?.username,
     isActive: 'Y',
     hasFile: 'Y',
     createdAt: getTodayDateString(user.createdAt),

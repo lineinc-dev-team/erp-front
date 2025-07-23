@@ -6,7 +6,7 @@ import CommonSelect from '../common/Select'
 import CommonDatePicker from '../common/DatePicker'
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { Checkbox, ListItemText, MenuItem, Pagination, Select } from '@mui/material'
-import { SiteExcelDownload, SiteMoveService } from '@/services/business/siteService'
+import { SiteExcelDownload, SiteMoveService } from '@/services/sites/siteService'
 import { useSiteSearchStore } from '@/stores/siteStore'
 import useSite from '@/hooks/useSite'
 import { useAccountStore } from '@/stores/accountManagementStore'
@@ -25,7 +25,7 @@ import { useState } from 'react'
 import ExcelModal from '../common/ExcelModal'
 import { SiteExcelFieldMap } from '@/utils/userExcelField'
 
-export default function BusinessView() {
+export default function SitesView() {
   const { handleNewOrderCreate } = SiteMoveService()
 
   const { search } = useSiteSearchStore()
@@ -34,17 +34,19 @@ export default function BusinessView() {
 
   const SiteDataList = SiteListQuery.data?.data.content ?? []
 
+  console.log('혀낭ㅈ', SiteDataList)
+
   const totalList = SiteListQuery.data?.data.pageInfo.totalElements ?? 0
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
   const updateSiteList = SiteDataList.map((site: SiteListProps) => ({
     ...site,
-    process: site.process.name,
-    clientCompany: site.clientCompany.name,
+    processStatuses: site.process?.name,
+    clientCompanyName: site.clientCompany?.name,
     isActive: 'Y',
     hasFile: 'Y',
-    startedAt: getTodayDateString(site.startedAt) + ' ~ ' + getTodayDateString(site.endedAt),
+    period: getTodayDateString(site.startedAt) + ' ~ ' + getTodayDateString(site.endedAt),
     createdAt: getTodayDateString(site.updatedAt),
   }))
 
@@ -65,7 +67,7 @@ export default function BusinessView() {
           const clientId = params.row.id
           return (
             <div
-              onClick={() => router.push(`/ordering/registration/${clientId}`)}
+              onClick={() => router.push(`/sites/registration/${clientId}`)}
               className="flex justify-center items-center cursor-pointer"
             >
               <span className="text-orange-500 font-bold">{params.value}</span>

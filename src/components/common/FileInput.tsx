@@ -57,14 +57,14 @@ export default function CommonFileInput({
               <span className={className}>{file?.name}</span>
               <button
                 onClick={() => removeFile(index)}
-                className="text-red-500 border border-gray-400 rounded px-2"
+                className="text-red-500 border cursor-pointer border-gray-400 rounded px-2"
               >
                 X
               </button>
             </li>
           ))}
         </ul>
-        <label className="cursor-pointer bg-gray-300 text-black font-medium border border-black px-4 py-2 rounded">
+        <label className="cursor-pointer whitespace-nowrap bg-gray-300 text-black font-medium border border-black px-4 py-2 rounded">
           <input
             type="file"
             multiple

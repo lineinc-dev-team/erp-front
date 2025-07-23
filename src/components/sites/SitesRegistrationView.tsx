@@ -2,21 +2,50 @@
 
 import CommonInput from '../common/Input'
 import CommonSelect from '../common/Select'
-import { BusinessRegistrationService } from '@/services/business/businessRegistrationService'
+import {
+  SiteDetailService,
+  SiteRegistrationService,
+} from '@/services/sites/siteRegistrationService'
 import CommonDatePicker from '../common/DatePicker'
 import CommonButton from '../common/Button'
 import DaumPostcodeEmbed from 'react-daum-postcode'
-import { useSiteFormStore } from '@/stores/siteStore'
+import { ProgressingLabelToValue, typeLabelToValue, useSiteFormStore } from '@/stores/siteStore'
 import { SiteOptions, SiteProgressing } from '@/config/erp.confing'
 import useSite from '@/hooks/useSite'
 import { formatNumber, unformatNumber } from '@/utils/formatters'
+import { useClientCompany } from '@/hooks/useClientCompany'
+import { Contract, ContractFile, ContractFileType } from '@/types/site'
+import CommonFileInput from '../common/FileInput'
+import { formatPhoneNumber } from '@/utils/formatPhoneNumber'
+import { useParams } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
+import { useEffect } from 'react'
 
-export default function BusinessRegistrationView({ isEditMode = false }) {
-  const { setField, setProcessField, form } = useSiteFormStore()
+export default function SitesRegistrationView({ isEditMode = false }) {
+  const FILE_TYPE_LABELS: Record<ContractFileType, string> = {
+    CONTRACT: '계약서',
+    DRAWING: '현장도면',
+    WARRANTY: '보증서류(보증보험)',
+    PERMIT: '인허가 서류',
+    ETC: '기타파일',
+  }
+
+  const {
+    setField,
+    setProcessField,
+    form,
+    resetForm,
+    addContract,
+    // removeContract,
+    updateContractField,
+    addContractFile,
+    removeContractFile,
+    setContracts,
+  } = useSiteFormStore()
 
   const {
     createSiteMutation,
-
+    ModifySiteMutation,
     //본사 담당자
     setOrderSearch,
     orderOptions,
@@ -26,9 +55,226 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
     isLoading,
   } = useSite()
 
-  const { handleCancelData } = BusinessRegistrationService()
+  // 상세페이지 로직
 
-  // 수정과 등록을 같이 사용함
+  const params = useParams()
+  const siteId = Number(params?.id)
+
+  const { data } = useQuery({
+    queryKey: ['SiteDetailInfo'],
+    queryFn: () => SiteDetailService(siteId),
+    enabled: isEditMode && !!siteId, // 수정 모드일 때만 fetch
+  })
+
+  console.log('상세데이터', data)
+
+  useEffect(() => {
+    if (data && isEditMode) {
+      const client = data.data
+
+      console.log('@@ 데이터 확인', client)
+
+      // 기본 필드 설정
+      setField('name', client.name)
+      setField('address', client.address)
+      setField('detailAddress', client.detailAddress)
+      const mappedType = typeLabelToValue[client.type] || '' // 한글 → 영어
+      setField('type', mappedType)
+
+      setField('clientCompanyId', client.clientCompany.id)
+      setField('startedAt', client.startedAt ? new Date(client.startedAt) : null)
+      setField('endedAt', client.endedAt ? new Date(client.endedAt) : null)
+      setField('userId', client.user.id)
+      setField('contractAmount', client.contractAmount)
+      setField('memo', client.memo)
+
+      // 공정 정보 설정
+      setProcessField('name', client.process?.name || '')
+      setProcessField('officePhone', client.process?.officePhone || '')
+      const filterProgress = ProgressingLabelToValue[client.process.status]
+      if (
+        filterProgress === 'NOT_STARTED' ||
+        filterProgress === 'IN_PROGRESS' ||
+        filterProgress === 'COMPLETED'
+      ) {
+        setProcessField('status', filterProgress)
+      }
+
+      setProcessField('memo', client.process?.memo || '')
+
+      // 계약 정보 초기화
+
+      const convertFileType = (typeKor: string): ContractFileType => {
+        switch (typeKor) {
+          case '계약서':
+            return 'CONTRACT'
+          case '현장도면':
+            return 'DRAWING'
+          case '보증서류(보증보험)':
+            return 'WARRANTY'
+          case '인허가 서류':
+            return 'PERMIT'
+          case '기타파일':
+            return 'ETC'
+          default:
+            return 'ETC'
+        }
+      }
+
+      // 계약 정보 세팅
+      if (client.contracts) {
+        const formattedContracts = client.contracts.map((contract: Contract) => ({
+          id: contract.id,
+          name: contract.name || '',
+          amount: contract.amount || 0,
+          memo: contract.memo || '',
+          files: (contract.files || []).map((file: ContractFile) => ({
+            id: file.id,
+            name: file.name,
+            memo: file.memo,
+            fileUrl: file.fileUrl,
+            originalFileName: file.originalFileName,
+            type: convertFileType(file.type), // 여기에서 한글 -> 영문 enum 매핑
+          })),
+        }))
+
+        setContracts(formattedContracts)
+      }
+    } else {
+      resetForm()
+    }
+  }, [data])
+
+  const { handleCancelData } = SiteRegistrationService()
+
+  const { setUserSearch, userOptions } = useClientCompany()
+
+  const renderInputRow = (label: string, children: React.ReactNode) => (
+    <div className="flex">
+      <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
+        {label}
+      </label>
+      <div className="flex-1 border border-gray-400 px-2 py-2 flex items-center">{children}</div>
+    </div>
+  )
+
+  const renderContractSection = () => (
+    <>
+      <div className="mt-4 flex justify-between items-center">
+        <span className="font-bold border-b-2">계약서 관리</span>
+        <CommonButton
+          label="계약서 추가"
+          onClick={addContract}
+          variant="primary"
+          className="bg-blue-400 text-white px-3 rounded"
+        />
+      </div>
+
+      {form.contracts.map((contract, idx) => (
+        <div key={idx} className="border rounded p-4 mt-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-bold">계약서 {idx + 1}</h3>
+
+            {/* <CommonButton
+              label="계약서 삭제"
+              variant="danger"
+              onClick={() => removeContract(idx)}
+            /> */}
+          </div>
+
+          <div className="grid grid-cols-2 ">
+            {renderInputRow(
+              '계약명',
+              <CommonInput
+                value={contract.name}
+                onChange={(v) => updateContractField(idx, 'name', v)}
+                placeholder="텍스트 입력"
+                className="flex-1"
+              />,
+            )}
+
+            {renderInputRow(
+              '계약금액',
+              <CommonInput
+                value={formatNumber(contract.amount)}
+                onChange={(v) => {
+                  const numericValue = unformatNumber(v)
+                  updateContractField(idx, 'amount', numericValue)
+                }}
+                placeholder="금액을 입력해주세요."
+                className="flex-1"
+              />,
+            )}
+
+            <div className="flex col-span-2">
+              <label className="w-36 text-[14px] border border-gray-400 bg-gray-300 flex items-center justify-center font-bold">
+                비고
+              </label>
+              <div className="flex-1 border border-gray-400 px-2 py-1">
+                <CommonInput
+                  placeholder="텍스트 입력"
+                  className="flex-1"
+                  value={contract.memo}
+                  onChange={(v) => updateContractField(idx, 'memo', v)}
+                />
+              </div>
+            </div>
+
+            {(['CONTRACT', 'DRAWING', 'WARRANTY', 'PERMIT', 'ETC'] as ContractFileType[]).map(
+              (type) => (
+                <div key={type} className="flex">
+                  <label className="w-36 text-[14px] border border-gray-400 bg-gray-300 flex items-center justify-center font-bold">
+                    {FILE_TYPE_LABELS[type]}
+                  </label>
+                  <div className="flex-1 border border-gray-400 px-2 py-2 flex flex-col gap-2">
+                    <CommonFileInput
+                      // label={FILE_TYPE_LABELS[type]}
+                      uploadTarget="CLIENT_COMPANY"
+                      acceptedExtensions={type === 'ETC' ? ['zip', 'xlsx', 'doc'] : ['pdf', 'hwp']}
+                      files={contract.files
+                        .filter((f) => f.type === type)
+                        .map((f) => ({
+                          file: new File([], f.originalFileName), // 화면 표시용 File 객체 (빈 파일)
+                          publicUrl: f.fileUrl,
+                        }))}
+                      onChange={(uploaded) => {
+                        // 기존 type에 해당하는 파일 제거
+                        contract.files
+                          .map((f, i) => ({ f, i }))
+                          .filter(({ f }) => f.type === type)
+                          .reverse() // 뒤에서부터 제거
+                          .forEach(({ i }) => removeContractFile(idx, i))
+
+                        // 새로운 파일 추가
+                        uploaded.forEach(({ publicUrl, file }) =>
+                          addContractFile(idx, {
+                            name: file.name,
+                            originalFileName: file.name,
+                            fileUrl: publicUrl,
+                            memo: '',
+                            type,
+                          }),
+                        )
+                      }}
+                    />
+                  </div>
+                </div>
+              ),
+            )}
+            {/* {renderInputRow(
+              '첨부일자 / 등록자',
+              <CommonInput
+                placeholder="텍스트 입력"
+                value={form.}
+                onChange={(value) => setField('name', value)}
+                className="flex-1"
+              />,
+            )} */}
+          </div>
+        </div>
+      ))}
+    </>
+  )
 
   return (
     <>
@@ -142,13 +388,13 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonDatePicker
-                value={form.startDate}
-                onChange={(value) => setField('startDate', value)}
+                value={form.startedAt}
+                onChange={(value) => setField('startedAt', value)}
               />
               ~
               <CommonDatePicker
-                value={form.endDate}
-                onChange={(value) => setField('endDate', value)}
+                value={form.endedAt}
+                onChange={(value) => setField('endedAt', value)}
               />
             </div>
           </div>
@@ -163,12 +409,12 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
                 className="text-xl"
                 value={form.userId}
                 onChange={(value) => setField('userId', value)}
-                options={orderOptions}
+                options={userOptions}
                 displayLabel
                 onScrollToBottom={() => {
                   if (hasNextPage && !isFetching) fetchNextPage()
                 }}
-                onInputChange={(value) => setOrderSearch(value)}
+                onInputChange={(value) => setUserSearch(value)}
                 loading={isLoading}
               />
             </div>
@@ -239,7 +485,10 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
             <div className="border flex  items-center border-gray-400 px-2 w-full">
               <CommonInput
                 value={form.process.officePhone}
-                onChange={(value) => setProcessField('officePhone', value)}
+                onChange={(value) => {
+                  const formatted = formatPhoneNumber(value)
+                  setProcessField('officePhone', formatted)
+                }}
                 className=" flex-1"
               />
             </div>
@@ -275,116 +524,6 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
           </div>
         </div>
       </div>
-
-      <div className="mt-4">
-        <span className="font-bold border-b-2 mb-4">첨부 파일</span>
-      </div>
-
-      {/* <div className="grid grid-cols-2 mt-1">
-        <div className="flex">
-          <label className="w-36  text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-            계약명
-          </label>
-          <div className="border flex  items-center border-gray-400 px-2 w-full">
-            <CommonInput
-              value={businessInfo.name}
-              onChange={(value) => setField('name', value)}
-              className=" flex-1"
-            />
-          </div>
-        </div>
-
-        <div className="flex">
-          <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-            계약금액
-          </label>
-          <div className="border flex  items-center border-gray-400 px-2 w-full">
-            <CommonInput
-              value={businessInfo.name}
-              onChange={(value) => setField('name', value)}
-              className=" flex-1"
-            />
-          </div>
-        </div>
-        <div className="flex">
-          <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-            계약서
-          </label>
-          <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
-            <CommonFileInput
-              className=" w-[420px] break-words whitespace-normal"
-              label="인허가 서류"
-              acceptedExtensions={['pdf', 'hwp']}
-              files={permitFiles}
-              onChange={setPermitFiles}
-            />
-          </div>
-        </div>
-        <div className="flex">
-          <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-            현장도면
-          </label>
-          <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
-            <CommonFileInput
-              className=" w-[420px] break-words whitespace-normal"
-              label="인허가 서류"
-              acceptedExtensions={['pdf', 'hwp']}
-              files={permitFiles}
-              onChange={setPermitFiles}
-            />
-          </div>
-        </div>
-        <div className="flex">
-          <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-            보증서류(보증보험)
-          </label>
-          <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
-            <CommonFileInput
-              className=" w-[420px] break-words whitespace-normal"
-              label="인허가 서류"
-              acceptedExtensions={['pdf', 'hwp']}
-              files={permitFiles}
-              onChange={setPermitFiles}
-            />
-          </div>
-        </div>
-        <div className="flex">
-          <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-            인허가 서류
-          </label>
-          <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
-            <CommonFileInput
-              className=" w-[420px] break-words whitespace-normal"
-              label="인허가 서류"
-              acceptedExtensions={['pdf', 'hwp']}
-              files={permitFiles}
-              onChange={setPermitFiles}
-            />
-          </div>
-        </div>
-        <div className="flex">
-          <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-            기타파일
-          </label>
-          <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
-            <CommonFileInput
-              className=" w-[420px] break-words whitespace-normal"
-              label="기타파일"
-              acceptedExtensions={['zip', 'xlsx', 'doc']}
-              files={etcFiles}
-              onChange={setEtcFiles}
-            />
-          </div>
-        </div>
-        <div className="flex">
-          <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-            첨부일자 / 등록자
-          </label>
-          <div className="border border-gray-400 px-2 p-2 w-full flex gap-2.5 items-center">
-            <p>{getTodayDateString()}</p>
-          </div>
-        </div>
-      </div> */}
 
       {/* <div className="mt-4">
         <span className="font-bold border-b-2 mb-4">변경이력</span>
@@ -425,6 +564,8 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
         </div>
       </div> */}
 
+      {renderContractSection()}
+
       <div className="flex justify-center gap-10 mt-10">
         <CommonButton label="취소" variant="reset" className="px-10" onClick={handleCancelData} />
         <CommonButton
@@ -432,11 +573,11 @@ export default function BusinessRegistrationView({ isEditMode = false }) {
           className="px-10 font-bold"
           variant="secondary"
           onClick={() => {
-            // if (isEditMode) {
-            //   ClientModifyMutation.mutate(clientCompanyId)
-            // } else {
-            createSiteMutation.mutate()
-            // }
+            if (isEditMode) {
+              ModifySiteMutation.mutate(siteId)
+            } else {
+              createSiteMutation.mutate()
+            }
           }}
         />
       </div>

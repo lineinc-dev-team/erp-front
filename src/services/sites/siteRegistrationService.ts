@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 // import { useBusinessStore } from '@/stores/businessStore'
 import { useState } from 'react'
 
-export function BusinessRegistrationService() {
+export function SiteRegistrationService() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [address, setAddress] = useState('')
   const [detail, setDetail] = useState('')
@@ -103,4 +103,41 @@ export async function OrderingPersonScroll({ pageParam = 0, size = 5, keyword = 
   const data = await resData.json()
   console.log('파싱된 유저 데이터', data)
   return data
+}
+
+// 현장 상세
+export async function SiteDetailService(siteId: number) {
+  const res = await fetch(`${API.SITES}/${siteId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    throw new Error(`서버 오류: ${res.status}`)
+  }
+
+  return await res.json()
+}
+
+//  현장 수정
+export async function ModifySiteService(siteModifyId: number) {
+  const { toPayload } = useSiteFormStore.getState()
+  const payload = toPayload()
+
+  const res = await fetch(`${API.SITES}/${siteModifyId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    throw new Error(`서버 오류: ${res.status}`)
+  }
+
+  return await res.status
 }

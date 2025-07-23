@@ -38,14 +38,14 @@ export const SiteExcelFieldMap = {
   현장명: 'name',
   위치: 'address',
   현장유형: 'type',
-  발주처명: 'clientCompany',
-  사업기간: 'startedAt',
-  진행상태: 'process',
+  발주처명: 'clientCompanyName',
+  사업기간: 'period',
+  진행상태: 'processStatuses',
   등록자: 'createdBy',
   등록일자: 'createdAt',
   첨부파일: 'hasFile',
   비고: 'memo',
 } as const
 
-export type SiteExcelFieldLabel = keyof typeof clientCompanyExcelFieldMap
-export type SietExcelFieldKey = (typeof clientCompanyExcelFieldMap)[SiteExcelFieldLabel]
+export type SiteExcelFieldLabel = keyof typeof SiteExcelFieldMap
+export type SietExcelFieldKey = (typeof SiteExcelFieldMap)[SiteExcelFieldLabel]

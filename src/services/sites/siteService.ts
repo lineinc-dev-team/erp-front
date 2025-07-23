@@ -16,7 +16,7 @@ export function SiteMoveService() {
     )
   }
 
-  const handleNewOrderCreate = () => router.push('/business/registration')
+  const handleNewOrderCreate = () => router.push('/sites/registration')
 
   return {
     selectedFields,
@@ -128,9 +128,9 @@ export async function SiteExcelDownload({
 
   const res = await fetch(`${API.SITES}/download?${queryParams.toString()}`, {
     method: 'GET',
-    headers: {
-      Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    },
+    // headers: {
+    //   Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    // },
 
     credentials: 'include',
   })

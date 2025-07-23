@@ -11,7 +11,7 @@ export const useOrderingSearchStore = create<{ search: OrderingSearchState }>((s
   search: {
     searchTrigger: 0,
     name: '',
-    currentPage: 0,
+    currentPage: 1,
     businessNumber: '',
     ceoName: '',
     landlineNumber: '',
@@ -63,7 +63,7 @@ export const useOrderingSearchStore = create<{ search: OrderingSearchState }>((s
           ...state.search,
           name: '',
           businessNumber: '',
-          currentPage: 0,
+          currentPage: 1,
           ceoName: '',
           areaNumber: '',
           landlineNumber: '',

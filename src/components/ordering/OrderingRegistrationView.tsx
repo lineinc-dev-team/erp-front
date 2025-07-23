@@ -48,6 +48,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
     isLoading,
   } = useClientCompany()
 
+  // 체크 박스에 활용
   const managers = form.headManagers
   const checkedIds = form.checkedManagerIds
   const isAllChecked = managers.length > 0 && checkedIds.length === managers.length

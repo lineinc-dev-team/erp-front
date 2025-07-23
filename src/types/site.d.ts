@@ -6,21 +6,31 @@ type SiteProcess = {
   memo: string
 }
 
-type ContractFile = {
-  siteContractId?: number
+export type ContractFileType = 'CONTRACT' | 'DRAWING' | 'WARRANTY' | 'PERMIT' | 'ETC'
+
+export type ContractFile = {
+  id?: number
   name: string
   fileUrl: string
   originalFileName: string
   memo: string
-  type: 'CONTRACT' | 'OTHER'
+  type: ContractFileType
 }
 
-type Contract = {
+export type Contract = {
+  id: number
   name: string
   amount: number
   memo: string
   files: ContractFile[]
 }
+
+// 상세에서 계약서 가져오기
+type ContractState = {
+  contracts: Contract[]
+  setContracts: (contracts: Contract[]) => void
+}
+
 // 등록에 필요한 타입
 
 type SiteForm = {
@@ -32,8 +42,8 @@ type SiteForm = {
   district: string
   type: string
   clientCompanyId: number
-  startDate: Date | null
-  endDate: Date | null
+  startedAt: Date | null
+  endedAt: Date | null
   userId: number
   contractAmount: number
   memo: string

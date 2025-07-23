@@ -34,7 +34,7 @@ export function useLoginForm() {
     if (result.status === 'success') {
       try {
         await MyInfoService()
-        router.push('/business')
+        router.push('/sites')
       } catch (err) {
         console.error('내 정보를 불러 올 권한이 없습니다.', err)
       }

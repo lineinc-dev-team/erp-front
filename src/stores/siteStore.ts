@@ -15,6 +15,19 @@ type SiteFormState = {
   resetForm: () => void
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   toPayload: () => any
+  setContracts: (contracts: Contract[]) => void
+}
+
+export const typeLabelToValue: Record<string, string> = {
+  건축: 'CONSTRUCTION',
+  토목: 'CIVIL_ENGINEERING',
+  외주: 'OUTSOURCING',
+}
+
+export const ProgressingLabelToValue: Record<string, string> = {
+  준비중: 'NOT_STARTED',
+  진행중: 'IN_PROGRESS',
+  완료: 'COMPLETED',
 }
 
 export const useSiteSearchStore = create<{ search: SiteSearchState }>((set) => ({
@@ -33,7 +46,7 @@ export const useSiteSearchStore = create<{ search: SiteSearchState }>((set) => (
     createdStartDate: null,
     createdEndDate: null,
     arraySort: '최신순',
-    currentPage: 0,
+    currentPage: 1,
     pageCount: '10',
 
     setField: (field, value) =>
@@ -90,7 +103,7 @@ export const useSiteSearchStore = create<{ search: SiteSearchState }>((set) => (
           createdStartDate: null,
           createdEndDate: null,
           arraySort: '최신순',
-          currentPage: 0,
+          currentPage: 1,
           pageCount: '10',
         },
       })),
@@ -111,8 +124,8 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
     district: '',
     type: '선택',
     clientCompanyId: 0,
-    startDate: null,
-    endDate: null,
+    startedAt: null,
+    endedAt: null,
     userId: 0,
     contractAmount: 0,
     memo: '',
@@ -124,6 +137,13 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
     },
     contracts: [],
   },
+  setContracts: (contracts) =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        contracts,
+      },
+    })),
 
   setField: (field, value) => set((state) => ({ form: { ...state.form, [field]: value } })),
 
@@ -149,6 +169,7 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
         contracts: [
           ...state.form.contracts,
           {
+            id: 0,
             name: '',
             amount: 0,
             memo: '',
@@ -191,8 +212,8 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
         district: '',
         type: '선택',
         clientCompanyId: 0,
-        startDate: null,
-        endDate: null,
+        startedAt: null,
+        endedAt: null,
         userId: 0,
         contractAmount: 0,
         memo: '',
@@ -210,8 +231,8 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
     const form = get().form
     return {
       ...form,
-      startDate: form.startDate?.toISOString().split('T')[0] ?? '',
-      endDate: form.endDate?.toISOString().split('T')[0] ?? '',
+      startedAt: form.startedAt?.toISOString().split('T')[0] ?? '',
+      endedAt: form.endedAt?.toISOString().split('T')[0] ?? '',
     }
   },
 }))

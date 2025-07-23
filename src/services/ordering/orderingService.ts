@@ -110,9 +110,9 @@ export async function ClientCompanyExcelDownload({
 
   const res = await fetch(`${API.CLIENTCOMPANY}/download?${queryParams.toString()}`, {
     method: 'GET',
-    headers: {
-      Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    },
+    // headers: {
+    //   Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    // },
 
     credentials: 'include',
   })

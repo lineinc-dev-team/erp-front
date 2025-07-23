@@ -1,8 +1,9 @@
 import {
   CreateSiteInfo,
+  ModifySiteService,
   OrderingPersonScroll,
-} from '@/services/business/businessRegistrationService'
-import { SiteInfoService, SiteRemoveService } from '@/services/business/siteService'
+} from '@/services/sites/siteRegistrationService'
+import { SiteInfoService, SiteRemoveService } from '@/services/sites/siteService'
 import { useSiteFormStore, useSiteSearchStore } from '@/stores/siteStore'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { getTodayDateString } from '@/utils/formatters'
@@ -87,7 +88,7 @@ export default function useSite() {
       // 초기화 로직
       queryClient.invalidateQueries({ queryKey: ['siteInfo'] })
       resetForm()
-      router.push('/business')
+      router.push('/sites')
     },
     onError: () => {
       showSnackbar('현장 등록이 실패했습니다.', 'error')
@@ -108,6 +109,25 @@ export default function useSite() {
 
     onError: () => {
       showSnackbar(' 현장 삭제에 실패했습니다.', 'error')
+    },
+  })
+
+  // 현장 수정
+
+  const ModifySiteMutation = useMutation({
+    mutationFn: (siteModifyId: number) => ModifySiteService(siteModifyId),
+
+    onSuccess: () => {
+      if (window.confirm('수정하시겠습니까?')) {
+        showSnackbar('현장이 수정 되었습니다.', 'success')
+        queryClient.invalidateQueries({ queryKey: ['siteInfo'] })
+        resetForm()
+        router.push('/sites')
+      }
+    },
+
+    onError: () => {
+      showSnackbar(' 현장 수정에 실패했습니다.', 'error')
     },
   })
 
@@ -163,6 +183,7 @@ export default function useSite() {
     createSiteMutation,
     SiteListQuery,
     SiteDeleteMutation,
+    ModifySiteMutation,
 
     //발주처 담당자 관련
     useOrderingPersonInfiniteScroll,
