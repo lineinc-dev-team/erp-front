@@ -175,8 +175,6 @@ export default function Header() {
   const pathname = usePathname()
   const { tabs, removeTab } = useTabStore()
 
-  console.log('현재 접속한 탭!', tabs)
-
   // 전역 알림 메시지
 
   const { showSnackbar } = useSnackbarStore()

@@ -8,7 +8,7 @@ import { useSiteFormStore, useSiteSearchStore } from '@/stores/siteStore'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { getTodayDateString } from '@/utils/formatters'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 
 export default function useSite() {
@@ -24,6 +24,8 @@ export default function useSite() {
   // 발주처 조회
   const search = useSiteSearchStore((state) => state.search)
 
+  const pathName = usePathname()
+
   useEffect(() => {
     if (search.currentPage !== 1) {
       search.setField('currentPage', 1)
@@ -38,6 +40,7 @@ export default function useSite() {
       search.currentPage,
       search.pageCount,
       search.arraySort,
+      pathName,
     ],
     queryFn: () => {
       const rawParams = {
@@ -96,7 +99,6 @@ export default function useSite() {
   })
 
   // 현장 삭제!
-
   const SiteDeleteMutation = useMutation({
     mutationFn: ({ siteIds }: { siteIds: number[] }) => SiteRemoveService(siteIds),
 
@@ -113,7 +115,6 @@ export default function useSite() {
   })
 
   // 현장 수정
-
   const ModifySiteMutation = useMutation({
     mutationFn: (siteModifyId: number) => ModifySiteService(siteModifyId),
 
