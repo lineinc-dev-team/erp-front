@@ -13,3 +13,16 @@ export const getTodayDateString = (
 
   return `${year}-${month}-${day}`
 }
+
+// 숫자를 세 자리마다 콤마 붙인 문자열로 변환
+export function formatNumber(value: number | string): string {
+  const num = Number(value)
+  if (isNaN(num)) return ''
+  return num.toLocaleString()
+}
+
+export // 입력받은 문자열에서 숫자만 남기기
+function unformatNumber(value: string): number {
+  const numericString = value.replace(/[^0-9]/g, '')
+  return Number(numericString)
+}

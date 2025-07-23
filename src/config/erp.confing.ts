@@ -1,9 +1,17 @@
 import { GridColDef } from '@mui/x-data-grid'
 
-export const statusOptions = [
-  { label: '전체', value: '전체' },
-  { label: '토목', value: '토목' },
-  { label: '도로사업장', value: '도로사업장' },
+export const SiteOptions = [
+  { label: '선택', value: '선택' },
+  { label: '건축', value: 'CONSTRUCTION' },
+  { label: '토목', value: 'CIVIL_ENGINEERING' },
+  { label: '외주', value: 'OUTSOURCING' },
+]
+
+export const SiteProgressing = [
+  { id: 0, label: '선택', value: '선택' },
+  { id: 1, label: '미시작', value: 'NOT_STARTED' },
+  { id: 2, label: '진행중', value: 'IN_PROGRESS' },
+  { id: 3, label: '완료', value: 'COMPLETED' },
 ]
 
 export const LocationStatusOptions = [
@@ -45,18 +53,20 @@ export const PageCount = [
   { label: '50', value: '50' },
 ]
 
-export const BusinessDataList: GridColDef[] = [
+export const SiteColumnList: GridColDef[] = [
   { field: 'id', headerName: 'No', width: 70 },
-  { field: 'loginId', headerName: '현장코드', width: 130 },
-  { field: 'username', headerName: '위치', width: 130 },
-  { field: 'phoneNumber', headerName: '사업장유형', width: 130 },
-  { field: 'email', headerName: '기간', width: 180 },
-  { field: 'isActive', headerName: '상태', width: 100 },
-  { field: 'createdAt', headerName: '등록자', width: 100 },
-  { field: 'updatedAt', headerName: '등록일', width: 120 },
-  { field: 'modifiedDate', headerName: '수정일', width: 120 },
-  { field: 'attachments', headerName: '첨부파일', width: 100 },
-  { field: 'remark', headerName: '계약이력', width: 100 },
+  { field: 'name', headerName: '현장명', width: 130 },
+  // { field: 'username', headerName: '공정명', width: 130 },
+  { field: 'address', headerName: '위치', width: 130 },
+  { field: 'type', headerName: '현장유형', width: 180 },
+  { field: 'clientCompany', headerName: '발주처명', width: 100 },
+  // { field: 'createdAt', headerName: '현장소장', width: 100 },
+  { field: 'startedAt', headerName: '사업기간', width: 120 },
+  { field: 'process', headerName: '진행상태', width: 120 },
+  { field: 'createdBy', headerName: '등록자', width: 100 },
+  { field: 'createdAt', headerName: '등록일자', width: 100 },
+  { field: 'hasFile', headerName: '첨부파일', width: 100 },
+  { field: 'memo', headerName: '비고', width: 100 },
 ]
 
 export const UserDataList: GridColDef[] = [

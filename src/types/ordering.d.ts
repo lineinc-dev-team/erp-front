@@ -33,6 +33,7 @@ export interface User {
   username: string
 }
 
+// 발주처 조회
 export interface ClientCompany {
   id: number
   name: string // 발주처 이름

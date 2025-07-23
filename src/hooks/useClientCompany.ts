@@ -127,7 +127,7 @@ export function useClientCompany() {
     },
   })
 
-  // 발주처 본사 담당자
+  // 발주처에서 사용하는 유저 정보데이터
   // 조회에서 이름 검색 스크롤
   const useUserOrderingInfiniteScroll = (keyword: string) => {
     return useInfiniteQuery({

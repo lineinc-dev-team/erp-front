@@ -30,3 +30,22 @@ export const clientCompanyExcelFieldMap = {
 
 export type WorksiteExcelFieldLabel = keyof typeof clientCompanyExcelFieldMap
 export type WorksiteExcelFieldKey = (typeof clientCompanyExcelFieldMap)[WorksiteExcelFieldLabel]
+
+// 현장 엑셀다운 로드 필드 체크
+
+export const SiteExcelFieldMap = {
+  No: 'id',
+  현장명: 'name',
+  위치: 'address',
+  현장유형: 'type',
+  발주처명: 'clientCompany',
+  사업기간: 'startedAt',
+  진행상태: 'process',
+  등록자: 'createdBy',
+  등록일자: 'createdAt',
+  첨부파일: 'hasFile',
+  비고: 'memo',
+} as const
+
+export type SiteExcelFieldLabel = keyof typeof clientCompanyExcelFieldMap
+export type SietExcelFieldKey = (typeof clientCompanyExcelFieldMap)[SiteExcelFieldLabel]

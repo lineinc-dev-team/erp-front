@@ -33,8 +33,6 @@ export default function OrderingView() {
 
   const ClientCompanyList = ClientQuery.data?.data.content ?? []
 
-  // const { displayedRows } = usePagination<ClientCompany>(ClientCompanyList)
-
   const totalList = ClientQuery.data?.data.pageInfo.totalElements ?? 0
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
@@ -51,8 +49,6 @@ export default function OrderingView() {
     createdAt: getTodayDateString(user.createdAt),
     updatedAt: getTodayDateString(user.updatedAt),
   }))
-
-  console.log('updateClientListupdateClientList', updateClientList)
 
   const { selectedIds, setSelectedIds } = useAccountStore()
 
