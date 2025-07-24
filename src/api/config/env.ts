@@ -7,6 +7,7 @@ if (!apiBaseUrl) {
 export const API = {
   BASE_URL: apiBaseUrl,
   SITES: `${apiBaseUrl}/sites`,
+  PROCESS: `${apiBaseUrl}/site-process`,
   CLIENTCOMPANY: `${apiBaseUrl}/client-companies`,
   LOGIN: `${apiBaseUrl}/auth/login`,
   LOGOUT: `${apiBaseUrl}/auth/logout`,
@@ -15,5 +16,6 @@ export const API = {
   SINGLEROLE: `${apiBaseUrl}/roles`,
   USER: `${apiBaseUrl}/users`,
   FILEUPLOAD: `${apiBaseUrl}/files`,
+  COST: `${apiBaseUrl}/management-costs`,
   // 다른 API endpoint도 여기에 추가 가능
 }

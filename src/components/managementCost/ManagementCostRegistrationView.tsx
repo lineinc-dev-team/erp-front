@@ -3,9 +3,7 @@
 import CommonInput from '../common/Input'
 import CommonSelect from '../common/Select'
 import CommonButton from '../common/Button'
-import DaumPostcodeEmbed from 'react-daum-postcode'
 import CommonFileInput from '../common/FileInput'
-import { useOrderingFormStore } from '@/stores/orderingStore'
 import {
   Checkbox,
   Paper,
@@ -17,15 +15,18 @@ import {
   TableRow,
   TextField,
 } from '@mui/material'
-import { AreaCode, PayInfo, UseORnotOptions } from '@/config/erp.confing'
+import { bankOptions, itemTypeOptions } from '@/config/erp.confing'
 import { useClientCompany } from '@/hooks/useClientCompany'
 import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
-import { AttachedFile, Manager } from '@/types/ordering'
 import { ClientDetailService } from '@/services/ordering/orderingRegistrationService'
+import { useManagementCostFormStore } from '@/stores/managementCostsStore'
+import CommonDatePicker from '../common/DatePicker'
+import { useManagementCost } from '@/hooks/useManagementCost'
+import CommonInputnumber from '@/utils/formatBusinessNumber'
 
-export default function OrderingRegistrationView({ isEditMode = false }) {
+export default function ManagementCostRegistrationView({ isEditMode = false }) {
   const {
     setField,
     form,
@@ -35,22 +36,25 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
     addItem,
     toggleCheckItem,
     toggleCheckAllItems,
-  } = useOrderingFormStore()
+  } = useManagementCostFormStore()
+
+  const { ClientModifyMutation } = useClientCompany()
 
   const {
-    createClientMutation,
-    ClientModifyMutation,
-    setUserSearch,
-    userOptions,
+    createCostMutation,
+    setSitesSearch,
+    sitesOptions,
+    setProcessSearch,
+    processOptions,
     fetchNextPage,
     hasNextPage,
     isFetching,
     isLoading,
-  } = useClientCompany()
+  } = useManagementCost()
 
   // 체크 박스에 활용
-  const managers = form.headManagers
-  const checkedIds = form.checkedManagerIds
+  const managers = form.details
+  const checkedIds = form.checkedCostIds
   const isAllChecked = managers.length > 0 && checkedIds.length === managers.length
 
   const attachedFiles = form.attachedFiles
@@ -77,73 +81,73 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
       console.log('발주처 데터 화긴', client)
 
       // 담당자 데이터 가공
-      const formattedContacts = (client.contacts ?? []).map((c: Manager) => ({
-        id: c.id,
-        name: c.name,
-        position: c.position,
-        phoneNumber: c.phoneNumber,
-        landlineNumber: c.landlineNumber,
-        email: c.email,
-        memo: c.memo,
-      }))
+      //   const formattedContacts = (client.contacts ?? []).map((c: Manager) => ({
+      //     id: c.id,
+      //     name: c.name,
+      //     position: c.position,
+      //     phoneNumber: c.phoneNumber,
+      //     landlineNumber: c.landlineNumber,
+      //     email: c.email,
+      //     memo: c.memo,
+      //   }))
 
-      // 첨부파일 데이터 가공
-      const formattedFiles = (client.files ?? []).map((item: AttachedFile) => ({
-        id: item.id,
-        name: item.name,
-        memo: item.memo,
-        files: [
-          {
-            publicUrl: item.fileUrl,
-            file: {
-              name: item.originalFileName,
-            },
-          },
-        ],
-      }))
+      //   // 첨부파일 데이터 가공
+      //   const formattedFiles = (client.files ?? []).map((item: AttachedFile) => ({
+      //     id: item.id,
+      //     name: item.name,
+      //     memo: item.memo,
+      //     files: [
+      //       {
+      //         publicUrl: item.fileUrl,
+      //         file: {
+      //           name: item.originalFileName,
+      //         },
+      //       },
+      //     ],
+      //   }))
 
-      if (client.paymentMethod === 'BILL') {
-        setField('paymentMethod', '어음')
-      }
-      if (client.paymentMethod === 'CASH') {
-        setField('paymentMethod', '현금')
-      }
-      if (client.isActive === false) {
-        setField('isActive', '미사용')
-      }
+      //   if (client.paymentMethod === 'BILL') {
+      //     setField('paymentMethod', '어음')
+      //   }
+      //   if (client.paymentMethod === 'CASH') {
+      //     setField('paymentMethod', '현금')
+      //   }
+      //   if (client.isActive === false) {
+      //     setField('isActive', '미사용')
+      //   }
 
-      if (client.landlineNumber) {
-        const parts = client.landlineNumber.split('-')
-        if (parts.length >= 2) {
-          const area = parts[0] // 지역번호
-          const number = parts.slice(1).join('-') // 나머지 번호
-          setField('areaNumber', area)
-          setField('landlineNumber', number)
-        } else {
-          // fallback (예외 처리)
-          setField('landlineNumber', client.landlineNumber)
-        }
-      } else {
-        setField('landlineNumber', '')
-        setField('areaNumber', '')
-      }
+      //   if (client.landlineNumber) {
+      //     const parts = client.landlineNumber.split('-')
+      //     if (parts.length >= 2) {
+      //       const area = parts[0] // 지역번호
+      //       const number = parts.slice(1).join('-') // 나머지 번호
+      //       setField('areaNumber', area)
+      //       setField('landlineNumber', number)
+      //     } else {
+      //       // fallback (예외 처리)
+      //       setField('landlineNumber', client.landlineNumber)
+      //     }
+      //   } else {
+      //     setField('landlineNumber', '')
+      //     setField('areaNumber', '')
+      //   }
 
-      // 각 필드에 set
-      setField('name', client.name)
-      setField('businessNumber', client.businessNumber)
-      setField('address', client.address)
-      setField('phoneNumber', client.phoneNumber)
-      setField('detailAddress', client.detailAddress)
-      setField('ceoName', client.ceoName)
-      setField('email', client.email)
-      setField('paymentPeriod', client.paymentPeriod)
-      setField('isActive', client.isActive ? '사용' : '미사용')
+      //   // 각 필드에 set
+      //   setField('name', client.name)
+      //   setField('businessNumber', client.businessNumber)
+      //   setField('address', client.address)
+      //   setField('phoneNumber', client.phoneNumber)
+      //   setField('detailAddress', client.detailAddress)
+      //   setField('ceoName', client.ceoName)
+      //   setField('email', client.email)
+      //   setField('paymentPeriod', client.paymentPeriod)
+      //   setField('isActive', client.isActive ? '사용' : '미사용')
 
-      setField('userId', client.user.id)
+      //   setField('userId', client.user.id)
 
-      setField('memo', client.memo)
-      setField('headManagers', formattedContacts)
-      setField('attachedFiles', formattedFiles)
+      //   setField('memo', client.memo)
+      //   setField('headManagers', formattedContacts)
+      //   setField('attachedFiles', formattedFiles)
     } else {
       reset()
     }
@@ -155,18 +159,100 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
         <span className="font-bold border-b-2 mb-4">기본 정보</span>
         <div className="grid grid-cols-2 mt-1 ">
           <div className="flex">
-            <label className=" w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300 font-bold text-center">
-              발주처명
+            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+              현장명
             </label>
-            <div className="border border-gray-400 px-2 w-full">
-              <CommonInput
-                placeholder="텍스트 입력"
-                value={form.name}
-                onChange={(value) => setField('name', value)}
-                className="flex-1"
+            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
+              <CommonSelect
+                fullWidth
+                className="text-xl"
+                value={form.siteId}
+                onChange={(value) => setField('siteId', value)}
+                options={sitesOptions}
+                displayLabel
+                onScrollToBottom={() => {
+                  if (hasNextPage && !isFetching) fetchNextPage()
+                }}
+                onInputChange={(value) => setSitesSearch(value)}
+                loading={isLoading}
               />
             </div>
           </div>
+          <div className="flex">
+            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+              공정명
+            </label>
+            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
+              <CommonSelect
+                fullWidth
+                className="text-xl"
+                value={form.siteProcessId}
+                onChange={(value) => setField('siteProcessId', value)}
+                options={processOptions}
+                displayLabel
+                onScrollToBottom={() => {
+                  if (hasNextPage && !isFetching) fetchNextPage()
+                }}
+                onInputChange={(value) => setProcessSearch(value)}
+                loading={isLoading}
+              />
+            </div>
+          </div>
+          <div className="flex">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+              품목
+            </label>
+            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
+              <CommonSelect
+                className="text-2xl"
+                value={form.itemType}
+                displayLabel
+                onChange={(value) => setField('itemType', value)}
+                options={itemTypeOptions}
+              />
+
+              <CommonInput
+                placeholder="텍스트 입력"
+                value={form.itemDescription}
+                onChange={(value) => setField('itemDescription', value)}
+                className=" flex-1"
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+              일자
+            </label>
+            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
+              <CommonDatePicker
+                value={form.paymentDate}
+                onChange={(value) => setField('paymentDate', value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+              업체명 추후 넣기
+            </label>
+            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
+              {/* <CommonSelect
+                className="text-2xl"
+                value={form.paymentMethod}
+                onChange={(value) => setField('paymentMethod', value)}
+                options={PayInfo}
+              />
+
+              <CommonInput
+                placeholder="텍스트 입력"
+                value={form.paymentPeriod}
+                onChange={(value) => setField('paymentPeriod', value)}
+                className=" flex-1"
+              /> */}
+            </div>
+          </div>
+
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               사업장등록번호
@@ -174,60 +260,13 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
                 placeholder="'-'없이 숫자만 입력"
-                value={form.businessNumber}
+                value={CommonInputnumber(form.businessNumber)}
                 onChange={(value) => setField('businessNumber', value)}
                 className="flex-1"
               />
             </div>
           </div>
-          <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              본사 주소
-            </label>
-            <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
-              <div className="flex gap-2">
-                <input
-                  value={form.address}
-                  readOnly
-                  placeholder="주소를 검색해 주세요."
-                  className="flex-1 border px-3 py-2 rounded"
-                />
-                <CommonButton
-                  label="주소찾기"
-                  variant="secondary"
-                  className="bg-gray-400 text-white px-3 rounded"
-                  onClick={() => setField('isModalOpen', true)}
-                />
-              </div>
-              <input
-                value={form.detailAddress}
-                onChange={(e) => setField('detailAddress', e.target.value)}
-                placeholder="상세주소"
-                className="w-full border px-3 py-2 rounded"
-              />
-              {form.isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                  <div className="bg-white w-full max-w-lg p-4 rounded-xl shadow-lg relative flex flex-col">
-                    <div className="flex justify-end w-full">
-                      <CommonButton
-                        className="mb-2"
-                        label="X"
-                        variant="danger"
-                        onClick={() => setField('isModalOpen', false)}
-                      />
-                    </div>
-                    <DaumPostcodeEmbed
-                      onComplete={(data) => {
-                        setField('address', data.address)
-                        setField('isModalOpen', false)
-                      }}
-                      autoClose={false}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               대표자명
@@ -241,98 +280,36 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
               />
             </div>
           </div>
+
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              전화번호
+              청구계좌 / 계좌명
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
                 className="text-2xl"
-                value={form.areaNumber}
-                onChange={(value) => setField('areaNumber', value)}
-                options={AreaCode}
-              />
-
-              <CommonInput
-                placeholder="'-'없이 숫자만 입력"
-                value={form.landlineNumber}
-                onChange={(value) => setField('landlineNumber', value)}
-                className=" flex-1"
-              />
-            </div>
-          </div>
-
-          <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              휴대폰
-            </label>
-            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
-              {/* <CommonSelect
-                className="text-2xl"
-                value={form.areaNumber}
-                onChange={(value) => setField('areaNumber', value)}
-                options={AreaCode}
-              /> */}
-
-              <CommonInput
-                placeholder="'-'없이 숫자만 입력"
-                value={form.phoneNumber}
-                onChange={(value) => setField('phoneNumber', value)}
-                className=" flex-1"
-              />
-            </div>
-          </div>
-          <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              이메일(대표)
-            </label>
-            <div className="border border-gray-400 px-2 w-full">
-              <CommonInput
-                placeholder="텍스트 입력"
-                value={form.email}
-                onChange={(value) => setField('email', value)}
-                className="flex-1"
-              />
-            </div>
-          </div>
-          <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              결제정보
-            </label>
-            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
-              <CommonSelect
-                className="text-2xl"
-                value={form.paymentMethod}
-                onChange={(value) => setField('paymentMethod', value)}
-                options={PayInfo}
+                value={form.bankName}
+                onChange={(value) => setField('bankName', value)}
+                options={bankOptions}
               />
 
               <CommonInput
                 placeholder="텍스트 입력"
-                value={form.paymentPeriod}
-                onChange={(value) => setField('paymentPeriod', value)}
+                value={form.accountNumber}
+                onChange={(value) => setField('accountNumber', value)}
+                className=" flex-1"
+              />
+
+              <CommonInput
+                placeholder="메모"
+                value={form.accountHolder}
+                onChange={(value) => setField('accountHolder', value)}
                 className=" flex-1"
               />
             </div>
           </div>
+
           {/* <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              본사 담당자명
-            </label>
-            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelect
-                fullWidth={true}
-                className="text-xl"
-                value={form.isActive}
-                onChange={(value) => setField('isActive', value)}
-                options={UseORnotOptions}
-              />
-            </div>
-          </div>
-          
-          */}
-
-          <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               본사 담당자명
             </label>
@@ -351,22 +328,8 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                 loading={isLoading}
               />
             </div>
-          </div>
+          </div> */}
 
-          <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              사용 여부
-            </label>
-            <div className="border border-gray-400 px-2 w-full flex items-center">
-              <CommonSelect
-                fullWidth={false}
-                className="text-xl"
-                value={form.isActive}
-                onChange={(value) => setField('isActive', value)}
-                options={UseORnotOptions}
-              />
-            </div>
-          </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               비교 / 메모
@@ -385,19 +348,19 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
       {/* 담당자 */}
       <div>
         <div className="flex justify-between items-center mt-10 mb-2">
-          <span className="font-bold border-b-2 mb-4">담당자</span>
+          <span className="font-bold border-b-2 mb-4">품목상세</span>
           <div className="flex gap-4">
             <CommonButton
               label="삭제"
               className="px-7"
               variant="danger"
-              onClick={() => removeCheckedItems('manager')}
+              onClick={() => removeCheckedItems('costItem')}
             />
             <CommonButton
               label="추가"
               className="px-7"
               variant="secondary"
-              onClick={() => addItem('manager')}
+              onClick={() => addItem('costItem')}
             />
           </div>
         </div>
@@ -409,11 +372,11 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                   <Checkbox
                     checked={isAllChecked}
                     indeterminate={checkedIds.length > 0 && !isAllChecked}
-                    onChange={(e) => toggleCheckAllItems('manager', e.target.checked)}
+                    onChange={(e) => toggleCheckAllItems('costItem', e.target.checked)}
                     sx={{ color: 'black' }}
                   />
                 </TableCell>
-                {['이름', '부서/직급', '연락처', '휴대폰', '이메일', '비고'].map((label) => (
+                {['품명', '단가', '공급가', '부가세', '합계', '비고'].map((label) => (
                   <TableCell
                     key={label}
                     align="center"
@@ -439,7 +402,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                   >
                     <Checkbox
                       checked={checkedIds.includes(m.id)}
-                      onChange={(e) => toggleCheckItem('manager', m.id, e.target.checked)}
+                      onChange={(e) => toggleCheckItem('costItem', m.id, e.target.checked)}
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -447,24 +410,16 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       placeholder="텍스트 입력"
                       size="small"
                       value={m.name}
-                      onChange={(e) => updateItemField('manager', m.id, 'name', e.target.value)}
+                      onChange={(e) => updateItemField('costItem', m.id, 'name', e.target.value)}
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       placeholder="텍스트 입력"
                       size="small"
-                      value={m.position}
-                      onChange={(e) => updateItemField('manager', m.id, 'position', e.target.value)}
-                    />
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      placeholder="'-'없이 숫자만 입력"
-                      value={m.landlineNumber}
+                      value={m.unitPrice}
                       onChange={(e) =>
-                        updateItemField('manager', m.id, 'landlineNumber', e.target.value)
+                        updateItemField('costItem', m.id, 'unitPrice', e.target.value)
                       }
                     />
                   </TableCell>
@@ -472,18 +427,26 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                     <TextField
                       size="small"
                       placeholder="'-'없이 숫자만 입력"
-                      value={m.phoneNumber}
+                      value={m.supplyPrice}
                       onChange={(e) =>
-                        updateItemField('manager', m.id, 'phoneNumber', e.target.value)
+                        updateItemField('costItem', m.id, 'supplyPrice', e.target.value)
                       }
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
+                      placeholder="'-'없이 숫자만 입력"
+                      value={m.vat}
+                      onChange={(e) => updateItemField('costItem', m.id, 'vat', e.target.value)}
+                    />
+                  </TableCell>
+                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                    <TextField
+                      size="small"
                       placeholder="텍스트 입력"
-                      value={m.email}
-                      onChange={(e) => updateItemField('manager', m.id, 'email', e.target.value)}
+                      value={m.total}
+                      onChange={(e) => updateItemField('costItem', m.id, 'total', e.target.value)}
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -491,7 +454,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       size="small"
                       placeholder="텍스트 입력"
                       value={m.memo}
-                      onChange={(e) => updateItemField('manager', m.id, 'memo', e.target.value)}
+                      onChange={(e) => updateItemField('costItem', m.id, 'memo', e.target.value)}
                     />
                   </TableCell>
                 </TableRow>
@@ -504,7 +467,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
       {/* 첨부파일 */}
       <div>
         <div className="flex justify-between items-center mt-10 mb-2">
-          <span className="font-bold border-b-2 mb-4">첨부파일</span>
+          <span className="font-bold border-b-2 mb-4">증빙서류</span>
           <div className="flex gap-4">
             <CommonButton
               label="삭제"
@@ -572,18 +535,9 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       }
                     />
                   </TableCell>
+
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
-                      {/* <CommonFileInput
-                        className=" break-words whitespace-normal"
-                        label="계약서"
-                        acceptedExtensions={['pdf', 'hwp']}
-                        files={form.attachedFiles.find((f) => f.id === m.id)?.files || []}
-                        onChange={(newFiles) =>
-                          form.updateItemField('attachedFile', m.id, 'files', newFiles)
-                        }
-                      />
-                       */}
                       <CommonFileInput
                         acceptedExtensions={[
                           'pdf',
@@ -601,21 +555,6 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                         }
                         uploadTarget="CLIENT_COMPANY"
                       />
-                      {/* <CommonFileInput
-                        acceptedExtensions={[
-                          'pdf',
-                          'jpg',
-                          'png',
-                          'hwp',
-                          'xlsx',
-                          'zip',
-                          'jpeg',
-                          'ppt',
-                        ]}
-                        files={uploadedFiles}
-                        onChange={setUploadedFiles}
-                        uploadTarget={'CLIENT_COMPANY'}
-                      /> */}
                     </div>
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -651,7 +590,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
             if (isEditMode) {
               ClientModifyMutation.mutate(clientCompanyId)
             } else {
-              createClientMutation.mutate()
+              createCostMutation.mutate()
             }
           }}
         />

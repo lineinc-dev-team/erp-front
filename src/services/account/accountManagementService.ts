@@ -4,7 +4,6 @@ import { useState } from 'react'
 import {
   LocationStatusOptions,
   ProcessStatusOptions,
-  statusOptions,
   ArrayStatusOptions,
 } from '@/config/erp.confing'
 // import { GridRowSelectionModel } from '@mui/x-data-grid'
@@ -63,7 +62,6 @@ export function AccountManagementService() {
   return {
     LocationStatusOptions,
     ProcessStatusOptions,
-    statusOptions,
     ArrayStatusOptions,
     sortList,
     setSortList,

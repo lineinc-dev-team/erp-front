@@ -69,6 +69,24 @@ export const SiteColumnList: GridColDef[] = [
   { field: 'memo', headerName: '비고', width: 100 },
 ]
 
+export const CostColumnList: GridColDef[] = [
+  { field: 'id', headerName: 'No', width: 70 },
+  { field: 'site', headerName: '현장명', width: 130 },
+  { field: 'process', headerName: '공정명', width: 130 },
+  { field: 'itemType', headerName: '품목', width: 180 },
+  { field: 'paymentDate', headerName: '일자', width: 100 },
+  // { field: 'period', headerName: '업체명', width: 120 },
+  { field: 'businessNumber', headerName: '사업자번호', width: 120 },
+  { field: 'ceoName', headerName: '대표자', width: 100 },
+  { field: 'accountNumber', headerName: '청구계좌', width: 100 },
+  { field: 'bankName', headerName: '계좌명', width: 100 },
+  { field: 'supplyPrice', headerName: '공급가', width: 100 },
+  { field: 'mvatemo', headerName: '부가세', width: 100 },
+  { field: 'total', headerName: '합계', width: 100 },
+  { field: 'hasFile', headerName: '첨부파일', width: 100 },
+  { field: 'memo', headerName: '비고', width: 100 },
+]
+
 export const UserDataList: GridColDef[] = [
   { field: 'id', headerName: 'No', width: 70 },
   { field: 'loginId', headerName: '사용자 ID', width: 130 },
@@ -131,4 +149,28 @@ export const GuaranteeInfo = [
   { label: '선택', value: '선택' },
   { label: 'O', value: 'O' },
   { label: 'X', value: 'X' },
+]
+
+// 관리비 옵션 타입
+export const itemTypeOptions = [
+  { label: '선택', value: '선택' },
+  { label: '보증금', value: 'DEPOSIT' },
+  { label: '월세', value: 'MONTHLY_RENT' },
+  { label: '관리비(가스전기수도)', value: 'MAINTENANCE' },
+  { label: '주차비', value: 'PARKING_FEE' },
+  { label: '식대', value: 'MEAL_FEE' },
+  { label: '전도금', value: 'KEY_MONEY' },
+  { label: '기타잡비', value: 'MISC_EXPENSE' },
+]
+
+// 은행 옵셥
+
+export const bankOptions = [
+  { label: '선택', value: '선택' },
+  { label: '기업은행', value: '기업은행' },
+  { label: '농협은행', value: '농협은행' },
+  { label: '우리은행', value: '우리은행' },
+  { label: '카카오뱅크', value: '카카오뱅크' },
+  { label: '국민은행', value: '국민은행' },
+  { label: '신한은행', value: '신한은행' },
 ]

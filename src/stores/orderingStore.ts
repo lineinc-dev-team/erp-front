@@ -269,6 +269,7 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
       isActive: form.isActive === '사용' ? true : false,
       userId: form.userId,
       contacts: form.headManagers.map((m) => ({
+        id: m.id,
         name: m.name,
         position: m.position,
         landlineNumber: m.landlineNumber,
@@ -284,6 +285,7 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
       // })),
       files: form.attachedFiles.flatMap((f) =>
         f.files.map((fileObj) => ({
+          id: f.id,
           name: f.name,
           fileUrl: fileObj.publicUrl,
           originalFileName: fileObj.file?.name || 'testFile_2024.pdf',

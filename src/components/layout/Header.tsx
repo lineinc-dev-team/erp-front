@@ -71,6 +71,15 @@ const menuItems: MenuItem[] = [
   },
 
   {
+    title: '관리비 관리',
+    icon: <Assignment />, // 기업 아이콘
+    children: [
+      { label: ' - 조회', path: '/managementCost' },
+      { label: ' - 등록', path: '/managementCost/registration' },
+    ],
+  },
+
+  {
     title: '외주 업체관리',
     icon: <Groups />, // 그룹/사람들
     children: [
