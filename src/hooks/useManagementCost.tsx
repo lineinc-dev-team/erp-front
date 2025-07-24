@@ -3,6 +3,7 @@ import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   CreateManagementCost,
+  ModifyCostManagement,
   SitesPersonScroll,
   SitesProcessNameScroll,
 } from '@/services/managementCost/managementCostRegistrationService'
@@ -60,8 +61,8 @@ export function useManagementCost() {
     ],
     queryFn: () => {
       const rawParams = {
-        siteId: search.siteId,
-        siteProcessId: search.siteProcessId,
+        name: search.name,
+        processName: search.processName,
         itemType: search.itemType === '선택' ? '' : search.itemType,
         itemDescription: search.itemDescription,
         paymentStartDate: getTodayDateString(search.paymentStartDate),
@@ -107,6 +108,25 @@ export function useManagementCost() {
 
     onError: () => {
       showSnackbar('관리비 삭제에 실패했습니다.', 'error')
+    },
+  })
+
+  // 발주처 수정
+
+  const CostModifyMutation = useMutation({
+    mutationFn: (costId: number) => ModifyCostManagement(costId),
+
+    onSuccess: () => {
+      if (window.confirm('수정하시겠습니까?')) {
+        showSnackbar('관리비가 수정 되었습니다.', 'success')
+        queryClient.invalidateQueries({ queryKey: ['CostInfo'] })
+        reset()
+        router.push('/managementCost')
+      }
+    },
+
+    onError: () => {
+      showSnackbar('관리비 수정에 실패했습니다.', 'error')
     },
   })
 
@@ -208,6 +228,7 @@ export function useManagementCost() {
     createCostMutation,
     CostListQuery,
     CostDeleteMutation,
+    CostModifyMutation,
 
     // 현장명 무한 스크롤
     useSitesPersonInfiniteScroll,

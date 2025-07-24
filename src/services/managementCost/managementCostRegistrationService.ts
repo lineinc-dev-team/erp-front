@@ -68,3 +68,40 @@ export async function CreateManagementCost() {
 
   return await res.status
 }
+
+// 발주처 상세
+export async function CostDetailService(costDetailId: number) {
+  const res = await fetch(`${API.COST}/${costDetailId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    throw new Error(`서버 오류: ${res.status}`)
+  }
+
+  return await res.json()
+}
+
+//  수정
+export async function ModifyCostManagement(costId: number) {
+  const { newCostData } = useManagementCostFormStore.getState()
+  const payload = newCostData()
+
+  const res = await fetch(`${API.COST}/${costId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    throw new Error(`서버 오류: ${res.status}`)
+  }
+
+  return await res.status
+}

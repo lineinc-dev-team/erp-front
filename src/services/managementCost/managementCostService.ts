@@ -55,62 +55,59 @@ export async function CostRemoveService(managementCostIds: number[]) {
 }
 
 // 관리비엑셀 다운로드
-// export async function ClientCompanyExcelDownload({
-//   sort = '',
-//   username = '',
-//   roleId,
-//   isActive,
-//   createdStartDate,
-//   createdEndDate,
-//   lastLoginStartDate,
-//   lastLoginEndDate,
-//   fields,
-// }: {
-//   sort?: string
-//   username?: string
-//   roleId?: number
-//   isActive?: boolean
-//   createdStartDate?: string
-//   createdEndDate?: string
-//   lastLoginStartDate?: string
-//   lastLoginEndDate?: string
-//   fields?: string[]
-// }) {
-//   const queryParams = new URLSearchParams()
+export async function CostExcelDownload({
+  sort = '',
+  username = '',
+  roleId,
+  isActive,
+  createdStartDate,
+  createdEndDate,
+  lastLoginStartDate,
+  lastLoginEndDate,
+  fields,
+}: {
+  sort?: string
+  username?: string
+  roleId?: number
+  isActive?: boolean
+  createdStartDate?: string
+  createdEndDate?: string
+  lastLoginStartDate?: string
+  lastLoginEndDate?: string
+  fields?: string[]
+}) {
+  const queryParams = new URLSearchParams()
 
-//   queryParams.append('sort', sort)
-//   if (username) queryParams.append('username', username)
-//   if (roleId !== undefined) queryParams.append('roleId', String(roleId))
-//   if (isActive !== undefined) queryParams.append('isActive', String(isActive))
-//   if (createdStartDate) queryParams.append('createdStartDate', createdStartDate)
-//   if (createdEndDate) queryParams.append('createdEndDate', createdEndDate)
-//   if (lastLoginStartDate) queryParams.append('lastLoginStartDate', lastLoginStartDate)
-//   if (lastLoginEndDate) queryParams.append('lastLoginEndDate', lastLoginEndDate)
+  queryParams.append('sort', sort)
+  if (username) queryParams.append('username', username)
+  if (roleId !== undefined) queryParams.append('roleId', String(roleId))
+  if (isActive !== undefined) queryParams.append('isActive', String(isActive))
+  if (createdStartDate) queryParams.append('createdStartDate', createdStartDate)
+  if (createdEndDate) queryParams.append('createdEndDate', createdEndDate)
+  if (lastLoginStartDate) queryParams.append('lastLoginStartDate', lastLoginStartDate)
+  if (lastLoginEndDate) queryParams.append('lastLoginEndDate', lastLoginEndDate)
 
-//   if (fields && fields.length > 0) {
-//     queryParams.append('fields', fields.join(','))
-//   }
+  if (fields && fields.length > 0) {
+    queryParams.append('fields', fields.join(','))
+  }
 
-//   const res = await fetch(`${API.CLIENTCOMPANY}/download?${queryParams.toString()}`, {
-//     method: 'GET',
-//     // headers: {
-//     //   Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-//     // },
+  const res = await fetch(`${API.COST}/download?${queryParams.toString()}`, {
+    method: 'GET',
 
-//     credentials: 'include',
-//   })
+    credentials: 'include',
+  })
 
-//   if (!res.ok) {
-//     throw new Error(`서버 오류: ${res.status}`)
-//   }
+  if (!res.ok) {
+    throw new Error(`서버 오류: ${res.status}`)
+  }
 
-//   const blob = await res.blob()
-//   const url = window.URL.createObjectURL(blob)
-//   const a = document.createElement('a')
-//   a.href = url
-//   a.download = 'export23test.xlsx'
-//   a.click()
-//   window.URL.revokeObjectURL(url)
+  const blob = await res.blob()
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'export23test.xlsx'
+  a.click()
+  window.URL.revokeObjectURL(url)
 
-//   return res.status
-// }
+  return res.status
+}

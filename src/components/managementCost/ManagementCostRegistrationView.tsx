@@ -16,15 +16,16 @@ import {
   TextField,
 } from '@mui/material'
 import { bankOptions, itemTypeOptions } from '@/config/erp.confing'
-import { useClientCompany } from '@/hooks/useClientCompany'
 import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
-import { ClientDetailService } from '@/services/ordering/orderingRegistrationService'
-import { useManagementCostFormStore } from '@/stores/managementCostsStore'
+import { ItemTypeLabelToValue, useManagementCostFormStore } from '@/stores/managementCostsStore'
 import CommonDatePicker from '../common/DatePicker'
 import { useManagementCost } from '@/hooks/useManagementCost'
 import CommonInputnumber from '@/utils/formatBusinessNumber'
+import { formatNumber, unformatNumber } from '@/utils/formatters'
+import { CostDetailService } from '@/services/managementCost/managementCostRegistrationService'
+import { AttachedFile, DetailItem } from '@/types/managementCost'
 
 export default function ManagementCostRegistrationView({ isEditMode = false }) {
   const {
@@ -38,10 +39,9 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     toggleCheckAllItems,
   } = useManagementCostFormStore()
 
-  const { ClientModifyMutation } = useClientCompany()
-
   const {
     createCostMutation,
+    CostModifyMutation,
     setSitesSearch,
     sitesOptions,
     setProcessSearch,
@@ -64,12 +64,12 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
   // 상세페이지 로직
 
   const params = useParams()
-  const clientCompanyId = Number(params?.id)
+  const costDetailId = Number(params?.id)
 
   const { data } = useQuery({
-    queryKey: ['ClientDetailInfo'],
-    queryFn: () => ClientDetailService(clientCompanyId),
-    enabled: isEditMode && !!clientCompanyId, // 수정 모드일 때만 fetch
+    queryKey: ['CostDetailInfo'],
+    queryFn: () => CostDetailService(costDetailId),
+    enabled: isEditMode && !!costDetailId, // 수정 모드일 때만 fetch
   })
 
   console.log('상세데이터', data)
@@ -78,76 +78,56 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     if (data && isEditMode === true) {
       const client = data.data
 
-      console.log('발주처 데터 화긴', client)
+      console.log('발주처 데이터 확인', client)
 
-      // 담당자 데이터 가공
-      //   const formattedContacts = (client.contacts ?? []).map((c: Manager) => ({
-      //     id: c.id,
-      //     name: c.name,
-      //     position: c.position,
-      //     phoneNumber: c.phoneNumber,
-      //     landlineNumber: c.landlineNumber,
-      //     email: c.email,
-      //     memo: c.memo,
-      //   }))
+      // 상세 항목 가공
+      const formattedDetails = (client.details ?? []).map((c: DetailItem) => ({
+        id: c.id,
+        name: c.name,
+        unitPrice: c.unitPrice,
+        supplyPrice: c.supplyPrice,
+        vat: c.vat,
+        total: c.total,
+        memo: c.memo,
+      }))
 
-      //   // 첨부파일 데이터 가공
-      //   const formattedFiles = (client.files ?? []).map((item: AttachedFile) => ({
-      //     id: item.id,
-      //     name: item.name,
-      //     memo: item.memo,
-      //     files: [
-      //       {
-      //         publicUrl: item.fileUrl,
-      //         file: {
-      //           name: item.originalFileName,
-      //         },
-      //       },
-      //     ],
-      //   }))
+      // 첨부 파일 가공
+      const formattedFiles = (client.files ?? []).map((item: AttachedFile) => ({
+        id: item.id,
+        name: item.name,
+        memo: item.memo,
+        files: [
+          {
+            publicUrl: item.fileUrl,
+            file: {
+              name: item.originalFileName,
+            },
+          },
+        ],
+      }))
 
-      //   if (client.paymentMethod === 'BILL') {
-      //     setField('paymentMethod', '어음')
-      //   }
-      //   if (client.paymentMethod === 'CASH') {
-      //     setField('paymentMethod', '현금')
-      //   }
-      //   if (client.isActive === false) {
-      //     setField('isActive', '미사용')
-      //   }
+      // 각 필드에 값 세팅
+      setField('siteId', client.site?.id ?? '') // 현장명
+      setField('siteProcessId', client.process?.id ?? '') // 공정명
+      setField('businessNumber', client.businessNumber ?? '')
+      setField('ceoName', client.ceoName ?? '')
+      setField('paymentDate', client.paymentDate ? new Date(client.paymentDate) : null)
+      setField('accountHolder', client.accountHolder ?? '')
+      setField('accountNumber', client.accountNumber ?? '')
+      setField('bankName', client.bankName ?? '')
 
-      //   if (client.landlineNumber) {
-      //     const parts = client.landlineNumber.split('-')
-      //     if (parts.length >= 2) {
-      //       const area = parts[0] // 지역번호
-      //       const number = parts.slice(1).join('-') // 나머지 번호
-      //       setField('areaNumber', area)
-      //       setField('landlineNumber', number)
-      //     } else {
-      //       // fallback (예외 처리)
-      //       setField('landlineNumber', client.landlineNumber)
-      //     }
-      //   } else {
-      //     setField('landlineNumber', '')
-      //     setField('areaNumber', '')
-      //   }
+      const mappedItemType = ItemTypeLabelToValue[client.itemType ?? '']
 
-      //   // 각 필드에 set
-      //   setField('name', client.name)
-      //   setField('businessNumber', client.businessNumber)
-      //   setField('address', client.address)
-      //   setField('phoneNumber', client.phoneNumber)
-      //   setField('detailAddress', client.detailAddress)
-      //   setField('ceoName', client.ceoName)
-      //   setField('email', client.email)
-      //   setField('paymentPeriod', client.paymentPeriod)
-      //   setField('isActive', client.isActive ? '사용' : '미사용')
+      if (mappedItemType) {
+        setField('itemType', mappedItemType)
+      } else {
+        setField('itemType', '') // 혹은 기본값 처리
+      }
 
-      //   setField('userId', client.user.id)
-
-      //   setField('memo', client.memo)
-      //   setField('headManagers', formattedContacts)
-      //   setField('attachedFiles', formattedFiles)
+      setField('itemDescription', client.itemDescription ?? '')
+      setField('memo', client.memo ?? '')
+      setField('details', formattedDetails)
+      setField('attachedFiles', formattedFiles)
     } else {
       reset()
     }
@@ -283,7 +263,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              청구계좌 / 계좌명
+              청구계좌 / 예금주명
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
@@ -301,7 +281,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
               />
 
               <CommonInput
-                placeholder="메모"
+                placeholder="예금주"
                 value={form.accountHolder}
                 onChange={(value) => setField('accountHolder', value)}
                 className=" flex-1"
@@ -405,48 +385,89 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       onChange={(e) => toggleCheckItem('costItem', m.id, e.target.checked)}
                     />
                   </TableCell>
+
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
-                      placeholder="텍스트 입력"
                       size="small"
+                      placeholder="텍스트 입력"
                       value={m.name}
                       onChange={(e) => updateItemField('costItem', m.id, 'name', e.target.value)}
+                      variant="outlined"
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': {
+                            borderColor: 'black', // 기본 테두리 색 검은색
+                          },
+                          '&:hover fieldset': {
+                            borderColor: 'black', // 호버 시에도 검은색 유지
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: 'black', // 포커스 시에도 검은색 유지
+                          },
+                        },
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                    <CommonInput
+                      className="flex-1 "
+                      value={formatNumber(m.unitPrice)}
+                      onChange={(value) => {
+                        const numericValue = unformatNumber(value)
+                        updateItemField('costItem', m.id, 'unitPrice', numericValue)
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                    <CommonInput
+                      className="flex-1 "
+                      value={formatNumber(m.supplyPrice)}
+                      onChange={(value) => {
+                        const numericValue = unformatNumber(value)
+                        updateItemField('costItem', m.id, 'supplyPrice', numericValue)
+                      }}
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
-                      placeholder="텍스트 입력"
                       size="small"
-                      value={m.unitPrice}
-                      onChange={(e) =>
-                        updateItemField('costItem', m.id, 'unitPrice', e.target.value)
-                      }
-                    />
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      placeholder="'-'없이 숫자만 입력"
-                      value={m.supplyPrice}
-                      onChange={(e) =>
-                        updateItemField('costItem', m.id, 'supplyPrice', e.target.value)
-                      }
-                    />
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      placeholder="'-'없이 숫자만 입력"
                       value={m.vat}
-                      onChange={(e) => updateItemField('costItem', m.id, 'vat', e.target.value)}
+                      InputProps={{ readOnly: true }}
+                      variant="outlined"
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': {
+                            borderColor: 'black', // 기본 테두리 색 검은색
+                          },
+                          '&:hover fieldset': {
+                            borderColor: 'black', // 호버 시에도 검은색 유지
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: 'black', // 포커스 시에도 검은색 유지
+                          },
+                        },
+                      }}
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder="텍스트 입력"
                       value={m.total}
-                      onChange={(e) => updateItemField('costItem', m.id, 'total', e.target.value)}
+                      InputProps={{ readOnly: true }}
+                      variant="outlined"
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': {
+                            borderColor: 'black', // 기본 테두리 색 검은색
+                          },
+                          '&:hover fieldset': {
+                            borderColor: 'black', // 호버 시에도 검은색 유지
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: 'black', // 포커스 시에도 검은색 유지
+                          },
+                        },
+                      }}
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -455,6 +476,20 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       placeholder="텍스트 입력"
                       value={m.memo}
                       onChange={(e) => updateItemField('costItem', m.id, 'memo', e.target.value)}
+                      variant="outlined"
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': {
+                            borderColor: 'black', // 기본 테두리 색 검은색
+                          },
+                          '&:hover fieldset': {
+                            borderColor: 'black', // 호버 시에도 검은색 유지
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: 'black', // 포커스 시에도 검은색 유지
+                          },
+                        },
+                      }}
                     />
                   </TableCell>
                 </TableRow>
@@ -588,7 +623,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
           variant="secondary"
           onClick={() => {
             if (isEditMode) {
-              ClientModifyMutation.mutate(clientCompanyId)
+              CostModifyMutation.mutate(costDetailId)
             } else {
               createCostMutation.mutate()
             }

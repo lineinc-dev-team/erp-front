@@ -49,3 +49,25 @@ export const SiteExcelFieldMap = {
 
 export type SiteExcelFieldLabel = keyof typeof SiteExcelFieldMap
 export type SietExcelFieldKey = (typeof SiteExcelFieldMap)[SiteExcelFieldLabel]
+
+// 관리비 엑셀다운 로드 필드 체크
+
+export const CostExcelFieldMap = {
+  No: 'id',
+  현장명: 'siteName',
+  공정명: 'processName',
+  품목: 'itemType',
+  일자: 'paymentDate',
+  사업자번호: 'businessNumber',
+  대표자: 'ceoName',
+  청구계좌: 'accountNumber',
+  계좌명: 'accountHolder',
+  공급가: 'supplyPrice',
+  부가세: 'vat',
+  합계: 'total',
+  첨부파일: 'hasFile',
+  비고: 'memo',
+} as const
+
+export type CostExcelFieldLabel = keyof typeof CostExcelFieldMap
+export type CostExcelFieldKey = (typeof CostExcelFieldMap)[CostExcelFieldLabel]

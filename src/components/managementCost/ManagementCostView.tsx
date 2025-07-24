@@ -5,7 +5,6 @@ import CommonSelect from '../common/Select'
 import CommonDatePicker from '../common/DatePicker'
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { Pagination } from '@mui/material'
-import { SiteExcelDownload } from '@/services/sites/siteService'
 import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
 import {
@@ -16,8 +15,11 @@ import {
 } from '@/config/erp.confing'
 import { useState } from 'react'
 import ExcelModal from '../common/ExcelModal'
-import { SiteExcelFieldMap } from '@/utils/userExcelField'
-import { ManagementCostService } from '@/services/managementCost/managementCostService'
+import { CostExcelFieldMap } from '@/utils/userExcelField'
+import {
+  CostExcelDownload,
+  ManagementCostService,
+} from '@/services/managementCost/managementCostService'
 import { useManagementCost } from '@/hooks/useManagementCost'
 import { useCostSearchStore } from '@/stores/managementCostsStore'
 import { CostList } from '@/types/managementCost'
@@ -47,14 +49,16 @@ export default function ManagementCost() {
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
-  console.log('@@@@@@@@@@@@@@@=======', CostListQuery.data)
-
   const updateCostList = CostDataList.map((cost: CostList) => {
     const supplyPrices = cost.details.map((d) => d.supplyPrice).join(', ')
-    const vats = cost.details.map((d) => d.vat).join(', ')
-    const totals = cost.details.map((d) => d.total).join(', ')
+
+    const vats = cost.details.map((d) => Number(d.vat).toLocaleString()).join(', ')
+
+    const totals = cost.details.map((d) => Number(d.total).toLocaleString()).join(', ')
+
     const memos = cost.details.map((d) => d.memo).join(', ')
 
+    console.log('vatsvatsvats', vats)
     return {
       ...cost,
       site: cost.site.name,
@@ -74,7 +78,7 @@ export default function ManagementCost() {
 
   // 그리도 라우팅 로직!
   const enhancedColumns = CostColumnList.map((col): GridColDef => {
-    if (col.field === 'name') {
+    if (col.field === 'itemType') {
       return {
         ...col,
         headerAlign: 'center',
@@ -82,10 +86,10 @@ export default function ManagementCost() {
         flex: 1,
 
         renderCell: (params: GridRenderCellParams) => {
-          const clientId = params.row.id
+          const costId = params.row.id
           return (
             <div
-              onClick={() => router.push(`/sites/registration/${clientId}`)}
+              onClick={() => router.push(`/managementCost/registration/${costId}`)}
               className="flex justify-center items-center cursor-pointer"
             >
               <span className="text-orange-500 font-bold">{params.value}</span>
@@ -102,20 +106,6 @@ export default function ManagementCost() {
         align: 'center',
         flex: 1,
         renderCell: (params: GridRenderCellParams) => {
-          // console.log('@@@', params)
-          // if (params.value === '확인') {
-          //   return (
-          //     <div
-          //       onClick={(e) => {
-          //         e.preventDefault()
-          //         setContract(true)
-          //       }}
-          //       className="flex justify-center items-center cursor-pointer"
-          //     >
-          //       <button className=" text-blue-500 font-bold">{params.value}</button>
-          //     </div>
-          //   )
-          // }
           return <span>{params.value}</span>
         },
       }
@@ -129,18 +119,15 @@ export default function ManagementCost() {
     }
   })
 
-  // if (isLoading) return <LoadingSkeletion />
-  // if (error) throw error
-
   const [modalOpen, setModalOpen] = useState(false)
   // // userExcelFieldMap 객체를 { label: string, value: string }[] 배열로 바꿔줍니다.
-  const fieldMapArray = Object.entries(SiteExcelFieldMap).map(([label, value]) => ({
+  const fieldMapArray = Object.entries(CostExcelFieldMap).map(([label, value]) => ({
     label,
     value,
   }))
 
   const handleDownloadExcel = async (fields: string[]) => {
-    await SiteExcelDownload({ fields })
+    await CostExcelDownload({ fields })
   }
   return (
     <>
@@ -154,8 +141,11 @@ export default function ManagementCost() {
               <CommonSelect
                 fullWidth
                 className="text-xl"
-                value={search.siteId}
-                onChange={(value) => search.setField('siteId', value)}
+                value={sitesOptions.find((opt) => opt.label === search.name)?.value || '0'} // UI에 보여질 값은 id 기반 (value)
+                onChange={(value) => {
+                  const selected = sitesOptions.find((opt) => opt.value === value)
+                  search.setField('name', selected?.label ?? '') // ← label 값을 상태로 저장
+                }}
                 options={sitesOptions}
                 displayLabel
                 onScrollToBottom={() => {
@@ -174,8 +164,13 @@ export default function ManagementCost() {
               <CommonSelect
                 fullWidth
                 className="text-xl"
-                value={search.siteProcessId}
-                onChange={(value) => search.setField('siteProcessId', value)}
+                value={processOptions.find((opt) => opt.label === search.processName)?.value || '0'}
+                onChange={(value) => {
+                  const selected = processOptions.find((opt) => opt.value === value)
+                  search.setField('processName', selected?.label ?? '')
+                }}
+                // value={search.processName}
+                // onChange={(value) => search.setField('processName', value)}
                 options={processOptions}
                 displayLabel
                 onScrollToBottom={() => {
@@ -192,6 +187,7 @@ export default function ManagementCost() {
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-2  justify-center items-center">
               <CommonSelect
+                fullWidth={true}
                 className="text-2xl"
                 value={search.itemType}
                 displayLabel

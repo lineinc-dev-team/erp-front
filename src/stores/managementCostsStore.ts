@@ -1,11 +1,21 @@
 import { create } from 'zustand'
 import { costItem, AttachedFile, CostFormStore, CostSearchState } from '@/types/managementCost'
 
+export const ItemTypeLabelToValue: Record<string, string> = {
+  보증금: 'DEPOSIT',
+  월세: 'MONTHLY_RENT',
+  관리비: 'MAINTENANCE',
+  주차비: 'PARKING_FEE',
+  식대: 'MEAL_FEE',
+  전도금: 'KEY_MONEY',
+  기타잡비: 'MISC_EXPENSE',
+}
+
 export const useCostSearchStore = create<{ search: CostSearchState }>((set) => ({
   search: {
     searchTrigger: 0,
-    siteId: 0,
-    siteProcessId: 0,
+    name: '',
+    processName: '',
     itemType: '선택',
     itemDescription: '',
     paymentStartDate: null,
@@ -31,8 +41,8 @@ export const useCostSearchStore = create<{ search: CostSearchState }>((set) => (
       set((state) => ({
         search: {
           ...state.search,
-          siteId: 0,
-          siteProcessId: 0,
+          name: '',
+          processName: '',
           itemType: '선택',
           itemDescription: '',
           paymentStartDate: null,
@@ -48,7 +58,7 @@ export const useCostSearchStore = create<{ search: CostSearchState }>((set) => (
 
 export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
   form: {
-    siteId: 1,
+    siteId: 0,
     siteProcessId: 0,
     itemType: '선택',
     itemDescription: '',
@@ -125,12 +135,29 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
           form: {
             ...state.form,
             details: state.form.details.map((item) =>
-              item.id === id ? { ...item, [field]: value } : item,
+              item.id === id
+                ? {
+                    ...item,
+                    [field]: value,
+                    ...(field === 'supplyPrice'
+                      ? (() => {
+                          const supply = Number(value) || 0
+                          const vat = Math.floor(supply * 0.1)
+                          const total = supply + vat
+                          return {
+                            vat: vat.toString(),
+                            total: total.toString(),
+                          }
+                        })()
+                      : {}),
+                  }
+                : item,
             ),
           },
         }
       } else {
         return {
+          ...state,
           form: {
             ...state.form,
             attachedFiles: state.form.attachedFiles.map((item) =>

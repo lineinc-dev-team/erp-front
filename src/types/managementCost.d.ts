@@ -37,8 +37,8 @@ export interface CostList {
 
 export type CostSearchState = {
   searchTrigger: number
-  siteId: number
-  siteProcessId: number
+  name: string
+  processName: string
   itemType: string
   itemDescription: string
   paymentStartDate: Date | null
@@ -61,9 +61,9 @@ export type costItem = {
   id: number
   name: string
   unitPrice: number
-  supplyPrice: number
-  vat: number
-  total: number
+  supplyPrice: string | number
+  vat: string | number
+  total: string | number
   memo: string
 }
 
@@ -121,7 +121,13 @@ type CostFormStore = {
   ) => void
 
   addItem: (type: 'costItem' | 'attachedFile') => void
-  updateItemField: (type: 'costItem' | 'attachedFile', id: number, field: string, value: T) => void
+  updateItemField: (
+    type: 'costItem' | 'attachedFile',
+    id: T,
+    field: keyof CostItem,
+    value: T,
+  ) => void
+
   toggleCheckItem: (type: 'costItem' | 'attachedFile', id: number, checked: boolean) => void
   toggleCheckAllItems: (type: 'costItem' | 'attachedFile', checked: boolean) => void
   removeCheckedItems: (type: 'costItem' | 'attachedFile') => void
