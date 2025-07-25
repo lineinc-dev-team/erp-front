@@ -176,8 +176,11 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
                 placeholder="'-'없이 숫자만 입력"
-                value={CommonInputnumber(form.businessNumber)}
-                onChange={(value) => setField('businessNumber', value)}
+                value={form.businessNumber}
+                onChange={(value) => {
+                  const formatBusinessNumber = CommonInputnumber(value)
+                  setField('businessNumber', formatBusinessNumber)
+                }}
                 className="flex-1"
               />
             </div>
@@ -257,8 +260,11 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
 
               <CommonInput
                 placeholder="'-'없이 숫자만 입력"
-                value={formatPersonNumber(form.landlineNumber)}
-                onChange={(value) => setField('landlineNumber', value)}
+                value={form.landlineNumber}
+                onChange={(value) => {
+                  const formatAreaNumber = formatPersonNumber(value)
+                  setField('landlineNumber', formatAreaNumber)
+                }}
                 className=" flex-1"
               />
             </div>
@@ -278,8 +284,11 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
 
               <CommonInput
                 placeholder="'-'없이 숫자만 입력"
-                value={formatPhoneNumber(form.phoneNumber)}
-                onChange={(value) => setField('phoneNumber', value)}
+                value={form.phoneNumber}
+                onChange={(value) => {
+                  const clientPhone = formatPhoneNumber(value)
+                  setField('phoneNumber', clientPhone)
+                }}
                 className=" flex-1"
               />
             </div>
@@ -465,9 +474,10 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       size="small"
                       placeholder="'-'없이 숫자만 입력"
                       value={m.landlineNumber}
-                      onChange={(e) =>
-                        updateItemField('manager', m.id, 'landlineNumber', e.target.value)
-                      }
+                      onChange={(e) => {
+                        const formatted = formatPhoneNumber(e.target.value)
+                        updateItemField('manager', m.id, 'landlineNumber', formatted)
+                      }}
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -475,9 +485,10 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       size="small"
                       placeholder="'-'없이 숫자만 입력"
                       value={m.phoneNumber}
-                      onChange={(e) =>
-                        updateItemField('manager', m.id, 'phoneNumber', e.target.value)
-                      }
+                      onChange={(e) => {
+                        const formatted = formatPhoneNumber(e.target.value)
+                        updateItemField('manager', m.id, 'phoneNumber', formatted)
+                      }}
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
