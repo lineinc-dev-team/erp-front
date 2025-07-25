@@ -50,7 +50,7 @@ export default function ManagementCost() {
   const totalPages = Math.ceil(totalList / pageCount)
 
   const updateCostList = CostDataList.map((cost: CostList) => {
-    const supplyPrices = cost.details.map((d) => d.supplyPrice).join(', ')
+    const supplyPrices = cost.details.map((d) => Number(d.supplyPrice).toLocaleString()).join(', ')
 
     const vats = cost.details.map((d) => Number(d.vat).toLocaleString()).join(', ')
 

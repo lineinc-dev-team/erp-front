@@ -24,6 +24,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import { AttachedFile, Manager } from '@/types/ordering'
 import { ClientDetailService } from '@/services/ordering/orderingRegistrationService'
+import CommonInputnumber from '@/utils/formatBusinessNumber'
+import { formatPersonNumber, formatPhoneNumber } from '@/utils/formatPhoneNumber'
 
 export default function OrderingRegistrationView({ isEditMode = false }) {
   const {
@@ -174,7 +176,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
                 placeholder="'-'없이 숫자만 입력"
-                value={form.businessNumber}
+                value={CommonInputnumber(form.businessNumber)}
                 onChange={(value) => setField('businessNumber', value)}
                 className="flex-1"
               />
@@ -255,7 +257,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
 
               <CommonInput
                 placeholder="'-'없이 숫자만 입력"
-                value={form.landlineNumber}
+                value={formatPersonNumber(form.landlineNumber)}
                 onChange={(value) => setField('landlineNumber', value)}
                 className=" flex-1"
               />
@@ -276,7 +278,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
 
               <CommonInput
                 placeholder="'-'없이 숫자만 입력"
-                value={form.phoneNumber}
+                value={formatPhoneNumber(form.phoneNumber)}
                 onChange={(value) => setField('phoneNumber', value)}
                 className=" flex-1"
               />

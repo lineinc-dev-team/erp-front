@@ -24,13 +24,26 @@ import { getTodayDateString } from '@/utils/formatters'
 import { useState } from 'react'
 import ExcelModal from '../common/ExcelModal'
 import { SiteExcelFieldMap } from '@/utils/userExcelField'
+import { useManagementCost } from '@/hooks/useManagementCost'
 
 export default function SitesView() {
   const { handleNewOrderCreate } = SiteMoveService()
 
   const { search } = useSiteSearchStore()
 
-  const { SiteListQuery, SiteDeleteMutation } = useSite()
+  // 현장명 공정명 무한 스크롤
+  const {
+    setSitesSearch,
+    sitesOptions,
+    setProcessSearch,
+    processOptions,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isLoading,
+  } = useManagementCost()
+
+  const { SiteListQuery, SiteDeleteMutation, setOrderSearch, orderOptions } = useSite()
 
   const SiteDataList = SiteListQuery.data?.data.content ?? []
 
@@ -132,11 +145,22 @@ export default function SitesView() {
             <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명
             </label>
-            <div className="border border-gray-400 px-2 w-full">
-              <CommonInput
-                value={search.name}
-                onChange={(value) => search.setField('name', value)}
-                className=" flex-1"
+            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
+              <CommonSelect
+                fullWidth
+                className="text-xl"
+                value={sitesOptions.find((opt) => opt.label === search.name)?.value || '0'} // UI에 보여질 값은 id 기반 (value)
+                onChange={(value) => {
+                  const selected = sitesOptions.find((opt) => opt.value === value)
+                  search.setField('name', selected?.label ?? '') // ← label 값을 상태로 저장
+                }}
+                options={sitesOptions}
+                displayLabel
+                onScrollToBottom={() => {
+                  if (hasNextPage && !isFetching) fetchNextPage()
+                }}
+                onInputChange={(value) => setSitesSearch(value)}
+                loading={isLoading}
               />
             </div>
           </div>
@@ -145,11 +169,24 @@ export default function SitesView() {
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               공정명
             </label>
-            <div className="border border-gray-400 px-2 w-full">
-              <CommonInput
-                value={search.processName}
-                onChange={(value) => search.setField('processName', value)}
-                className="flex-1"
+            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
+              <CommonSelect
+                fullWidth
+                className="text-xl"
+                value={processOptions.find((opt) => opt.label === search.processName)?.value || '0'}
+                onChange={(value) => {
+                  const selected = processOptions.find((opt) => opt.value === value)
+                  search.setField('processName', selected?.label ?? '')
+                }}
+                // value={search.processName}
+                // onChange={(value) => search.setField('processName', value)}
+                options={processOptions}
+                displayLabel
+                onScrollToBottom={() => {
+                  if (hasNextPage && !isFetching) fetchNextPage()
+                }}
+                onInputChange={(value) => setProcessSearch(value)}
+                loading={isLoading}
               />
             </div>
           </div>
@@ -252,14 +289,27 @@ export default function SitesView() {
           </div>
 
           <div className="flex">
-            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              발주처명
+            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+              발주처
             </label>
-            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
-              <CommonInput
-                value={search.clientCompanyName}
-                onChange={(value) => search.setField('clientCompanyName', value)}
-                className=" flex-1"
+            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
+              <CommonSelect
+                fullWidth
+                className="text-xl"
+                value={
+                  orderOptions.find((opt) => opt.label === search.clientCompanyName)?.value || '0'
+                }
+                onChange={(value) => {
+                  const selected = orderOptions.find((opt) => opt.value === value)
+                  search.setField('clientCompanyName', selected?.label ?? '')
+                }}
+                options={orderOptions}
+                displayLabel
+                onScrollToBottom={() => {
+                  if (hasNextPage && !isFetching) fetchNextPage()
+                }}
+                onInputChange={(value) => setOrderSearch(value)}
+                loading={isLoading}
               />
             </div>
           </div>
