@@ -47,7 +47,7 @@ export function useManagementCost() {
     if (search.currentPage !== 1) {
       search.setField('currentPage', 1)
     }
-  }, [])
+  }, [search])
 
   // useQuery 쪽 수정
   const CostListQuery = useQuery({

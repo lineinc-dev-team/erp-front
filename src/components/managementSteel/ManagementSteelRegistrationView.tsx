@@ -135,7 +135,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     } else {
       reset()
     }
-  }, [data])
+  }, [data, isEditMode, reset, setField])
 
   return (
     <>

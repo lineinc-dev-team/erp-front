@@ -4,7 +4,7 @@ import CommonInput from '../../common/Input'
 import CommonSelect from '../../common/Select'
 import CommonButton from '../../common/Button'
 import DaumPostcodeEmbed from 'react-daum-postcode'
-import CommonFileInput from '../../common/FileInput'
+// import CommonFileInput from '../../common/FileInput'
 import {
   Checkbox,
   Paper,
@@ -409,7 +409,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                       }
                     />
                   </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                  {/* <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
                       <CommonFileInput
                         className=" break-words whitespace-normal"
@@ -421,7 +421,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                         }
                       />
                     </div>
-                  </TableCell>
+                  </TableCell> */}
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"

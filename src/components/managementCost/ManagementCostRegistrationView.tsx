@@ -131,7 +131,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     } else {
       reset()
     }
-  }, [data])
+  }, [data, isEditMode, reset, setField])
 
   return (
     <>

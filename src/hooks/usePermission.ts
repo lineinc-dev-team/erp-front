@@ -49,7 +49,7 @@ export function usePermission() {
         router.push('/business')
       }
     }
-  }, [isError, error])
+  }, [isError, error, router, showSnackbar])
 
   // 권한 메뉴별 권한 조회
   const {

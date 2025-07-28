@@ -143,7 +143,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     } else {
       resetForm()
     }
-  }, [data])
+  }, [data, isEditMode, resetForm, setField, setContracts, setProcessField])
 
   const { handleCancelData } = SiteRegistrationService()
 

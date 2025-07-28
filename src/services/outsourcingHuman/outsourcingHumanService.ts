@@ -4,7 +4,6 @@ import { useState } from 'react'
 import {
   LocationStatusOptions,
   ProcessStatusOptions,
-  statusOptions,
   ArrayStatusOptions,
 } from '@/config/erp.confing'
 import { GridRowSelectionModel } from '@mui/x-data-grid'
@@ -283,7 +282,6 @@ export function OutsourcingHumanService() {
     handleNewHumanCreate,
     LocationStatusOptions,
     ProcessStatusOptions,
-    statusOptions,
     ArrayStatusOptions,
     displayedRows,
     page,

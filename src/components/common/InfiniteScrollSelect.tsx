@@ -68,7 +68,7 @@ export default function InfiniteScrollSelect<T>({
         fetchNextPage()
       }
     }
-  }, [activeIndex])
+  }, [activeIndex, fetchNextPage, hasNextPage, items.length])
 
   useEffect(() => {
     if (activeIndex >= 0 && itemRefs.current[activeIndex]) {

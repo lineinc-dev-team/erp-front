@@ -149,7 +149,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
     } else {
       reset()
     }
-  }, [data])
+  }, [data, isEditMode, reset, setField])
 
   return (
     <>
