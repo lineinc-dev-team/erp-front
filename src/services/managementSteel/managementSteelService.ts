@@ -3,22 +3,21 @@
 import { useRouter } from 'next/navigation'
 import { API } from '@/api/config/env'
 
-export function ManagementCostService() {
+export function ManagementSteelService() {
   const router = useRouter()
 
-  const handleNewCostCreate = () => router.push('/managementCost/registration')
+  const handleNewSteelCreate = () => router.push('/managementSteel/registration')
 
   return {
-    handleNewCostCreate,
+    handleNewSteelCreate,
   }
 }
 
-// 관리비 조회
-export async function ManagementCostInfoService(params = {}) {
+// 강재데이터 조회
+export async function ManagementSteelInfoService(params = {}) {
   const query = new URLSearchParams(params).toString()
 
-  console.log('쿼리 확인 @@', query)
-  const resData = await fetch(`${API.COST}?${query}`, {
+  const resData = await fetch(`${API.STEEL}?${query}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -38,14 +37,14 @@ export async function ManagementCostInfoService(params = {}) {
   return data
 }
 
-// 관리비 삭제
-export async function CostRemoveService(managementCostIds: number[]) {
-  const res = await fetch(API.COST, {
+// 강재데이터 삭제
+export async function SteelRemoveService(steelManagementIds: number[]) {
+  const res = await fetch(API.STEEL, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ managementCostIds }),
+    body: JSON.stringify({ steelManagementIds }),
     credentials: 'include',
   })
   if (!res.ok) {
@@ -55,8 +54,42 @@ export async function CostRemoveService(managementCostIds: number[]) {
   return await res.status
 }
 
-// 관리비엑셀 다운로드
-export async function CostExcelDownload({
+// 강재데이터 승인처리
+export async function SteelApproveService(steelManagementIds: number[]) {
+  const res = await fetch(`${API.STEEL}/approve`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ steelManagementIds }),
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    throw new Error(`서버 오류: ${res.status}`)
+  }
+
+  return await res.status
+}
+
+// 강재데이터 반출처리
+export async function SteelReleaseService(steelManagementIds: number[]) {
+  const res = await fetch(`${API.STEEL}/release`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ steelManagementIds }),
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    throw new Error(`서버 오류: ${res.status}`)
+  }
+
+  return await res.status
+}
+
+// 강재수불부 엑셀 다운로드
+export async function SteelExcelDownload({
   sort = '',
   username = '',
   roleId,
@@ -92,7 +125,7 @@ export async function CostExcelDownload({
     queryParams.append('fields', fields.join(','))
   }
 
-  const res = await fetch(`${API.COST}/download?${queryParams.toString()}`, {
+  const res = await fetch(`${API.STEEL}/download?${queryParams.toString()}`, {
     method: 'GET',
 
     credentials: 'include',

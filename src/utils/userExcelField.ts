@@ -71,3 +71,29 @@ export const CostExcelFieldMap = {
 
 export type CostExcelFieldLabel = keyof typeof CostExcelFieldMap
 export type CostExcelFieldKey = (typeof CostExcelFieldMap)[CostExcelFieldLabel]
+
+// 강재수불부 엑셀다운 로드 필드 체크
+
+export const SteelExcelFieldMap = {
+  No: 'id',
+  현장명: 'siteName',
+  공정명: 'processName',
+  규격: 'standard',
+  품목: 'name',
+  단위: 'unit',
+  본: 'count',
+  길이: 'length',
+  총길이: 'totalLength',
+  단위중량: 'unitWeight',
+  수량: 'quantity',
+  단가: 'unitPrice',
+  공급가: 'supplyPrice',
+  // 거래선: 'hasFile',
+  용도: 'usage',
+  첨부: 'hasFile',
+  구분: 'type',
+  비고: 'memo',
+} as const
+
+export type SteelExcelFieldLabel = keyof typeof CostExcelFieldMap
+export type SteelExcelFieldKey = (typeof CostExcelFieldMap)[SteelExcelFieldLabel]

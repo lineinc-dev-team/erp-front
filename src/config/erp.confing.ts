@@ -87,6 +87,27 @@ export const CostColumnList: GridColDef[] = [
   { field: 'memo', headerName: '비고', width: 100 },
 ]
 
+export const SteelColumnList: GridColDef[] = [
+  { field: 'id', headerName: 'No', width: 70 },
+  { field: 'site', headerName: '현장명', width: 130 },
+  { field: 'process', headerName: '공정명', width: 130 },
+  { field: 'standard', headerName: '규격', width: 180 },
+  { field: 'name', headerName: '품목', width: 100 },
+  { field: 'unit', headerName: '단위', width: 120 },
+  { field: 'count', headerName: '본', width: 120 },
+  { field: 'length', headerName: '길이', width: 100 },
+  { field: 'totalLength', headerName: '총 길이', width: 100 },
+  { field: 'unitWeight', headerName: '단위중량', width: 100 },
+  { field: 'quantity', headerName: '수량', width: 100 },
+  { field: 'unitPrice', headerName: '단가', width: 100 },
+  { field: 'supplyPrice', headerName: '공급가', width: 100 },
+  // { field: 'supplyPrice', headerName: '거래선', width: 100 },
+  { field: 'usage', headerName: '용도', width: 100 },
+  { field: 'hasFile', headerName: '첨부', width: 100 },
+  { field: 'type', headerName: '구분', width: 100 },
+  { field: 'memo', headerName: '비고', width: 100 },
+]
+
 export const UserDataList: GridColDef[] = [
   { field: 'id', headerName: 'No', width: 70 },
   { field: 'loginId', headerName: '사용자 ID', width: 130 },
@@ -163,6 +184,13 @@ export const itemTypeOptions = [
   { label: '기타잡비', value: 'MISC_EXPENSE' },
 ]
 
+// 강재관리 옵션 타입
+export const steelTypeOptions = [
+  { label: '선택', value: '선택' },
+  { label: '발주', value: 'ORDER' },
+  { label: '임대', value: 'PURCHASE' },
+  { label: '구매', value: 'LEASE' },
+]
 // 은행 옵셥
 
 export const bankOptions = [

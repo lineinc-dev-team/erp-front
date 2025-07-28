@@ -17,5 +17,6 @@ export const API = {
   USER: `${apiBaseUrl}/users`,
   FILEUPLOAD: `${apiBaseUrl}/files`,
   COST: `${apiBaseUrl}/management-costs`,
+  STEEL: `${apiBaseUrl}/steel-management`,
   // 다른 API endpoint도 여기에 추가 가능
 }

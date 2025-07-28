@@ -2,44 +2,48 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { usePathname, useRouter } from 'next/navigation'
 import {
-  CreateManagementCost,
-  ModifyCostManagement,
+  CreateManagementSteel,
+  ModifySteelManagement,
+} from '@/services/managementSteel/managementSteelRegistrationService'
+import { useManagementSteelFormStore, useSteelSearchStore } from '@/stores/managementSteelStore'
+import {
+  ManagementSteelInfoService,
+  SteelApproveService,
+  SteelReleaseService,
+  SteelRemoveService,
+} from '@/services/managementSteel/managementSteelService'
+import { useEffect, useMemo, useState } from 'react'
+import { getTodayDateString } from '@/utils/formatters'
+import {
   SitesPersonScroll,
   SitesProcessNameScroll,
 } from '@/services/managementCost/managementCostRegistrationService'
-import { useCostSearchStore, useManagementCostFormStore } from '@/stores/managementCostsStore'
-import { useEffect, useMemo, useState } from 'react'
-import {
-  CostRemoveService,
-  ManagementCostInfoService,
-} from '@/services/managementCost/managementCostService'
-import { getTodayDateString } from '@/utils/formatters'
 
-export function useManagementCost() {
+export function useManagementSteel() {
   const { showSnackbar } = useSnackbarStore()
-  const { reset } = useManagementCostFormStore()
+  const { reset } = useManagementSteelFormStore()
 
   const router = useRouter()
   const queryClient = useQueryClient()
 
-  // 관리비 등록
-  const createCostMutation = useMutation({
-    mutationFn: CreateManagementCost,
+  // 강재 관리등록
+  const createSteelMutation = useMutation({
+    mutationFn: CreateManagementSteel,
     onSuccess: () => {
-      showSnackbar('관리비가 등록 되었습니다.', 'success')
+      showSnackbar('강재관리가 등록 되었습니다.', 'success')
       // 초기화 로직
-      queryClient.invalidateQueries({ queryKey: ['costInfo'] })
+      queryClient.invalidateQueries({ queryKey: ['steelInfo'] })
       reset()
-      router.push('/managementCost')
+      router.push('/managementSteel')
     },
     onError: () => {
-      showSnackbar('관리비 등록에 실패했습니다.', 'error')
+      showSnackbar('강재관리 등록에 실패했습니다.', 'error')
     },
   })
 
-  // 관리비 조회
+  // 강재 관리 조회
 
-  const search = useCostSearchStore((state) => state.search)
+  const search = useSteelSearchStore((state) => state.search)
 
   const pathName = usePathname()
 
@@ -50,9 +54,9 @@ export function useManagementCost() {
   }, [])
 
   // useQuery 쪽 수정
-  const CostListQuery = useQuery({
+  const SteelListQuery = useQuery({
     queryKey: [
-      'CostInfo',
+      'SteelInfo',
       search.searchTrigger,
       search.currentPage,
       search.pageCount,
@@ -61,10 +65,10 @@ export function useManagementCost() {
     ],
     queryFn: () => {
       const rawParams = {
-        name: search.name,
+        siteName: search.siteName,
         processName: search.processName,
-        itemType: search.itemType === '선택' ? '' : search.itemType,
-        itemDescription: search.itemDescription,
+        itemName: search.itemName,
+        type: search.type === '선택' ? '' : search.type,
         paymentStartDate: getTodayDateString(search.paymentStartDate),
         paymentEndDate: getTodayDateString(search.paymentEndDate),
         page: search.currentPage - 1,
@@ -89,44 +93,78 @@ export function useManagementCost() {
 
       console.log('검색 파라미터', filteredParams)
 
-      return ManagementCostInfoService(filteredParams)
+      return ManagementSteelInfoService(filteredParams)
     },
     staleTime: 1000 * 30,
   })
 
-  //관리비 삭제!
-  const CostDeleteMutation = useMutation({
-    mutationFn: ({ managementCostIds }: { managementCostIds: number[] }) =>
-      CostRemoveService(managementCostIds),
+  //강재데이터 삭제!
+  const SteelDeleteMutation = useMutation({
+    mutationFn: ({ steelManagementIds }: { steelManagementIds: number[] }) =>
+      SteelRemoveService(steelManagementIds),
 
     onSuccess: () => {
       if (window.confirm('정말 삭제하시겠습니까?')) {
-        showSnackbar('관리비가 삭제되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['CostInfo'] })
+        showSnackbar('강재 관리가 삭제되었습니다.', 'success')
+        queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
       }
     },
 
     onError: () => {
-      showSnackbar('관리비 삭제에 실패했습니다.', 'error')
+      showSnackbar('강재 관리 삭제에 실패했습니다.', 'error')
     },
   })
 
-  // 관리비 수정
-
-  const CostModifyMutation = useMutation({
-    mutationFn: (costId: number) => ModifyCostManagement(costId),
+  //강재데이터 승인!
+  const SteelApproveMutation = useMutation({
+    mutationFn: ({ steelManagementIds }: { steelManagementIds: number[] }) =>
+      SteelApproveService(steelManagementIds),
 
     onSuccess: () => {
-      if (window.confirm('수정하시겠습니까?')) {
-        showSnackbar('관리비가 수정 되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['CostInfo'] })
-        reset()
-        router.push('/managementCost')
+      if (window.confirm('정말 승인 하시겠습니까?')) {
+        showSnackbar('강재 관리가 승인되었습니다.', 'success')
+        queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
       }
     },
 
     onError: () => {
-      showSnackbar('관리비 수정에 실패했습니다.', 'error')
+      showSnackbar('강재 관리 승인에 실패했습니다.', 'error')
+    },
+  })
+
+  //강재데이터 반출!
+  const SteelReleaseMutation = useMutation({
+    mutationFn: ({ steelManagementIds }: { steelManagementIds: number[] }) =>
+      SteelReleaseService(steelManagementIds),
+
+    onSuccess: () => {
+      if (window.confirm('정말 반출 하시겠습니까?')) {
+        showSnackbar('강재 관리가 반출되었습니다.', 'success')
+        queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
+      }
+    },
+
+    onError: () => {
+      showSnackbar('강재 관리 반출에 실패했습니다.', 'error')
+    },
+  })
+
+  //   // 발주처 수정
+
+  const SteelModifyMutation = useMutation({
+    mutationFn: (SteelId: number) => ModifySteelManagement(SteelId),
+
+    onSuccess: () => {
+      if (window.confirm('수정하시겠습니까?')) {
+        showSnackbar('강재수불부가 수정 되었습니다.', 'success')
+        queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
+        reset()
+        router.push('/managementSteel')
+      }
+    },
+
+    onError: () => {
+      showSnackbar('강재수불부 수정에 실패했습니다.', 'error')
     },
   })
 
@@ -225,10 +263,12 @@ export function useManagementCost() {
   }, [processInfo])
 
   return {
-    createCostMutation,
-    CostListQuery,
-    CostDeleteMutation,
-    CostModifyMutation,
+    createSteelMutation,
+    SteelDeleteMutation,
+    SteelApproveMutation,
+    SteelListQuery,
+    SteelReleaseMutation,
+    SteelModifyMutation,
 
     // 현장명 무한 스크롤
     useSitesPersonInfiniteScroll,

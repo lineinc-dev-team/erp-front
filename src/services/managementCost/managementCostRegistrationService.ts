@@ -1,8 +1,6 @@
 import { API } from '@/api/config/env'
 import { useManagementCostFormStore } from '@/stores/managementCostsStore'
 
-export default function managementCostRegistrationService() {}
-
 // 현장명 무한 스크롤 조회
 export async function SitesPersonScroll({ pageParam = 0, size = 5, keyword = '', sort = '' }) {
   const resData = await fetch(

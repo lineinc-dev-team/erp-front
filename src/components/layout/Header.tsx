@@ -71,6 +71,14 @@ const menuItems: MenuItem[] = [
   },
 
   {
+    title: '강재 관리',
+    icon: <Inventory />, // 기업 아이콘
+    children: [
+      { label: ' - 조회', path: '/managementSteel' },
+      { label: ' - 등록', path: '/managementSteel/registration' },
+    ],
+  },
+  {
     title: '관리비 관리',
     icon: <Assignment />, // 기업 아이콘
     children: [
