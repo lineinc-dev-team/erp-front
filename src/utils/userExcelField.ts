@@ -95,5 +95,28 @@ export const SteelExcelFieldMap = {
   비고: 'memo',
 } as const
 
-export type SteelExcelFieldLabel = keyof typeof CostExcelFieldMap
-export type SteelExcelFieldKey = (typeof CostExcelFieldMap)[SteelExcelFieldLabel]
+export type SteelExcelFieldLabel = keyof typeof SteelExcelFieldMap
+export type SteelExcelFieldKey = (typeof SteelExcelFieldMap)[SteelExcelFieldLabel]
+
+// 자재관리 컬럼
+export const MaterialExcelFieldMap = {
+  No: 'id',
+  현장명: 'siteName',
+  공정명: 'processName',
+  투입구분: 'inputType',
+  납품일자: 'deliveryDate',
+  // 자채업체명: 'name',
+  품명: 'name',
+  규격: 'standard',
+  사용용도: 'usage',
+  수량: 'quantity',
+  단가: 'unitPrice',
+  공급가: 'supplyPrice',
+  부가세: 'vat',
+  합계: 'total',
+  첨부파일: 'hasFile',
+  비고: 'memo',
+} as const
+
+export type MaterialExcelFieldLabel = keyof typeof MaterialExcelFieldMap
+export type MaterialExcelFieldKey = (typeof MaterialExcelFieldMap)[MaterialExcelFieldLabel]

@@ -108,6 +108,25 @@ export const SteelColumnList: GridColDef[] = [
   { field: 'memo', headerName: '비고', width: 100 },
 ]
 
+export const MaterialColumnList: GridColDef[] = [
+  { field: 'id', headerName: 'No', width: 70 },
+  { field: 'site', headerName: '현장명', width: 130 },
+  { field: 'process', headerName: '공정명', width: 130 },
+  { field: 'inputType', headerName: '투입구분', width: 180 },
+  { field: 'deliveryDate', headerName: '납품일자', width: 100 },
+  // { field: 'unit', headerName: '자재업체명', width: 120 },
+  { field: 'name', headerName: '품명', width: 120 },
+  { field: 'standard', headerName: '규격', width: 100 },
+  { field: 'usage', headerName: '사용용도', width: 100 },
+  { field: 'quantity', headerName: '수량', width: 100 },
+  { field: 'unitPrice', headerName: '단가', width: 100 },
+  { field: 'supplyPrice', headerName: '공급가', width: 100 },
+  { field: 'vat', headerName: '부가세', width: 100 },
+  { field: 'total', headerName: '합계', width: 100 },
+  { field: 'hasFile', headerName: '첨부파일', width: 100 },
+  { field: 'memo', headerName: '비고', width: 100 },
+]
+
 export const UserDataList: GridColDef[] = [
   { field: 'id', headerName: 'No', width: 70 },
   { field: 'loginId', headerName: '사용자 ID', width: 130 },
@@ -191,7 +210,20 @@ export const steelTypeOptions = [
   { label: '임대', value: 'PURCHASE' },
   { label: '구매', value: 'LEASE' },
 ]
-// 은행 옵셥
+
+// 자재관리 투입구분타입
+export const materialTypeOptions = [
+  { label: '선택', value: '선택' },
+  { label: '주요자재(구매)', value: 'MAJOR_PURCHASE' },
+  { label: '주요자재(임대)', value: 'MAJOR_LEASE' },
+  { label: '주요자재(자사)', value: 'MAJOR_INTERNAL' },
+  { label: '부대토목자재', value: 'CIVIL_SUPPORT' },
+  { label: '잡자재(공구)', value: 'TOOL_MISC' },
+  { label: '잡자재(잡철)', value: 'METAL_MISC' },
+  { label: '안전(안전관리비)', value: 'SAFETY' },
+  { label: '환경(환경관리비)', value: 'ENVIRONMENT' },
+  { label: '운반비', value: 'TRANSPORT' },
+]
 
 export const bankOptions = [
   { label: '선택', value: '선택' },

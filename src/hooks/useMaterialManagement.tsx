@@ -1,45 +1,50 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
 import {
-  CreateManagementCost,
-  ModifyCostManagement,
   SitesPersonScroll,
   SitesProcessNameScroll,
 } from '@/services/managementCost/managementCostRegistrationService'
-import { useCostSearchStore, useManagementCostFormStore } from '@/stores/managementCostsStore'
-import { useEffect, useMemo, useState } from 'react'
 import {
-  CostRemoveService,
-  ManagementCostInfoService,
-} from '@/services/managementCost/managementCostService'
+  CreateManagementMaterial,
+  ModifyMaterialManagement,
+} from '@/services/materialManagement/materialManagementRegistrationService'
+import {
+  useManagementMaterialFormStore,
+  useMaterialSearchStore,
+} from '@/stores/materialManagementStore'
 import { getTodayDateString } from '@/utils/formatters'
+import {
+  ManagementMaterialInfoService,
+  MaterialRemoveService,
+} from '@/services/materialManagement/materialManagementService'
 
-export function useManagementCost() {
+export function useManagementMaterial() {
   const { showSnackbar } = useSnackbarStore()
-  const { reset } = useManagementCostFormStore()
+  const { reset } = useManagementMaterialFormStore()
 
   const router = useRouter()
   const queryClient = useQueryClient()
 
-  // 관리비 등록
-  const createCostMutation = useMutation({
-    mutationFn: CreateManagementCost,
+  // 강재 관리등록
+  const createMaterialMutation = useMutation({
+    mutationFn: CreateManagementMaterial,
     onSuccess: () => {
-      showSnackbar('관리비가 등록 되었습니다.', 'success')
+      showSnackbar('자재가 등록 되었습니다.', 'success')
       // 초기화 로직
-      queryClient.invalidateQueries({ queryKey: ['costInfo'] })
+      queryClient.invalidateQueries({ queryKey: ['materialInfo'] })
       reset()
-      router.push('/managementCost')
+      router.push('/materialManagement')
     },
     onError: () => {
-      showSnackbar('관리비 등록에 실패했습니다.', 'error')
+      showSnackbar('자재 등록에 실패했습니다.', 'error')
     },
   })
 
-  // 관리비 조회
+  // 자재 관리 조회
 
-  const search = useCostSearchStore((state) => state.search)
+  const search = useMaterialSearchStore((state) => state.search)
 
   const pathName = usePathname()
 
@@ -50,9 +55,9 @@ export function useManagementCost() {
   }, [search])
 
   // useQuery 쪽 수정
-  const CostListQuery = useQuery({
+  const MaterialListQuery = useQuery({
     queryKey: [
-      'CostInfo',
+      'MaterialInfo',
       search.searchTrigger,
       search.currentPage,
       search.pageCount,
@@ -61,12 +66,11 @@ export function useManagementCost() {
     ],
     queryFn: () => {
       const rawParams = {
-        name: search.name,
+        siteName: search.siteName,
         processName: search.processName,
-        itemType: search.itemType === '선택' ? '' : search.itemType,
-        itemDescription: search.itemDescription,
-        paymentStartDate: getTodayDateString(search.paymentStartDate),
-        paymentEndDate: getTodayDateString(search.paymentEndDate),
+        materialName: search.materialName,
+        deliveryStartDate: getTodayDateString(search.deliveryStartDate),
+        deliveryEndDate: getTodayDateString(search.deliveryEndDate),
         page: search.currentPage - 1,
         size: Number(search.pageCount) || 10,
         sort:
@@ -89,45 +93,44 @@ export function useManagementCost() {
 
       console.log('검색 파라미터', filteredParams)
 
-      return ManagementCostInfoService(filteredParams)
+      return ManagementMaterialInfoService(filteredParams)
     },
     staleTime: 1000 * 30,
-    enabled: pathName === '/login', // 경로 체크
   })
 
-  //관리비 삭제!
-  const CostDeleteMutation = useMutation({
-    mutationFn: ({ managementCostIds }: { managementCostIds: number[] }) =>
-      CostRemoveService(managementCostIds),
+  //자재데이터 삭제!
+  const MaterialDeleteMutation = useMutation({
+    mutationFn: ({ materialManagementIds }: { materialManagementIds: number[] }) =>
+      MaterialRemoveService(materialManagementIds),
 
     onSuccess: () => {
       if (window.confirm('정말 삭제하시겠습니까?')) {
-        showSnackbar('관리비가 삭제되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['CostInfo'] })
+        showSnackbar('자재 관리가 삭제되었습니다.', 'success')
+        queryClient.invalidateQueries({ queryKey: ['MaterialInfo'] })
       }
     },
 
     onError: () => {
-      showSnackbar('관리비 삭제에 실패했습니다.', 'error')
+      showSnackbar('자재 관리 삭제에 실패했습니다.', 'error')
     },
   })
 
-  // 관리비 수정
+  // 자재데이터 수정
 
-  const CostModifyMutation = useMutation({
-    mutationFn: (costId: number) => ModifyCostManagement(costId),
+  const MaterialModifyMutation = useMutation({
+    mutationFn: (materialId: number) => ModifyMaterialManagement(materialId),
 
     onSuccess: () => {
       if (window.confirm('수정하시겠습니까?')) {
-        showSnackbar('관리비가 수정 되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['CostInfo'] })
+        showSnackbar('자재비가 수정 되었습니다.', 'success')
+        queryClient.invalidateQueries({ queryKey: ['MaterialInfo'] })
         reset()
-        router.push('/managementCost')
+        router.push('/materialManagement')
       }
     },
 
     onError: () => {
-      showSnackbar('관리비 수정에 실패했습니다.', 'error')
+      showSnackbar('자재비 수정에 실패했습니다.', 'error')
     },
   })
 
@@ -226,10 +229,10 @@ export function useManagementCost() {
   }, [processInfo])
 
   return {
-    createCostMutation,
-    CostListQuery,
-    CostDeleteMutation,
-    CostModifyMutation,
+    createMaterialMutation,
+    MaterialModifyMutation,
+    MaterialListQuery,
+    MaterialDeleteMutation,
 
     // 현장명 무한 스크롤
     useSitesPersonInfiniteScroll,
@@ -241,7 +244,6 @@ export function useManagementCost() {
     isLoading,
 
     // 공정명
-
     useProcessNameInfiniteScroll,
     setProcessSearch,
     processOptions,

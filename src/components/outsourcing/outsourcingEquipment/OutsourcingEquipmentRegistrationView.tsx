@@ -25,8 +25,6 @@ export default function OutsourcingEquipmentRegistrationView({ isEditMode = fals
   const fileCheckIds = form.checkedAttachedFileIds
   const isFilesAllChecked = attachedFiles.length > 0 && fileCheckIds.length === attachedFiles.length
 
-  console.log('number', form.areaNumber, form.phoneNumber)
-
   return (
     <>
       <div>
