@@ -2,7 +2,7 @@
 
 import CommonSelect from '@/components/common/Select'
 import CommonButton from '@/components/common/Button'
-import CommonFileInput from '@/components/common/FileInput'
+// import CommonFileInput from '@/components/common/FileInput'
 import {
   Checkbox,
   Paper,
@@ -228,7 +228,7 @@ export default function OutsourcingEquipmentRegistrationView({ isEditMode = fals
                       }
                     />
                   </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                  {/* <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
                       <CommonFileInput
                         className=" break-words whitespace-normal"
@@ -240,7 +240,7 @@ export default function OutsourcingEquipmentRegistrationView({ isEditMode = fals
                         }
                       />
                     </div>
-                  </TableCell>
+                  </TableCell> */}
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
@@ -455,7 +455,7 @@ export default function OutsourcingEquipmentRegistrationView({ isEditMode = fals
                       }
                     />
                   </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                  {/* <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
                       <CommonFileInput
                         className=" break-words whitespace-normal"
@@ -467,7 +467,7 @@ export default function OutsourcingEquipmentRegistrationView({ isEditMode = fals
                         }
                       />
                     </div>
-                  </TableCell>
+                  </TableCell> */}
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
