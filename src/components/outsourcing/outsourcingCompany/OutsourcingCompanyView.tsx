@@ -3,7 +3,7 @@
 import CommonInput from '@/components/common/Input'
 import CommonSelect from '@/components/common/Select'
 import { DataGrid } from '@mui/x-data-grid'
-import { BusinessDataList, SubmitOptions, UseORnotOptions } from '@/config/erp.confing'
+import { CostColumnList, SubmitOptions, UseORnotOptions } from '@/config/erp.confing'
 import { Pagination } from '@mui/material'
 import { useOrderingSearchStore } from '@/stores/outsourcingCompanyStore'
 import { OutsourcingCompanyService } from '@/services/outsourcingCompany/outsourcingCompanyService'
@@ -232,7 +232,7 @@ export default function OutsourcingCompanyView() {
       <div style={{ height: 500, width: '100%' }}>
         <DataGrid
           rows={displayedRows}
-          columns={BusinessDataList.map((col) => ({
+          columns={CostColumnList.map((col) => ({
             ...col,
             sortable: false,
             headerAlign: 'center',

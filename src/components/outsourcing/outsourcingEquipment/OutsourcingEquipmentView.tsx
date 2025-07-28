@@ -5,7 +5,7 @@ import { DataGrid } from '@mui/x-data-grid'
 import { Pagination } from '@mui/material'
 import { useOrderingSearchStore } from '@/stores/outsourcingCompanyStore'
 import CommonButton from '@/components/common/Button'
-import { BusinessDataList, SubmitOptions } from '@/config/erp.confing'
+import { CostColumnList, SubmitOptions } from '@/config/erp.confing'
 import { OutsourcingEquipmentService } from '@/services/outsourcingEquipment/outsourcingEquipmentService'
 
 export default function OutsourcingEquipmentView() {
@@ -228,7 +228,7 @@ export default function OutsourcingEquipmentView() {
       <div style={{ height: 500, width: '100%' }}>
         <DataGrid
           rows={displayedRows}
-          columns={BusinessDataList.map((col) => ({
+          columns={CostColumnList.map((col) => ({
             ...col,
             sortable: false,
             headerAlign: 'center',

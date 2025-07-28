@@ -1,7 +1,7 @@
 'use client'
 
 import { DataGrid } from '@mui/x-data-grid'
-import { BusinessDataList, SubmitOptions, UseORnotOptions } from '@/config/erp.confing'
+import { CostColumnList, SubmitOptions, UseORnotOptions } from '@/config/erp.confing'
 import { Pagination } from '@mui/material'
 import CommonSelect from '@/components/common/Select'
 import CommonButton from '@/components/common/Button'
@@ -216,7 +216,7 @@ export default function WorkForceHoursView() {
       <div style={{ height: 500, width: '100%' }}>
         <DataGrid
           rows={displayedRows}
-          columns={BusinessDataList.map((col) => ({
+          columns={CostColumnList.map((col) => ({
             ...col,
             sortable: false,
             headerAlign: 'center',
