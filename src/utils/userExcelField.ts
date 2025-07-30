@@ -1,9 +1,11 @@
 export const userExcelFieldMap = {
   No: 'id',
   '사용자 ID': 'loginId',
-  '사용자 이름': 'username',
-  '소속 (부서/현장)': 'roleName',
-  // 직책: 'position',
+  이름: 'username',
+  부서: 'department',
+  직급: 'grade',
+  직책: 'position',
+  휴대폰: 'phoneNumber',
   계정상태: 'isActive',
   최종접속일: 'lastLoginAt',
   생성일자: 'createdAt',
@@ -120,3 +122,23 @@ export const MaterialExcelFieldMap = {
 
 export type MaterialExcelFieldLabel = keyof typeof MaterialExcelFieldMap
 export type MaterialExcelFieldKey = (typeof MaterialExcelFieldMap)[MaterialExcelFieldLabel]
+
+// 계정관리 컬럼
+export const AccountExcelFieldMap = {
+  No: 'id',
+  사용자ID: 'loginId',
+  사용자이름: 'username',
+  부서: 'roleName',
+  직급: 'isActive',
+  직책: 'name',
+  휴대폰: 'standard',
+  계정상태: 'usage',
+  최종접속일: 'lastLoginAt',
+  생성일자: 'createdAt',
+  최종수정일: 'updatedBy',
+  수정자: 'vat',
+  비고: 'memo',
+} as const
+
+export type AccountxcelFieldLabel = keyof typeof AccountExcelFieldMap
+export type AccountExcelFieldKey = (typeof AccountExcelFieldMap)[AccountxcelFieldLabel]

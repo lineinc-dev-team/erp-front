@@ -208,7 +208,7 @@ export default function Header() {
 
   // react-query로 메뉴 호출
   const {
-    data: menuData,
+    // data: menuData,
     isLoading,
     isError,
   } = useQuery({
@@ -218,8 +218,6 @@ export default function Header() {
 
   if (isLoading) return <div>로딩중...</div>
   if (isError) return <div>권한이 없거나 에러 발생</div>
-
-  console.log('menuData:', menuData)
 
   const handleToggleSection = (key: string) => {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
@@ -345,7 +343,23 @@ export default function Header() {
               </button>
               {tab.path !== '/' && (
                 <button
-                  onClick={() => removeTab(tab.path)}
+                  onClick={() => {
+                    const currentPath = pathname
+                    const tabIndex = tabs.findIndex((t) => t.path === tab.path)
+
+                    // 현재 닫는 탭이 현재 경로라면
+                    if (tab.path === currentPath) {
+                      const nextTab = tabs[tabIndex + 1] || tabs[tabIndex - 1]
+
+                      if (nextTab) {
+                        router.push(nextTab.path)
+                      } else {
+                        router.push('/') // 기본 경로로 fallback
+                      }
+                    }
+
+                    removeTab(tab.path)
+                  }}
                   className="ml-2 text-sm cursor-pointer hover:text-red-500"
                 >
                   <CloseIcon fontSize="small" />

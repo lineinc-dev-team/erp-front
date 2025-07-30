@@ -23,38 +23,8 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
     departmentOptions,
     positionOptions,
     gradeOptions,
+    resetPasswordMutation,
   } = useUserMg()
-
-  const handleResetPassword = () => {
-    const length = 8
-    const numbers = '0123456789'
-    const lower = 'abcdefghijklmnopqrstuvwxyz'
-    const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-
-    // 숫자, 소문자, 대문자 최소 1개씩 포함하도록 강제하기 위해
-    // 각각에서 1글자씩 뽑아서 배열에 넣고 나머지는 랜덤으로 채움
-    const passwordChars = [
-      numbers[Math.floor(Math.random() * numbers.length)],
-      lower[Math.floor(Math.random() * lower.length)],
-      upper[Math.floor(Math.random() * upper.length)],
-    ]
-
-    const allChars = numbers + lower + upper
-    for (let i = passwordChars.length; i < length; i++) {
-      passwordChars.push(allChars[Math.floor(Math.random() * allChars.length)])
-    }
-
-    // 배열 셔플 (비밀번호 문자 순서 섞기)
-    for (let i = passwordChars.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
-      ;[passwordChars[i], passwordChars[j]] = [passwordChars[j], passwordChars[i]]
-    }
-
-    const newPassword = passwordChars.join('')
-
-    setField('password', newPassword)
-    setField('checkPassword', newPassword)
-  }
 
   const { form, reset, setField } = useAccountFormStore()
 
@@ -72,6 +42,8 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
   useEffect(() => {
     if (data && isEditMode) {
       const client = data.data
+
+      console.log('@@client', client)
 
       // 기존 값과 다르면 업데이트 (방어 코드)
       if (client.loginId !== form.loginId) setField('loginId', client.loginId ?? '')
@@ -126,6 +98,38 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
     } else {
       createUserMutation.mutate()
     }
+  }
+
+  const handleResetPassword = (userDetailId: number) => {
+    resetPasswordMutation.mutate(userDetailId)
+    // const length = 8
+    // const numbers = '0123456789'
+    // const lower = 'abcdefghijklmnopqrstuvwxyz'
+    // const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+    // // 숫자, 소문자, 대문자 최소 1개씩 포함하도록 강제하기 위해
+    // // 각각에서 1글자씩 뽑아서 배열에 넣고 나머지는 랜덤으로 채움
+    // const passwordChars = [
+    //   numbers[Math.floor(Math.random() * numbers.length)],
+    //   lower[Math.floor(Math.random() * lower.length)],
+    //   upper[Math.floor(Math.random() * upper.length)],
+    // ]
+
+    // const allChars = numbers + lower + upper
+    // for (let i = passwordChars.length; i < length; i++) {
+    //   passwordChars.push(allChars[Math.floor(Math.random() * allChars.length)])
+    // }
+
+    // // 배열 셔플 (비밀번호 문자 순서 섞기)
+    // for (let i = passwordChars.length - 1; i > 0; i--) {
+    //   const j = Math.floor(Math.random() * (i + 1))
+    //   ;[passwordChars[i], passwordChars[j]] = [passwordChars[j], passwordChars[i]]
+    // }
+
+    // const newPassword = passwordChars.join('')
+
+    // setField('password', newPassword)
+    // setField('checkPassword', newPassword)
   }
 
   return (
@@ -262,23 +266,57 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
               />
             </div>
           </div>
+
+          {isEditMode && (
+            <>
+              <div className="flex">
+                <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
+                  계정생성일 / 수정일
+                </label>
+                <div className="border border-gray-400 px-2 w-full flex items-center text-sm text-gray-600">
+                  {data?.data.createdAt?.slice(0, 10)} / {data?.data.updatedAt?.slice(0, 10)}
+                </div>
+              </div>
+
+              <div className="flex">
+                <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
+                  최종 로그인
+                </label>
+                <div className="border border-gray-400 p-4 px-2 w-full flex items-center text-sm text-gray-600">
+                  {data?.data.lastLoginAt ? data.data.lastLoginAt.slice(0, 10) : '기록 없음'}
+                </div>
+              </div>
+              <div className="flex">
+                <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
+                  비밀번호 초기화
+                </label>
+                <div className="border border-gray-400 p-4 px-2 w-full flex items-center text-sm text-gray-600">
+                  <CommonButton label="초기화" onClick={() => handleResetPassword(userDetailId)} />
+                </div>
+              </div>
+            </>
+          )}
+
           <div className="flex">
-            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center"></label>
-            <div className="border border-gray-400 px-2 w-full"></div>
+            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              비고 / 메모
+            </label>
+            <div className="border flex items-center gap-4 p-2 border-gray-400 px-2 w-full">
+              <CommonInput
+                placeholder="텍스트 입력"
+                value={form.memo}
+                onChange={(value) => setField('memo', value)}
+                className=" flex-1"
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="mt-10">
+      {/* <div className="mt-10">
         <div className="flex justify-between mb-4">
           <div>
             <span className="font-bold border-b-2 mb-4">비밀번호 정보</span>
-          </div>
-          <div>
-            <CommonButton
-              label={isEditMode ? '초기화' : '초기비밀번호 생성'}
-              onClick={handleResetPassword}
-            />
           </div>
         </div>
         <div className="grid grid-cols-2 mt-1">
@@ -311,7 +349,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className="flex justify-center gap-10 mt-10">
         <CommonButton

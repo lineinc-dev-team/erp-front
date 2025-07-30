@@ -1,10 +1,16 @@
 // components/common/CommonSelect.tsx
 import { FormControl, MenuItem, Select } from '@mui/material'
 
+type OptionType<T extends string | number> = {
+  label?: string
+  id?: string | number
+  name: T
+}
+
 type CommonSelectProps<T extends string | number> = {
   value: T
   onChange: (value: T) => void
-  options: { label: string; value: T }[]
+  options: OptionType<T>[]
   fullWidth?: boolean
   required?: boolean
   disabled?: boolean
@@ -34,16 +40,9 @@ export default function CommonSelect<T extends string | number>({
         MenuProps={{
           PaperProps: {
             sx: {
-              maxHeight: 200, // 스크롤 생기게
+              maxHeight: 200,
             },
           },
-          // MenuListProps: {
-          //   onScroll: (e: React.UIEvent<HTMLUListElement>) => {
-          //     const target = e.currentTarget
-          //     if (target.scrollHeight - target.scrollTop === target.clientHeight) {
-          //     }
-          //   },
-          // },
         }}
         sx={{
           '& .MuiOutlinedInput-notchedOutline': {
@@ -58,8 +57,8 @@ export default function CommonSelect<T extends string | number>({
         }}
       >
         {options.map((opt) => (
-          <MenuItem key={opt.value} value={opt.value}>
-            {displayLabel ? opt.label : opt.value}
+          <MenuItem key={opt.id} value={opt.id}>
+            {displayLabel ? opt.label ?? opt.name : opt.name}
           </MenuItem>
         ))}
       </Select>

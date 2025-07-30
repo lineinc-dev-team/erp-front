@@ -163,12 +163,12 @@ export function useClientCompany() {
   })
 
   const userOptions = useMemo(() => {
-    const defaultOption = { label: '선택', value: '0' }
+    const defaultOption = { id: '0', name: '선택' }
     const options = (userData?.pages || [])
       .flatMap((page) => page.data.content)
       .map((user) => ({
-        label: user.username,
-        value: user.id,
+        id: user.id,
+        name: user.username,
       }))
 
     return [defaultOption, ...options]

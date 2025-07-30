@@ -1,56 +1,62 @@
 import { GridColDef } from '@mui/x-data-grid'
 
 export const SiteOptions = [
-  { label: '선택', value: '선택' },
-  { label: '건축', value: 'CONSTRUCTION' },
-  { label: '토목', value: 'CIVIL_ENGINEERING' },
-  { label: '외주', value: 'OUTSOURCING' },
+  { label: '선택', name: '선택' },
+  { label: '건축', name: 'CONSTRUCTION' },
+  { label: '토목', name: 'CIVIL_ENGINEERING' },
+  { label: '외주', name: 'OUTSOURCING' },
 ]
 
 export const SiteProgressing = [
-  { id: 0, label: '선택', value: '선택' },
-  { id: 1, label: '준비중', value: 'NOT_STARTED' },
-  { id: 2, label: '진행중', value: 'IN_PROGRESS' },
-  { id: 3, label: '완료', value: 'COMPLETED' },
+  { id: 0, label: '선택', name: '선택' },
+  { id: 1, label: '준비중', name: 'NOT_STARTED' },
+  { id: 2, label: '진행중', name: 'IN_PROGRESS' },
+  { id: 3, label: '완료', name: 'COMPLETED' },
 ]
 
 export const LocationStatusOptions = [
-  { label: '전체', value: '전체' },
-  { label: '서울', value: '서울' },
-  { label: '부산', value: '부산' },
-  { label: '고양', value: '고양' },
+  { label: '전체', name: '전체' },
+  { label: '서울', name: '서울' },
+  { label: '부산', name: '부산' },
+  { label: '고양', name: '고양' },
 ]
 
 export const UseORnotOptions = [
-  { label: '선택', value: '선택' },
-  { label: '사용', value: '사용' },
-  { label: '미사용', value: '미사용' },
+  { id: '0', name: '선택' },
+  { id: '1', name: '사용' },
+  { id: '2', name: '미사용' },
+]
+
+export const UseStateOptions = [
+  { id: '0', name: '선택' },
+  { id: '1', name: '활성' },
+  { id: '2', name: '비활성' },
 ]
 
 export const SubmitOptions = [
-  { label: '전체', value: '전체' },
-  { label: '제출', value: '제출' },
-  { label: '미제출', value: '미제출' },
+  { label: '전체', name: '전체' },
+  { label: '제출', name: '제출' },
+  { label: '미제출', name: '미제출' },
 ]
 
 export const ProcessStatusOptions = [
-  { label: '전체', value: '전체' },
-  { label: '미정', value: '미정' },
-  { label: '진행 중', value: '진행중' },
-  { label: '완료', value: '완료' },
+  { label: '전체', name: '전체' },
+  { label: '미정', name: '미정' },
+  { label: '진행 중', name: '진행중' },
+  { label: '완료', name: '완료' },
 ]
 
 export const ArrayStatusOptions = [
-  { label: '최신순', value: '최신순' },
-  { label: '날짜순', value: '날짜순' },
-  // { label: '이름순', value: '이름순' },
+  { id: '최신순', name: '최신순' },
+  { id: '날짜순', name: '날짜순' },
+  // { label: '이름순', name: '이름순' },
 ]
 
 export const PageCount = [
-  { label: '10', value: '10' },
-  { label: '20', value: '20' },
-  { label: '30', value: '30' },
-  { label: '50', value: '50' },
+  { id: '10', name: '10' },
+  { id: '20', name: '20' },
+  { id: '30', name: '30' },
+  { id: '50', name: '50' },
 ]
 
 export const SiteColumnList: GridColDef[] = [
@@ -131,11 +137,13 @@ export const UserDataList: GridColDef[] = [
   { field: 'id', headerName: 'No', width: 70 },
   { field: 'loginId', headerName: '사용자 ID', width: 130 },
   { field: 'username', headerName: '사용자 이름', width: 130 },
-  { field: 'phoneNumber', headerName: '소속 (부서/현장)', width: 130 },
-  { field: 'email', headerName: '직책', width: 180 },
+  { field: 'department', headerName: '부서', width: 180 },
+  { field: 'grade', headerName: '직급', width: 180 },
+  { field: 'position', headerName: '직책', width: 180 },
+  { field: 'phoneNumber', headerName: '휴대폰', width: 180 },
   { field: 'isActive', headerName: '계정상태', width: 100 },
-  { field: 'createdAt', headerName: '생성일자', width: 100 },
   { field: 'lastLoginAt', headerName: '최종접속일', width: 120 },
+  { field: 'createdAt', headerName: '생성일자', width: 100 },
   { field: 'updatedAt', headerName: '최종수정일', width: 100 },
   { field: 'updatedBy', headerName: '수정자', width: 100 },
   { field: 'memo', headerName: '비고', width: 100 },
@@ -159,78 +167,78 @@ export const clientCompanyList: GridColDef[] = [
 ]
 
 export const AreaCode = [
-  { label: '지역번호', value: '지역번호' },
-  { label: '서울', value: '02' },
-  { label: '인천', value: '032' },
-  { label: '경기', value: '031' },
-  { label: '강원', value: '033' },
-  { label: '충북', value: '043' },
-  { label: '충남', value: '041' },
-  { label: '세종', value: '044' },
-  { label: '대전', value: '042' },
-  { label: '전북', value: '063' },
-  { label: '전남', value: '061' },
-  { label: '광주', value: '062' },
-  { label: '경북', value: '054' },
-  { label: '대구', value: '053' },
-  { label: '경남', value: '055' },
-  { label: '부산', value: '051' },
-  { label: '울산', value: '052' },
-  { label: '제주', value: '064' },
+  { label: '지역번호', name: '지역번호' },
+  { label: '서울', name: '02' },
+  { label: '인천', name: '032' },
+  { label: '경기', name: '031' },
+  { label: '강원', name: '033' },
+  { label: '충북', name: '043' },
+  { label: '충남', name: '041' },
+  { label: '세종', name: '044' },
+  { label: '대전', name: '042' },
+  { label: '전북', name: '063' },
+  { label: '전남', name: '061' },
+  { label: '광주', name: '062' },
+  { label: '경북', name: '054' },
+  { label: '대구', name: '053' },
+  { label: '경남', name: '055' },
+  { label: '부산', name: '051' },
+  { label: '울산', name: '052' },
+  { label: '제주', name: '064' },
 ]
 
 export const PayInfo = [
-  { label: '선택', value: '선택' },
-  { label: '어음', value: '어음' },
-  { label: '현금', value: '현금' },
+  { label: '선택', name: '선택' },
+  { label: '어음', name: '어음' },
+  { label: '현금', name: '현금' },
 ]
 
 export const GuaranteeInfo = [
-  { label: '선택', value: '선택' },
-  { label: 'O', value: 'O' },
-  { label: 'X', value: 'X' },
+  { label: '선택', name: '선택' },
+  { label: 'O', name: 'O' },
+  { label: 'X', name: 'X' },
 ]
 
 // 관리비 옵션 타입
 export const itemTypeOptions = [
-  { label: '선택', value: '선택' },
-  { label: '보증금', value: 'DEPOSIT' },
-  { label: '월세', value: 'MONTHLY_RENT' },
-  { label: '관리비(가스전기수도)', value: 'MAINTENANCE' },
-  { label: '주차비', value: 'PARKING_FEE' },
-  { label: '식대', value: 'MEAL_FEE' },
-  { label: '전도금', value: 'KEY_MONEY' },
-  { label: '기타잡비', value: 'MISC_EXPENSE' },
+  { label: '선택', name: '선택' },
+  { label: '보증금', name: 'DEPOSIT' },
+  { label: '월세', name: 'MONTHLY_RENT' },
+  { label: '관리비(가스전기수도)', name: 'MAINTENANCE' },
+  { label: '주차비', name: 'PARKING_FEE' },
+  { label: '식대', name: 'MEAL_FEE' },
+  { label: '전도금', name: 'KEY_MONEY' },
+  { label: '기타잡비', name: 'MISC_EXPENSE' },
 ]
 
 // 강재관리 옵션 타입
 export const steelTypeOptions = [
-  { label: '선택', value: '선택' },
-  { label: '발주', value: 'ORDER' },
-  { label: '임대', value: 'PURCHASE' },
-  { label: '구매', value: 'LEASE' },
+  { label: '선택', name: '선택' },
+  { label: '발주', name: 'ORDER' },
+  { label: '임대', name: 'PURCHASE' },
+  { label: '구매', name: 'LEASE' },
 ]
 
 // 자재관리 투입구분타입
 export const materialTypeOptions = [
-  { label: '선택', value: '선택' },
-  { label: '주요자재(구매)', value: 'MAJOR_PURCHASE' },
-  { label: '주요자재(임대)', value: 'MAJOR_LEASE' },
-  { label: '주요자재(자사)', value: 'MAJOR_INTERNAL' },
-  { label: '부대토목자재', value: 'CIVIL_SUPPORT' },
-  { label: '잡자재(공구)', value: 'TOOL_MISC' },
-  { label: '잡자재(잡철)', value: 'METAL_MISC' },
-  { label: '안전(안전관리비)', value: 'SAFETY' },
-  { label: '환경(환경관리비)', value: 'ENVIRONMENT' },
-  { label: '운반비', value: 'TRANSPORT' },
+  { label: '선택', name: '선택' },
+  { label: '주요자재(구매)', name: 'MAJOR_PURCHASE' },
+  { label: '주요자재(임대)', name: 'MAJOR_LEASE' },
+  { label: '주요자재(자사)', name: 'MAJOR_INTERNAL' },
+  { label: '부대토목자재', name: 'CIVIL_SUPPORT' },
+  { label: '잡자재(공구)', name: 'TOOL_MISC' },
+  { label: '잡자재(잡철)', name: 'METAL_MISC' },
+  { label: '안전(안전관리비)', name: 'SAFETY' },
+  { label: '환경(환경관리비)', name: 'ENVIRONMENT' },
+  { label: '운반비', name: 'TRANSPORT' },
 ]
 
 export const bankOptions = [
-  { label: '선택', value: '선택' },
-  { label: '기업은행', value: '기업은행' },
-  { label: '농협은행', value: '농협은행' },
-  { label: '우리은행', value: '우리은행' },
-  { label: '카카오뱅크', value: '카카오뱅크' },
-  { label: '국민은행', value: '국민은행' },
-  { label: '신한은행', value: '신한은행' },
+  { label: '선택', name: '선택' },
+  { label: '기업은행', name: '기업은행' },
+  { label: '농협은행', name: '농협은행' },
+  { label: '우리은행', name: '우리은행' },
+  { label: '카카오뱅크', name: '카카오뱅크' },
+  { label: '국민은행', name: '국민은행' },
+  { label: '신한은행', name: '신한은행' },
 ]

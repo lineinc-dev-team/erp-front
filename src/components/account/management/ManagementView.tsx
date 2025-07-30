@@ -22,8 +22,9 @@ import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 import CommonDatePicker from '@/components/common/DatePicker'
 import ExcelModal from '@/components/common/ExcelModal'
 import { UserDataExcelDownload } from '@/services/account/accountManagementService'
-import { CostExcelFieldMap } from '@/utils/userExcelField'
+import { userExcelFieldMap } from '@/utils/userExcelField'
 import { useRouter } from 'next/navigation'
+import { useSnackbarStore } from '@/stores/useSnackbarStore'
 
 export default function ManagementView() {
   const { search } = useAccountManagementStore()
@@ -38,8 +39,6 @@ export default function ManagementView() {
   } = useUserMg()
 
   const UserInfoList = userQuery.data?.data.content ?? []
-
-  console.log('!@@#', userQuery.data)
 
   const totalList = userQuery.data?.data.pageInfo.totalElements ?? 0
   const pageCount = Number(search.pageCount) || 10
@@ -105,6 +104,8 @@ export default function ManagementView() {
 
   const { useUserInfiniteScroll } = useUserMg()
 
+  const { showSnackbar } = useSnackbarStore()
+
   // 유저 선택 시 처리
   const handleSelectUser = (selectedUser: UserInfoProps) => {
     // 예: username 필드에 선택한 유저 이름 넣기
@@ -118,19 +119,31 @@ export default function ManagementView() {
   const { data, fetchNextPage, hasNextPage, isFetching, isLoading } =
     useUserInfiniteScroll(debouncedKeyword)
 
-  const userList = data?.pages.flatMap((page) => page.data.content) ?? []
+  const rawList = data?.pages.flatMap((page) => page.data.content) ?? []
+  const userList = Array.from(new Map(rawList.map((user) => [user.username, user])).values())
 
   const [modalOpen, setModalOpen] = useState(false)
   // // userExcelFieldMap 객체를 { label: string, value: string }[] 배열로 바꿔줍니다.
-  const fieldMapArray = Object.entries(CostExcelFieldMap).map(([label, value]) => ({
+  const fieldMapArray = Object.entries(userExcelFieldMap).map(([label, value]) => ({
     label,
     value,
   }))
 
   const handleDownloadExcel = async (fields: string[]) => {
-    await UserDataExcelDownload({ fields })
+    await UserDataExcelDownload({
+      sort: search.arraySort === '최신순' ? 'username,desc' : 'username,asc',
+      username: search.username,
+      roleId: search.roleId === '0' ? undefined : Number(search.roleId),
+      isActive: search.isActive === '0' ? undefined : search.isActive === 'Y',
+      createdStartDate: getTodayDateString(search.createdStartDate),
+      createdEndDate: getTodayDateString(search.createdEndDate),
+      lastLoginStartDate: getTodayDateString(search.lastLoginStartDate),
+      lastLoginEndDate: getTodayDateString(search.lastLoginEndDate),
+      fields,
+    })
   }
 
+  console.log('search.currentPagesearch.currentPage', search.currentPage)
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
@@ -139,25 +152,23 @@ export default function ManagementView() {
             <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               이름
             </label>
-            <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
-              <InfiniteScrollSelect<UserInfoProps>
-                placeholder="이름을 입력하세요"
-                keyword={search.username}
-                onChangeKeyword={(newKeyword) => search.setField('username', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
-                items={userList}
-                hasNextPage={hasNextPage ?? false}
-                fetchNextPage={fetchNextPage}
-                renderItem={(item, isHighlighted) => (
-                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
-                    {item.username}
-                  </div>
-                )}
-                onSelect={handleSelectUser}
-                shouldShowList={true}
-                isLoading={isLoading || isFetching}
-                debouncedKeyword={debouncedKeyword}
-              />
-            </div>
+            <InfiniteScrollSelect<UserInfoProps>
+              placeholder="이름을 입력하세요"
+              keyword={search.username}
+              onChangeKeyword={(newKeyword) => search.setField('username', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+              items={userList}
+              hasNextPage={hasNextPage ?? false}
+              fetchNextPage={fetchNextPage}
+              renderItem={(item, isHighlighted) => (
+                <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                  {item.username}
+                </div>
+              )}
+              onSelect={handleSelectUser}
+              shouldShowList={true}
+              isLoading={isLoading || isFetching}
+              debouncedKeyword={debouncedKeyword}
+            />
           </div>
 
           <div className="flex">
@@ -176,7 +187,7 @@ export default function ManagementView() {
 
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              직급
+              직책
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonSelect
@@ -190,7 +201,7 @@ export default function ManagementView() {
 
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              직책
+              직급
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-2 ">
               <CommonSelect
@@ -237,12 +248,32 @@ export default function ManagementView() {
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
               <CommonDatePicker
                 value={search.createdStartDate}
-                onChange={(value) => search.setField('createdStartDate', value)}
+                onChange={(value) => {
+                  search.setField('createdStartDate', value)
+
+                  if (
+                    value !== null &&
+                    search.createdEndDate !== null &&
+                    new Date(search.createdEndDate) < new Date(value)
+                  ) {
+                    search.setField('createdEndDate', value)
+                  }
+                }}
               />
               ~
               <CommonDatePicker
                 value={search.createdEndDate}
-                onChange={(value) => search.setField('createdEndDate', value)}
+                onChange={(value) => {
+                  if (
+                    value !== null &&
+                    search.createdStartDate !== null &&
+                    new Date(value) < new Date(search.createdStartDate)
+                  ) {
+                    showSnackbar('종료일은 시작일 이후여야 합니다.', 'error')
+                    return
+                  }
+                  search.setField('createdEndDate', value)
+                }}
               />
             </div>
           </div>
@@ -255,12 +286,32 @@ export default function ManagementView() {
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
               <CommonDatePicker
                 value={search.lastLoginStartDate}
-                onChange={(value) => search.setField('lastLoginStartDate', value)}
+                onChange={(value) => {
+                  search.setField('lastLoginStartDate', value)
+
+                  if (
+                    value !== null &&
+                    search.lastLoginEndDate !== null &&
+                    new Date(search.lastLoginEndDate) < new Date(value)
+                  ) {
+                    search.setField('lastLoginEndDate', value)
+                  }
+                }}
               />
               ~
               <CommonDatePicker
                 value={search.lastLoginEndDate}
-                onChange={(value) => search.setField('lastLoginEndDate', value)}
+                onChange={(value) => {
+                  if (
+                    value !== null &&
+                    search.lastLoginStartDate !== null &&
+                    new Date(value) < new Date(search.lastLoginStartDate)
+                  ) {
+                    showSnackbar('종료일은 시작일 이후여야 합니다.', 'error')
+                    return
+                  }
+                  search.setField('lastLoginEndDate', value)
+                }}
               />
             </div>
           </div>

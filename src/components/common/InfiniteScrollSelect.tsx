@@ -34,13 +34,31 @@ export default function InfiniteScrollSelect<T>({
   const [isOpen, setIsOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
 
+  const manuallySelected = useRef(false)
+
   useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    if (manuallySelected.current) {
+      manuallySelected.current = false // 초기화
+      return // 리스트 다시 열지 않음
+    }
+
     if (keyword.trim() !== '') {
       setIsOpen(true)
     } else {
       setIsOpen(false)
     }
-    setActiveIndex(-1) // 키워드 바뀔 때 초기화
+    setActiveIndex(-1)
   }, [keyword])
 
   useEffect(() => {
@@ -80,6 +98,7 @@ export default function InfiniteScrollSelect<T>({
   }, [activeIndex])
 
   const handleItemClick = (item: T) => {
+    manuallySelected.current = true
     if (onSelect) onSelect(item)
     setIsOpen(false)
     setActiveIndex(-1)
@@ -115,7 +134,7 @@ export default function InfiniteScrollSelect<T>({
           if (keyword.trim() !== '') setIsOpen(true)
         }}
         onBlur={() => {
-          setTimeout(() => setIsOpen(false), 10000)
+          // setTimeout(() => setIsOpen(false), 10000)
         }}
         onKeyDown={handleKeyDown}
       />
@@ -123,7 +142,7 @@ export default function InfiniteScrollSelect<T>({
       {showList && (
         <div
           ref={containerRef}
-          className="absolute top-full left-0 right-0 max-h-60 overflow-auto  border  rounded px-2 py-2 bg-amber-100 shadow z-10"
+          className="absolute left-0 top-12 right-0 max-h-40 mx-2 overflow-auto  border  rounded px-2 py-2 bg-white shadow z-10"
         >
           {items.map((item, index) => (
             <div
@@ -131,7 +150,9 @@ export default function InfiniteScrollSelect<T>({
               ref={(el) => {
                 itemRefs.current[index] = el
               }}
-              className="cursor-pointer px-2 py-1"
+              className={`cursor-pointer px-2 py-1 
+      ${index === activeIndex ? 'bg-gray-400 text-white font-bold' : 'hover:bg-gray-100'}`}
+              onMouseEnter={() => setActiveIndex(index)} // 마우스 오버 시에도 강조
               onClick={() => handleItemClick(item)}
             >
               {renderItem(item, index === activeIndex)}
@@ -142,9 +163,9 @@ export default function InfiniteScrollSelect<T>({
             <div className="text-center text-sm text-gray-500 py-2">불러오는 중...</div>
           )}
 
-          {(items.length === 0 && !isLoading) || (
+          {/* {(items.length === 0 && !isLoading) || (
             <div className="text-center text-sm text-gray-400 py-4">검색 결과가 없습니다</div>
-          )}
+          )} */}
         </div>
       )}
     </div>

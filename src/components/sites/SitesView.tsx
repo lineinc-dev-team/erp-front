@@ -149,10 +149,10 @@ export default function SitesView() {
               <CommonSelect
                 fullWidth
                 className="text-xl"
-                value={sitesOptions.find((opt) => opt.label === search.name)?.value || '0'} // UI에 보여질 값은 id 기반 (value)
+                value={sitesOptions.find((opt) => opt.id === search.name)?.name || '0'} // UI에 보여질 값은 id 기반 (value)
                 onChange={(value) => {
-                  const selected = sitesOptions.find((opt) => opt.value === value)
-                  search.setField('name', selected?.label ?? '') // ← label 값을 상태로 저장
+                  const selected = sitesOptions.find((opt) => opt.name === value)
+                  search.setField('name', selected?.id ?? '') // ← label 값을 상태로 저장
                 }}
                 options={sitesOptions}
                 displayLabel
@@ -173,10 +173,10 @@ export default function SitesView() {
               <CommonSelect
                 fullWidth
                 className="text-xl"
-                value={processOptions.find((opt) => opt.label === search.processName)?.value || '0'}
+                value={processOptions.find((opt) => opt.id === search.processName)?.name || '0'}
                 onChange={(value) => {
-                  const selected = processOptions.find((opt) => opt.value === value)
-                  search.setField('processName', selected?.label ?? '')
+                  const selected = processOptions.find((opt) => opt.name === value)
+                  search.setField('processName', selected?.id ?? '')
                 }}
                 // value={search.processName}
                 // onChange={(value) => search.setField('processName', value)}
@@ -250,7 +250,7 @@ export default function SitesView() {
                   if (selectedArray.length === 0) return '선택'
 
                   return selectedArray
-                    .map((val) => SiteProgressing.find((item) => item.value === val)?.label || val)
+                    .map((val) => SiteProgressing.find((item) => item.name === val)?.label || val)
                     .join(', ')
                 }}
                 displayEmpty
@@ -276,10 +276,10 @@ export default function SitesView() {
                   },
                 }}
               >
-                {SiteProgressing.filter((item) => item.value !== '선택').map((option) => (
-                  <MenuItem key={option.id} value={option.value}>
+                {SiteProgressing.filter((item) => item.name !== '선택').map((option) => (
+                  <MenuItem key={option.id} value={option.name}>
                     <Checkbox
-                      checked={search.ProcessStatus.includes(option.value as ProcessStatus)}
+                      checked={search.ProcessStatus.includes(option.name as ProcessStatus)}
                     />
                     <ListItemText primary={option.label} />
                   </MenuItem>
@@ -296,12 +296,10 @@ export default function SitesView() {
               <CommonSelect
                 fullWidth
                 className="text-xl"
-                value={
-                  orderOptions.find((opt) => opt.label === search.clientCompanyName)?.value || '0'
-                }
+                value={orderOptions.find((opt) => opt.id === search.clientCompanyName)?.name || '0'}
                 onChange={(value) => {
-                  const selected = orderOptions.find((opt) => opt.value === value)
-                  search.setField('clientCompanyName', selected?.label ?? '')
+                  const selected = orderOptions.find((opt) => opt.name === value)
+                  search.setField('clientCompanyName', selected?.id ?? '')
                 }}
                 options={orderOptions}
                 displayLabel

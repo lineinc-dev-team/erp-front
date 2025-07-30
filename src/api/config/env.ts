@@ -11,6 +11,7 @@ export const API = {
   CLIENTCOMPANY: `${apiBaseUrl}/client-companies`,
   LOGIN: `${apiBaseUrl}/auth/login`,
   LOGOUT: `${apiBaseUrl}/auth/logout`,
+  RESETPASSWORD: `${apiBaseUrl}/auth/password`,
   MYINFO: `${apiBaseUrl}/auth/me`,
   SIDEMENU: `${apiBaseUrl}/menus/permissions`,
   SINGLEROLE: `${apiBaseUrl}/roles`,

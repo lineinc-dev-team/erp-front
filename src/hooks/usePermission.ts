@@ -117,7 +117,9 @@ export function usePermission() {
   const [permissionGroupOpen, setPermissionGroupOpen] = useState(false)
   const [groupName, setGroupName] = useState('')
 
-  const handleOpen = () => setPermissionGroupOpen(true)
+  const handleOpen = () => {
+    router.push('/permissionGroup/registration')
+  }
   const handleClose = () => {
     setGroupName('')
     setPermissionGroupOpen(false)

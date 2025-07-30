@@ -28,31 +28,33 @@ export function useLoginForm() {
   const handleLogin = async () => {
     if (!validate()) {
       showSnackbar('아이디와 비밀번호를 모두 입력해주세요.', 'error')
+      return
     }
 
     const result = await loginService({ loginId, password, autoLogin })
     showSnackbar(result.message, result.status)
+
     if (result.status === 'success') {
       try {
-        await MyInfoService()
+        const isInfoLoaded = await MyInfoService()
+
+        // requirePasswordReset이면 위에서 바로 redirect 됨 (false 반환)
+        if (!isInfoLoaded) return
 
         // '/sites' 탭이 sessionStorage와 탭 스토어에 없으면 추가
         const tabPath = '/sites'
-        const tabLabel = '현장 관리 - 조회' // 적절한 탭 이름
+        const tabLabel = '현장 관리 - 조회'
 
-        // sessionStorage에서 탭 리스트 불러오기
         const storedTabs = JSON.parse(sessionStorage.getItem('tabs') || '[]') as Array<{
           path: string
           label: string
         }>
 
-        // 없으면 추가
         if (!storedTabs.some((tab) => tab.path === tabPath)) {
           storedTabs.push({ path: tabPath, label: tabLabel })
           sessionStorage.setItem('tabs', JSON.stringify(storedTabs))
         }
 
-        // 전역 탭 스토어에도 없으면 추가
         const tabStore = useTabStore.getState()
         if (!tabStore.tabs.find((t) => t.path === tabPath)) {
           tabStore.addTab({ path: tabPath, label: tabLabel })

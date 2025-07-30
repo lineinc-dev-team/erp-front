@@ -169,12 +169,12 @@ export default function useSite() {
   })
 
   const orderOptions = useMemo(() => {
-    const defaultOption = { label: '선택', value: '0' }
+    const defaultOption = { id: '0', name: '선택' }
     const options = (orderPersonInfo?.pages || [])
       .flatMap((page) => page.data.content)
       .map((user) => ({
-        label: user.name,
-        value: user.id,
+        id: user.id,
+        name: user.name,
       }))
 
     return [defaultOption, ...options]
