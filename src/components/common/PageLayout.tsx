@@ -17,7 +17,7 @@ export default function PageLayout({ entity, children }: PageLayoutProps) {
   if (id) {
     title = `${entity} 수정`
   } else if (id === undefined) {
-    title = segment === 'registration' ? `${entity} 등록` : `${entity} 관리`
+    title = segment === 'registration' ? `${entity} 등록` : `${entity} 조회`
   }
 
   return (

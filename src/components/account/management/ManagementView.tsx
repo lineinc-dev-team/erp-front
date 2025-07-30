@@ -1,57 +1,128 @@
 'use client'
 
-import { DataGrid } from '@mui/x-data-grid'
-import { UserDataList, SubmitOptions, UseORnotOptions } from '@/config/erp.confing'
+import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
+import {
+  UserDataList,
+  UseORnotOptions,
+  ArrayStatusOptions,
+  PageCount,
+  UseStateOptions,
+} from '@/config/erp.confing'
 import { Pagination } from '@mui/material'
-// import CommonInput from '@/components/common/Input'
-import { userExcelFieldMap } from '@/utils/userExcelField'
 
 import CommonSelect from '@/components/common/Select'
 import CommonButton from '@/components/common/Button'
-import { useOrderingContractSearchStore } from '@/stores/outsourcingContractStore'
-import {
-  AccountManagementService,
-  UserDataExcelDownload,
-} from '@/services/account/accountManagementService'
-import { usePagination } from '@/hooks/usePagination'
 import { useUserMg } from '@/hooks/useUserMg'
-import { useAccountStore } from '@/stores/accountManagementStore'
+import { useAccountManagementStore, useAccountStore } from '@/stores/accountManagementStore'
 import { getTodayDateString } from '@/utils/formatters'
 import { UserInfoProps } from '@/types/accountManagement'
 import { useState } from 'react'
-import ExcelModal from '@/components/common/ExcelModal'
 import InfiniteScrollSelect from '@/components/common/InfiniteScrollSelect'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
+import CommonDatePicker from '@/components/common/DatePicker'
+import ExcelModal from '@/components/common/ExcelModal'
+import { UserDataExcelDownload } from '@/services/account/accountManagementService'
+import { CostExcelFieldMap } from '@/utils/userExcelField'
+import { useRouter } from 'next/navigation'
 
 export default function ManagementView() {
-  const { ArrayStatusOptions, sortList, setSortList } = AccountManagementService()
+  const { search } = useAccountManagementStore()
 
-  const { search } = useOrderingContractSearchStore()
-  const { userQuery, deleteMutation, handleNewAccountCreate } = useUserMg()
-
-  const [modalOpen, setModalOpen] = useState(false)
+  const {
+    userQuery,
+    deleteMutation,
+    handleNewAccountCreate,
+    departmentOptions,
+    positionOptions,
+    gradeOptions,
+  } = useUserMg()
 
   const UserInfoList = userQuery.data?.data.content ?? []
 
-  const { page, setPage, totalPages, displayedRows } = usePagination<UserInfoProps>(
-    UserInfoList,
-    10,
-  )
+  console.log('!@@#', userQuery.data)
+
+  const totalList = userQuery.data?.data.pageInfo.totalElements ?? 0
+  const pageCount = Number(search.pageCount) || 10
+  const totalPages = Math.ceil(totalList / pageCount)
+
+  // 가공 로직
+  const updatedUsers = UserInfoList.map((user: UserInfoProps) => ({
+    ...user,
+    isActive: 'Y',
+    lastLoginAt: getTodayDateString(user.lastLoginAt),
+    createdAt: getTodayDateString(user.createdAt),
+    updatedAt: getTodayDateString(user.updatedAt),
+  }))
 
   const { selectedIds, setSelectedIds } = useAccountStore()
 
-  // 가공 로직
-  const updatedUsers = displayedRows.map((user) => ({
-    ...user,
-    isActive: 'Y',
-    createdAt: getTodayDateString(user.createdAt),
-    updatedAt: getTodayDateString(user.updatedAt),
-    lastLoginAt: getTodayDateString(user.lastLoginAt),
-  }))
+  const router = useRouter()
 
-  // 필드 값 데이터 가공
-  // userExcelFieldMap 객체를 { label: string, value: string }[] 배열로 바꿔줍니다.
-  const fieldMapArray = Object.entries(userExcelFieldMap).map(([label, value]) => ({
+  // 그리도 라우팅 로직!
+  const enhancedColumns = UserDataList.map((col): GridColDef => {
+    if (col.field === 'loginId') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 1,
+
+        renderCell: (params: GridRenderCellParams) => {
+          const UserId = params.row.id
+          return (
+            <div
+              onClick={() => router.push(`/account/registration/${UserId}`)}
+              className="flex justify-center items-center cursor-pointer"
+            >
+              <span className="text-orange-500 font-bold">{params.value}</span>
+            </div>
+          )
+        },
+      }
+    }
+    if (col.field === 'remark') {
+      return {
+        ...col,
+        sortable: false,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 1,
+        renderCell: (params: GridRenderCellParams) => {
+          return <span>{params.value}</span>
+        },
+      }
+    }
+    return {
+      ...col,
+      sortable: false,
+      headerAlign: 'center',
+      align: 'center',
+      flex: 1,
+    }
+  })
+
+  // 이름에 대한 무한 스크롤
+
+  const { useUserInfiniteScroll } = useUserMg()
+
+  // 유저 선택 시 처리
+  const handleSelectUser = (selectedUser: UserInfoProps) => {
+    // 예: username 필드에 선택한 유저 이름 넣기
+    search.setField('username', selectedUser.username)
+  }
+
+  console.log()
+
+  const debouncedKeyword = useDebouncedValue(search.username, 300)
+
+  const { data, fetchNextPage, hasNextPage, isFetching, isLoading } =
+    useUserInfiniteScroll(debouncedKeyword)
+
+  const userList = data?.pages.flatMap((page) => page.data.content) ?? []
+
+  const [modalOpen, setModalOpen] = useState(false)
+  // // userExcelFieldMap 객체를 { label: string, value: string }[] 배열로 바꿔줍니다.
+  const fieldMapArray = Object.entries(CostExcelFieldMap).map(([label, value]) => ({
     label,
     value,
   }))
@@ -59,22 +130,6 @@ export default function ManagementView() {
   const handleDownloadExcel = async (fields: string[]) => {
     await UserDataExcelDownload({ fields })
   }
-
-  const [keyword, setKeyword] = useState('')
-
-  const { useUserInfiniteScroll } = useUserMg()
-
-  const handleSelectUser = (user: UserInfoProps) => {
-    setKeyword(user.username)
-    search.setField('ceoName', user.username)
-  }
-
-  const debouncedKeyword = useDebouncedValue(keyword, 300)
-
-  const { data, fetchNextPage, hasNextPage, isFetching, isLoading } =
-    useUserInfiniteScroll(debouncedKeyword)
-
-  const userList = data?.pages.flatMap((page) => page.data.content) ?? []
 
   return (
     <>
@@ -84,104 +139,93 @@ export default function ManagementView() {
             <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               이름
             </label>
-            {/* <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
-              <CommonInput
-                placeholder="텍스트 입력"
-                value={search.ceoName}
-                onChange={(value) => search.setField('ceoName', value)}
-                className="flex-1"
-              />
-            </div>
-            
-            */}
-            <InfiniteScrollSelect<UserInfoProps>
-              placeholder="이름을 입력하세요"
-              keyword={keyword}
-              onChangeKeyword={setKeyword}
-              items={userList}
-              hasNextPage={hasNextPage ?? false}
-              fetchNextPage={fetchNextPage}
-              renderItem={(item, isHighlighted) => (
-                <div className={isHighlighted ? 'font-bold text-white p-1  bg-blue-600' : ''}>
-                  {item.username}
-                </div>
-              )}
-              onSelect={handleSelectUser}
-              shouldShowList={true}
-              isLoading={isLoading || isFetching}
-              debouncedKeyword={debouncedKeyword}
-            />
-          </div>
-
-          <div className="flex">
-            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              직책
-            </label>
-            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
-              <CommonSelect
-                fullWidth={true}
-                value={search.isActive}
-                onChange={(value) => search.setField('isActive', value)}
-                options={UseORnotOptions}
+            <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
+              <InfiniteScrollSelect<UserInfoProps>
+                placeholder="이름을 입력하세요"
+                keyword={search.username}
+                onChangeKeyword={(newKeyword) => search.setField('username', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                items={userList}
+                hasNextPage={hasNextPage ?? false}
+                fetchNextPage={fetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.username}
+                  </div>
+                )}
+                onSelect={handleSelectUser}
+                shouldShowList={true}
+                isLoading={isLoading || isFetching}
+                debouncedKeyword={debouncedKeyword}
               />
             </div>
           </div>
 
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              권한 그룹
+              부서
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonSelect
                 fullWidth={true}
-                value={search.isActive}
-                onChange={(value) => search.setField('isActive', value)}
-                options={UseORnotOptions}
+                value={search.departmentId}
+                onChange={(value) => search.setField('departmentId', value)}
+                options={departmentOptions}
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              직급
+            </label>
+            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
+              <CommonSelect
+                fullWidth={true}
+                value={search.positionId}
+                onChange={(value) => search.setField('positionId', value)}
+                options={positionOptions}
               />
             </div>
           </div>
 
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              권한 조건
+              직책
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-2 ">
               <CommonSelect
                 fullWidth={true}
-                value={search.isActive}
-                onChange={(value) => search.setField('isActive', value)}
-                options={UseORnotOptions}
+                value={search.gradeId}
+                onChange={(value) => search.setField('gradeId', value)}
+                options={gradeOptions}
               />
             </div>
           </div>
 
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              계정 상태
+              권한그룹
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-2 ">
               <CommonSelect
                 fullWidth={true}
-                value={search.isActive}
-                onChange={(value) => search.setField('isActive', value)}
+                value={search.roleId}
+                onChange={(value) => search.setField('roleId', value)}
                 options={UseORnotOptions}
               />
             </div>
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              최종접속일
+              계정상태
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
-              {/* <CommonDatePicker
-                value={search.startDate}
-                onChange={(value) => search.setField('startDate', value)}
+              <CommonSelect
+                fullWidth={true}
+                value={search.isActive}
+                onChange={(value) => search.setField('isActive', value)}
+                options={UseStateOptions}
               />
-              ~
-              <CommonDatePicker
-                value={search.endDate}
-                onChange={(value) => search.setField('endDate', value)}
-              /> */}
             </div>
           </div>
 
@@ -191,18 +235,34 @@ export default function ManagementView() {
             </label>
 
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
-              <CommonSelect
-                fullWidth={true}
-                value={search.isSubmit}
-                onChange={(value) => search.setField('isSubmit', value)}
-                options={SubmitOptions}
+              <CommonDatePicker
+                value={search.createdStartDate}
+                onChange={(value) => search.setField('createdStartDate', value)}
+              />
+              ~
+              <CommonDatePicker
+                value={search.createdEndDate}
+                onChange={(value) => search.setField('createdEndDate', value)}
               />
             </div>
           </div>
 
           <div className="flex">
-            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center"></label>
-            <div className="border border-gray-400 px-2 w-full flex justify-center items-center"></div>
+            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              최종접속일
+            </label>
+
+            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
+              <CommonDatePicker
+                value={search.lastLoginStartDate}
+                onChange={(value) => search.setField('lastLoginStartDate', value)}
+              />
+              ~
+              <CommonDatePicker
+                value={search.lastLoginEndDate}
+                onChange={(value) => search.setField('lastLoginEndDate', value)}
+              />
+            </div>
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center"></label>
@@ -220,7 +280,10 @@ export default function ManagementView() {
           <CommonButton
             label="검색"
             variant="secondary"
-            onClick={search.handleSearch}
+            onClick={() => {
+              search.setField('currentPage', 1) // 페이지 초기화
+              search.handleSearch()
+            }}
             className="mt-3 px-20"
           />
         </div>
@@ -230,19 +293,20 @@ export default function ManagementView() {
         <div className="bg-white flex justify-between items-center">
           {/* 왼쪽 상태 요약 */}
           <div className="flex items-center gap-2 text-sm text-gray-700">
-            <span className="font-medium">전체 999개</span>
-            <span className="text-gray-500">(진행중 000 / 종료 000)</span>
+            <span className="font-medium">전체 : {totalList}</span>
           </div>
 
           {/* 오른쪽 컨트롤 영역 */}
           <div className="flex items-center gap-4">
-            {/* 정렬 */}
             <div className="flex items-center gap-2">
               <span className="text-base font-medium text-gray-600">정렬</span>
               <CommonSelect
-                value={sortList}
-                fullWidth={false}
-                onChange={setSortList}
+                value={search.arraySort}
+                className="text-2xl w-full"
+                onChange={(value) => {
+                  search.setField('arraySort', value)
+                  search.setField('currentPage', 1)
+                }}
                 options={ArrayStatusOptions}
               />
             </div>
@@ -250,10 +314,13 @@ export default function ManagementView() {
             <div className="flex items-center gap-2">
               <span className="text-base font-medium text-gray-600">페이지당 목록 수</span>
               <CommonSelect
-                value={sortList}
-                fullWidth={false}
-                onChange={setSortList}
-                options={ArrayStatusOptions}
+                value={search.pageCount}
+                className="text-2xl w-full"
+                onChange={(value) => {
+                  search.setField('pageCount', value)
+                  search.setField('currentPage', 1) // 페이지 초기화 반드시 필요!
+                }}
+                options={PageCount}
               />
             </div>
 
@@ -286,7 +353,6 @@ export default function ManagementView() {
                 className="px-3"
               />
 
-              {/* <ExcelModal open={modalOpen} onClose={() => setModalOpen(false)} /> */}
               <ExcelModal
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
@@ -308,7 +374,7 @@ export default function ManagementView() {
       <div style={{ height: 500, width: '100%' }}>
         <DataGrid
           rows={updatedUsers}
-          columns={UserDataList.map((col) => ({
+          columns={enhancedColumns.map((col) => ({
             ...col,
             sortable: false,
             headerAlign: 'center',
@@ -333,8 +399,8 @@ export default function ManagementView() {
         <div className="flex justify-center mt-4 pb-6">
           <Pagination
             count={totalPages}
-            page={page}
-            onChange={(_, newPage) => setPage(newPage)}
+            page={search.currentPage}
+            onChange={(_, newPage) => search.setField('currentPage', newPage)}
             shape="rounded"
             color="primary"
           />
