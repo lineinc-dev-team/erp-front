@@ -5,6 +5,10 @@ import { useSnackbarStore } from './useSnackbarStore'
 type TabItem = {
   label: string
   path: string
+  meta?: {
+    displayName?: string
+    isDetailPage?: boolean
+  }
 }
 
 type TabStore = {

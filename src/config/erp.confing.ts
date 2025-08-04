@@ -149,6 +149,14 @@ export const UserDataList: GridColDef[] = [
   { field: 'memo', headerName: '비고', width: 100 },
 ]
 
+export const PermissionDataList: GridColDef[] = [
+  { field: 'id', headerName: 'No', width: 70 },
+  { field: 'name', headerName: '그룹명', width: 130 },
+  { field: 'sites', headerName: '현장/공정', width: 130 },
+  { field: 'createdAt', headerName: '등록일/수정일', width: 180 },
+  { field: 'memo', headerName: '비고', width: 180 },
+]
+
 export const clientCompanyList: GridColDef[] = [
   { field: 'id', headerName: 'No', width: 70 },
   { field: 'businessNumber', headerName: '사업자등록번호', width: 130 },

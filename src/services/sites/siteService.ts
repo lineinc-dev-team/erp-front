@@ -1,12 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { API } from '@/api/config/env'
-import { useTabStore } from '@/stores/useTabStore'
 
 export function SiteMoveService() {
-  const router = useRouter()
   const [selectedFields, setSelectedFields] = useState<string[]>([])
 
   // 계약 이력
@@ -17,38 +14,9 @@ export function SiteMoveService() {
     )
   }
 
-  const handleNewOrderCreate = () => {
-    const tabPath = '/sites/registration'
-    const tabLabel = '현장 관리 - 등록' // 원하는 탭 이름
-
-    // sessionStorage에서 탭 리스트를 불러와서 확인 (없으면 빈 배열)
-    const storedTabs = JSON.parse(sessionStorage.getItem('tabs') || '[]') as Array<{
-      path: string
-      label: string
-    }>
-
-    // 중복 확인 후 없으면 추가
-    const tabExists = storedTabs.some((tab) => tab.path === tabPath)
-    if (!tabExists) {
-      const newTabs = [...storedTabs, { path: tabPath, label: tabLabel }]
-      sessionStorage.setItem('tabs', JSON.stringify(newTabs))
-    }
-
-    // 전역 탭 스토어에 탭 추가
-    const tabStore = useTabStore.getState()
-    if (!tabStore.tabs.find((t) => t.path === tabPath)) {
-      tabStore.addTab({ path: tabPath, label: tabLabel })
-    }
-
-    // 경로 이동
-    router.push(tabPath)
-  }
-
   return {
     selectedFields,
     handleToggleField,
-
-    handleNewOrderCreate,
   }
 }
 

@@ -1,19 +1,14 @@
-// export type Manager = {
-//   id: number
-//   name: string
-//   department: string
-//   tel: string
-//   phone: string
-//   email: string
-//   memo: string
-// }
-
-// export type AttachedFile = {
-//   id: number
-//   fileName: string
-//   memo: string
-//   files: File[]
-// }
+// 수정에 사용 할 타입
+type HistoryItem = {
+  id: number
+  no: number
+  getChanges: string
+  createdAt: string // or Date
+  updatedAt: string
+  content: string // 수정항목
+  updatedBy: string
+  memo: string
+}
 
 export type UserInfoProps = {
   id: number
@@ -43,6 +38,10 @@ export type FormState = {
   checkPassword: string
   isActive: string
   memo: string
+  editedHistories?: Pick<HistoryItem, 'id' | 'memo'>[]
+
+  // 수정이력에서 메모와 id 값
+  changeHistories: HistoryItem[] // 수정 이력 포함
 }
 
 type AccountFormStore = {
@@ -54,14 +53,8 @@ type AccountFormStore = {
     value: FormState[K],
   ) => void
 
-  // addItem: (type: 'manager' | 'attachedFile') => void
-  // updateItemField: (type: 'manager' | 'attachedFile', id: number, field: string, value: T) => void
-
-  // toggleCheckItem: (type: 'manager' | 'attachedFile', id: number, checked: boolean) => void
-  // toggleCheckAllItems: (type: 'manager' | 'attachedFile', checked: boolean) => void
-  // removeCheckedItems: (type: 'manager' | 'attachedFile') => void
-
   newAccountUser: () => void
+  updateMemo: (id: number, newMemo: string) => void
 }
 
 export type accountManagementSearchProps = {

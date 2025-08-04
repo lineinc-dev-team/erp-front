@@ -26,17 +26,16 @@ import {
   Description,
   Apartment,
   Assignment,
-  PeopleAlt,
+  // PeopleAlt,
   AccountCircle,
 } from '@mui/icons-material'
 import { usePathname, useRouter } from 'next/navigation'
 import CommonButton from '../common/Button'
 import { API } from '@/api/config/env'
-import { MenuService } from '@/services/sideMenu/menuService'
-import { useQuery } from '@tanstack/react-query'
 import { myInfoProps } from '@/types/user'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { useTabStore } from '@/stores/useTabStore'
+import useMenu from '@/hooks/useMenu'
 
 interface MenuItem {
   title?: string // 1 depth에서만 사용
@@ -45,149 +44,211 @@ interface MenuItem {
   path?: string
   children?: MenuItem[]
 }
-const menuItems: MenuItem[] = [
-  {
-    title: '대쉬보드',
-    icon: <Dashboard />,
-    children: [],
-  },
+// const menuItems: MenuItem[] = [
+//   {
+//     title: '대쉬보드',
+//     icon: <Dashboard />,
+//     children: [],
+//   },
 
-  {
-    title: '현장 관리',
-    icon: <Apartment />, // 사업장: 건물 관련
-    children: [
-      { label: ' - 조회', path: '/sites' },
-      { label: ' - 등록', path: '/sites/registration' },
-    ],
-  },
+//   {
+//     title: '현장 관리',
+//     icon: <Apartment />, // 사업장: 건물 관련
+//     children: [
+//       { label: '조회', path: '/sites' },
+//       { label: '등록', path: '/sites/registration' },
+//     ],
+//   },
 
-  {
-    title: '발주처 관리',
-    icon: <Business />, // 기업 아이콘
-    children: [
-      { label: ' - 조회', path: '/ordering' },
-      { label: ' - 등록', path: '/ordering/registration' },
-    ],
-  },
+//   {
+//     title: '발주처 관리',
+//     icon: <Business />, // 기업 아이콘
+//     children: [
+//       { label: '조회', path: '/ordering' },
+//       { label: '등록', path: '/ordering/registration' },
+//     ],
+//   },
 
-  {
-    title: '강재 관리',
-    icon: <Inventory />, // 기업 아이콘
-    children: [
-      { label: ' - 조회', path: '/managementSteel' },
-      { label: ' - 등록', path: '/managementSteel/registration' },
-    ],
-  },
-  {
-    title: '관리비 관리',
-    icon: <Assignment />, // 기업 아이콘
-    children: [
-      { label: ' - 조회', path: '/managementCost' },
-      { label: ' - 등록', path: '/managementCost/registration' },
-    ],
-  },
+//   {
+//     title: '강재 관리',
+//     icon: <Inventory />, // 기업 아이콘
+//     children: [
+//       { label: '조회', path: '/managementSteel' },
+//       { label: '등록', path: '/managementSteel/registration' },
+//     ],
+//   },
+//   {
+//     title: '관리비 관리',
+//     icon: <Assignment />, // 기업 아이콘
+//     children: [
+//       { label: '조회', path: '/managementCost' },
+//       { label: '등록', path: '/managementCost/registration' },
+//     ],
+//   },
 
-  {
-    title: '외주 업체관리',
-    icon: <Groups />, // 그룹/사람들
-    children: [
-      { label: ' - 조회', path: '/outsourcingCompany' },
-      { label: ' - 등록', path: '/outsourcingCompany/registration' },
-    ],
-  },
+//   {
+//     title: '외주 업체관리',
+//     icon: <Groups />, // 그룹/사람들
+//     children: [
+//       { label: ' - 조회', path: '/outsourcingCompany' },
+//       { label: ' - 등록', path: '/outsourcingCompany/registration' },
+//     ],
+//   },
 
-  {
-    title: '외주 계약관리',
-    icon: <Description />, // 계약서, 문서
-    children: [
-      { label: ' - 조회', path: '/outsourcingContract' },
-      { label: ' - 등록', path: '/outsourcingContract/registration' },
-    ],
-  },
+//   {
+//     title: '외주 계약관리',
+//     icon: <Description />, // 계약서, 문서
+//     children: [
+//       { label: ' - 조회', path: '/outsourcingContract' },
+//       { label: ' - 등록', path: '/outsourcingContract/registration' },
+//     ],
+//   },
 
-  {
-    title: '외주 인력관리',
-    icon: <AssignmentInd />, // 사람 + 태그: 인력관리
-    children: [
-      { label: ' - 조회', path: '/outsourcingHuman' },
-      { label: ' - 등록', path: '/outsourcingHuman/registration' },
-    ],
-  },
+//   {
+//     title: '외주 인력관리',
+//     icon: <AssignmentInd />, // 사람 + 태그: 인력관리
+//     children: [
+//       { label: ' - 조회', path: '/outsourcingHuman' },
+//       { label: ' - 등록', path: '/outsourcingHuman/registration' },
+//     ],
+//   },
 
-  {
-    title: '외주 장비관리',
-    icon: <Inventory />, // 장비, 물품 아이콘
-    children: [
-      { label: ' - 조회', path: '/outsourcingEquipment' },
-      { label: ' - 등록', path: '/outsourcingEquipment/registration' },
-    ],
-  },
+//   {
+//     title: '외주 장비관리',
+//     icon: <Inventory />, // 장비, 물품 아이콘
+//     children: [
+//       { label: ' - 조회', path: '/outsourcingEquipment' },
+//       { label: ' - 등록', path: '/outsourcingEquipment/registration' },
+//     ],
+//   },
 
-  {
-    title: '외주 정산관리',
-    icon: <Assignment />, // 계산서 느낌의 아이콘
-    children: [
-      { label: ' - 조회', path: '/outsourcingCalculate' },
-      { label: ' - 등록', path: '/outsourcingCalculate/registration' },
-    ],
-  },
+//   {
+//     title: '외주 정산관리',
+//     icon: <Assignment />, // 계산서 느낌의 아이콘
+//     children: [
+//       { label: ' - 조회', path: '/outsourcingCalculate' },
+//       { label: ' - 등록', path: '/outsourcingCalculate/registration' },
+//     ],
+//   },
 
-  {
-    title: '노무 - 인력 및 공수 관리',
-    icon: <PeopleAlt />, // 인력 관련
-    children: [
-      { label: ' - 조회', path: '/laborWorkForce' },
-      { label: ' - 등록', path: '/laborWorkForce/registration' },
-    ],
-  },
+//   // {
+//   //   title: '노무 - 인력 및 공수 관리',
+//   //   icon: <PeopleAlt />, // 인력 관련
+//   //   children: [
+//   //     { label: ' - 조회', path: '/laborWorkForce' },
+//   //     { label: ' - 등록', path: '/laborWorkForce/registration' },
+//   //   ],
+//   // },
 
-  {
-    title: '노무 - 퇴직금 대상자 조회',
-    icon: <AssignmentInd />, // 사람 + 태그
-    children: [{ label: ' - 조회', path: '/outsourcingCalculate' }],
-  },
+//   // {
+//   //   title: '노무 - 퇴직금 대상자 조회',
+//   //   icon: <AssignmentInd />, // 사람 + 태그
+//   //   children: [{ label: ' - 조회', path: '/outsourcingCalculate' }],
+//   // },
 
-  {
-    title: '자재 관리',
-    icon: <Inventory />, // 물품 관련
-    children: [
-      { label: '- 자재 조회', path: '/materials/view' },
-      { label: '- 자재 등록', path: '/materials/register' },
-    ],
-  },
+//   {
+//     title: '자재 관리',
+//     icon: <Inventory />, // 물품 관련
+//     children: [
+//       { label: '조회', path: '/materials/view' },
+//       { label: '등록', path: '/materials/register' },
+//     ],
+//   },
 
-  {
-    title: '계약/증빙',
-    icon: <Description />, // 문서
-    children: [
-      { label: '- 계약서 조회', path: '/contracts/view' },
-      { label: '- 계약서 등록', path: '/contracts/register' },
-    ],
-  },
+//   // {
+//   //   title: '계약/증빙',
+//   //   icon: <Description />, // 문서
+//   //   children: [
+//   //     { label: '계약서 조회', path: '/contracts/view' },
+//   //     { label: '- 계약서 등록', path: '/contracts/register' },
+//   //   ],
+//   // },
 
-  {
-    title: '권한 관리',
-    icon: <ManageAccounts />,
-    children: [
-      { label: '- 조회', path: '/permissionGroup' },
-      { label: '- 등록', path: '/permissionGroup/registration' },
-    ],
-  },
+//   {
+//     title: '권한 관리',
+//     icon: <ManageAccounts />,
+//     children: [
+//       { label: '조회', path: '/permissionGroup' },
+//       { label: '등록', path: '/permissionGroup/registration' },
+//     ],
+//   },
 
-  {
-    title: '계정 관리',
-    icon: <AccountCircle />,
-    children: [
-      { label: ' - 조회', path: '/account' },
-      { label: ' - 등록', path: '/account/registration' },
-    ],
-  },
-]
+//   {
+//     title: '계정 관리',
+//     icon: <AccountCircle />,
+//     children: [
+//       { label: '조회', path: '/account' },
+//       { label: '등록', path: '/account/registration' },
+//     ],
+//   },
+// ]
+
+const menuNameToBasePath: Record<string, string> = {
+  '계정 관리': '/account',
+  '권한 관리': '/permissionGroup',
+  '발주처 관리': '/ordering',
+  '현장 관리': '/sites',
+  '관리비 관리': '/managementCost',
+  '강재 관리': '/managementSteel',
+  '자재 관리': '/materials',
+  '외주 업체관리': '/outsourcingCompany',
+  '외주 계약관리': '/outsourcingContract',
+  '외주 인력관리': '/outsourcingHuman',
+  '외주 장비관리': '/outsourcingEquipment',
+  '외주 정산관리': '/outsourcingCalculate',
+}
+
+const menuNameToIcon: Record<string, React.ReactNode> = {
+  '계정 관리': <AccountCircle />,
+  '권한 관리': <ManageAccounts />,
+  '발주처 관리': <Business />,
+  '현장 관리': <Apartment />,
+  '관리비 관리': <Assignment />,
+  '강재 관리': <Inventory />,
+  '자재 관리': <Inventory />,
+  '외주 업체관리': <Groups />,
+  '외주 계약관리': <Description />,
+  '외주 인력관리': <AssignmentInd />,
+  '외주 장비관리': <Inventory />,
+  '외주 정산관리': <Assignment />,
+}
+
+function convertApiMenusToMenuItems(apiMenus: any[]) {
+  return apiMenus.map((menu) => {
+    const basePath = menuNameToBasePath[menu.name] || '/'
+    const icon = menuNameToIcon[menu.name] || null
+
+    const filteredPermissions = menu.permissions.filter(
+      (perm: any) => !['승인', '수정', '삭제'].includes(perm.action),
+    )
+
+    const children = filteredPermissions.map((perm: any) => {
+      let path = basePath
+      if (perm.action === '등록') path = `${basePath}/registration`
+      else if (perm.action === '조회') path = basePath
+
+      const labelPrefix = '- ' // 항상 붙임
+
+      return {
+        label: `${labelPrefix}${perm.action}`,
+        path,
+      }
+    })
+
+    return {
+      title: menu.name,
+      icon,
+      children,
+    }
+  })
+}
 
 export default function Header() {
   const [open, setOpen] = useState(false)
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
   const router = useRouter()
+
+  const { useHeaderMenuListQuery } = useMenu()
 
   const pathname = usePathname()
   const { tabs, removeTab } = useTabStore()
@@ -196,7 +257,6 @@ export default function Header() {
 
   const { showSnackbar } = useSnackbarStore()
 
-  // 세션스토리지 데이터
   const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
 
   useEffect(() => {
@@ -206,18 +266,12 @@ export default function Header() {
     }
   }, [])
 
-  // react-query로 메뉴 호출
-  const {
-    // data: menuData,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ['MenuService'],
-    queryFn: MenuService,
-  })
+  const roleId = myInfo?.roles?.[0]?.id
 
-  if (isLoading) return <div>로딩중...</div>
-  if (isError) return <div>권한이 없거나 에러 발생</div>
+  const { data, isLoading, isError } = useHeaderMenuListQuery(roleId)
+
+  // (3) data가 있으면 변환해서 메뉴 생성
+  const menuItemsFromApi = data ? convertApiMenusToMenuItems(data.data) : []
 
   const handleToggleSection = (key: string) => {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
@@ -281,7 +335,7 @@ export default function Header() {
       return (
         <ListItemButton
           key={key}
-          sx={{ pl: level * 3 }}
+          sx={{ pl: level * 4 }}
           onClick={() => {
             if (item.path) {
               const label = Array.isArray(tabLabel) ? tabLabel.join('') : tabLabel
@@ -372,7 +426,7 @@ export default function Header() {
 
       <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
         <List sx={{ width: 240 }}>
-          {!isLoading && !isError && renderMenu(menuItems)}
+          {!isLoading && !isError && renderMenu(menuItemsFromApi)}
 
           {isLoading && <div>메뉴를 불러오는 중 </div>}
           {isError && <div>에러 발생했습니다.</div>}

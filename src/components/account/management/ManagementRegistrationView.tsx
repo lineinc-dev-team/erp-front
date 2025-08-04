@@ -12,8 +12,19 @@ import { UseORnotOptions } from '@/config/erp.confing'
 import { useParams } from 'next/navigation'
 import { UserDetailService } from '@/services/account/accountManagementService'
 import { useQuery } from '@tanstack/react-query'
-import { useEffect } from 'react'
-import { FormState } from '@/types/accountManagement'
+import { useCallback, useEffect, useRef } from 'react'
+import { FormState, HistoryItem } from '@/types/accountManagement'
+import {
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+} from '@mui/material'
+import { getTodayDateString } from '@/utils/formatters'
 
 export default function ManagementRegistrationView({ isEditMode = false }) {
   const {
@@ -24,9 +35,10 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
     positionOptions,
     gradeOptions,
     resetPasswordMutation,
+    useHistoryDataQuery,
   } = useUserMg()
 
-  const { form, reset, setField } = useAccountFormStore()
+  const { form, reset, updateMemo, setField } = useAccountFormStore()
 
   // 상세페이지 로직
 
@@ -39,6 +51,28 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
     enabled: isEditMode && !!userDetailId, // 수정 모드일 때만 fetch
   })
 
+  const PROPERTY_NAME_MAP: Record<string, string> = {
+    username: '이름',
+    departmentId: '부서(소속)',
+    positionId: '직급',
+    gradeId: '직책',
+    phoneNumber: '휴대폰',
+    landlineNumber: '연락처',
+    email: '이메일',
+    isActive: '계정 상태',
+    memo: '메모',
+  }
+
+  const {
+    data: userHistoryList,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useHistoryDataQuery(userDetailId, isEditMode)
+
+  const historyList = useAccountFormStore((state) => state.form.changeHistories)
+
   useEffect(() => {
     if (data && isEditMode) {
       const client = data.data
@@ -48,6 +82,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
       // 기존 값과 다르면 업데이트 (방어 코드)
       if (client.loginId !== form.loginId) setField('loginId', client.loginId ?? '')
       if (client.username !== form.username) setField('username', client.username ?? '')
+      if (client.memo !== form.memo) setField('memo', client.memo ?? '')
       if (client.email !== form.email) setField('email', client.email ?? '')
       if (client.phoneNumber !== form.phoneNumber) setField('phoneNumber', client.phoneNumber ?? '')
       if (client.landlineNumber !== form.landlineNumber)
@@ -69,6 +104,56 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, isEditMode]) // 의존성은 핵심 데이터만 넣음
+
+  const formatChangeDetail = (getChanges: string) => {
+    try {
+      const parsed = JSON.parse(getChanges)
+      if (!Array.isArray(parsed)) return '-'
+
+      return parsed
+        .map((item: { property: string; before: string; after: string }) => {
+          const propertyKo = PROPERTY_NAME_MAP[item.property] || item.property
+          return `${propertyKo} : ${item.before} ==> ${item.after}`
+        })
+        .join('\n')
+    } catch (e) {
+      if (e instanceof Error) return '-'
+    }
+  }
+
+  // 수정이력 데이터가 들어옴
+  useEffect(() => {
+    if (userHistoryList?.pages) {
+      const allHistories = userHistoryList.pages.flatMap((page) =>
+        page.data.content.map((item: HistoryItem) => ({
+          id: item.id,
+          content: formatChangeDetail(item.getChanges), // 여기 변경
+          createdAt: getTodayDateString(item.createdAt),
+          updatedAt: getTodayDateString(item.updatedAt),
+          updatedBy: item.updatedBy,
+          memo: item.memo ?? '',
+        })),
+      )
+      setField('changeHistories', allHistories)
+    }
+  }, [userHistoryList, setField])
+
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  const loadMoreRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (isLoading || isFetchingNextPage) return
+      if (observerRef.current) observerRef.current.disconnect()
+
+      observerRef.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage()
+        }
+      })
+
+      if (node) observerRef.current.observe(node)
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading],
+  )
 
   function validateForm(form: FormState) {
     if (!form.loginId.trim()) return 'ID를 입력하세요.'
@@ -102,34 +187,6 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
 
   const handleResetPassword = (userDetailId: number) => {
     resetPasswordMutation.mutate(userDetailId)
-    // const length = 8
-    // const numbers = '0123456789'
-    // const lower = 'abcdefghijklmnopqrstuvwxyz'
-    // const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-
-    // // 숫자, 소문자, 대문자 최소 1개씩 포함하도록 강제하기 위해
-    // // 각각에서 1글자씩 뽑아서 배열에 넣고 나머지는 랜덤으로 채움
-    // const passwordChars = [
-    //   numbers[Math.floor(Math.random() * numbers.length)],
-    //   lower[Math.floor(Math.random() * lower.length)],
-    //   upper[Math.floor(Math.random() * upper.length)],
-    // ]
-
-    // const allChars = numbers + lower + upper
-    // for (let i = passwordChars.length; i < length; i++) {
-    //   passwordChars.push(allChars[Math.floor(Math.random() * allChars.length)])
-    // }
-
-    // // 배열 셔플 (비밀번호 문자 순서 섞기)
-    // for (let i = passwordChars.length - 1; i > 0; i--) {
-    //   const j = Math.floor(Math.random() * (i + 1))
-    //   ;[passwordChars[i], passwordChars[j]] = [passwordChars[j], passwordChars[i]]
-    // }
-
-    // const newPassword = passwordChars.join('')
-
-    // setField('password', newPassword)
-    // setField('checkPassword', newPassword)
   }
 
   return (
@@ -313,44 +370,93 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
         </div>
       </div>
 
-      {/* <div className="mt-10">
-        <div className="flex justify-between mb-4">
-          <div>
-            <span className="font-bold border-b-2 mb-4">비밀번호 정보</span>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 mt-1">
-          <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              비밀번호
-            </label>
-            <div className="border border-gray-400 px-2 w-full">
-              <CommonInput
-                placeholder="비밀번호를 입력해주세요."
-                type="text"
-                value={form.password}
-                onChange={(value) => setField('password', value)}
-                className=" flex-1"
-              />
+      {isEditMode && (
+        <div>
+          <div className="flex justify-between items-center mt-10 mb-2">
+            <span className="font-bold border-b-2 mb-4">수정이력</span>
+            <div className="flex gap-4">
+              {/* <CommonButton
+              label="삭제"
+              className="px-7"
+              variant="danger"
+              onClick={() => removeCheckedItems('manager')}
+            />
+            <CommonButton
+              label="추가"
+              className="px-7"
+              variant="secondary"
+              onClick={() => addItem('manager')}
+            /> */}
             </div>
           </div>
-          <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              비밀번호 확인
-            </label>
-            <div className="border border-gray-400 px-2 w-full">
-              <CommonInput
-                placeholder="비밀번호를 입력해주세요."
-                type="text"
-                value={form.checkPassword}
-                onChange={(value) => setField('checkPassword', value)}
-                className=" flex-1"
-              />
-            </div>
-          </div>
+          <TableContainer component={Paper}>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                  {['No', '수정일시', '수정항목', '수정자', '비고 / 메모'].map((label) => (
+                    <TableCell
+                      key={label}
+                      align="center"
+                      sx={{
+                        backgroundColor: '#D1D5DB',
+                        border: '1px solid  #9CA3AF',
+                        color: 'black',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {label}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {historyList.map((item: HistoryItem) => (
+                  <TableRow key={item.id}>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      {item.id}
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      {item.createdAt} / {item.updatedAt}
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'pre-line' }}
+                    >
+                      {item.content}
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'pre-line' }}
+                    >
+                      {item.updatedBy}
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        value={item.memo ?? ''}
+                        placeholder="메모 입력"
+                        onChange={(e) => updateMemo(item.id, e.target.value)}
+                        multiline
+                        inputProps={{ maxLength: 500 }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {hasNextPage && (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center" sx={{ border: 'none' }}>
+                      <div ref={loadMoreRef} className="p-4 text-gray-500 text-sm">
+                        불러오는 중...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </div>
-      </div> */}
-
+      )}
       <div className="flex justify-center gap-10 mt-10">
         <CommonButton
           label="취소"

@@ -9,6 +9,7 @@ import {
   ModifyUserManagement,
   ModifyUserPasswordManagement,
   PositionIdInfoService,
+  UserInfoHistoryService,
   UserInfoNameScroll,
   UserInfoService,
   UserRemoveService,
@@ -85,10 +86,10 @@ export function useUserMg() {
       queryFn: ({ pageParam }) => UserInfoNameScroll({ pageParam, keyword }),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
-        const { sliceInfo } = lastPage.data
-        const nextPage = sliceInfo.page + 1
+        const { sliceInfo } = lastPage?.data
+        const nextPage = sliceInfo?.page + 1
 
-        return sliceInfo.hasNext ? nextPage : undefined
+        return sliceInfo?.hasNext ? nextPage : undefined
       },
     })
   }
@@ -135,10 +136,6 @@ export function useUserMg() {
     },
   })
 
-  const handleNewAccountCreate = () => {
-    router.push('/account/registration')
-  }
-
   const handleAccountCancel = () => {
     router.push('/account')
   }
@@ -175,6 +172,21 @@ export function useUserMg() {
 
   const gradeOptions = [{ id: 0, name: '선택' }, ...(gradeId?.data ?? [])]
 
+  const useHistoryDataQuery = (historyId: number, enabled: boolean) => {
+    return useInfiniteQuery({
+      queryKey: ['historyList', historyId],
+      queryFn: ({ pageParam = 0 }) => UserInfoHistoryService(historyId, pageParam, 4),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage?.data
+        const nextPage = sliceInfo?.page + 1
+
+        return sliceInfo?.hasNext ? nextPage : undefined
+      },
+      enabled: enabled && !!historyId && !isNaN(historyId),
+    })
+  }
+
   return {
     userQuery,
     createUserMutation,
@@ -184,8 +196,8 @@ export function useUserMg() {
     departmentOptions,
     positionOptions,
     gradeOptions,
+    useHistoryDataQuery,
 
-    handleNewAccountCreate,
     handleAccountCancel,
     useUserInfiniteScroll,
 

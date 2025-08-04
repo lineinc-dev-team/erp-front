@@ -124,7 +124,7 @@ export default function InfiniteScrollSelect<T>({
     isOpen && shouldShowList && debouncedKeyword === keyword && (items.length > 0 || isLoading)
 
   return (
-    <div className="border relative border-gray-400 px-2 p-2 w-full flex justify-center items-center">
+    <div className=" relative border-gray-400 px-2 p-2 w-full flex justify-center items-center">
       <input
         className="border rounded px-2 py-2 w-full"
         placeholder={placeholder}
@@ -142,7 +142,7 @@ export default function InfiniteScrollSelect<T>({
       {showList && (
         <div
           ref={containerRef}
-          className="absolute left-0 top-12 right-0 max-h-40 mx-2 overflow-auto  border  rounded px-2 py-2 bg-white shadow z-10"
+          className="absolute left-0 top-12  right-0 max-h-40 mx-2 overflow-auto  border  rounded px-2 py-2 bg-white shadow z-10"
         >
           {items.map((item, index) => (
             <div
@@ -150,7 +150,7 @@ export default function InfiniteScrollSelect<T>({
               ref={(el) => {
                 itemRefs.current[index] = el
               }}
-              className={`cursor-pointer px-2 py-1 
+              className={`cursor-pointer px-2 py-1  text-left
       ${index === activeIndex ? 'bg-gray-400 text-white font-bold' : 'hover:bg-gray-100'}`}
               onMouseEnter={() => setActiveIndex(index)} // 마우스 오버 시에도 강조
               onClick={() => handleItemClick(item)}

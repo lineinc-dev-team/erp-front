@@ -25,18 +25,15 @@ import { UserDataExcelDownload } from '@/services/account/accountManagementServi
 import { userExcelFieldMap } from '@/utils/userExcelField'
 import { useRouter } from 'next/navigation'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
+import { useTabOpener } from '@/utils/openTab'
 
 export default function ManagementView() {
   const { search } = useAccountManagementStore()
 
-  const {
-    userQuery,
-    deleteMutation,
-    handleNewAccountCreate,
-    departmentOptions,
-    positionOptions,
-    gradeOptions,
-  } = useUserMg()
+  const { userQuery, deleteMutation, departmentOptions, positionOptions, gradeOptions } =
+    useUserMg()
+
+  const openTab = useTabOpener()
 
   const UserInfoList = userQuery.data?.data.content ?? []
 
@@ -100,19 +97,17 @@ export default function ManagementView() {
     }
   })
 
+  const { showSnackbar } = useSnackbarStore()
+
   // 이름에 대한 무한 스크롤
 
   const { useUserInfiniteScroll } = useUserMg()
-
-  const { showSnackbar } = useSnackbarStore()
 
   // 유저 선택 시 처리
   const handleSelectUser = (selectedUser: UserInfoProps) => {
     // 예: username 필드에 선택한 유저 이름 넣기
     search.setField('username', selectedUser.username)
   }
-
-  console.log()
 
   const debouncedKeyword = useDebouncedValue(search.username, 300)
 
@@ -149,26 +144,28 @@ export default function ManagementView() {
       <div className="border-10 border-gray-400 p-4">
         <div className="grid grid-cols-3">
           <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+            <label className="w-35 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               이름
             </label>
-            <InfiniteScrollSelect<UserInfoProps>
-              placeholder="이름을 입력하세요"
-              keyword={search.username}
-              onChangeKeyword={(newKeyword) => search.setField('username', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
-              items={userList}
-              hasNextPage={hasNextPage ?? false}
-              fetchNextPage={fetchNextPage}
-              renderItem={(item, isHighlighted) => (
-                <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
-                  {item.username}
-                </div>
-              )}
-              onSelect={handleSelectUser}
-              shouldShowList={true}
-              isLoading={isLoading || isFetching}
-              debouncedKeyword={debouncedKeyword}
-            />
+            <div className="border w-full  border-gray-400">
+              <InfiniteScrollSelect<UserInfoProps>
+                placeholder="이름을 입력하세요"
+                keyword={search.username}
+                onChangeKeyword={(newKeyword) => search.setField('username', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                items={userList}
+                hasNextPage={hasNextPage ?? false}
+                fetchNextPage={fetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.username}
+                  </div>
+                )}
+                onSelect={handleSelectUser}
+                shouldShowList={true}
+                isLoading={isLoading || isFetching}
+                debouncedKeyword={debouncedKeyword}
+              />
+            </div>
           </div>
 
           <div className="flex">
@@ -415,7 +412,7 @@ export default function ManagementView() {
               <CommonButton
                 label="+ 신규등록"
                 variant="secondary"
-                onClick={handleNewAccountCreate}
+                onClick={() => openTab('/account/registration', '계정관리 - 등록')}
                 className="px-3"
               />
             </div>

@@ -9,8 +9,6 @@ import { useAccountFormStore } from '@/stores/accountManagementStore'
 export async function UserInfoService(params = {}) {
   const query = new URLSearchParams(params).toString()
 
-  console.log('받아온 데이터 확인@@~', query)
-
   const resData = await fetch(`${API.USER}?${query}`, {
     method: 'GET',
     headers: {
@@ -274,4 +272,34 @@ export async function ModifyUserPasswordManagement(userIds: number) {
   }
 
   return await res.status
+}
+
+// 수정이력 조회
+// 수정이력 조회 (페이지네이션 추가)
+export async function UserInfoHistoryService(
+  historyId: number,
+  page: number = 0,
+  size: number = 4,
+) {
+  const resData = await fetch(
+    `${API.USER}/${historyId}/change-histories?page=${page}&size=${size}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    },
+  )
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      throw new Error('권한이 없습니다.')
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  console.log('파싱된 유저 데이터', data)
+  return data
 }

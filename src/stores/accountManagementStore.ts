@@ -78,6 +78,7 @@ export const useAccountFormStore = create<AccountFormStore>((set, get) => ({
     checkPassword: '',
     isActive: '0',
     memo: '',
+    changeHistories: [],
   },
 
   reset: () =>
@@ -95,6 +96,7 @@ export const useAccountFormStore = create<AccountFormStore>((set, get) => ({
         checkPassword: '',
         isActive: '0',
         memo: '',
+        changeHistories: [],
       },
     })),
 
@@ -102,6 +104,30 @@ export const useAccountFormStore = create<AccountFormStore>((set, get) => ({
     set((state) => ({
       form: { ...state.form, [field]: value },
     })),
+
+  updateMemo: (id, value) =>
+    set((state) => {
+      // 기존 changeHistories 업데이트
+      const updatedHistories = state.form.changeHistories.map((history) =>
+        history.id === id ? { ...history, memo: value } : history,
+      )
+
+      // 기존에 저장된 editedHistories 복사
+      const edited = state.form.editedHistories ?? []
+
+      // 이미 수정된 항목이 있으면 덮어쓰기, 없으면 새로 추가
+      const updatedEditedHistories = edited.some((h) => h.id === id)
+        ? edited.map((h) => (h.id === id ? { id, memo: value } : h))
+        : [...edited, { id, memo: value }]
+
+      return {
+        form: {
+          ...state.form,
+          changeHistories: updatedHistories,
+          editedHistories: updatedEditedHistories,
+        },
+      }
+    }),
 
   newAccountUser: () => {
     const form = get().form
@@ -114,10 +140,17 @@ export const useAccountFormStore = create<AccountFormStore>((set, get) => ({
       email: form.email,
       phoneNumber: form.phoneNumber,
       landlineNumber: form.landlineNumber,
-      // password: form.password,
       ...(form.password && form.password.trim() !== '' ? { password: form.password } : {}),
-      // checkPassword: form.checkPassword,
       isActive: form.isActive === '1' ? true : false,
+      memo: form.memo,
+
+      // 수정된 항목만 보내기 (없으면 빈 배열)
+      changeHistories: form.editedHistories ?? [],
+
+      // changeHistories: form.changeHistories.map((history) => ({
+      //   id: history.id,
+      //   memo: history.memo,
+      // })),
     }
   },
 }))
