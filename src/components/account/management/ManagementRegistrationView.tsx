@@ -53,9 +53,9 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
 
   const PROPERTY_NAME_MAP: Record<string, string> = {
     username: '이름',
-    departmentId: '부서(소속)',
-    positionId: '직급',
-    gradeId: '직책',
+    departmentName: '부서(소속)',
+    positionName: '직급',
+    gradeName: '직책',
     phoneNumber: '휴대폰',
     landlineNumber: '연락처',
     email: '이메일',
@@ -113,7 +113,18 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
       return parsed
         .map((item: { property: string; before: string; after: string }) => {
           const propertyKo = PROPERTY_NAME_MAP[item.property] || item.property
-          return `${propertyKo} : ${item.before} ==> ${item.after}`
+
+          // true/false를 한글로 매핑
+          const convertValue = (value: string) => {
+            if (value === 'true') return '사용'
+            if (value === 'false') return '미사용'
+            return value
+          }
+
+          const before = convertValue(item.before)
+          const after = convertValue(item.after)
+
+          return `${propertyKo} : ${before} ==> ${after}`
         })
         .join('\n')
     } catch (e) {
