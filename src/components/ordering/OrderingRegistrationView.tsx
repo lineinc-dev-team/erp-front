@@ -7,8 +7,10 @@ import DaumPostcodeEmbed from 'react-daum-postcode'
 import CommonFileInput from '../common/FileInput'
 import { useOrderingFormStore } from '@/stores/orderingStore'
 import {
+  Box,
   Checkbox,
   Paper,
+  Radio,
   Table,
   TableBody,
   TableCell,
@@ -17,15 +19,17 @@ import {
   TableRow,
   TextField,
 } from '@mui/material'
-import { AreaCode, PayInfo, UseORnotOptions } from '@/config/erp.confing'
+import { AreaCode, UseORnotOptions } from '@/config/erp.confing'
 import { useClientCompany } from '@/hooks/useClientCompany'
-import { useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
+import { Typography } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
-import { AttachedFile, Manager } from '@/types/ordering'
+import { AttachedFile, HistoryItem, Manager } from '@/types/ordering'
 import { ClientDetailService } from '@/services/ordering/orderingRegistrationService'
 import CommonInputnumber from '@/utils/formatBusinessNumber'
 import { formatPersonNumber, formatPhoneNumber } from '@/utils/formatPhoneNumber'
+import { getTodayDateString } from '@/utils/formatters'
 
 export default function OrderingRegistrationView({ isEditMode = false }) {
   const {
@@ -34,7 +38,9 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
     updateItemField,
     removeCheckedItems,
     reset,
+    setRepresentativeManager,
     addItem,
+    updateMemo,
     toggleCheckItem,
     toggleCheckAllItems,
   } = useOrderingFormStore()
@@ -47,7 +53,10 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
     fetchNextPage,
     hasNextPage,
     isFetching,
+    orderingCancel,
     isLoading,
+    payMethodOptions,
+    useClientHistoryDataQuery,
   } = useClientCompany()
 
   // 체크 박스에 활용
@@ -64,30 +73,88 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
   const params = useParams()
   const clientCompanyId = Number(params?.id)
 
+  const PROPERTY_NAME_MAP: Record<string, string> = {
+    username: '이름',
+    address: '본사 주소',
+    detailAddress: '상세 주소',
+    userName: '본사 담당자명',
+    phoneNumber: '개인 휴대폰',
+    paymentMethodName: '결제 정보',
+    paymentPeriod: '결제 기간',
+    businessNumber: '사업자등록번호',
+    ceoName: '대표자명',
+    name: '발주처명',
+    landlineNumber: '전화번호',
+    email: '이메일',
+    department: '부서/직급',
+    isActive: '계정 상태',
+    memo: '메모',
+    isMain: '대표담당자',
+  }
+
+  const {
+    data: clientHistoryList,
+    isFetchingNextPage,
+    fetchNextPage: clientFetchNextPage,
+    hasNextPage: clientHasNextPage,
+    isLoading: clientIsLoading,
+  } = useClientHistoryDataQuery(clientCompanyId, isEditMode)
+
+  const historyList = useOrderingFormStore((state) => state.form.changeHistories)
+
   const { data } = useQuery({
     queryKey: ['ClientDetailInfo'],
     queryFn: () => ClientDetailService(clientCompanyId),
     enabled: isEditMode && !!clientCompanyId, // 수정 모드일 때만 fetch
   })
 
-  console.log('상세데이터', data)
-
   useEffect(() => {
     if (data && isEditMode === true) {
       const client = data.data
 
-      console.log('발주처 데터 화긴', client)
+      function parseLandlineNumber(landline: string) {
+        if (!landline) return { managerAreaNumber: '', landlineNumber: '' }
+
+        const parts = landline.split('-')
+
+        if (parts.length === 3) {
+          return {
+            managerAreaNumber: parts[0], // "02"
+            landlineNumber: `${parts[1]}-${parts[2]}`, // "123-5678"
+          }
+        } else if (parts.length === 2) {
+          // "02-1234567" → ["02", "1234567"]
+          return {
+            managerAreaNumber: parts[0], // "02"
+            landlineNumber: parts[1], // "1234567"
+          }
+        } else {
+          // 하이픈 없거나 이상한 경우
+          return {
+            managerAreaNumber: '',
+            landlineNumber: landline.replace(/-/g, ''),
+          }
+        }
+      }
 
       // 담당자 데이터 가공
-      const formattedContacts = (client.contacts ?? []).map((c: Manager) => ({
-        id: c.id,
-        name: c.name,
-        position: c.position,
-        phoneNumber: c.phoneNumber,
-        landlineNumber: c.landlineNumber,
-        email: c.email,
-        memo: c.memo,
-      }))
+      const formattedContacts = (client.contacts ?? []).map((c: Manager) => {
+        const { managerAreaNumber, landlineNumber } = parseLandlineNumber(c.landlineNumber ?? '')
+
+        return {
+          id: c.id,
+          name: c.name,
+          position: c.position,
+          department: c.department,
+          phoneNumber: c.phoneNumber,
+          email: c.email,
+          memo: c.memo,
+          isMain: c.isMain,
+          // 분리된 값 추가
+          managerAreaNumber,
+          landlineNumber,
+        }
+      })
 
       // 첨부파일 데이터 가공
       const formattedFiles = (client.files ?? []).map((item: AttachedFile) => ({
@@ -104,11 +171,11 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
         ],
       }))
 
-      if (client.paymentMethod === 'BILL') {
-        setField('paymentMethod', '어음')
+      if (client.paymentMethod === '어음') {
+        setField('paymentMethod', 'BILL')
       }
-      if (client.paymentMethod === 'CASH') {
-        setField('paymentMethod', '현금')
+      if (client.paymentMethod === '현금') {
+        setField('paymentMethod', 'CASH')
       }
       if (client.isActive === false) {
         setField('isActive', '미사용')
@@ -151,6 +218,86 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
     }
   }, [data, isEditMode, reset, setField])
 
+  const formatChangeDetail = (getChanges: string) => {
+    try {
+      const parsed = JSON.parse(getChanges)
+      if (!Array.isArray(parsed)) return '-'
+
+      return parsed.map(
+        (item: { property: string; before: string | null; after: string | null }, idx: number) => {
+          const propertyKo = PROPERTY_NAME_MAP[item.property] || item.property
+
+          const convertValue = (value: string | null) => {
+            if (value === 'true') return '사용'
+            if (value === 'false') return '미사용'
+            if (value === null || value === 'null') return 'null'
+            return value
+          }
+
+          let before = convertValue(item.before)
+          let after = convertValue(item.after)
+
+          // 스타일 결정
+          let style = {}
+          if (before === 'null') {
+            before = '추가'
+            style = { color: '#1976d2' } // 파란색 - 추가
+          } else if (after === 'null') {
+            after = '삭제'
+            style = { color: '#d32f2f' } // 빨간색 - 삭제
+          }
+
+          return (
+            <Typography key={idx} component="div" style={style}>
+              {before === '추가'
+                ? `추가됨 => ${after}`
+                : after === '삭제'
+                ? ` ${before} => 삭제됨`
+                : `${propertyKo} : ${before} => ${after}`}
+            </Typography>
+          )
+        },
+      )
+    } catch (e) {
+      if (e instanceof Error) return '-'
+    }
+  }
+
+  // 수정이력 데이터가 들어옴
+  useEffect(() => {
+    if (clientHistoryList?.pages) {
+      const allHistories = clientHistoryList.pages.flatMap((page) =>
+        page.data.content.map((item: HistoryItem) => ({
+          id: item.id,
+          type: item.type,
+          content: formatChangeDetail(item.getChanges), // 여기 변경
+          createdAt: getTodayDateString(item.createdAt),
+          updatedAt: getTodayDateString(item.updatedAt),
+          updatedBy: item.updatedBy,
+          memo: item.memo ?? '',
+        })),
+      )
+      setField('changeHistories', allHistories)
+    }
+  }, [clientHistoryList, setField])
+
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  const loadMoreRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (clientIsLoading || isFetchingNextPage) return
+      if (observerRef.current) observerRef.current.disconnect()
+
+      observerRef.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && clientHasNextPage) {
+          clientFetchNextPage()
+        }
+      })
+
+      if (node) observerRef.current.observe(node)
+    },
+    [clientFetchNextPage, clientHasNextPage, isFetchingNextPage, clientIsLoading],
+  )
+
   return (
     <>
       <div>
@@ -163,7 +310,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
                 placeholder="텍스트 입력"
-                value={form.name}
+                value={form.name ?? ''}
                 onChange={(value) => setField('name', value)}
                 className="flex-1"
               />
@@ -171,12 +318,12 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              사업장등록번호
+              사업자등록번호
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
                 placeholder="'-'없이 숫자만 입력"
-                value={form.businessNumber}
+                value={form.businessNumber ?? ''}
                 onChange={(value) => {
                   const formatBusinessNumber = CommonInputnumber(value)
                   setField('businessNumber', formatBusinessNumber)
@@ -205,7 +352,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                 />
               </div>
               <input
-                value={form.detailAddress}
+                value={form.detailAddress ?? ''}
                 onChange={(e) => setField('detailAddress', e.target.value)}
                 placeholder="상세주소"
                 className="w-full border px-3 py-2 rounded"
@@ -240,7 +387,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
             <div className="border flex  items-center border-gray-400 px-2 w-full">
               <CommonInput
                 placeholder="텍스트 입력"
-                value={form.ceoName}
+                value={form.ceoName ?? ''}
                 onChange={(value) => setField('ceoName', value)}
                 className="flex-1"
               />
@@ -260,7 +407,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
 
               <CommonInput
                 placeholder="'-'없이 숫자만 입력"
-                value={form.landlineNumber}
+                value={form.landlineNumber ?? ''}
                 onChange={(value) => {
                   const formatAreaNumber = formatPersonNumber(value)
                   setField('landlineNumber', formatAreaNumber)
@@ -272,19 +419,12 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              휴대폰
+              개인 휴대폰
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
-              {/* <CommonSelect
-                className="text-2xl"
-                value={form.areaNumber}
-                onChange={(value) => setField('areaNumber', value)}
-                options={AreaCode}
-              /> */}
-
               <CommonInput
                 placeholder="'-'없이 숫자만 입력"
-                value={form.phoneNumber}
+                value={form.phoneNumber ?? ''}
                 onChange={(value) => {
                   const clientPhone = formatPhoneNumber(value)
                   setField('phoneNumber', clientPhone)
@@ -300,7 +440,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
                 placeholder="텍스트 입력"
-                value={form.email}
+                value={form.email ?? ''}
                 onChange={(value) => setField('email', value)}
                 className="flex-1"
               />
@@ -313,14 +453,14 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
                 className="text-2xl"
-                value={form.paymentMethod}
+                value={form.paymentMethod || 'BASE'}
                 onChange={(value) => setField('paymentMethod', value)}
-                options={PayInfo}
+                options={payMethodOptions}
               />
 
               <CommonInput
                 placeholder="텍스트 입력"
-                value={form.paymentPeriod}
+                value={form.paymentPeriod ?? ''}
                 onChange={(value) => setField('paymentPeriod', value)}
                 className=" flex-1"
               />
@@ -384,7 +524,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
-                value={form.memo}
+                value={form.memo ?? ''}
                 onChange={(value) => setField('memo', value)}
                 className="flex-1"
               />
@@ -424,7 +564,16 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                     sx={{ color: 'black' }}
                   />
                 </TableCell>
-                {['이름', '부서/직급', '연락처', '휴대폰', '이메일', '비고'].map((label) => (
+                {[
+                  '대표담당자',
+                  '이름',
+                  '부서',
+                  '직급(직책)',
+                  '전화번호',
+                  '개인 휴대폰',
+                  '이메일',
+                  '비고',
+                ].map((label) => (
                   <TableCell
                     key={label}
                     align="center"
@@ -433,6 +582,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       border: '1px solid  #9CA3AF',
                       color: 'black',
                       fontWeight: 'bold',
+                      whiteSpace: 'nowrap',
                     }}
                   >
                     {label}
@@ -453,6 +603,14 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       onChange={(e) => toggleCheckItem('manager', m.id, e.target.checked)}
                     />
                   </TableCell>
+                  <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                    <Radio
+                      checked={m.isMain === true}
+                      onChange={() => setRepresentativeManager(m.id)}
+                      value={m.id}
+                      name="representative"
+                    />
+                  </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       placeholder="텍스트 입력"
@@ -471,15 +629,43 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
+                      placeholder="텍스트 입력"
                       size="small"
-                      placeholder="'-'없이 숫자만 입력"
-                      value={m.landlineNumber}
-                      onChange={(e) => {
-                        const formatted = formatPhoneNumber(e.target.value)
-                        updateItemField('manager', m.id, 'landlineNumber', formatted)
-                      }}
+                      value={m.department}
+                      onChange={(e) =>
+                        updateItemField('manager', m.id, 'department', e.target.value)
+                      }
                     />
                   </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      border: '1px solid #9CA3AF',
+                      padding: '8px',
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <CommonSelect
+                        value={m.managerAreaNumber}
+                        onChange={(value) => {
+                          updateItemField('manager', m.id, 'managerAreaNumber', value)
+                        }}
+                        options={AreaCode}
+                      />
+
+                      <TextField
+                        size="small"
+                        placeholder="'-'없이 숫자만 입력"
+                        value={m.landlineNumber}
+                        onChange={(e) => {
+                          const formatAreaNumber = formatPersonNumber(e.target.value)
+                          updateItemField('manager', m.id, 'landlineNumber', formatAreaNumber)
+                        }}
+                        sx={{ width: 120 }}
+                      />
+                    </Box>
+                  </TableCell>
+
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
@@ -649,13 +835,109 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
         </TableContainer>
       </div>
 
+      {isEditMode && (
+        <div>
+          <div className="flex justify-between items-center mt-10 mb-2">
+            <span className="font-bold border-b-2 mb-4">수정이력</span>
+            <div className="flex gap-4">
+              {/* <CommonButton
+                    label="삭제"
+                    className="px-7"
+                    variant="danger"
+                    onClick={() => removeCheckedItems('manager')}
+                  />
+                  <CommonButton
+                    label="추가"
+                    className="px-7"
+                    variant="secondary"
+                    onClick={() => addItem('manager')}
+                  /> */}
+            </div>
+          </div>
+          <TableContainer component={Paper}>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                  {['No', '수정일시', '항목', '수정항목', '수정자', '비고 / 메모'].map((label) => (
+                    <TableCell
+                      key={label}
+                      align="center"
+                      sx={{
+                        backgroundColor: '#D1D5DB',
+                        border: '1px solid  #9CA3AF',
+                        color: 'black',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {label}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {historyList.map((item: HistoryItem) => (
+                  <TableRow key={item.id}>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      {item.id}
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      {item.createdAt} / {item.updatedAt}
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{
+                        border: '1px solid  #9CA3AF',
+                        textAlign: 'center',
+                        whiteSpace: 'pre-line',
+                      }}
+                    >
+                      {item.type}
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{
+                        border: '1px solid  #9CA3AF',
+                        whiteSpace: 'pre-line',
+                      }}
+                    >
+                      {item.content}
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'pre-line' }}
+                    >
+                      {item.updatedBy}
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        value={item.memo ?? ''}
+                        placeholder="메모 입력"
+                        onChange={(e) => updateMemo(item.id, e.target.value)}
+                        multiline
+                        inputProps={{ maxLength: 500 }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {clientHasNextPage && (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center" sx={{ border: 'none' }}>
+                      <div ref={loadMoreRef} className="p-4 text-gray-500 text-sm">
+                        불러오는 중...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </div>
+      )}
+
       <div className="flex justify-center gap-10 mt-10">
-        <CommonButton
-          label="취소"
-          variant="reset"
-          className="px-10"
-          onClick={() => console.log('취소')}
-        />
+        <CommonButton label="취소" variant="reset" className="px-10" onClick={orderingCancel} />
         <CommonButton
           label={isEditMode ? '+ 수정' : '+ 등록'}
           className="px-10 font-bold"

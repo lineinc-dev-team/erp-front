@@ -86,6 +86,28 @@ export async function OrderingInfoNameScroll({ pageParam = 0, size = 5, keyword 
   return data
 }
 
+// 결제 정보
+export async function PayIdInfoService() {
+  const resData = await fetch(`${API.CLIENTCOMPANY}/payment-methods`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      throw new Error('권한이 없습니다.')
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  console.log('파싱된 유저 부서 데이터@@@ 데이터', data)
+  return data
+}
+
 // 발주처 상세
 export async function ClientDetailService(clientCompanyId: number) {
   const res = await fetch(`${API.CLIENTCOMPANY}/${clientCompanyId}`, {
@@ -121,4 +143,34 @@ export async function ModifyClientCompany(clientModifyId: number) {
   }
 
   return await res.status
+}
+
+// 발주처 수정이력 조회
+// 발주처 수정이력 조회 (페이지네이션 추가)
+export async function CLientCompanyInfoHistoryService(
+  historyId: number,
+  page: number = 0,
+  size: number = 4,
+) {
+  const resData = await fetch(
+    `${API.CLIENTCOMPANY}/${historyId}/change-histories?page=${page}&size=${size}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    },
+  )
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      throw new Error('권한이 없습니다.')
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  console.log('파싱된 유저 데이터', data)
+  return data
 }

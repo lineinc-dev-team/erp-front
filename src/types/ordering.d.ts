@@ -2,10 +2,13 @@ export type Manager = {
   id: number
   name: string
   position: string
+  department: string
+  managerAreaNumber: string
   landlineNumber: string
   phoneNumber: string
   email: string
   memo: string
+  isMain?: boolean //대표 담당자
 }
 
 export type AttachedFile = {
@@ -26,6 +29,9 @@ export interface Contact {
   landlineNumber: string
   email: string
   memo?: string
+  position: string
+  department: string
+  isMain?: boolean
 }
 
 export interface User {
@@ -59,12 +65,12 @@ export type OrderingSearchState = {
   businessNumber: string
   ceoName: string
   currentPage: number
+  contactName: string
   landlineNumber: string
-  orderCEOname: string
+  userName: string
   email: string
   startDate: Date | null
   endDate: Date | null
-  bossName: string
   isActive: string
   arraySort: string
   pageCount: string
@@ -78,6 +84,19 @@ export type OrderingSearchState = {
 
   handleSearch: () => void
   handleOrderingListRemove: () => void
+}
+
+// 수정에 사용 할 타입
+type HistoryItem = {
+  id: number
+  no: number
+  getChanges: string
+  createdAt: string // or Date
+  updatedAt: string
+  content: string // 수정항목
+  updatedBy: string
+  memo: string
+  type: string
 }
 
 export type FormState = {
@@ -108,6 +127,9 @@ export type FormState = {
   attachedFiles: AttachedFile[]
   checkedAttachedFileIds: number[]
 
+  editedHistories?: Pick<HistoryItem, 'id' | 'memo'>[]
+  changeHistories: HistoryItem[] // 수정 이력 포함
+
   //수정페이지에서 이력 조회 시 사용
   modificationHistory: {
     modifiedAt: Date | null
@@ -135,6 +157,8 @@ type ClientCompanyFormStore = {
   removeCheckedItems: (type: 'manager' | 'attachedFile') => void
   // updateAttachedFileUploads: (id: number, newFiles: FileUploadInfo[]) => void
 
+  updateMemo: (id: number, newMemo: string) => void
+  setRepresentativeManager: (id: number) => void
   //발주처 등록하기
 
   //payload 값

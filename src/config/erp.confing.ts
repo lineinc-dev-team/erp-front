@@ -22,9 +22,9 @@ export const LocationStatusOptions = [
 ]
 
 export const UseORnotOptions = [
-  { id: '0', name: '선택' },
-  { id: '1', name: '사용' },
-  { id: '2', name: '미사용' },
+  { id: '선택', name: '선택' },
+  { id: '사용', name: '사용' },
+  { id: '미사용', name: '미사용' },
 ]
 
 export const UseStateOptions = [
@@ -160,12 +160,12 @@ export const PermissionDataList: GridColDef[] = [
 export const clientCompanyList: GridColDef[] = [
   { field: 'id', headerName: 'No', width: 70 },
   { field: 'businessNumber', headerName: '사업자등록번호', width: 130 },
-  { field: 'name', headerName: '발주처', width: 130 },
+  { field: 'name', headerName: '발주처명', width: 130 },
   { field: 'ceoName', headerName: '대표자명', width: 130 },
   { field: 'address', headerName: '본사 주소', width: 180 },
   { field: 'landlineNumber', headerName: '전화번호', width: 100 },
   { field: 'contactName', headerName: '담당자명', width: 100 },
-  // { field: 'lastLoginAt', headerName: '부서/직급', width: 120 },
+  { field: 'contactPositionAndDepartment', headerName: '부서/직급', width: 120 },
   { field: 'contactInfo', headerName: '담당자 연락처/이메일', width: 100 },
   { field: 'headquarter', headerName: '본사담당자명', width: 100 },
   { field: 'isActive', headerName: '사용여부', width: 100 },
@@ -175,30 +175,30 @@ export const clientCompanyList: GridColDef[] = [
 ]
 
 export const AreaCode = [
-  { label: '지역번호', name: '지역번호' },
-  { label: '서울', name: '02' },
-  { label: '인천', name: '032' },
-  { label: '경기', name: '031' },
-  { label: '강원', name: '033' },
-  { label: '충북', name: '043' },
-  { label: '충남', name: '041' },
-  { label: '세종', name: '044' },
-  { label: '대전', name: '042' },
-  { label: '전북', name: '063' },
-  { label: '전남', name: '061' },
-  { label: '광주', name: '062' },
-  { label: '경북', name: '054' },
-  { label: '대구', name: '053' },
-  { label: '경남', name: '055' },
-  { label: '부산', name: '051' },
-  { label: '울산', name: '052' },
-  { label: '제주', name: '064' },
+  { id: '지역번호', name: '지역번호' },
+  { id: '02', name: '02' },
+  { id: '032', name: '032' },
+  { id: '031', name: '031' },
+  { id: '강원', name: '033' },
+  { id: '충북', name: '043' },
+  { id: '충남', name: '041' },
+  { id: '세종', name: '044' },
+  { id: '대전', name: '042' },
+  { id: '전북', name: '063' },
+  { id: '전남', name: '061' },
+  { id: '광주', name: '062' },
+  { id: '경북', name: '054' },
+  { id: '대구', name: '053' },
+  { id: '경남', name: '055' },
+  { id: '부산', name: '051' },
+  { id: '울산', name: '052' },
+  { id: '제주', name: '064' },
 ]
 
 export const PayInfo = [
-  { label: '선택', name: '선택' },
-  { label: '어음', name: '어음' },
-  { label: '현금', name: '현금' },
+  { id: '선택', name: '선택' },
+  { id: '어음', name: '어음' },
+  { id: '현금', name: '현금' },
 ]
 
 export const GuaranteeInfo = [

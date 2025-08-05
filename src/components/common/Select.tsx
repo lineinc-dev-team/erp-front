@@ -4,6 +4,7 @@ import { FormControl, MenuItem, Select } from '@mui/material'
 type OptionType<T extends string | number> = {
   label?: string
   id?: string | number
+  code?: string | number
   name: T
 }
 
@@ -57,7 +58,7 @@ export default function CommonSelect<T extends string | number>({
         }}
       >
         {options.map((opt) => (
-          <MenuItem key={opt.id} value={opt.id}>
+          <MenuItem key={opt.id} value={opt.id || opt.code}>
             {displayLabel ? opt.label ?? opt.name : opt.name}
           </MenuItem>
         ))}

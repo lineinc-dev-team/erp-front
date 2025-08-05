@@ -1,11 +1,13 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useOrderingFormStore, useOrderingSearchStore } from '@/stores/orderingStore'
 import {
+  CLientCompanyInfoHistoryService,
   CreateClientCompany,
   ModifyClientCompany,
   OrderingInfoNameScroll,
+  PayIdInfoService,
 } from '@/services/ordering/orderingRegistrationService'
 import { ClientCompanyInfoService, ClientRemoveService } from '@/services/ordering/orderingService'
 import { useEffect, useMemo, useState } from 'react'
@@ -20,13 +22,14 @@ export function useClientCompany() {
 
   // 발주처 조회
   const search = useOrderingSearchStore((state) => state.search)
-
+  const pathName = usePathname()
   // 초기 화면에 들어왔을 때 currentPage 1로 세팅 (예: useEffect 등에서)
   useEffect(() => {
-    if (search.currentPage !== 1) {
+    if (search.searchTrigger && search.currentPage !== 0) {
       search.setField('currentPage', 1)
     }
-  }, [search])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.searchTrigger])
 
   // useQuery 쪽 수정
   const ClientQuery = useQuery({
@@ -36,15 +39,17 @@ export function useClientCompany() {
       search.currentPage,
       search.pageCount,
       search.arraySort /* 필요한 상태들 추가 */,
+      pathName,
     ],
     queryFn: () => {
       const rawParams = {
         name: search.name,
         businessNumber: search.businessNumber,
         ceoName: search.ceoName,
-        phoneNumber: search.landlineNumber,
-        contactName: search.orderCEOname,
+        landlineNumber: search.landlineNumber,
+        contactName: search.contactName,
         email: search.email,
+        userName: search.userName,
         createdStartDate: getTodayDateString(search.startDate),
         createdEndDate: getTodayDateString(search.endDate),
         isActive:
@@ -69,11 +74,10 @@ export function useClientCompany() {
         ),
       )
 
-      console.log('검색 파라미터', filteredParams)
-
       return ClientCompanyInfoService(filteredParams)
     },
     staleTime: 1000 * 30,
+    enabled: pathName === '/ordering', // 경로 체크
   })
 
   // 발주처 등록
@@ -116,7 +120,7 @@ export function useClientCompany() {
     onSuccess: () => {
       if (window.confirm('수정하시겠습니까?')) {
         showSnackbar('발주처가 수정 되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['clientInfo'] })
+        queryClient.invalidateQueries({ queryKey: ['ClientInfo'] })
         reset()
         router.push('/ordering')
       }
@@ -174,13 +178,44 @@ export function useClientCompany() {
     return [defaultOption, ...options]
   }, [userData])
 
+  const orderingCancel = () => {
+    router.push('/ordering')
+  }
+
+  const { data: payInfoId } = useQuery({
+    queryKey: ['positionInfo'],
+    queryFn: PayIdInfoService,
+  })
+
+  const payMethodOptions = [{ code: 'BASE', name: '선택' }, ...(payInfoId?.data ?? [])]
+
+  const useClientHistoryDataQuery = (historyId: number, enabled: boolean) => {
+    return useInfiniteQuery({
+      queryKey: ['ClientHistoryList', historyId],
+      queryFn: ({ pageParam = 0 }) => CLientCompanyInfoHistoryService(historyId, pageParam, 4),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage?.data
+        const nextPage = sliceInfo?.page + 1
+
+        return sliceInfo?.hasNext ? nextPage : undefined
+      },
+      enabled: enabled && !!historyId && !isNaN(historyId),
+    })
+  }
+
   return {
     ClientQuery,
+    orderingCancel,
     createClientMutation,
     ClientDeleteMutation,
     ClientModifyMutation,
     useUserOrderingInfiniteScroll,
+    // 결제수단
+    payMethodOptions,
 
+    // 이력
+    useClientHistoryDataQuery,
     // 본사 담당자 관련
     userSearch,
     setUserSearch,

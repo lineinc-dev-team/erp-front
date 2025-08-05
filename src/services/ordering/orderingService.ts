@@ -74,36 +74,46 @@ export async function ClientRemoveService(clientCompanyIds: number[]) {
 // 엑셀 다운로드
 export async function ClientCompanyExcelDownload({
   sort = '',
-  username = '',
-  roleId,
-  isActive,
+  name = '',
+  businessNumber,
+  ceoName,
+  landlineNumber,
+  contactName,
+  email,
+  userName,
+  isActive = true,
   createdStartDate,
   createdEndDate,
-  lastLoginStartDate,
-  lastLoginEndDate,
   fields,
 }: {
   sort?: string
-  username?: string
-  roleId?: number
+  name?: string
+  businessNumber?: string
+  ceoName?: string
+  landlineNumber?: string
+  contactName?: string
+  email?: string
+  userName?: string
   isActive?: boolean
   createdStartDate?: string
   createdEndDate?: string
-  lastLoginStartDate?: string
-  lastLoginEndDate?: string
+  hasFile?: boolean
   fields?: string[]
 }) {
   const queryParams = new URLSearchParams()
 
   queryParams.append('sort', sort)
-  if (username) queryParams.append('username', username)
-  if (roleId !== undefined) queryParams.append('roleId', String(roleId))
-  if (isActive !== undefined) queryParams.append('isActive', String(isActive))
+  if (name) queryParams.append('name', name)
+  if (businessNumber) queryParams.append('businessNumber', businessNumber)
+  if (ceoName) queryParams.append('ceoName', ceoName)
+  if (landlineNumber) queryParams.append('landlineNumber', landlineNumber)
+  if (contactName) queryParams.append('contactName', contactName)
+  if (email) queryParams.append('email', email)
+  if (userName) queryParams.append('userName', userName)
+  queryParams.append('isActive', String(isActive))
+  // if (isActive !== undefined) queryParams.append('isActive', String(isActive))
   if (createdStartDate) queryParams.append('createdStartDate', createdStartDate)
   if (createdEndDate) queryParams.append('createdEndDate', createdEndDate)
-  if (lastLoginStartDate) queryParams.append('lastLoginStartDate', lastLoginStartDate)
-  if (lastLoginEndDate) queryParams.append('lastLoginEndDate', lastLoginEndDate)
-
   if (fields && fields.length > 0) {
     queryParams.append('fields', fields.join(','))
   }

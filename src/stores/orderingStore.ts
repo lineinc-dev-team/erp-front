@@ -1,4 +1,3 @@
-import { getTodayDateString } from '@/utils/formatters'
 import { create } from 'zustand'
 import type {
   Manager,
@@ -14,12 +13,12 @@ export const useOrderingSearchStore = create<{ search: OrderingSearchState }>((s
     currentPage: 1,
     businessNumber: '',
     ceoName: '',
+    userName: '',
     landlineNumber: '',
-    orderCEOname: '',
+    contactName: '',
     email: '',
     startDate: null,
     endDate: null,
-    bossName: '',
     isActive: '선택',
     arraySort: '최신순',
     pageCount: '10',
@@ -30,32 +29,12 @@ export const useOrderingSearchStore = create<{ search: OrderingSearchState }>((s
       })),
 
     handleSearch: () =>
-      set((state) => {
-        const search = state.search
-
-        const payload = {
-          name: search.name,
-          businessNumber: search.businessNumber,
-          ceoName: search.ceoName,
-          landlineNumber: search.landlineNumber,
-          orderCEOname: search.orderCEOname,
-          email: search.email,
-          startDate: getTodayDateString(search.startDate),
-          endDate: getTodayDateString(search.endDate),
-          bossName: search.bossName,
-          isActive:
-            search.isActive === '사용' ? true : search.isActive === '미사용' ? false : undefined,
-        }
-
-        alert(JSON.stringify(payload, null, 2))
-
-        return {
-          search: {
-            ...search,
-            searchTrigger: (search.searchTrigger || 0) + 1,
-          },
-        }
-      }),
+      set((state) => ({
+        search: {
+          ...state.search,
+          searchTrigger: state.search.searchTrigger + 1,
+        },
+      })),
 
     reset: () =>
       set((state) => ({
@@ -65,13 +44,13 @@ export const useOrderingSearchStore = create<{ search: OrderingSearchState }>((s
           businessNumber: '',
           currentPage: 1,
           ceoName: '',
+          userName: '',
           areaNumber: '',
           landlineNumber: '',
-          orderCEOname: '',
+          contactName: '',
           email: '',
           startDate: null,
           endDate: null,
-          bossName: '',
           arraySort: '최신순',
           pageCount: '10',
           isActive: '선택',
@@ -96,7 +75,7 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
     phoneNumber: '',
     isModalOpen: false,
     email: '',
-    paymentMethod: '선택',
+    paymentMethod: '',
     paymentPeriod: '',
     memo: '',
     isActive: '선택',
@@ -106,6 +85,7 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
     attachedFiles: [],
     checkedAttachedFileIds: [],
     modificationHistory: [],
+    changeHistories: [],
   },
   reset: () =>
     set(() => ({
@@ -121,7 +101,7 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
         phoneNumber: '',
         isModalOpen: false,
         email: '',
-        paymentMethod: '선택',
+        paymentMethod: '',
         paymentPeriod: '',
         memo: '',
         isActive: '선택',
@@ -130,6 +110,7 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
         attachedFiles: [],
         checkedAttachedFileIds: [],
         modificationHistory: [],
+        changeHistories: [],
       },
     })),
 
@@ -138,6 +119,30 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
       form: { ...state.form, [field]: value },
     })),
 
+  updateMemo: (id, value) =>
+    set((state) => {
+      // 기존 changeHistories 업데이트
+      const updatedHistories = state.form.changeHistories.map((history) =>
+        history.id === id ? { ...history, memo: value } : history,
+      )
+
+      // 기존에 저장된 editedHistories 복사
+      const edited = state.form.editedHistories ?? []
+
+      // 이미 수정된 항목이 있으면 덮어쓰기, 없으면 새로 추가
+      const updatedEditedHistories = edited.some((h) => h.id === id)
+        ? edited.map((h) => (h.id === id ? { id, memo: value } : h))
+        : [...edited, { id, memo: value }]
+
+      return {
+        form: {
+          ...state.form,
+          changeHistories: updatedHistories,
+          editedHistories: updatedEditedHistories,
+        },
+      }
+    }),
+
   addItem: (type) =>
     set((state) => {
       if (type === 'manager') {
@@ -145,6 +150,8 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
           id: Date.now(),
           name: '',
           position: '',
+          department: '',
+          managerAreaNumber: '지역번호',
           landlineNumber: '',
           phoneNumber: '',
           email: '',
@@ -227,6 +234,17 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
       }
     }),
 
+  setRepresentativeManager: (id: number) =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        headManagers: state.form.headManagers.map((m) => ({
+          ...m,
+          isMain: m.id === id,
+        })),
+      },
+    })),
+
   removeCheckedItems: (type) =>
     set((state) => {
       if (type === 'manager') {
@@ -263,7 +281,7 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
       landlineNumber: `${form.areaNumber}-${form.landlineNumber}`,
       phoneNumber: form.phoneNumber,
       email: form.email,
-      paymentMethod: form.paymentMethod === '어음' ? 'CASH' : 'BILL',
+      paymentMethod: form.paymentMethod,
       paymentPeriod: form.paymentPeriod,
       memo: form.memo,
       isActive: form.isActive === '사용' ? true : false,
@@ -272,10 +290,12 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
         id: m.id,
         name: m.name,
         position: m.position,
-        landlineNumber: m.landlineNumber,
+        department: m.department,
+        landlineNumber: `${m.managerAreaNumber}-${m.landlineNumber}`,
         phoneNumber: m.phoneNumber,
         email: m.email,
         memo: m.memo,
+        isMain: m.isMain || false, // 여기 추가
       })),
       // files: form.attachedFiles.map((f) => ({
       //   name: f.fileName,
@@ -292,6 +312,7 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
           memo: f.memo,
         })),
       ),
+      changeHistories: form.editedHistories ?? [],
     }
   },
 

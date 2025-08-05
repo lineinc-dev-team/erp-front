@@ -23,9 +23,16 @@ import ExcelModal from '../common/ExcelModal'
 import { useState } from 'react'
 import { clientCompanyExcelFieldMap } from '@/utils/userExcelField'
 import { getTodayDateString } from '@/utils/formatters'
+import { useTabOpener } from '@/utils/openTab'
+import { formatAreaNumber } from '@/utils/formatPhoneNumber'
+import { useSnackbarStore } from '@/stores/useSnackbarStore'
 
 export default function OrderingView() {
-  const { handleNewOrderCreate, contract, setContract } = OrderingService()
+  const { contract, setContract } = OrderingService()
+
+  const openTab = useTabOpener()
+
+  const { showSnackbar } = useSnackbarStore()
 
   const { search } = useOrderingSearchStore()
 
@@ -37,18 +44,27 @@ export default function OrderingView() {
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
-  const updateClientList = ClientCompanyList.map((user: ClientCompany) => ({
-    ...user,
-    contactName: user.contacts?.[0]?.name || '-',
-    contactInfo: `${user.contacts?.[0]?.phoneNumber || '-'}<br/>${
-      user.contacts?.[0]?.email || '-'
-    }`,
-    headquarter: user.user?.username,
-    isActive: 'Y',
-    hasFile: 'Y',
-    createdAt: getTodayDateString(user.createdAt),
-    updatedAt: getTodayDateString(user.updatedAt),
-  }))
+  const updateClientList = ClientCompanyList.map((user: ClientCompany) => {
+    const mainContact = user.contacts?.find((contact) => contact.isMain === true)
+
+    return {
+      ...user,
+      contactName: mainContact?.name || '-',
+      contactPositionAndDepartment: mainContact
+        ? `${mainContact.position} <br/> ${mainContact.department}`
+        : '-',
+      contactInfo: mainContact
+        ? `${mainContact.phoneNumber || '-'}<br/>${mainContact.email || '-'}`
+        : '-',
+
+      headquarter: user.user?.username,
+      isActive: 'Y',
+      hasFile: 'Y',
+      createdAt: `${getTodayDateString(user.createdAt)} / ${getTodayDateString(user.updatedAt)}`,
+    }
+  })
+
+  console.log('ClientCompanyListClientCompanyListClientCompanyList', ClientCompanyList)
 
   const { selectedIds, setSelectedIds } = useAccountStore()
 
@@ -122,7 +138,20 @@ export default function OrderingView() {
   }))
 
   const handleDownloadExcel = async (fields: string[]) => {
-    await ClientCompanyExcelDownload({ fields })
+    await ClientCompanyExcelDownload({
+      sort: search.arraySort === '최신순' ? 'id,desc' : 'id,asc',
+      name: search.name,
+      businessNumber: search.businessNumber,
+      ceoName: search.ceoName,
+      landlineNumber: search.landlineNumber,
+      contactName: search.contactName,
+      email: search.email,
+      userName: search.userName,
+      createdStartDate: search.startDate ? getTodayDateString(search.startDate) : undefined,
+      createdEndDate: search.endDate ? getTodayDateString(search.endDate) : undefined,
+      isActive: search.isActive !== 'N',
+      fields, // 필수 필드: ["id", "name", "businessNumber", ...]
+    })
   }
   return (
     <>
@@ -174,7 +203,10 @@ export default function OrderingView() {
             <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
               <CommonInput
                 value={search.landlineNumber}
-                onChange={(value) => search.setField('landlineNumber', value)}
+                onChange={(value) => {
+                  const resultAreaNumber = formatAreaNumber(value)
+                  search.setField('landlineNumber', resultAreaNumber)
+                }}
                 className="flex-1"
               />
             </div>
@@ -185,8 +217,8 @@ export default function OrderingView() {
             </label>
             <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
               <CommonInput
-                value={search.orderCEOname}
-                onChange={(value) => search.setField('orderCEOname', value)}
+                value={search.contactName}
+                onChange={(value) => search.setField('contactName', value)}
                 className="flex-1"
               />
             </div>
@@ -212,12 +244,32 @@ export default function OrderingView() {
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonDatePicker
                 value={search.startDate}
-                onChange={(value) => search.setField('startDate', value)}
+                onChange={(value) => {
+                  search.setField('startDate', value)
+
+                  if (
+                    value !== null &&
+                    search.endDate !== null &&
+                    new Date(search.endDate) < new Date(value)
+                  ) {
+                    search.setField('endDate', value)
+                  }
+                }}
               />
               ~
               <CommonDatePicker
                 value={search.endDate}
-                onChange={(value) => search.setField('endDate', value)}
+                onChange={(value) => {
+                  if (
+                    value !== null &&
+                    search.startDate !== null &&
+                    new Date(value) < new Date(search.startDate)
+                  ) {
+                    showSnackbar('종료일은 시작일 이후여야 합니다.', 'error')
+                    return
+                  }
+                  search.setField('endDate', value)
+                }}
               />
             </div>
           </div>
@@ -228,8 +280,8 @@ export default function OrderingView() {
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonInput
-                value={search.bossName}
-                onChange={(value) => search.setField('bossName', value)}
+                value={search.userName}
+                onChange={(value) => search.setField('userName', value)}
                 className=" flex-1"
               />
             </div>
@@ -341,7 +393,6 @@ export default function OrderingView() {
                 className="px-3"
               />
 
-              {/* <ExcelModal open={modalOpen} onClose={() => setModalOpen(false)} /> */}
               <ExcelModal
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
@@ -352,7 +403,7 @@ export default function OrderingView() {
               <CommonButton
                 label="+ 신규등록"
                 variant="secondary"
-                onClick={handleNewOrderCreate}
+                onClick={() => openTab('/ordering/registration', '발주처 관리 - 등록')}
                 className="px-3"
               />
             </div>

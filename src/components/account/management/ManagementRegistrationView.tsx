@@ -56,8 +56,8 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
     departmentName: '부서(소속)',
     positionName: '직급',
     gradeName: '직책',
-    phoneNumber: '휴대폰',
-    landlineNumber: '연락처',
+    phoneNumber: '개인 휴대폰',
+    landlineNumber: '전화번호',
     email: '이메일',
     isActive: '계정 상태',
     memo: '메모',
@@ -174,8 +174,8 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
     if (form.gradeId === 0) return '직책을 선택하세요.'
     if (!form.email.trim()) return '이메일을 입력하세요.'
     if (!/\S+@\S+\.\S+/.test(form.email)) return '유효한 이메일을 입력하세요.'
-    if (!form.phoneNumber.trim()) return '휴대폰 번호를 입력하세요.'
-    if (!form.landlineNumber.trim()) return '연락처를 입력하세요.'
+    if (!form.phoneNumber.trim()) return '개인 휴대폰 번호를 입력하세요.'
+    if (!form.landlineNumber.trim()) return '전화번호를 입력하세요.'
     // if (!form.password.trim()) return '비밀번호를 입력하세요.'
     // if (form.password !== form.checkPassword) return '비밀번호가 일치하지 않습니다.'
     if (form.isActive === '0' || !form.isActive) return '계정 상태를 선택하세요.'
@@ -277,7 +277,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              휴대폰
+              개인 휴대폰
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -293,7 +293,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36  text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              연락처
+              전화번호
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
