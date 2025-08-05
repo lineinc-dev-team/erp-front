@@ -114,6 +114,7 @@ export async function ClientCompanyExcelDownload({
   // if (isActive !== undefined) queryParams.append('isActive', String(isActive))
   if (createdStartDate) queryParams.append('createdStartDate', createdStartDate)
   if (createdEndDate) queryParams.append('createdEndDate', createdEndDate)
+
   if (fields && fields.length > 0) {
     queryParams.append('fields', fields.join(','))
   }

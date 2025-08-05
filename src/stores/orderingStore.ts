@@ -10,7 +10,6 @@ export const useOrderingSearchStore = create<{ search: OrderingSearchState }>((s
   search: {
     searchTrigger: 0,
     name: '',
-    currentPage: 1,
     businessNumber: '',
     ceoName: '',
     userName: '',
@@ -21,6 +20,7 @@ export const useOrderingSearchStore = create<{ search: OrderingSearchState }>((s
     endDate: null,
     isActive: '선택',
     arraySort: '최신순',
+    currentPage: 1,
     pageCount: '10',
 
     setField: (field, value) =>

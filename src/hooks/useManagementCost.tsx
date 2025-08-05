@@ -150,11 +150,11 @@ export function useManagementCost() {
   const [sitesSearch, setSitesSearch] = useState('')
 
   const {
-    data: orderPersonInfo,
-    // fetchNextPage,
-    // hasNextPage,
-    // isFetching,
-    // isLoading,
+    data: siteNameInfo,
+    fetchNextPage: siteNameFetchNextPage,
+    hasNextPage: siteNamehasNextPage,
+    isFetching: siteNameFetching,
+    isLoading: siteNameLoading,
   } = useInfiniteQuery({
     queryKey: ['siteInfo', sitesSearch],
     queryFn: ({ pageParam }) => SitesPersonScroll({ pageParam, keyword: sitesSearch }),
@@ -168,7 +168,7 @@ export function useManagementCost() {
 
   const sitesOptions = useMemo(() => {
     const defaultOption = { id: '0', name: '선택' }
-    const options = (orderPersonInfo?.pages || [])
+    const options = (siteNameInfo?.pages || [])
       .flatMap((page) => page.data.content)
       .map((user) => ({
         id: user.id,
@@ -176,7 +176,7 @@ export function useManagementCost() {
       }))
 
     return [defaultOption, ...options]
-  }, [orderPersonInfo])
+  }, [siteNameInfo])
 
   // 공정명
 
@@ -198,10 +198,10 @@ export function useManagementCost() {
 
   const {
     data: processInfo,
-    fetchNextPage,
-    hasNextPage,
-    isFetching,
-    isLoading,
+    fetchNextPage: processInfoFetchNextPage,
+    hasNextPage: processInfoHasNextPage,
+    isFetching: processInfoIsFetching,
+    isLoading: processInfoLoading,
   } = useInfiniteQuery({
     queryKey: ['processInfo', processSearch],
     queryFn: ({ pageParam }) => SitesProcessNameScroll({ pageParam, keyword: processSearch }),
@@ -235,15 +235,19 @@ export function useManagementCost() {
     useSitesPersonInfiniteScroll,
     setSitesSearch,
     sitesOptions,
-    fetchNextPage,
-    hasNextPage,
-    isFetching,
-    isLoading,
+    siteNameFetchNextPage,
+    siteNamehasNextPage,
+    siteNameFetching,
+    siteNameLoading,
 
     // 공정명
 
     useProcessNameInfiniteScroll,
     setProcessSearch,
     processOptions,
+    processInfoFetchNextPage,
+    processInfoHasNextPage,
+    processInfoIsFetching,
+    processInfoLoading,
   }
 }

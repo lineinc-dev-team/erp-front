@@ -96,3 +96,24 @@ export async function ModifySiteService(siteModifyId: number) {
 
   return await res.status
 }
+
+// 현장유형 조회
+export async function SiteIdInfoService() {
+  const resData = await fetch(`${API.SITES}/site-types`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      throw new Error('권한이 없습니다.')
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}

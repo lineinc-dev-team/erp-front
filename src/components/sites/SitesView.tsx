@@ -6,7 +6,7 @@ import CommonSelect from '../common/Select'
 import CommonDatePicker from '../common/DatePicker'
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { Checkbox, ListItemText, MenuItem, Pagination, Select } from '@mui/material'
-import { SiteExcelDownload, SiteMoveService } from '@/services/sites/siteService'
+import { SiteExcelDownload } from '@/services/sites/siteService'
 import { useSiteSearchStore } from '@/stores/siteStore'
 import useSite from '@/hooks/useSite'
 import { useAccountStore } from '@/stores/accountManagementStore'
@@ -15,50 +15,70 @@ import {
   ArrayStatusOptions,
   PageCount,
   SiteColumnList,
-  SiteOptions,
   SiteProgressing,
   UseORnotOptions,
 } from '@/config/erp.confing'
-import { ProcessStatus, SiteListProps } from '@/types/site'
+import { processStatuses, SiteListProps } from '@/types/site'
 import { getTodayDateString } from '@/utils/formatters'
 import { useState } from 'react'
 import ExcelModal from '../common/ExcelModal'
 import { SiteExcelFieldMap } from '@/utils/userExcelField'
 import { useManagementCost } from '@/hooks/useManagementCost'
+import { useTabOpener } from '@/utils/openTab'
+import CommonSelectByName from '../common/CommonSelectByName'
+import { useSnackbarStore } from '@/stores/useSnackbarStore'
 
 export default function SitesView() {
-  const { handleNewOrderCreate } = SiteMoveService()
-
   const { search } = useSiteSearchStore()
+
+  const openTab = useTabOpener()
 
   // 현장명 공정명 무한 스크롤
   const {
     setSitesSearch,
     sitesOptions,
+    siteNameFetchNextPage,
+    siteNamehasNextPage,
+    siteNameFetching,
+    siteNameLoading,
+
     setProcessSearch,
     processOptions,
-    fetchNextPage,
-    hasNextPage,
-    isFetching,
-    isLoading,
+    processInfoFetchNextPage,
+    processInfoHasNextPage,
+    processInfoIsFetching,
+    processInfoLoading,
   } = useManagementCost()
 
-  const { SiteListQuery, SiteDeleteMutation, setOrderSearch, orderOptions } = useSite()
+  const {
+    SiteListQuery,
+    SiteDeleteMutation,
+    setOrderSearch,
+    orderPersonFetchNextPage,
+    orderPersonHasNextPage,
+    orderPersonIsFetching,
+    orderPersonIsLoading,
+    orderOptions,
+    siteTypeOptions,
+  } = useSite()
+
+  const { showSnackbar } = useSnackbarStore()
 
   const SiteDataList = SiteListQuery.data?.data.content ?? []
-
-  console.log('혀낭ㅈ', SiteDataList)
 
   const totalList = SiteListQuery.data?.data.pageInfo.totalElements ?? 0
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
+  console.log('SiteDataListSiteDataListSiteDataListSiteDataListSiteDataList', SiteDataList)
+
   const updateSiteList = SiteDataList.map((site: SiteListProps) => ({
     ...site,
-    processStatuses: site.process?.name,
-    clientCompanyName: site.clientCompany?.name,
-    isActive: 'Y',
-    hasFile: 'Y',
+    processName: site.process?.name ?? '-', // 공정명
+    managerName: site.manager?.username ?? '-', // 공정소장 이름
+    hasFile: 'Y', // 고정값
+    processStatuses: site.process?.status ?? '-', // 진행상태
+    clientCompanyName: site.clientCompany?.name ?? '-', // 발주처명
     period: getTodayDateString(site.startedAt) + ' ~ ' + getTodayDateString(site.endedAt),
     createdAt: getTodayDateString(site.updatedAt),
   }))
@@ -97,20 +117,6 @@ export default function SitesView() {
         align: 'center',
         flex: 1,
         renderCell: (params: GridRenderCellParams) => {
-          // console.log('@@@', params)
-          // if (params.value === '확인') {
-          //   return (
-          //     <div
-          //       onClick={(e) => {
-          //         e.preventDefault()
-          //         setContract(true)
-          //       }}
-          //       className="flex justify-center items-center cursor-pointer"
-          //     >
-          //       <button className=" text-blue-500 font-bold">{params.value}</button>
-          //     </div>
-          //   )
-          // }
           return <span>{params.value}</span>
         },
       }
@@ -124,9 +130,6 @@ export default function SitesView() {
     }
   })
 
-  // if (isLoading) return <LoadingSkeletion />
-  // if (error) throw error
-
   const [modalOpen, setModalOpen] = useState(false)
   // // userExcelFieldMap 객체를 { label: string, value: string }[] 배열로 바꿔줍니다.
   const fieldMapArray = Object.entries(SiteExcelFieldMap).map(([label, value]) => ({
@@ -135,32 +138,46 @@ export default function SitesView() {
   }))
 
   const handleDownloadExcel = async (fields: string[]) => {
-    await SiteExcelDownload({ fields })
+    await SiteExcelDownload({
+      sort: search.arraySort === '최신순' ? 'id,desc' : 'id,asc',
+      name: search.name,
+      processName: search.processName,
+      city: search.city,
+      district: search.district,
+      type: search.type,
+      processStatuses: search.processStatuses,
+      clientCompanyName: search.clientCompanyName,
+      // managerName: search.managerName,
+      startDate: search.startDate ? getTodayDateString(search.startDate) : undefined,
+      endDate: search.endDate ? getTodayDateString(search.endDate) : undefined,
+      createdStartDate: search.createdStartDate
+        ? getTodayDateString(search.createdStartDate)
+        : undefined,
+      createdEndDate: search.createdEndDate ? getTodayDateString(search.createdEndDate) : undefined,
+      createdBy: search.createdBy,
+      fields,
+    })
   }
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
         <div className="grid grid-cols-3">
           <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+            <label className="w-[144px] text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelect
-                fullWidth
-                className="text-xl"
-                value={sitesOptions.find((opt) => opt.id === search.name)?.name || '0'} // UI에 보여질 값은 id 기반 (value)
+              <CommonSelectByName
+                value={search.name || '선택'} // 현재 선택된 name 값
                 onChange={(value) => {
-                  const selected = sitesOptions.find((opt) => opt.name === value)
-                  search.setField('name', selected?.id ?? '') // ← label 값을 상태로 저장
+                  search.setField('name', value) // 선택된 name을 상태로 저장
                 }}
                 options={sitesOptions}
-                displayLabel
                 onScrollToBottom={() => {
-                  if (hasNextPage && !isFetching) fetchNextPage()
+                  if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
                 }}
                 onInputChange={(value) => setSitesSearch(value)}
-                loading={isLoading}
+                loading={siteNameLoading}
               />
             </div>
           </div>
@@ -170,23 +187,20 @@ export default function SitesView() {
               공정명
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelect
+              <CommonSelectByName
                 fullWidth
                 className="text-xl"
-                value={processOptions.find((opt) => opt.id === search.processName)?.name || '0'}
+                value={search.processName || '선택'} // 현재 선택된 name 값
                 onChange={(value) => {
-                  const selected = processOptions.find((opt) => opt.name === value)
-                  search.setField('processName', selected?.id ?? '')
+                  search.setField('processName', value) // 선택된 name을 상태로 저장
                 }}
-                // value={search.processName}
-                // onChange={(value) => search.setField('processName', value)}
                 options={processOptions}
                 displayLabel
                 onScrollToBottom={() => {
-                  if (hasNextPage && !isFetching) fetchNextPage()
+                  if (processInfoHasNextPage && !processInfoIsFetching) processInfoFetchNextPage()
                 }}
                 onInputChange={(value) => setProcessSearch(value)}
-                loading={isLoading}
+                loading={processInfoLoading}
               />
             </div>
           </div>
@@ -218,18 +232,23 @@ export default function SitesView() {
               현장유형
             </label>
             <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
+              {/* <CommonSelectByName
+                fullWidth={true}
+                className="text-xl"
+                options={SiteOptions}
+                value={search.type || '선택'} // 현재 선택된 name 값
+                onChange={(value) => {
+                  search.setField('type', value) // 선택된 name을 상태로 저장
+                }}
+              /> */}
+
               <CommonSelect
                 fullWidth={true}
                 className="text-xl"
-                value={search.type}
+                value={search.type || 'BASE'}
                 displayLabel
-                onChange={(value) =>
-                  search.setField(
-                    'type',
-                    value as 'CONSTRUCTION' | 'CIVIL_ENGINEERING' | 'OUTSOURCING' | '선택',
-                  )
-                }
-                options={SiteOptions}
+                onChange={(value) => search.setField('type', value)}
+                options={siteTypeOptions}
               />
             </div>
           </div>
@@ -240,23 +259,21 @@ export default function SitesView() {
             <div className="border p-2 border-gray-400 px-2 w-full flex justify-center items-center">
               <Select
                 multiple
-                value={search.ProcessStatus}
-                onChange={(e) =>
-                  search.setField('ProcessStatus', e.target.value as ProcessStatus[])
-                }
+                value={search.processStatuses} // ProcessStatus[] (code 배열)
+                onChange={(e) => {
+                  search.setField('processStatuses', e.target.value as processStatuses[])
+                }}
                 renderValue={(selected) => {
-                  const selectedArray = selected as ProcessStatus[]
+                  if ((selected as processStatuses[]).length === 0) return '선택'
 
-                  if (selectedArray.length === 0) return '선택'
-
-                  return selectedArray
-                    .map((val) => SiteProgressing.find((item) => item.name === val)?.label || val)
+                  return (selected as processStatuses[])
+                    .map((code) => SiteProgressing.find((item) => item.code === code)?.name ?? code)
                     .join(', ')
                 }}
                 displayEmpty
                 className="w-full"
                 sx={{
-                  minHeight: 40, // 기본 40px 이상일 수 있는데, 줄여봄
+                  minHeight: 40,
                   '&.MuiOutlinedInput-root': {
                     '& fieldset': {
                       borderColor: 'black',
@@ -272,16 +289,17 @@ export default function SitesView() {
                   '& .MuiSelect-select': {
                     paddingTop: '4px',
                     paddingBottom: '4px',
-                    fontSize: '1rem', // 글자 크기도 같이 줄이기
+                    fontSize: '1rem',
                   },
                 }}
               >
-                {SiteProgressing.filter((item) => item.name !== '선택').map((option) => (
-                  <MenuItem key={option.id} value={option.name}>
+                {SiteProgressing.filter((item) => item.code !== '선택').map((option) => (
+                  <MenuItem key={option.id} value={option.code}>
                     <Checkbox
-                      checked={search.ProcessStatus.includes(option.name as ProcessStatus)}
+                      checked={search.processStatuses.includes(option.code as processStatuses)}
                     />
-                    <ListItemText primary={option.label} />
+
+                    <ListItemText primary={option.name} />
                   </MenuItem>
                 ))}
               </Select>
@@ -293,21 +311,18 @@ export default function SitesView() {
               발주처
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelect
-                fullWidth
-                className="text-xl"
-                value={orderOptions.find((opt) => opt.id === search.clientCompanyName)?.name || '0'}
+              <CommonSelectByName
+                value={search.clientCompanyName || '선택'} // 현재 선택된 name 값
                 onChange={(value) => {
-                  const selected = orderOptions.find((opt) => opt.name === value)
-                  search.setField('clientCompanyName', selected?.id ?? '')
+                  search.setField('clientCompanyName', value) // 선택된 name을 상태로 저장
                 }}
                 options={orderOptions}
                 displayLabel
                 onScrollToBottom={() => {
-                  if (hasNextPage && !isFetching) fetchNextPage()
+                  if (orderPersonHasNextPage && !orderPersonIsFetching) orderPersonFetchNextPage()
                 }}
                 onInputChange={(value) => setOrderSearch(value)}
-                loading={isLoading}
+                loading={orderPersonIsLoading}
               />
             </div>
           </div>
@@ -317,10 +332,18 @@ export default function SitesView() {
               공정소장
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
-              {/* <CommonInput
-                value={search.email}
-                onChange={(value) => search.setField('email', value)}
-                className=" flex-1"
+              {/* <CommonSelect
+                fullWidth
+                className="text-xl"
+                value={form.process.managerId}
+                onChange={(value) => setProcessField('managerId', value)}
+                options={userOptions}
+                displayLabel
+                onScrollToBottom={() => {
+                  if (hasNextPage && !isFetching) fetchNextPage()
+                }}
+                onInputChange={(value) => setUserSearch(value)}
+                loading={isLoading}
               /> */}
             </div>
           </div>
@@ -332,12 +355,32 @@ export default function SitesView() {
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonDatePicker
                 value={search.startDate}
-                onChange={(value) => search.setField('startDate', value)}
+                onChange={(value) => {
+                  search.setField('startDate', value)
+
+                  if (
+                    value !== null &&
+                    search.endDate !== null &&
+                    new Date(search.endDate) < new Date(value)
+                  ) {
+                    search.setField('endDate', value)
+                  }
+                }}
               />
               ~
               <CommonDatePicker
                 value={search.endDate}
-                onChange={(value) => search.setField('endDate', value)}
+                onChange={(value) => {
+                  if (
+                    value !== null &&
+                    search.startDate !== null &&
+                    new Date(value) < new Date(search.startDate)
+                  ) {
+                    showSnackbar('종료일은 시작일 이후여야 합니다.', 'error')
+                    return
+                  }
+                  search.setField('endDate', value)
+                }}
               />
             </div>
           </div>
@@ -349,12 +392,32 @@ export default function SitesView() {
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonDatePicker
                 value={search.createdStartDate}
-                onChange={(value) => search.setField('createdStartDate', value)}
+                onChange={(value) => {
+                  search.setField('createdStartDate', value)
+
+                  if (
+                    value !== null &&
+                    search.createdEndDate !== null &&
+                    new Date(search.createdEndDate) < new Date(value)
+                  ) {
+                    search.setField('createdEndDate', value)
+                  }
+                }}
               />
               ~
               <CommonDatePicker
                 value={search.createdEndDate}
-                onChange={(value) => search.setField('createdEndDate', value)}
+                onChange={(value) => {
+                  if (
+                    value !== null &&
+                    search.createdStartDate !== null &&
+                    new Date(value) < new Date(search.createdStartDate)
+                  ) {
+                    showSnackbar('종료일은 시작일 이후여야 합니다.', 'error')
+                    return
+                  }
+                  search.setField('createdEndDate', value)
+                }}
               />
             </div>
           </div>
@@ -475,7 +538,7 @@ export default function SitesView() {
               <CommonButton
                 label="+ 신규등록"
                 variant="secondary"
-                onClick={handleNewOrderCreate}
+                onClick={() => openTab('/sites/registration', '현장관리 - 등록')}
                 className="px-3"
               />
             </div>

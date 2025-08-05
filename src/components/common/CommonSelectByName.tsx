@@ -1,14 +1,14 @@
-// components/common/CommonSelect.tsx
+// components/common/CommonSelectByName.tsx
 import { FormControl, MenuItem, Select } from '@mui/material'
 
-type OptionType<T extends string | number> = {
+type OptionType<T extends string> = {
   label?: string
+  name: T
   id?: string | number
   code?: string | number
-  name: T
 }
 
-type CommonSelectProps<T extends string | number> = {
+type CommonSelectByNameProps<T extends string> = {
   value: T
   onChange: (value: T) => void
   options: OptionType<T>[]
@@ -16,22 +16,23 @@ type CommonSelectProps<T extends string | number> = {
   required?: boolean
   disabled?: boolean
   className?: string
-  displayLabel?: boolean
   onScrollToBottom?: () => void
   onInputChange?: (value: string) => void
   loading?: boolean
+  displayLabel?: boolean
 }
 
-export default function CommonSelect<T extends string | number>({
+export default function CommonSelectByName<T extends string>({
   value,
   onChange,
   options,
-  fullWidth,
+  fullWidth = true,
   className,
-  displayLabel,
+  onScrollToBottom,
   required = false,
   disabled = false,
-}: CommonSelectProps<T>) {
+  displayLabel = false,
+}: CommonSelectByNameProps<T>) {
   return (
     <FormControl fullWidth={fullWidth} required={required} disabled={disabled} size="small">
       <Select
@@ -42,6 +43,14 @@ export default function CommonSelect<T extends string | number>({
           PaperProps: {
             sx: {
               maxHeight: 200,
+              width: '50px', // 부모와 동일한 너비
+            },
+            onScroll: (e: React.UIEvent<HTMLDivElement>) => {
+              const el = e.currentTarget
+              const isBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 5 // 5px 버퍼
+              if (isBottom && onScrollToBottom) {
+                onScrollToBottom()
+              }
             },
           },
         }}
@@ -55,10 +64,24 @@ export default function CommonSelect<T extends string | number>({
           '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
             borderColor: 'black',
           },
+          '& .MuiSelect-select': {
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          },
         }}
       >
         {options.map((opt) => (
-          <MenuItem key={opt.id} value={opt.code || opt.id}>
+          <MenuItem
+            key={opt.id}
+            value={opt.name}
+            sx={{
+              fontSize: '14px',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
             {displayLabel ? opt.label ?? opt.name : opt.name}
           </MenuItem>
         ))}

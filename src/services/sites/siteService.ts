@@ -65,56 +65,54 @@ export async function SiteRemoveService(siteIds: number[]) {
 // 현장 엑셀 다운로드
 export async function SiteExcelDownload({
   sort = '',
-  name,
-  type,
+  name = '',
   processName,
   city,
   district,
+  type,
   processStatuses,
   clientCompanyName,
-  createdBy,
   startDate,
   endDate,
   createdStartDate,
   createdEndDate,
+  createdBy,
   fields,
 }: {
   sort?: string
   name?: string
-  type?: 'CONSTRUCTION' | 'CIVIL_ENGINEERING' | 'OUTSOURCING'
   processName?: string
   city?: string
   district?: string
-  processStatuses?: ('NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED')[]
+  type?: string
+  processStatuses?: string[]
   clientCompanyName?: string
-  createdBy?: string
   startDate?: string
   endDate?: string
   createdStartDate?: string
   createdEndDate?: string
-  fields: string[] // ✅ 필수
+  createdBy?: string
+  fields?: string[]
 }) {
   const queryParams = new URLSearchParams()
 
-  // 필수 값
-  // queryParams.append('fields', fields)
-
-  // 선택 값들
-  if (sort) queryParams.append('sort', sort)
+  queryParams.append('sort', sort)
   if (name) queryParams.append('name', name)
-  if (type) queryParams.append('type', type)
   if (processName) queryParams.append('processName', processName)
   if (city) queryParams.append('city', city)
   if (district) queryParams.append('district', district)
+  if (type) queryParams.append('type', type)
   if (processStatuses && processStatuses.length > 0) {
-    processStatuses.forEach((status) => queryParams.append('processStatuses', status))
+    processStatuses.forEach((status) => {
+      queryParams.append('processStatuses', status)
+    })
   }
   if (clientCompanyName) queryParams.append('clientCompanyName', clientCompanyName)
-  if (createdBy) queryParams.append('createdBy', createdBy)
   if (startDate) queryParams.append('startDate', startDate)
   if (endDate) queryParams.append('endDate', endDate)
   if (createdStartDate) queryParams.append('createdStartDate', createdStartDate)
   if (createdEndDate) queryParams.append('createdEndDate', createdEndDate)
+  if (createdBy) queryParams.append('createdBy', createdBy)
 
   if (fields && fields.length > 0) {
     queryParams.append('fields', fields.join(','))

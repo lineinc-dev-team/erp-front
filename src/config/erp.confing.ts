@@ -8,10 +8,10 @@ export const SiteOptions = [
 ]
 
 export const SiteProgressing = [
-  { id: 0, label: '선택', name: '선택' },
-  { id: 1, label: '준비중', name: 'NOT_STARTED' },
-  { id: 2, label: '진행중', name: 'IN_PROGRESS' },
-  { id: 3, label: '완료', name: 'COMPLETED' },
+  { id: 0, name: '선택', code: '선택' },
+  { id: 1, name: '준비중', code: 'NOT_STARTED' },
+  { id: 2, name: '진행중', code: 'IN_PROGRESS' },
+  { id: 3, name: '완료', code: 'COMPLETED' },
 ]
 
 export const LocationStatusOptions = [
@@ -62,11 +62,12 @@ export const PageCount = [
 export const SiteColumnList: GridColDef[] = [
   { field: 'id', headerName: 'No', width: 70 },
   { field: 'name', headerName: '현장명', width: 130 },
-  // { field: 'username', headerName: '공정명', width: 130 },
+  { field: 'processName', headerName: '공정명', width: 130 },
   { field: 'address', headerName: '위치', width: 130 },
   { field: 'type', headerName: '현장유형', width: 180 },
   { field: 'clientCompanyName', headerName: '발주처명', width: 100 },
-  // { field: 'createdAt', headerName: '현장소장', width: 100 },
+  { field: 'contractAmount', headerName: '도급금액', width: 100 },
+  { field: 'managerName', headerName: '공정소장', width: 100 },
   { field: 'period', headerName: '사업기간', width: 120 },
   { field: 'processStatuses', headerName: '진행상태', width: 120 },
   { field: 'createdBy', headerName: '등록자', width: 100 },

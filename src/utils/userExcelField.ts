@@ -25,9 +25,18 @@ export type UserExcelFieldKey = (typeof userExcelFieldMap)[UserExcelFieldLabel]
 export const clientCompanyExcelFieldMap = {
   No: 'id',
   사업자등록번호: 'businessNumber',
+  발주처명: 'name',
   대표자명: 'ceoName',
   본사주소: 'address',
-  전화번호: 'phoneNumber',
+  전화번호: 'landlineNumber',
+  담당자명: 'contactName',
+  '직급,부서': 'contactPositionAndDepartment',
+  '담당자 연락처, 이메일': 'contactLandlineNumberAndEmail',
+  본사담당자: 'userName',
+  사용여부: 'isActive',
+  '등록일, 수정일': 'createdAtAndUpdatedAt',
+  첨부파일유무: 'hasFile',
+  비고: 'memo',
 } as const
 
 export type WorksiteExcelFieldLabel = keyof typeof clientCompanyExcelFieldMap
@@ -38,9 +47,12 @@ export type WorksiteExcelFieldKey = (typeof clientCompanyExcelFieldMap)[Worksite
 export const SiteExcelFieldMap = {
   No: 'id',
   현장명: 'name',
+  공정명: 'processName',
   위치: 'address',
   현장유형: 'type',
   발주처명: 'clientCompanyName',
+  도급금액: 'contractAmount',
+  공정소장: 'managerName',
   사업기간: 'period',
   진행상태: 'processStatuses',
   등록자: 'createdBy',

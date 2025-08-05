@@ -1,5 +1,4 @@
 import { Contract, ContractFile, SiteForm, SiteProcess, SiteSearchState } from '@/types/site'
-import { getTodayDateString } from '@/utils/formatters'
 import { create } from 'zustand'
 
 type SiteFormState = {
@@ -34,11 +33,11 @@ export const useSiteSearchStore = create<{ search: SiteSearchState }>((set) => (
   search: {
     searchTrigger: 0,
     name: '',
-    type: '선택',
     processName: '',
+    type: '',
     city: '',
     district: '',
-    ProcessStatus: [],
+    processStatuses: [],
     clientCompanyName: '',
     createdBy: '',
     startDate: null,
@@ -55,43 +54,19 @@ export const useSiteSearchStore = create<{ search: SiteSearchState }>((set) => (
       })),
 
     handleSearch: () =>
-      set((state) => {
-        const search = state.search
-
-        const payload = {
-          name: search.name,
-          type: search.type,
-          processName: search.processName,
-          city: search.city,
-          district: search.district,
-          processStatuses: search.ProcessStatus,
-          clientCompanyName: search.clientCompanyName,
-          createdBy: search.createdBy,
-          startDate: getTodayDateString(search.startDate),
-          endDate: getTodayDateString(search.endDate),
-          createdStartDate: getTodayDateString(search.createdStartDate),
-          createdEndDate: getTodayDateString(search.createdEndDate),
-          // sort: search.arraySort,
-          // page: search.currentPage,
-          // size: Number(search.pageCount),
-        }
-
-        alert(JSON.stringify(payload, null, 2)) // 디버깅용
-
-        return {
-          search: {
-            ...search,
-            searchTrigger: (search.searchTrigger || 0) + 1,
-          },
-        }
-      }),
+      set((state) => ({
+        search: {
+          ...state.search,
+          searchTrigger: state.search.searchTrigger + 1,
+        },
+      })),
 
     reset: () =>
       set((state) => ({
         search: {
           ...state.search,
           name: '',
-          type: '선택',
+          type: '',
           processName: '',
           city: '',
           district: '',
@@ -107,10 +82,6 @@ export const useSiteSearchStore = create<{ search: SiteSearchState }>((set) => (
           pageCount: '10',
         },
       })),
-
-    handleOrderingListRemove: () => {
-      alert('리스트에서 선택 항목이 제거됩니다.')
-    },
   },
 }))
 
@@ -122,7 +93,7 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
     isModalOpen: false,
     city: '',
     district: '',
-    type: '선택',
+    type: '',
     clientCompanyId: 0,
     startedAt: null,
     endedAt: null,
@@ -131,6 +102,7 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
     memo: '',
     process: {
       name: '',
+      managerId: 0,
       officePhone: '',
       status: '선택',
       memo: '',
@@ -210,7 +182,7 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
         isModalOpen: false,
         city: '',
         district: '',
-        type: '선택',
+        type: '',
         clientCompanyId: 0,
         startedAt: null,
         endedAt: null,
@@ -219,6 +191,7 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
         memo: '',
         process: {
           name: '',
+          managerId: 0,
           officePhone: '',
           status: '선택',
           memo: '',

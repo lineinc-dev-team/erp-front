@@ -1,6 +1,7 @@
 type SiteProcess = {
   id?: number
   name: string
+  managerId: number
   officePhone: string
   status: '선택' | 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED'
   memo: string
@@ -52,16 +53,16 @@ type SiteForm = {
 }
 
 // 현장 조회에 사용되는 검색 타입
-export type ProcessStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | '선택'
+export type processStatuses = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | '선택'
 
 export type SiteSearchState = {
   searchTrigger: number // 검색 실행 시마다 증가시켜 query 갱신 트리거
   name: string // 현장명
-  type: 'CONSTRUCTION' | 'CIVIL_ENGINEERING' | 'OUTSOURCING' | '선택' // 현장 유형 (빈 문자열은 선택 안 함)
+  type: string
   processName: string // 공정명
   city: string // 시
   district: string // 구
-  ProcessStatus: ProcessStatus[] // 공정 상태 (다중 선택)
+  processStatuses: processStatuses[] // 공정 상태 (다중 선택)
   clientCompanyName: string // 발주처
   createdBy: string // 등록자 이름
   startDate: Date | null // 사업 시작일
@@ -73,17 +74,11 @@ export type SiteSearchState = {
   pageCount: string // 페이지당 항목 수 (예: '10', '30', etc)
 
   reset: () => void // 초기화 함수
-  setField: <
-    K extends keyof Omit<
-      SiteSearchState,
-      'reset' | 'setField' | 'handleSearch' | 'handleOrderingListRemove'
-    >,
-  >(
+  setField: <K extends keyof Omit<SiteSearchState, 'reset' | 'setField' | 'handleSearch'>>(
     field: K,
     value: SiteSearchState[K],
   ) => void
   handleSearch: () => void // 검색 실행
-  handleOrderingListRemove: () => void // 선택된 항목 제거 등
 }
 
 // 조회에 사용되는 타입
@@ -91,6 +86,7 @@ export type SiteSearchState = {
 export interface SiteListProps {
   id: number
   name: string
+  processName: string
   address: string
   detailAddress: string
   city: string
@@ -110,6 +106,10 @@ export interface SiteListProps {
     officePhone: string
     status: string
     memo: string
+  }
+  manager: {
+    id: number
+    username: string
   }
   clientCompany: {
     id: number

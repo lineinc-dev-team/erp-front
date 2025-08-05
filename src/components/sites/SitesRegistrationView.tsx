@@ -10,7 +10,7 @@ import CommonDatePicker from '../common/DatePicker'
 import CommonButton from '../common/Button'
 import DaumPostcodeEmbed from 'react-daum-postcode'
 import { ProgressingLabelToValue, typeLabelToValue, useSiteFormStore } from '@/stores/siteStore'
-import { SiteOptions, SiteProgressing } from '@/config/erp.confing'
+import { SiteProgressing } from '@/config/erp.confing'
 import useSite from '@/hooks/useSite'
 import { formatNumber, unformatNumber } from '@/utils/formatters'
 import { useClientCompany } from '@/hooks/useClientCompany'
@@ -20,6 +20,7 @@ import { formatPhoneNumber } from '@/utils/formatPhoneNumber'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
+import AmountInput from '../common/AmountInput'
 
 export default function SitesRegistrationView({ isEditMode = false }) {
   const FILE_TYPE_LABELS: Record<ContractFileType, string> = {
@@ -49,10 +50,11 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     //본사 담당자
     setOrderSearch,
     orderOptions,
-    fetchNextPage,
-    hasNextPage,
-    isFetching,
-    isLoading,
+    orderPersonFetchNextPage,
+    orderPersonHasNextPage,
+    orderPersonIsFetching,
+    orderPersonIsLoading,
+    siteTypeOptions,
   } = useSite()
 
   // 상세페이지 로직
@@ -65,8 +67,6 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     queryFn: () => SiteDetailService(siteId),
     enabled: isEditMode && !!siteId, // 수정 모드일 때만 fetch
   })
-
-  console.log('상세데이터', data)
 
   useEffect(() => {
     if (data && isEditMode) {
@@ -90,6 +90,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
       // 공정 정보 설정
       setProcessField('name', client.process?.name || '')
+      setProcessField('managerId', client.manager?.id || '')
       setProcessField('officePhone', client.process?.officePhone || '')
       const filterProgress = ProgressingLabelToValue[client.process.status]
       if (
@@ -147,7 +148,8 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
   const { handleCancelData } = SiteRegistrationService()
 
-  const { setUserSearch, userOptions } = useClientCompany()
+  const { setUserSearch, userOptions, fetchNextPage, hasNextPage, isFetching, isLoading } =
+    useClientCompany()
 
   const renderInputRow = (label: string, children: React.ReactNode) => (
     <div className="flex">
@@ -195,14 +197,14 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
             {renderInputRow(
               '계약금액',
-              <CommonInput
+
+              <AmountInput
                 value={formatNumber(contract.amount)}
-                onChange={(v) => {
-                  const numericValue = unformatNumber(v)
+                onChange={(val) => {
+                  const numericValue = unformatNumber(val)
                   updateContractField(idx, 'amount', numericValue)
                 }}
-                placeholder="금액을 입력해주세요."
-                className="flex-1"
+                placeholder="금액을 입력하세요"
               />,
             )}
 
@@ -353,10 +355,10 @@ export default function SitesRegistrationView({ isEditMode = false }) {
               <CommonSelect
                 fullWidth={true}
                 className="text-xl"
-                value={form.type}
+                value={form.type || 'BASE'}
                 displayLabel
                 onChange={(value) => setField('type', value)}
-                options={SiteOptions}
+                options={siteTypeOptions}
               />
             </div>
           </div>
@@ -374,10 +376,10 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                 options={orderOptions}
                 displayLabel
                 onScrollToBottom={() => {
-                  if (hasNextPage && !isFetching) fetchNextPage()
+                  if (orderPersonHasNextPage && !orderPersonIsFetching) orderPersonFetchNextPage()
                 }}
                 onInputChange={(value) => setOrderSearch(value)}
-                loading={isLoading}
+                loading={orderPersonIsLoading}
               />
             </div>
           </div>
@@ -424,13 +426,13 @@ export default function SitesRegistrationView({ isEditMode = false }) {
               도급금액
             </label>
             <div className="border flex  items-center border-gray-400 px-2 w-full">
-              <CommonInput
+              <AmountInput
                 value={formatNumber(form.contractAmount)}
-                onChange={(value) => {
-                  const numericValue = unformatNumber(value)
+                onChange={(val) => {
+                  const numericValue = unformatNumber(val)
                   setField('contractAmount', numericValue)
                 }}
-                className="flex-1"
+                placeholder="금액을 입력하세요"
               />
             </div>
           </div>
@@ -470,10 +472,18 @@ export default function SitesRegistrationView({ isEditMode = false }) {
               공정소장
             </label>
             <div className="border flex  items-center border-gray-400 px-2 w-full">
-              <CommonInput
-                value={form.process.name}
-                onChange={(value) => setProcessField('name', value)}
-                className=" flex-1"
+              <CommonSelect
+                fullWidth
+                className="text-xl"
+                value={form.process.managerId}
+                onChange={(value) => setProcessField('managerId', value)}
+                options={userOptions}
+                displayLabel
+                onScrollToBottom={() => {
+                  if (hasNextPage && !isFetching) fetchNextPage()
+                }}
+                onInputChange={(value) => setUserSearch(value)}
+                loading={isLoading}
               />
             </div>
           </div>

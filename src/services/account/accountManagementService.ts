@@ -196,9 +196,9 @@ export async function UserDataExcelDownload({
 
   const res = await fetch(`${API.USER}/download?${queryParams.toString()}`, {
     method: 'GET',
-    headers: {
-      Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    },
+    // headers: {
+    //   Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    // },
 
     credentials: 'include',
   })

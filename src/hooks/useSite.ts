@@ -2,6 +2,7 @@ import {
   CreateSiteInfo,
   ModifySiteService,
   OrderingPersonScroll,
+  SiteIdInfoService,
 } from '@/services/sites/siteRegistrationService'
 import { SiteInfoService, SiteRemoveService } from '@/services/sites/siteService'
 import { useSiteFormStore, useSiteSearchStore } from '@/stores/siteStore'
@@ -25,17 +26,18 @@ export default function useSite() {
   const search = useSiteSearchStore((state) => state.search)
 
   const pathName = usePathname()
-
+  // 초기 화면에 들어왔을 때 currentPage 1로 세팅 (예: useEffect 등에서)
   useEffect(() => {
-    if (search.currentPage !== 1) {
+    if (search.searchTrigger && search.currentPage !== 0) {
       search.setField('currentPage', 1)
     }
-  }, [search])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.searchTrigger])
 
   // useQuery 쪽 수정
   const SiteListQuery = useQuery({
     queryKey: [
-      'ClientInfo',
+      'SiteInfo',
       search.searchTrigger,
       search.currentPage,
       search.pageCount,
@@ -49,7 +51,7 @@ export default function useSite() {
         processName: search.processName,
         city: search.city,
         district: search.district,
-        processStatus: search.ProcessStatus.length > 0 ? search.ProcessStatus : undefined,
+        processStatuses: search.processStatuses.length > 0 ? search.processStatuses : undefined,
         clientCompanyName: search.clientCompanyName,
         createdBy: search.createdBy,
         startDate: getTodayDateString(search.startDate),
@@ -153,10 +155,10 @@ export default function useSite() {
 
   const {
     data: orderPersonInfo,
-    fetchNextPage,
-    hasNextPage,
-    isFetching,
-    isLoading,
+    fetchNextPage: orderPersonFetchNextPage,
+    hasNextPage: orderPersonHasNextPage,
+    isFetching: orderPersonIsFetching,
+    isLoading: orderPersonIsLoading,
   } = useInfiniteQuery({
     queryKey: ['orderInfo', orderSearch],
     queryFn: ({ pageParam }) => OrderingPersonScroll({ pageParam, keyword: orderSearch }),
@@ -180,20 +182,28 @@ export default function useSite() {
     return [defaultOption, ...options]
   }, [orderPersonInfo])
 
+  const { data: siteTypeId } = useQuery({
+    queryKey: ['siteTypeInfo'],
+    queryFn: SiteIdInfoService,
+  })
+
+  const siteTypeOptions = [{ code: 'BASE', name: '선택' }, ...(siteTypeId?.data ?? [])]
+
   return {
     createSiteMutation,
     SiteListQuery,
     SiteDeleteMutation,
     ModifySiteMutation,
+    siteTypeOptions,
 
     //발주처 담당자 관련
     useOrderingPersonInfiniteScroll,
     orderSearch,
     setOrderSearch,
     orderOptions,
-    fetchNextPage,
-    hasNextPage,
-    isFetching,
-    isLoading,
+    orderPersonFetchNextPage,
+    orderPersonHasNextPage,
+    orderPersonIsFetching,
+    orderPersonIsLoading,
   }
 }
