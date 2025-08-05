@@ -3,6 +3,7 @@
 import { DatePicker as MUIDatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import { ko } from 'date-fns/locale'
 import React from 'react'
 
 type CommonDatePickerProps = {
@@ -21,10 +22,23 @@ export default function CommonDatePicker({
   helperText = '',
 }: CommonDatePickerProps) {
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
+    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ko}>
       <MUIDatePicker
         value={value}
-        onChange={onChange}
+        onChange={(date) => {
+          if (!date) return onChange(null)
+
+          // 🔥 시간 보정: 오전 9시로 세팅
+          const adjustedDate = new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate(),
+            9,
+            0,
+            0,
+          )
+          onChange(adjustedDate)
+        }}
         format="yyyy/MM/dd"
         slotProps={{
           textField: {

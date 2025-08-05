@@ -83,6 +83,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
     paymentPeriod: '결제 기간',
     businessNumber: '사업자등록번호',
     ceoName: '대표자명',
+    position: '직급',
     name: '발주처명',
     landlineNumber: '전화번호',
     email: '이메일',
@@ -279,6 +280,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
       )
       setField('changeHistories', allHistories)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientHistoryList, setField])
 
   const observerRef = useRef<IntersectionObserver | null>(null)

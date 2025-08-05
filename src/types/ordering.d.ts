@@ -163,7 +163,4 @@ type ClientCompanyFormStore = {
 
   //payload 값
   newClientCompanyData: () => void
-
-  newOrderingData: () => void
-  handleCancelData: () => void
 }

@@ -70,7 +70,7 @@ export default function SitesView() {
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
-  console.log('SiteDataListSiteDataListSiteDataListSiteDataListSiteDataList', SiteDataList)
+  console.log('SiteDataListSiteDataListSiteDataListSiteDataListSiteDataList', SiteListQuery.data)
 
   const updateSiteList = SiteDataList.map((site: SiteListProps) => ({
     ...site,
@@ -109,18 +109,20 @@ export default function SitesView() {
         },
       }
     }
-    if (col.field === 'remark') {
-      return {
-        ...col,
-        sortable: false,
-        headerAlign: 'center',
-        align: 'center',
-        flex: 1,
-        renderCell: (params: GridRenderCellParams) => {
-          return <span>{params.value}</span>
-        },
-      }
-    }
+    // if (col.field === 'no') {
+    //   return {
+    //     ...col,
+    //     headerAlign: 'center',
+    //     align: 'center',
+    //     flex: 0.5,
+    //     renderCell: (params: GridRenderCellParams) => {
+    //       // 페이지와 인덱스로 NO 계산
+    //       const no = (search.currentPage - 1) * pageCount + (params.value(params.id) ?? 0) + 1
+    //       return <span>{no}</span>
+    //     },
+    //   }
+    // }
+
     return {
       ...col,
       sortable: false,

@@ -315,12 +315,4 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
       changeHistories: form.editedHistories ?? [],
     }
   },
-
-  handleCancelData: () => {
-    alert('이전 페이지 등록')
-  },
-
-  newOrderingData: () => {
-    alert('이전 페이지 등록')
-  },
 }))

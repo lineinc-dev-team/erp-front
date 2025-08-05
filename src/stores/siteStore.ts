@@ -1,4 +1,5 @@
 import { Contract, ContractFile, SiteForm, SiteProcess, SiteSearchState } from '@/types/site'
+import { getTodayDateString } from '@/utils/formatters'
 import { create } from 'zustand'
 
 type SiteFormState = {
@@ -12,6 +13,7 @@ type SiteFormState = {
   addContractFile: (contractIndex: number, file: ContractFile) => void
   removeContractFile: (contractIndex: number, fileIndex: number) => void
   resetForm: () => void
+  updateMemo: (id: number, newMemo: string) => void
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   toPayload: () => any
   setContracts: (contracts: Contract[]) => void
@@ -97,6 +99,8 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
     clientCompanyId: 0,
     startedAt: null,
     endedAt: null,
+    initialStartedAt: '', // 'yyyy-MM-dd'
+    initialEndedAt: '', // 'yyyy-MM-dd'
     userId: 0,
     contractAmount: 0,
     memo: '',
@@ -108,7 +112,9 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
       memo: '',
     },
     contracts: [],
+    changeHistories: [],
   },
+
   setContracts: (contracts) =>
     set((state) => ({
       form: {
@@ -118,6 +124,45 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
     })),
 
   setField: (field, value) => set((state) => ({ form: { ...state.form, [field]: value } })),
+
+  // setField: (key, value) => {
+  //   set((state) => {
+  //     const isDateField = key === 'startedAt' || key === 'endedAt'
+  //     const isEditedKey = `${key}Edited`
+
+  //     return {
+  //       form: {
+  //         ...state.form,
+  //         [key]: value,
+  //         ...(isDateField && { [isEditedKey]: true }),
+  //       },
+  //     }
+  //   })
+  // },
+
+  updateMemo: (id, value) =>
+    set((state) => {
+      // 기존 changeHistories 업데이트
+      const updatedHistories = state.form.changeHistories.map((history) =>
+        history.id === id ? { ...history, memo: value } : history,
+      )
+
+      // 기존에 저장된 editedHistories 복사
+      const edited = state.form.editedHistories ?? []
+
+      // 이미 수정된 항목이 있으면 덮어쓰기, 없으면 새로 추가
+      const updatedEditedHistories = edited.some((h) => h.id === id)
+        ? edited.map((h) => (h.id === id ? { id, memo: value } : h))
+        : [...edited, { id, memo: value }]
+
+      return {
+        form: {
+          ...state.form,
+          changeHistories: updatedHistories,
+          editedHistories: updatedEditedHistories,
+        },
+      }
+    }),
 
   setProcessField: (field, value) =>
     set((state) => ({
@@ -186,6 +231,8 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
         clientCompanyId: 0,
         startedAt: null,
         endedAt: null,
+        initialStartedAt: '', // 'yyyy-MM-dd'
+        initialEndedAt: '', // 'yyyy-MM-dd'
         userId: 0,
         contractAmount: 0,
         memo: '',
@@ -197,15 +244,21 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
           memo: '',
         },
         contracts: [],
+        changeHistories: [],
       },
     })),
 
   toPayload: () => {
     const form = get().form
+
+    const startedAtStr = getTodayDateString(form.startedAt)
+    const endedAtStr = getTodayDateString(form.endedAt)
+
     return {
       ...form,
-      startedAt: form.startedAt?.toISOString().split('T')[0] ?? '',
-      endedAt: form.endedAt?.toISOString().split('T')[0] ?? '',
+      startedAt: startedAtStr !== form.initialStartedAt ? startedAtStr : form.initialStartedAt,
+      endedAt: endedAtStr !== form.initialEndedAt ? endedAtStr : form.initialEndedAt,
+      changeHistories: form.editedHistories ?? [],
     }
   },
 }))

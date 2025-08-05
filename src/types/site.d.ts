@@ -32,6 +32,18 @@ type ContractState = {
   setContracts: (contracts: Contract[]) => void
 }
 
+// 수정에 사용 할 타입
+type HistoryItem = {
+  id: number
+  no: number
+  getChanges: string
+  createdAt: string // or Date
+  updatedAt: string
+  content: string // 수정항목
+  updatedBy: string
+  memo: string
+  type: string
+}
 // 등록에 필요한 타입
 
 type SiteForm = {
@@ -45,11 +57,16 @@ type SiteForm = {
   clientCompanyId: number
   startedAt: Date | null
   endedAt: Date | null
+  initialStartedAt: string // 'yyyy-MM-dd'
+  initialEndedAt: string // 'yyyy-MM-dd'
   userId: number
   contractAmount: number
   memo: string
   process: SiteProcess
   contracts: Contract[]
+
+  editedHistories?: Pick<HistoryItem, 'id' | 'memo'>[]
+  changeHistories: HistoryItem[] // 수정 이력 포함
 }
 
 // 현장 조회에 사용되는 검색 타입
