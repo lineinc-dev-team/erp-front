@@ -35,6 +35,7 @@ import { myInfoProps } from '@/types/user'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { useTabStore } from '@/stores/useTabStore'
 import useMenu from '@/hooks/useMenu'
+import { ApiMenu, ApiPermission, HeaderMenuItem } from '@/types/header'
 
 interface MenuItem {
   title?: string // 1 depth에서만 사용
@@ -212,19 +213,16 @@ const menuNameToIcon: Record<string, React.ReactNode> = {
   '외주 정산관리': <Assignment />,
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function convertApiMenusToMenuItems(apiMenus: any[]) {
+function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {
   return apiMenus.map((menu) => {
     const basePath = menuNameToBasePath[menu.name] || '/'
     const icon = menuNameToIcon[menu.name] || null
 
     const filteredPermissions = menu.permissions.filter(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (perm: any) => !['승인', '수정', '삭제'].includes(perm.action),
+      (perm: ApiPermission) => !['승인', '수정', '삭제'].includes(perm.action),
     )
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const children = filteredPermissions.map((perm: any) => {
+    const children = filteredPermissions.map((perm: ApiPermission) => {
       let path = basePath
       if (perm.action === '등록') path = `${basePath}/registration`
       else if (perm.action === '조회') path = basePath
