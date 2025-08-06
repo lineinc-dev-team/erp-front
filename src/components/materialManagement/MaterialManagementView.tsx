@@ -30,6 +30,7 @@ export default function MaterialManagementView() {
     MaterialListQuery,
     MaterialDeleteMutation,
 
+    // 해당 개발 시 다시 수정해야함
     // 현장명 무한 스크롤
     // setSitesSearch,
     // sitesOptions,
