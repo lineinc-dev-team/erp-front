@@ -31,17 +31,17 @@ export default function MaterialManagementView() {
     MaterialDeleteMutation,
 
     // 현장명 무한 스크롤
-    setSitesSearch,
-    sitesOptions,
-    fetchNextPage,
-    hasNextPage,
-    isFetching,
-    isLoading,
+    // setSitesSearch,
+    // sitesOptions,
+    // fetchNextPage,
+    // hasNextPage,
+    // isFetching,
+    // isLoading,
 
-    // 공정명
+    // // 공정명
 
-    setProcessSearch,
-    processOptions,
+    // setProcessSearch,
+    // processOptions,
   } = useManagementMaterial()
 
   const MaterialDataList = MaterialListQuery.data?.data.content ?? []
@@ -174,7 +174,7 @@ export default function MaterialManagementView() {
     <>
       <div className="border-10 border-gray-400 p-4">
         <div className="grid grid-cols-3">
-          <div className="flex">
+          {/* <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               현장명
             </label>
@@ -236,7 +236,7 @@ export default function MaterialManagementView() {
                 loading={isLoading}
               />
             </div>
-          </div>
+          </div> */}
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               품명
