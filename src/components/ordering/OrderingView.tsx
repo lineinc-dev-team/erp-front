@@ -92,29 +92,17 @@ export default function OrderingView() {
         },
       }
     }
-    if (col.field === 'remark') {
+    if (col.field === 'no') {
       return {
         ...col,
-        sortable: false,
         headerAlign: 'center',
         align: 'center',
-        flex: 1,
+        flex: 0.5,
         renderCell: (params: GridRenderCellParams) => {
-          console.log('@@@', params)
-          if (params.value === '확인') {
-            return (
-              <div
-                onClick={(e) => {
-                  e.preventDefault()
-                  setContract(true)
-                }}
-                className="flex justify-center items-center cursor-pointer"
-              >
-                <button className=" text-blue-500 font-bold">{params.value}</button>
-              </div>
-            )
-          }
-          return <span>{params.value}</span>
+          const sortedRowIds = params.api.getSortedRowIds?.() ?? []
+          const indexInCurrentPage = sortedRowIds.indexOf(params.id)
+          const no = (search.currentPage - 1) * pageCount + indexInCurrentPage + 1
+          return <span>{no}</span>
         },
       }
     }

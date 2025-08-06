@@ -14,7 +14,9 @@ export const ItemTypeLabelToValue: Record<string, string> = {
 export const useCostSearchStore = create<{ search: CostSearchState }>((set) => ({
   search: {
     searchTrigger: 0,
+    nameId: 0,
     name: '',
+    processId: 0,
     processName: '',
     itemType: '선택',
     itemDescription: '',

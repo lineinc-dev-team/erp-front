@@ -60,7 +60,8 @@ export const PageCount = [
 ]
 
 export const SiteColumnList: GridColDef[] = [
-  { field: 'id', headerName: 'No', width: 70 },
+  { field: 'no', headerName: 'No', width: 70 },
+  // { field: 'id', headerName: 'No', width: 70 },
   { field: 'name', headerName: '현장명', width: 130 },
   { field: 'processName', headerName: '공정명', width: 130 },
   { field: 'address', headerName: '위치', width: 130 },
@@ -159,7 +160,8 @@ export const PermissionDataList: GridColDef[] = [
 ]
 
 export const clientCompanyList: GridColDef[] = [
-  { field: 'id', headerName: 'No', width: 70 },
+  { field: 'no', headerName: 'No', width: 70 },
+  // { field: 'id', headerName: 'No', width: 70 },
   { field: 'businessNumber', headerName: '사업자등록번호', width: 130 },
   { field: 'name', headerName: '발주처명', width: 130 },
   { field: 'ceoName', headerName: '대표자명', width: 130 },

@@ -27,6 +27,7 @@ import { useManagementCost } from '@/hooks/useManagementCost'
 import { useTabOpener } from '@/utils/openTab'
 import CommonSelectByName from '../common/CommonSelectByName'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
+import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 
 export default function SitesView() {
   const { search } = useSiteSearchStore()
@@ -109,19 +110,20 @@ export default function SitesView() {
         },
       }
     }
-    // if (col.field === 'no') {
-    //   return {
-    //     ...col,
-    //     headerAlign: 'center',
-    //     align: 'center',
-    //     flex: 0.5,
-    //     renderCell: (params: GridRenderCellParams) => {
-    //       // 페이지와 인덱스로 NO 계산
-    //       const no = (search.currentPage - 1) * pageCount + (params.value(params.id) ?? 0) + 1
-    //       return <span>{no}</span>
-    //     },
-    //   }
-    // }
+    if (col.field === 'no') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 0.5,
+        renderCell: (params: GridRenderCellParams) => {
+          const sortedRowIds = params.api.getSortedRowIds?.() ?? []
+          const indexInCurrentPage = sortedRowIds.indexOf(params.id)
+          const no = (search.currentPage - 1) * pageCount + indexInCurrentPage + 1
+          return <span>{no}</span>
+        },
+      }
+    }
 
     return {
       ...col,
@@ -169,10 +171,43 @@ export default function SitesView() {
               현장명
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelectByName
+              {/* <CommonSelectByName
                 value={search.name || '선택'} // 현재 선택된 name 값
                 onChange={(value) => {
                   search.setField('name', value) // 선택된 name을 상태로 저장
+                }}
+                options={sitesOptions}
+                onScrollToBottom={() => {
+                  if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
+                }}
+                onInputChange={(value) => setSitesSearch(value)}
+                loading={siteNameLoading}
+              />
+               */}
+
+              <CommonSelectByName
+                value={search.name || '선택'}
+                onChange={async (value) => {
+                  const selectedSite = sitesOptions.find((opt) => opt.name === value)
+                  if (!selectedSite) return
+
+                  search.setField('nameId', selectedSite.id)
+                  search.setField('name', selectedSite.name)
+
+                  const res = await SitesProcessNameScroll({
+                    pageParam: 0,
+                    siteId: selectedSite.id,
+                    keyword: '',
+                  })
+
+                  const processes = res.data?.content || []
+                  if (processes.length > 0) {
+                    search.setField('processId', processes[0].id)
+                    search.setField('processName', processes[0].name)
+                  } else {
+                    search.setField('processId', 0)
+                    search.setField('processName', '')
+                  }
                 }}
                 options={sitesOptions}
                 onScrollToBottom={() => {
@@ -192,9 +227,13 @@ export default function SitesView() {
               <CommonSelectByName
                 fullWidth
                 className="text-xl"
-                value={search.processName || '선택'} // 현재 선택된 name 값
+                value={search.processName || '선택'}
                 onChange={(value) => {
-                  search.setField('processName', value) // 선택된 name을 상태로 저장
+                  const selectedProcess = processOptions.find((opt) => opt.name === value)
+                  if (selectedProcess) {
+                    search.setField('processId', selectedProcess.id)
+                    search.setField('processName', selectedProcess.name)
+                  }
                 }}
                 options={processOptions}
                 displayLabel

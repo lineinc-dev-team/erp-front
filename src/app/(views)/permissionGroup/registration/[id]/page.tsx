@@ -1,10 +1,10 @@
-import ManagementRegistrationView from '@/components/account/management/ManagementRegistrationView'
+import PermissionRegistrationView from '@/components/account/permissionGroup/PermissionRegistrationView'
 import React from 'react'
 
 export default function page() {
   return (
     <div>
-      <ManagementRegistrationView isEditMode={true} />
+      <PermissionRegistrationView isEditMode={true} />
     </div>
   )
 }

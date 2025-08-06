@@ -34,7 +34,9 @@ export const ProgressingLabelToValue: Record<string, string> = {
 export const useSiteSearchStore = create<{ search: SiteSearchState }>((set) => ({
   search: {
     searchTrigger: 0,
+    nameId: 0,
     name: '',
+    processId: 0,
     processName: '',
     type: '',
     city: '',

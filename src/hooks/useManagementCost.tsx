@@ -14,6 +14,7 @@ import {
   ManagementCostInfoService,
 } from '@/services/managementCost/managementCostService'
 import { getTodayDateString } from '@/utils/formatters'
+import { useSiteSearchStore } from '@/stores/siteStore'
 
 export function useManagementCost() {
   const { showSnackbar } = useSnackbarStore()
@@ -196,6 +197,8 @@ export function useManagementCost() {
 
   const [processSearch, setProcessSearch] = useState('')
 
+  const siteSearch = useSiteSearchStore((state) => state.search)
+
   const {
     data: processInfo,
     fetchNextPage: processInfoFetchNextPage,
@@ -203,14 +206,19 @@ export function useManagementCost() {
     isFetching: processInfoIsFetching,
     isLoading: processInfoLoading,
   } = useInfiniteQuery({
-    queryKey: ['processInfo', processSearch],
-    queryFn: ({ pageParam }) => SitesProcessNameScroll({ pageParam, keyword: processSearch }),
+    queryKey: ['processInfo', processSearch, siteSearch.nameId],
+    queryFn: ({ pageParam }) =>
+      SitesProcessNameScroll({
+        pageParam,
+        siteId: siteSearch.nameId,
+        keyword: processSearch,
+      }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
       const { sliceInfo } = lastPage.data
-      const nextPage = sliceInfo.page + 1
-      return sliceInfo.hasNext ? nextPage : undefined
+      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
     },
+    enabled: !!siteSearch.nameId,
   })
 
   const processOptions = useMemo(() => {

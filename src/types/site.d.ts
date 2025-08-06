@@ -74,8 +74,10 @@ export type processStatuses = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | '선
 
 export type SiteSearchState = {
   searchTrigger: number // 검색 실행 시마다 증가시켜 query 갱신 트리거
+  nameId: number
   name: string // 현장명
   type: string
+  processId: number
   processName: string // 공정명
   city: string // 시
   district: string // 구

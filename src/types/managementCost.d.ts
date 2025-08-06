@@ -37,7 +37,9 @@ export interface CostList {
 
 export type CostSearchState = {
   searchTrigger: number
+  nameId: number
   name: string
+  processId: number
   processName: string
   itemType: string
   itemDescription: string
