@@ -20,7 +20,7 @@ type TabStore = {
 export const useTabStore = create<TabStore>()(
   persist(
     (set, get) => ({
-      tabs: [{ label: 'HOME', path: '/' }],
+      tabs: [{ label: '대쉬보드 - 관리', path: '/dashboard' }],
 
       addTab: (tab) => {
         const tabs = get().tabs

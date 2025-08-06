@@ -16,7 +16,7 @@ export default function Error() {
         label="홈으로 이동"
         variant="primary"
         className="mt-5"
-        onClick={() => router.push('/')}
+        onClick={() => router.push('/dashboard')}
       />
     </div>
   )

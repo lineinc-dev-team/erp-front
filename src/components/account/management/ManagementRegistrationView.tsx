@@ -180,7 +180,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
     if (!form.landlineNumber.trim()) return '전화번호를 입력하세요.'
     // if (!form.password.trim()) return '비밀번호를 입력하세요.'
     // if (form.password !== form.checkPassword) return '비밀번호가 일치하지 않습니다.'
-    if (form.isActive === '0' || !form.isActive) return '계정 상태를 선택하세요.'
+    if (form.isActive === '선택' || !form.isActive) return '계정 상태를 선택하세요.'
     return null
   }
 

@@ -42,8 +42,8 @@ export function useLoginForm() {
         if (!isInfoLoaded) return
 
         // '/sites' 탭이 sessionStorage와 탭 스토어에 없으면 추가
-        const tabPath = '/sites'
-        const tabLabel = '현장 관리 - 조회'
+        const tabPath = '/dashboard'
+        const tabLabel = '대쉬보드 - 관리'
 
         const storedTabs = JSON.parse(sessionStorage.getItem('tabs') || '[]') as Array<{
           path: string
@@ -59,6 +59,7 @@ export function useLoginForm() {
         if (!tabStore.tabs.find((t) => t.path === tabPath)) {
           tabStore.addTab({ path: tabPath, label: tabLabel })
         }
+        router.refresh()
 
         router.push(tabPath)
       } catch (err) {
