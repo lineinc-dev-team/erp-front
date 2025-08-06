@@ -147,6 +147,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
       )
       setField('changeHistories', allHistories)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userHistoryList, setField])
 
   const observerRef = useRef<IntersectionObserver | null>(null)

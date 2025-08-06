@@ -19,7 +19,6 @@ import {
   ManageAccounts,
   ExpandLess,
   ExpandMore,
-  Dashboard,
   Groups,
   AssignmentInd,
   Inventory,
@@ -213,15 +212,18 @@ const menuNameToIcon: Record<string, React.ReactNode> = {
   '외주 정산관리': <Assignment />,
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function convertApiMenusToMenuItems(apiMenus: any[]) {
   return apiMenus.map((menu) => {
     const basePath = menuNameToBasePath[menu.name] || '/'
     const icon = menuNameToIcon[menu.name] || null
 
     const filteredPermissions = menu.permissions.filter(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (perm: any) => !['승인', '수정', '삭제'].includes(perm.action),
     )
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const children = filteredPermissions.map((perm: any) => {
       let path = basePath
       if (perm.action === '등록') path = `${basePath}/registration`
@@ -266,7 +268,7 @@ export default function Header() {
     }
   }, [])
 
-  const roleId = myInfo?.roles?.[0]?.id
+  const roleId = Number(myInfo?.roles?.[0]?.id)
 
   const { data, isLoading, isError } = useHeaderMenuListQuery(roleId)
 

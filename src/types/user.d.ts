@@ -1,6 +1,11 @@
 export interface myInfoProps {
   id: number
   loginId: string
-  roles: string[]
+  roles: roleInfo[]
   username: string
+}
+
+type roleInfo = {
+  id: number
+  name: string
 }
