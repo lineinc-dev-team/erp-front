@@ -173,6 +173,9 @@ export function usePermission() {
 
   // 권한 그룹에서 사용하는 현장/공정 데이터 가져오기
 
+  const pathname = usePathname()
+  const isPermissionRegistrationPage = pathname.startsWith('/permissionGroup/registration')
+
   // 현장명데이터를 가져옴 무한 스크롤
 
   const [sitesSearch, setSitesSearch] = useState('')
@@ -192,6 +195,7 @@ export function usePermission() {
       const nextPage = sliceInfo.page + 1
       return sliceInfo.hasNext ? nextPage : undefined
     },
+    enabled: isPermissionRegistrationPage,
   })
 
   const sitesOptions = useMemo(() => {
@@ -235,7 +239,7 @@ export function usePermission() {
       const { sliceInfo } = lastPage.data
       return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
     },
-    enabled: !!permissionForm.siteProcesses,
+    enabled: !!permissionForm.siteProcesses && isPermissionRegistrationPage,
   })
 
   const processOptions = useMemo(() => {
