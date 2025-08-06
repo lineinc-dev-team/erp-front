@@ -36,10 +36,16 @@ export default function ManagementCost() {
     sitesOptions,
     setProcessSearch,
     processOptions,
-    fetchNextPage,
-    hasNextPage,
-    isFetching,
-    isLoading,
+
+    siteNameFetchNextPage,
+    siteNamehasNextPage,
+    siteNameFetching,
+    siteNameLoading,
+
+    processInfoFetchNextPage,
+    processInfoHasNextPage,
+    processInfoIsFetching,
+    processInfoLoading,
     CostDeleteMutation,
   } = useManagementCost()
 
@@ -149,10 +155,10 @@ export default function ManagementCost() {
                 options={sitesOptions}
                 displayLabel
                 onScrollToBottom={() => {
-                  if (hasNextPage && !isFetching) fetchNextPage()
+                  if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
                 }}
                 onInputChange={(value) => setSitesSearch(value)}
-                loading={isLoading}
+                loading={siteNameLoading}
               />
             </div>
           </div>
@@ -174,10 +180,10 @@ export default function ManagementCost() {
                 options={processOptions}
                 displayLabel
                 onScrollToBottom={() => {
-                  if (hasNextPage && !isFetching) fetchNextPage()
+                  if (processInfoHasNextPage && !processInfoIsFetching) processInfoFetchNextPage()
                 }}
                 onInputChange={(value) => setProcessSearch(value)}
-                loading={isLoading}
+                loading={processInfoLoading}
               />
             </div>
           </div>
