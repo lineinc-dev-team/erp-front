@@ -47,12 +47,17 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
   const {
     setSitesSearch,
     sitesOptions,
+    siteNameFetchNextPage,
+    siteNamehasNextPage,
+    siteNameFetching,
+    siteNameLoading,
+
     setProcessSearch,
     processOptions,
-    fetchNextPage,
-    hasNextPage,
-    isFetching,
-    isLoading,
+    processInfoFetchNextPage,
+    processInfoHasNextPage,
+    processInfoIsFetching,
+    processInfoLoading,
   } = useManagementCost()
 
   const { createMaterialMutation, MaterialModifyMutation } = useManagementMaterial()
@@ -148,10 +153,10 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                 options={sitesOptions}
                 displayLabel
                 onScrollToBottom={() => {
-                  if (hasNextPage && !isFetching) fetchNextPage()
+                  if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
                 }}
                 onInputChange={(value) => setSitesSearch(value)}
-                loading={isLoading}
+                loading={siteNameLoading}
               />
             </div>
           </div>
@@ -168,10 +173,10 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                 options={processOptions}
                 displayLabel
                 onScrollToBottom={() => {
-                  if (hasNextPage && !isFetching) fetchNextPage()
+                  if (processInfoHasNextPage && !processInfoIsFetching) processInfoFetchNextPage()
                 }}
                 onInputChange={(value) => setProcessSearch(value)}
-                loading={isLoading}
+                loading={processInfoLoading}
               />
             </div>
           </div>
