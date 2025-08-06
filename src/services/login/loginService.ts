@@ -3,11 +3,10 @@ import { API } from '@/api/config/env'
 export async function loginService({
   loginId,
   password,
-  autoLogin,
 }: {
   loginId: string
   password: string
-  autoLogin: boolean
+  autoLogin?: boolean
 }) {
   try {
     const res = await fetch(API.LOGIN, {
@@ -16,7 +15,7 @@ export async function loginService({
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ loginId, password, autoLogin }),
+      body: JSON.stringify({ loginId, password }),
       cache: 'no-store',
     })
 

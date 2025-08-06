@@ -11,8 +11,6 @@ export default function LoginView() {
     setLoginId,
     password,
     setPassword,
-    autoLogin,
-    setAutoLogin,
     userErrorId,
     setUserErrorId,
     userErrorPassword,
@@ -26,7 +24,7 @@ export default function LoginView() {
 
   return (
     <div>
-      <h1 className="text-[42px] mb-4">라인공영 관리 시스템 dev서버@</h1>
+      <h1 className="text-[42px] mb-4">라인공영 관리 시스템</h1>
 
       <div className="w-88 flex flex-col gap-2 m-0">
         <CommonInput
@@ -56,7 +54,7 @@ export default function LoginView() {
           className="m-0"
         />
 
-        <label className="flex items-center gap-2 mt-1.5 mb-3.5 cursor-pointer select-none">
+        {/* <label className="flex items-center gap-2 mt-1.5 mb-3.5 cursor-pointer select-none">
           <input
             type="checkbox"
             checked={autoLogin}
@@ -69,7 +67,7 @@ export default function LoginView() {
             "
           />
           <span>자동 로그인</span>
-        </label>
+        </label> */}
 
         <CommonButton
           label="로그인"

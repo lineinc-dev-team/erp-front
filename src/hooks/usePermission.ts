@@ -212,10 +212,10 @@ export function usePermission() {
 
   const permissionForm = usePermissionGroupStore((state) => state.form)
 
-  const [selectedIndex, setSelectedIndex] = useState(0)
-  const selectedSiteId = permissionForm.siteProcesses[selectedIndex]?.siteId
+  const selectedSiteId = permissionForm.siteProcesses[0]?.siteId
 
-  console.log('@@~ selectedSiteIdselectedSiteId', selectedSiteId)
+  // console.log('@@~ selectedSiteIdselectedSiteId', selectedSiteId, selectedIndex)
+
   const {
     data: processInfo,
     fetchNextPage: processInfoFetchNextPage,
@@ -270,7 +270,6 @@ export function usePermission() {
     siteNamehasNextPage,
     siteNameFetching,
     siteNameLoading,
-    setSelectedIndex,
 
     // 공정명
 

@@ -50,7 +50,6 @@ export default function PermissionManagementUI({ isEditMode = false }) {
     useSinglepermissionListQuery,
     useSinglepermissionMenuListQuery,
     useSinglepermissionUserListQuery,
-    setSelectedIndex,
     handlePermissionCancel,
   } = usePermission()
 
@@ -124,6 +123,8 @@ export default function PermissionManagementUI({ isEditMode = false }) {
 
   const permissionTypes: Permission['action'][] = ['조회', '등록', '수정', '삭제', '승인']
 
+  const [processOptionsMap, setProcessOptionsMap] = useState<Record<number, []>>({})
+
   const {
     setSitesSearch,
     sitesOptions,
@@ -133,7 +134,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
     siteNameLoading,
 
     setProcessSearch,
-    processOptions,
+    // processOptions,
     processInfoFetchNextPage,
     processInfoHasNextPage,
     processInfoIsFetching,
@@ -267,22 +268,20 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                         onChange={async (selectedId) => {
                           updateSiteProcessField(idx, 'siteId', selectedId)
 
-                          setSelectedIndex(selectedId)
-
-                          // 2) 실제 siteId 값 가져오기
-                          const siteId = selectedId
-
-                          // 공정명 자동 선택 로직 추가
                           const res = await SitesProcessNameScroll({
                             pageParam: 0,
-                            siteId: siteId,
+                            siteId: selectedId,
                             keyword: '',
                           })
 
                           const processes = res.data?.content || []
+                          setProcessOptionsMap((prev) => ({
+                            ...prev,
+                            [idx]: processes,
+                          }))
+
                           if (processes.length > 0) {
-                            const firstProcessId = processes[0].id
-                            updateSiteProcessField(idx, 'processId', firstProcessId)
+                            updateSiteProcessField(idx, 'processId', processes[0].id)
                           } else {
                             updateSiteProcessField(idx, 'processId', 0)
                           }
@@ -299,11 +298,12 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                       <CommonSelect
                         className=" w-full"
                         value={item.processId || '0'}
-                        onChange={(selectedIndex) =>
-                          updateSiteProcessField(idx, 'processId', selectedIndex)
+                        onChange={(selectedProcessId) =>
+                          updateSiteProcessField(idx, 'processId', selectedProcessId)
                         }
-                        options={processOptions}
+                        // options={processOptions}
                         displayLabel
+                        options={processOptionsMap[idx] || []}
                         onScrollToBottom={() => {
                           if (processInfoHasNextPage && !processInfoIsFetching)
                             processInfoFetchNextPage()

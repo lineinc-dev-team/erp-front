@@ -10,7 +10,7 @@ import { useTabStore } from '@/stores/useTabStore'
 export function useLoginForm() {
   const [loginId, setLoginId] = useState('')
   const [password, setPassword] = useState('')
-  const [autoLogin, setAutoLogin] = useState(false)
+  // const [autoLogin, setAutoLogin] = useState(false)
   const [userErrorId, setUserErrorId] = useState(false)
   const [userErrorPassword, setUserErrorPassword] = useState(false)
 
@@ -31,7 +31,7 @@ export function useLoginForm() {
       return
     }
 
-    const result = await loginService({ loginId, password, autoLogin })
+    const result = await loginService({ loginId, password })
     showSnackbar(result.message, result.status)
 
     if (result.status === 'success') {
@@ -74,8 +74,6 @@ export function useLoginForm() {
     setLoginId,
     password,
     setPassword,
-    autoLogin,
-    setAutoLogin,
     userErrorId,
     userErrorPassword,
     setUserErrorId,

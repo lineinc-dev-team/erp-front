@@ -290,6 +290,8 @@ export default function Header() {
         })
 
         sessionStorage.removeItem('myInfo')
+        sessionStorage.removeItem('tab-storage')
+        sessionStorage.removeItem('tabs')
 
         if (response.status === 200) {
           showSnackbar('로그아웃 되었습니다.', 'success')
