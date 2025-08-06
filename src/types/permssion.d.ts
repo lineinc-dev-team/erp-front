@@ -78,7 +78,7 @@ type PermissionFormState = {
   updateUserField: (userId: T, field: keyof FormState['users'][number], value: T) => void
 
   // siteProcess 관련 메서드 추가
-  updateSiteProcessField: (index: number, field: 'siteId' | 'processId', value: string) => void
+  updateSiteProcessField: (index: number, field: 'siteId' | 'processId', value: T) => void
   addSiteProcess: () => void
   removeSiteProcess: (index: number) => void
 

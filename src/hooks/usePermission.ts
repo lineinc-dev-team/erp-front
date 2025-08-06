@@ -1,351 +1,286 @@
-import { useEffect, useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useMemo, useState } from 'react'
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
+
 import {
-  GroupUserResponse,
-  MenuPermissionResponse,
-  PermissionResponse,
-  PermissionSingleResponse,
-} from '@/types/allRoles'
-import {
-  addUsersToRole,
-  GroupUserList,
-  GroupUserRemove,
-  MenuPermissionService,
-  PermissionGroupAdd,
+  CreatePermission,
+  MenuListService,
+  ModifyPermissionService,
   PermissionGroupRemove,
   PermissionService,
-  PermissionSingleService,
+  SinglepermissionMenuService,
+  SinglepermissionService,
+  SinglepermissionUserService,
 } from '@/services/permission/permissonService'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { usePermissionGroupStore, usePermissionSearchStore } from '@/stores/permissionStore'
+import { UserInfoService } from '@/services/account/accountManagementService'
+import {
+  SitesPersonScroll,
+  SitesProcessNameScroll,
+} from '@/services/managementCost/managementCostRegistrationService'
 
 export function usePermission() {
   const queryClient = useQueryClient()
   const { showSnackbar } = useSnackbarStore()
   const router = useRouter()
+  const { reset } = usePermissionGroupStore()
 
-  //권한 그룹에 필요한 상태 관리
+  // useQuery 쪽 수정
 
-  const [permissionGroupCheck, setPermissionGroupCheck] = useState<number[]>([])
+  const search = usePermissionSearchStore((state) => state.search)
 
-  const [open, setOpen] = useState(false)
-
-  const [checkGroupId, setCheckGroupId] = useState<number>(1)
-
-  // 체크 데이터 확인
-  const [selectedPermissions, setSelectedPermissions] = useState<
-    { id: number; menuId: number; action: string }[]
-  >([])
-
-  const { data, isLoading, isError, error } = useQuery<PermissionResponse, Error>({
-    queryKey: ['PermissionService'],
-    queryFn: PermissionService,
-  })
+  const pathName = usePathname()
 
   useEffect(() => {
-    if (isError) {
-      if (error instanceof Error && error.message === '권한이 없습니다.') {
-        showSnackbar('접근 권한이 없습니다.', 'warning')
-        router.push('/business')
-      }
+    if (search.searchTrigger && search.currentPage !== 0) {
+      search.setField('currentPage', 1)
     }
-  }, [isError, error, router, showSnackbar])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.searchTrigger])
 
-  // 권한 메뉴별 권한 조회
-  const {
-    data: PermissionData,
-    isLoading: PermissionLoading,
-    isError: PermissionError,
-  } = useQuery<MenuPermissionResponse>({
-    queryKey: ['MenuPermissionService'],
-    queryFn: () => MenuPermissionService(checkGroupId),
+  const permissionListQuery = useQuery({
+    queryKey: [
+      'permissionInfo',
+      search.searchTrigger,
+      search.currentPage,
+      search.pageCount,
+      search.arraySort,
+      pathName,
+    ],
+    queryFn: () => {
+      const rawParams = {
+        userSearch: search.userSearch ? search.userSearch : '',
+        page: search.currentPage - 1,
+        size: Number(search.pageCount) || 10,
+        sort: search.arraySort === '최신순' ? 'id,desc' : 'username,asc',
+      }
+
+      const filteredParams = Object.fromEntries(
+        Object.entries(rawParams).filter(
+          ([, value]) =>
+            value !== undefined &&
+            value !== null &&
+            value !== '' &&
+            !(typeof value === 'number' && isNaN(value)),
+        ),
+      )
+
+      return PermissionService(filteredParams)
+    },
+    staleTime: 1000 * 30,
+    enabled: pathName === '/permissionGroup', // 경로 체크
   })
 
   // 권한 그룹 삭제 함수
-  const { mutate: deletePermissionList } = useMutation({
+  const permissionDeleteMutation = useMutation({
     mutationFn: ({ roleIds }: { roleIds: number[] }) => PermissionGroupRemove(roleIds),
+
     onSuccess: () => {
-      showSnackbar('권한 유저가 삭제되었습니다.', 'success')
-      queryClient.invalidateQueries({
-        queryKey: ['PermissionService'],
-      })
-
-      setPermissionGroupCheck([])
+      if (window.confirm('정말 삭제하시겠습니까?')) {
+        showSnackbar('권한 그룹이 삭제되었습니다.', 'success')
+        queryClient.invalidateQueries({ queryKey: ['permissionInfo'] })
+      }
     },
+
     onError: () => {
-      showSnackbar('삭제에 실패했습니다.', 'error')
+      showSnackbar(' 권한 그룹 삭제에 실패했습니다.', 'error')
     },
   })
 
-  const allRoles = data?.data.content ?? []
-  const allPermissionGroupChecked =
-    permissionGroupCheck.length === allRoles.length && allRoles.length !== 0
-
-  //  권한 메뉴별 권한 체크박스 핸들러
-  const handlePermissionGroupCheckAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) setPermissionGroupCheck(allRoles.map((g) => g.id))
-    else setPermissionGroupCheck([])
-  }
-
-  // 권한 메뉴별 권한 개별 체크
-  const handlePermissionGroupCheck = (id: number) => {
-    if (permissionGroupCheck.includes(id)) {
-      setPermissionGroupCheck(permissionGroupCheck.filter((i) => i !== id))
-    } else {
-      setPermissionGroupCheck([...permissionGroupCheck, id])
-    }
-  }
-
-  // 권한 그룹 추가 할 수 있는 로직
-
-  // mutation
-  const { mutateAsync: addGroup } = useMutation({
-    mutationFn: (name: string) => PermissionGroupAdd(name),
-    onSuccess: () => {
-      showSnackbar('그룹이 추가되었습니다.', 'success')
-      queryClient.invalidateQueries({
-        queryKey: ['PermissionService'],
-        refetchType: 'active', // optional, active가 default
-      })
-      handleClose()
-    },
-    onError: () => {
-      showSnackbar('그룹 추가에 실패했습니다.', 'error')
-    },
-  })
-
-  const [permissionGroupOpen, setPermissionGroupOpen] = useState(false)
-  const [groupName, setGroupName] = useState('')
-
-  const handleOpen = () => {
-    router.push('/permissionGroup/registration')
-  }
-  const handleClose = () => {
-    setGroupName('')
-    setPermissionGroupOpen(false)
-  }
-
-  const handleAdd = async () => {
-    if (!groupName.trim()) {
-      showSnackbar('그룹 이름을 입력해주세요.', 'warning')
-      return
-    }
-    try {
-      await addGroup(groupName)
-      handleClose()
-    } catch (err) {
-      console.error('추가 실패:', err)
-    }
-  }
-
-  // 그룹 체크 상태
-  const [groupChecked, setGroupChecked] = useState<number[]>([])
-  const [selectedId, setSelectedId] = useState<number>(1)
-
-  // 단일 (선택) 그룹 조회
-  const {
-    data: singleData,
-    isLoading: singleLoading,
-    isError: singleError,
-  } = useQuery<PermissionSingleResponse>({
-    queryKey: ['PermissionSingleService'],
-    queryFn: () => PermissionSingleService(selectedId),
-    enabled: !!selectedId,
-  })
-
-  // 권한 그룹에 속한 유저 조회
-
-  const {
-    data: userData,
-    isLoading: userLoading,
-    isError: userError,
-  } = useQuery<GroupUserResponse>({
-    queryKey: ['GroupUserList'],
-    queryFn: () => GroupUserList(selectedId),
-  })
-
-  const alluserData = userData?.data.content ?? []
-  const allGroupChecked = groupChecked.length === alluserData.length && alluserData.length !== 0
-
-  // 권한 그룹 유저 삭제
-  // 삭제 mutation
-  const { mutate: deleteUserList } = useMutation({
-    mutationFn: ({ selectedId, groupChecked }: { selectedId: number; groupChecked: number[] }) =>
-      GroupUserRemove(selectedId, groupChecked),
-    onSuccess: () => {
-      showSnackbar('권한 유저가 삭제되었습니다.', 'success')
-      queryClient.invalidateQueries({
-        queryKey: ['GroupUserList'],
-      })
-
-      setGroupChecked([])
-    },
-    onError: () => {
-      showSnackbar('삭제에 실패했습니다.', 'error')
-    },
-  })
-
-  // 권한 그룹 유저 추가
-
-  const [useModalOpen, setUseModalOpen] = useState(false)
-
-  const [formData, setFormData] = useState({
-    id: '', // 그룹 ID
-    userIds: '', // "1,2,3" 처럼 임시 문자열로 입력 받아보기
-  })
-
-  const userGroupOpen = () => setUseModalOpen(true)
-  const userGroupClose = () => {
-    setUseModalOpen(false)
-    // 폼 초기화
-    setFormData({
-      id: '',
-      userIds: '',
+  // 조회에서 이름 검색 스크롤
+  const useUserAccountInfiniteScroll = () => {
+    return useInfiniteQuery({
+      queryKey: ['userInfo', false],
+      queryFn: ({ pageParam = 0 }) =>
+        UserInfoService({
+          hasRole: false,
+          page: pageParam,
+        }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { pageInfo } = lastPage?.data
+        const nextPage = pageInfo?.page + 1
+        return nextPage < pageInfo?.totalPages ? nextPage : undefined
+      },
     })
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
-  // mutation
-  const { mutateAsync: addUserGroup } = useMutation({
-    mutationFn: ({ roleId, userIds }: { roleId: number; userIds: number[] }) =>
-      addUsersToRole(roleId, userIds),
-
+  // 권한 그룹 등록
+  const createPermissionMutation = useMutation({
+    mutationFn: CreatePermission,
     onSuccess: () => {
-      showSnackbar('그룹이 추가되었습니다.', 'success')
-      queryClient.invalidateQueries({
-        queryKey: ['GroupUserList'],
-      })
-      handleClose()
+      showSnackbar('권한 그룹이 등록 되었습니다.', 'success')
+      // 초기화 로직
+      queryClient.invalidateQueries({ queryKey: ['permissionInfo'] })
+      reset()
+      router.push('/permissionGroup')
     },
-
     onError: () => {
-      showSnackbar('그룹 추가에 실패했습니다.', 'error')
+      showSnackbar('권한 그룹 등록에 실패했습니다.', 'error')
     },
   })
 
-  // 체크박스 핸들러
-  const handleGroupCheckAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) setGroupChecked(alluserData.map((g) => g.id))
-    else setGroupChecked([])
+  // 메뉴조회
+  const useMenuListQuery = () => {
+    return useQuery({
+      queryKey: ['menuInfo'],
+      queryFn: MenuListService,
+    })
   }
 
-  const handleGroupCheck = (id: number) => {
-    if (groupChecked.includes(id)) {
-      setGroupChecked(groupChecked.filter((i) => i !== id))
-    } else {
-      setGroupChecked([...groupChecked, id])
-    }
+  // 상세조회
+  const useSinglepermissionListQuery = (id: number, enabled: boolean) => {
+    return useQuery({
+      queryKey: ['permissionDetail', id],
+      queryFn: () => SinglepermissionService(id),
+      enabled: enabled && !!id && !isNaN(id), // id가 유효할 때만 호출
+    })
   }
 
-  // 삭제 핸들러 로직 !!
-
-  // 권한 그룹 관리 삭제
-  const handlePermissonGroupDelete = () => {
-    if (permissionGroupCheck.length === 0) {
-      showSnackbar('삭제할 그룹을 선택해주세요.', 'warning')
-      return
-    }
-    if (window.confirm('정말 선택한 그룹을 삭제하시겠습니까?')) {
-      deletePermissionList({ roleIds: permissionGroupCheck })
-    }
+  const useSinglepermissionUserListQuery = (singleId: number, enabled: boolean) => {
+    return useQuery({
+      queryKey: ['menuInfoUsers', singleId],
+      queryFn: () => SinglepermissionUserService(singleId),
+      enabled: enabled && !!singleId && !isNaN(singleId), // id가 유효할 때만 호출
+    })
+  }
+  const useSinglepermissionMenuListQuery = (singleId: number, enabled: boolean) => {
+    return useQuery({
+      queryKey: ['menuInfoMenus', singleId],
+      queryFn: () => SinglepermissionMenuService(singleId),
+      enabled: enabled && !!singleId && !isNaN(singleId), // id가 유효할 때만 호출
+    })
   }
 
-  //권한 그룹 안에 유저 삭제
-  const handleGroupDelete = () => {
-    if (groupChecked.length === 0) {
-      showSnackbar('삭제할 그룹을 선택해주세요.', 'warning')
-      return
-    }
-    if (window.confirm('정말 선택한 그룹을 삭제하시겠습니까?')) {
-      console.log('데이터 확인4455', selectedId, groupChecked)
-      deleteUserList({ selectedId, groupChecked })
-    }
-  }
+  // 권한 수정
+  const PermissionModifyMutation = useMutation({
+    mutationFn: (permissionModifyId: number) => ModifyPermissionService(permissionModifyId),
 
-  useEffect(() => {
-    if (PermissionData) {
-      const initial = PermissionData.data.flatMap((menu) =>
-        menu.permissions.map((p) => ({
-          menuId: menu.id,
-          id: p.id,
-          action: p.action,
-        })),
-      )
-      setSelectedPermissions(initial)
-    }
-  }, [PermissionData])
+    onSuccess: () => {
+      if (window.confirm('수정하시겠습니까?')) {
+        showSnackbar('권한 그룹이 수정 되었습니다.', 'success')
+        queryClient.invalidateQueries({ queryKey: ['permissionInfo'] })
+        reset()
+        router.push('/permissionGroup')
+      }
+    },
 
-  const handlePermissionToggle = (menuId: number, id: number, action: string, checked: boolean) => {
-    if (checked) {
-      setSelectedPermissions((prev) => [...prev, { menuId, id, action }])
-    } else {
-      setSelectedPermissions((prev) =>
-        prev.filter((p) => !(p.menuId === menuId && p.id === id && p.action === action)),
-      )
-    }
-  }
+    onError: () => {
+      showSnackbar(' 권한 그룹 수정에 실패했습니다.', 'error')
+    },
+  })
 
-  const userGroupAdd = async () => {
-    try {
-      await addUserGroup({
-        roleId: 4,
-        userIds: [4],
-      })
-      console.log('추가 완료!')
-    } catch (err) {
-      console.error('추가 실패:', err)
-    }
-  }
+  // 권한 그룹에서 사용하는 현장/공정 데이터 가져오기
+
+  // 현장명데이터를 가져옴 무한 스크롤
+
+  const [sitesSearch, setSitesSearch] = useState('')
+
+  const {
+    data: siteNameInfo,
+    fetchNextPage: siteNameFetchNextPage,
+    hasNextPage: siteNamehasNextPage,
+    isFetching: siteNameFetching,
+    isLoading: siteNameLoading,
+  } = useInfiniteQuery({
+    queryKey: ['siteInfo', sitesSearch],
+    queryFn: ({ pageParam }) => SitesPersonScroll({ pageParam, keyword: sitesSearch }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      const nextPage = sliceInfo.page + 1
+      return sliceInfo.hasNext ? nextPage : undefined
+    },
+  })
+
+  const sitesOptions = useMemo(() => {
+    const defaultOption = { id: '0', name: '선택' }
+    const options = (siteNameInfo?.pages || [])
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+      }))
+
+    return [defaultOption, ...options]
+  }, [siteNameInfo])
+
+  // 공정명
+
+  const [processSearch, setProcessSearch] = useState('')
+
+  const permissionForm = usePermissionGroupStore((state) => state.form)
+
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const selectedSiteId = permissionForm.siteProcesses[selectedIndex]?.siteId
+
+  console.log('@@~ selectedSiteIdselectedSiteId', selectedSiteId)
+  const {
+    data: processInfo,
+    fetchNextPage: processInfoFetchNextPage,
+    hasNextPage: processInfoHasNextPage,
+    isFetching: processInfoIsFetching,
+    isLoading: processInfoLoading,
+  } = useInfiniteQuery({
+    queryKey: ['permisionInProcessInfo', processSearch, selectedSiteId],
+    queryFn: ({ pageParam }) =>
+      SitesProcessNameScroll({
+        pageParam,
+        siteId: selectedSiteId,
+        keyword: processSearch,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+    },
+    enabled: !!permissionForm.siteProcesses,
+  })
+
+  const processOptions = useMemo(() => {
+    const defaultOption = { id: '0', name: '선택' }
+    const options = (processInfo?.pages || [])
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+      }))
+
+    return [defaultOption, ...options]
+  }, [processInfo])
 
   return {
-    handleClose,
-    userGroupAdd,
-    handleOpen,
-    groupName,
-    setGroupName,
-    handleAdd,
-    permissionGroupOpen,
-    useModalOpen,
-    handleChange,
-    formData,
-    userGroupOpen,
-    userGroupClose,
+    permissionListQuery,
+    permissionDeleteMutation,
+    createPermissionMutation,
+    PermissionModifyMutation,
+    useUserAccountInfiniteScroll,
+    useMenuListQuery,
 
-    allRoles,
-    handlePermissonGroupDelete,
-    handlePermissionGroupCheckAll,
-    handlePermissionGroupCheck,
-    allPermissionGroupChecked,
-    permissionGroupCheck,
-    isLoading,
-    isError,
-    allGroupChecked,
-    groupChecked,
-    handleGroupCheck,
-    handleGroupCheckAll,
-    handleGroupDelete,
-    selectedId,
-    setSelectedId,
-    checkGroupId,
-    setCheckGroupId,
-    open,
-    setOpen,
-    singleData,
-    singleLoading,
-    singleError,
-    PermissionData,
-    PermissionLoading,
-    PermissionError,
-    selectedPermissions,
-    handlePermissionToggle,
-    setSelectedPermissions,
-    userData,
-    userLoading,
-    userError,
-    alluserData,
+    // 권한 그룹 등록에서 현장/공정에 자동 완성 무한 스크롤
+    // useSitesPersonInfiniteScroll,
+    setSitesSearch,
+    sitesOptions,
+    siteNameFetchNextPage,
+    siteNamehasNextPage,
+    siteNameFetching,
+    siteNameLoading,
+    setSelectedIndex,
+
+    // 공정명
+
+    // useProcessNameInfiniteScroll,
+    setProcessSearch,
+    processOptions,
+    processInfoFetchNextPage,
+    processInfoHasNextPage,
+    processInfoIsFetching,
+    processInfoLoading,
+
+    // 상세
+    useSinglepermissionListQuery,
+    useSinglepermissionMenuListQuery,
+    useSinglepermissionUserListQuery,
   }
 }

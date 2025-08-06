@@ -147,11 +147,37 @@ export const usePermissionGroupStore = create<PermissionFormState>((set, get) =>
       }
     }),
 
-  updateSiteProcessField: (index: number, field: 'siteId' | 'processId', value: string) =>
+  // updateSiteProcessField: (index: number, field: 'siteId' | 'processId', value: string) =>
+  //   set((state) => {
+  //     const updated = [...state.form.siteProcesses]
+  //     if (!updated[index]) return state // 유효성 체크
+  //     updated[index] = { ...updated[index], [field]: value }
+  //     return {
+  //       form: {
+  //         ...state.form,
+  //         siteProcesses: updated,
+  //       },
+  //     }
+  //   }),
+
+  updateSiteProcessField: (index: number, field: 'siteId' | 'processId', value: string | number) =>
     set((state) => {
       const updated = [...state.form.siteProcesses]
-      if (!updated[index]) return state // 유효성 체크
-      updated[index] = { ...updated[index], [field]: value }
+      if (!updated[index]) return state
+
+      if (field === 'siteId') {
+        updated[index] = {
+          ...updated[index],
+          siteId: Number(value), // 🔧 여기
+          processId: 0, // 🔧 여기도 number 타입으로
+        }
+      } else {
+        updated[index] = {
+          ...updated[index],
+          [field]: Number(value), // 🔧 field가 'processId'인 경우에도 number로 변환 필요
+        }
+      }
+
       return {
         form: {
           ...state.form,
