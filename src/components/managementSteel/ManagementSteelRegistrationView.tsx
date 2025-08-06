@@ -44,10 +44,16 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     sitesOptions,
     setProcessSearch,
     processOptions,
-    fetchNextPage,
-    hasNextPage,
-    isFetching,
-    isLoading,
+
+    siteNameFetchNextPage,
+    siteNamehasNextPage,
+    siteNameFetching,
+    siteNameLoading,
+
+    processInfoFetchNextPage,
+    processInfoHasNextPage,
+    processInfoIsFetching,
+    processInfoLoading,
   } = useManagementCost()
 
   const { createSteelMutation, SteelModifyMutation } = useManagementSteel()
@@ -155,10 +161,10 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                 options={sitesOptions}
                 displayLabel
                 onScrollToBottom={() => {
-                  if (hasNextPage && !isFetching) fetchNextPage()
+                  if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
                 }}
                 onInputChange={(value) => setSitesSearch(value)}
-                loading={isLoading}
+                loading={siteNameLoading}
               />
             </div>
           </div>
@@ -175,10 +181,10 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                 options={processOptions}
                 displayLabel
                 onScrollToBottom={() => {
-                  if (hasNextPage && !isFetching) fetchNextPage()
+                  if (processInfoHasNextPage && !processInfoIsFetching) processInfoFetchNextPage()
                 }}
                 onInputChange={(value) => setProcessSearch(value)}
-                loading={isLoading}
+                loading={processInfoLoading}
               />
             </div>
           </div>
@@ -243,6 +249,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         </div>
       </div>
 
+      {/* 나중에 수정해야함!!! */}
       <div className="mt-6">
         <span className="font-bold border-b-2 mb-4">거래선</span>
         <div className="grid grid-cols-2 mt-1 ">
@@ -259,10 +266,10 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                 options={sitesOptions}
                 displayLabel
                 onScrollToBottom={() => {
-                  if (hasNextPage && !isFetching) fetchNextPage()
+                  if (processInfoHasNextPage && !processInfoIsFetching) processInfoFetchNextPage()
                 }}
                 onInputChange={(value) => setSitesSearch(value)}
-                loading={isLoading}
+                loading={processInfoLoading}
               />
             </div>
           </div>
