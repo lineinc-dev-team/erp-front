@@ -250,6 +250,9 @@ export function usePermission() {
     return [defaultOption, ...options]
   }, [processInfo])
 
+  const handlePermissionCancel = () => {
+    router.push('/permissionGroup')
+  }
   return {
     permissionListQuery,
     permissionDeleteMutation,
@@ -257,6 +260,7 @@ export function usePermission() {
     PermissionModifyMutation,
     useUserAccountInfiniteScroll,
     useMenuListQuery,
+    handlePermissionCancel,
 
     // 권한 그룹 등록에서 현장/공정에 자동 완성 무한 스크롤
     // useSitesPersonInfiniteScroll,

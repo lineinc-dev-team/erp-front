@@ -51,6 +51,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
     useSinglepermissionMenuListQuery,
     useSinglepermissionUserListQuery,
     setSelectedIndex,
+    handlePermissionCancel,
   } = usePermission()
 
   // const UserInfo = form.users
@@ -348,8 +349,8 @@ export default function PermissionManagementUI({ isEditMode = false }) {
       </div>
 
       <div className="flex justify-between gap-10 mt-14">
-        <div className="flex-1 ">
-          <div className="flex justify-between items-baseline w-[870px]">
+        <div className="flex-1 w-2xs">
+          <div className="flex justify-between items-baseline">
             <span className="font-bold border-b-2 mb-4">계정</span>
             <div className="flex gap-4">
               <CommonButton
@@ -477,9 +478,9 @@ export default function PermissionManagementUI({ isEditMode = false }) {
         </div>
 
         {/* 메뉴 권한 */}
-        <div style={{ width: '480px', height: '400px' }}>
+        <div style={{ height: '400px' }}>
           <span className="font-bold border-b-2 mb-4 inline-block">메뉴권한</span>
-          <TableContainer component={Paper} style={{ height: '360px', overflow: 'auto' }}>
+          <TableContainer component={Paper} style={{ height: '360px' }}>
             <Table size="small" stickyHeader>
               <TableHead>
                 <TableRow>
@@ -489,7 +490,8 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                       border: '1px solid  #9CA3AF',
                       color: 'black',
                       fontWeight: 'bold',
-                      maxWidth: '400px',
+                      minWidth: '140px', // 추가
+                      whiteSpace: 'nowrap', // 텍스트 줄바꿈 방지 (선택)
                     }}
                   >
                     메뉴명
@@ -513,7 +515,13 @@ export default function PermissionManagementUI({ isEditMode = false }) {
               <TableBody>
                 {sideMenuList?.data.map((menu: Menu) => (
                   <TableRow key={menu.id}>
-                    <TableCell sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                    <TableCell
+                      sx={{
+                        backgroundColor: '#D1D5DB',
+                        fontWeight: 'bold',
+                        border: '1px solid  #9CA3AF',
+                      }}
+                    >
                       {menu.name}
                     </TableCell>
                     {permissionTypes.map((type) => {
@@ -544,7 +552,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
           label="취소"
           variant="reset"
           className="px-10"
-          //  onClick={handleAccountCancel}
+          onClick={handlePermissionCancel}
         />
 
         <CommonButton
