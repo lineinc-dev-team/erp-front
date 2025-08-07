@@ -280,9 +280,10 @@ export async function UserInfoHistoryService(
   historyId: number,
   page: number = 0,
   size: number = 4,
+  sort: string,
 ) {
   const resData = await fetch(
-    `${API.USER}/${historyId}/change-histories?page=${page}&size=${size}`,
+    `${API.USER}/${historyId}/change-histories?page=${page}&size=${size}&sort=${sort}`,
     {
       method: 'GET',
       headers: {

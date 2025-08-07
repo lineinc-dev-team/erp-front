@@ -50,7 +50,7 @@ export function useUserMg() {
       const rawParams = {
         username: search.username ? search.username : '',
         roleId: search.roleId === '0' ? '' : search.roleId,
-        isActive: search.isActive === '0' ? '' : search.isActive,
+        isActive: search.isActive === '0' ? undefined : search.isActive === '1' ? true : false,
         createdStartDate: getTodayDateString(search.createdStartDate),
         createdEndDate: getTodayDateString(search.createdEndDate),
         lastLoginStartDate: getTodayDateString(search.lastLoginStartDate),
@@ -175,7 +175,7 @@ export function useUserMg() {
   const useHistoryDataQuery = (historyId: number, enabled: boolean) => {
     return useInfiniteQuery({
       queryKey: ['historyList', historyId],
-      queryFn: ({ pageParam = 0 }) => UserInfoHistoryService(historyId, pageParam, 4),
+      queryFn: ({ pageParam = 0 }) => UserInfoHistoryService(historyId, pageParam, 4, 'id,desc'),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
         const { sliceInfo } = lastPage?.data

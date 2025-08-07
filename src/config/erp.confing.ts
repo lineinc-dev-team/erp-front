@@ -22,9 +22,9 @@ export const LocationStatusOptions = [
 ]
 
 export const UseORnotOptions = [
-  { id: '선택', name: '선택' },
+  { id: '0', name: '선택' },
   { id: '1', name: '사용' },
-  { id: '0', name: '미사용' },
+  { id: '2', name: '미사용' },
 ]
 
 export const UseStateOptions = [

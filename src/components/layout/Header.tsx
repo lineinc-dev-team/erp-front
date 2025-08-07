@@ -191,11 +191,11 @@ const menuNameToBasePath: Record<string, string> = {
   '관리비 관리': '/managementCost',
   '강재 관리': '/managementSteel',
   '자재 관리': '/materials',
-  '외주 업체관리': '/outsourcingCompany',
-  '외주 계약관리': '/outsourcingContract',
-  '외주 인력관리': '/outsourcingHuman',
-  '외주 장비관리': '/outsourcingEquipment',
-  '외주 정산관리': '/outsourcingCalculate',
+  '외주업체 관리': '/outsourcingCompany',
+  '외주계약 관리': '/outsourcingContract',
+  '외주인력 관리': '/outsourcingHuman',
+  '외주장비 관리': '/outsourcingEquipment',
+  '외주정산 관리': '/outsourcingCalculate',
 }
 
 const menuNameToIcon: Record<string, React.ReactNode> = {
@@ -206,11 +206,11 @@ const menuNameToIcon: Record<string, React.ReactNode> = {
   '관리비 관리': <Assignment />,
   '강재 관리': <Inventory />,
   '자재 관리': <Inventory />,
-  '외주 업체관리': <Groups />,
-  '외주 계약관리': <Description />,
-  '외주 인력관리': <AssignmentInd />,
-  '외주 장비관리': <Inventory />,
-  '외주 정산관리': <Assignment />,
+  '외주업체 관리': <Groups />,
+  '외주계약 관리': <Description />,
+  '외주인력 관리': <AssignmentInd />,
+  '외주장비 관리': <Inventory />,
+  '외주정산 관리': <Assignment />,
 }
 
 function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {

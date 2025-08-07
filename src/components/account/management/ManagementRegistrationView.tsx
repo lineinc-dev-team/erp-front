@@ -97,7 +97,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
       const gradeId = gradeOptions.find((opt) => opt.name === client.grade)?.id ?? 0
       if (gradeId !== form.gradeId) setField('gradeId', gradeId)
 
-      const isActiveId = client.isActive === true ? '사용' : '미사용'
+      const isActiveId = client.isActive === true ? '1' : '2'
 
       if (isActiveId !== form.isActive) setField('isActive', isActiveId)
     } else {

@@ -61,7 +61,7 @@ export type accountManagementSearchProps = {
   searchTrigger: number
   username: string
   roleId: string
-  isActive: string
+  isActive: T
   createdStartDate: Date | null
   createdEndDate: Date | null
   lastLoginStartDate: Date | null

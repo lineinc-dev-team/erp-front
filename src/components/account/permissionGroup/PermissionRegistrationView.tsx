@@ -76,21 +76,21 @@ export default function PermissionManagementUI({ isEditMode = false }) {
   // 메뉴 및 권한 타입
 
   useEffect(() => {
-    if (!isEditMode) {
-      reset()
-      return
-    }
-
-    if (singlepermission?.data && singleperMenumission?.data && singleperUsermission?.data) {
+    if (
+      isEditMode &&
+      singlepermission?.data &&
+      singleperMenumission?.data &&
+      singleperUsermission?.data
+    ) {
       const detail = singlepermission.data
 
       setField('name', detail.name)
-      setField('memo', detail.memo)
 
       const siteProcesses = detail.sites.map((site: PermissionGroupDetail, index: number) => ({
         siteId: site.id,
         processId: detail.processes?.[index]?.id ?? null,
       }))
+
       setField('siteProcesses', siteProcesses)
 
       const permissionIds = singleperMenumission.data.flatMap((menu: Menu) =>
@@ -111,6 +111,23 @@ export default function PermissionManagementUI({ isEditMode = false }) {
         'userIds',
         users.map((u: RoleUser) => u.userId),
       )
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      siteProcesses.forEach(async (sp: any, idx: number) => {
+        if (sp.siteId) {
+          const res = await SitesProcessNameScroll({
+            pageParam: 0,
+            siteId: sp.siteId,
+            keyword: '',
+          })
+
+          const processes = res.data?.content || []
+          setProcessOptionsMap((prev) => ({
+            ...prev,
+            [idx]: processes,
+          }))
+        }
+      })
     }
   }, [
     isEditMode,

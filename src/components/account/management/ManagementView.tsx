@@ -41,10 +41,11 @@ export default function ManagementView() {
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
+  console.log('@!@#$', UserInfoList)
   // 가공 로직
   const updatedUsers = UserInfoList.map((user: UserInfoProps) => ({
     ...user,
-    isActive: 'Y',
+    isActive: user.isActive === true ? 'Y' : 'N',
     lastLoginAt: getTodayDateString(user.lastLoginAt),
     createdAt: getTodayDateString(user.createdAt),
     updatedAt: getTodayDateString(user.updatedAt),
@@ -129,7 +130,7 @@ export default function ManagementView() {
       sort: search.arraySort === '최신순' ? 'username,desc' : 'username,asc',
       username: search.username,
       roleId: search.roleId === '0' ? undefined : Number(search.roleId),
-      isActive: search.isActive === '0' ? undefined : search.isActive === 'Y',
+      isActive: search.isActive === '0' ? undefined : search.isActive,
       createdStartDate: getTodayDateString(search.createdStartDate),
       createdEndDate: getTodayDateString(search.createdEndDate),
       lastLoginStartDate: getTodayDateString(search.lastLoginStartDate),
