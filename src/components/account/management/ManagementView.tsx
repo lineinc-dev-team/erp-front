@@ -41,7 +41,6 @@ export default function ManagementView() {
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
-  console.log('@!@#$', UserInfoList)
   // 가공 로직
   const updatedUsers = UserInfoList.map((user: UserInfoProps) => ({
     ...user,

@@ -2,35 +2,140 @@
 
 import CommonInput from '@/components/common/Input'
 import CommonSelect from '@/components/common/Select'
-import { DataGrid } from '@mui/x-data-grid'
-import { CostColumnList, SubmitOptions, UseORnotOptions } from '@/config/erp.confing'
+import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
+import {
+  ArrayStatusOptions,
+  outsourcingCompanyList,
+  PageCount,
+  UseORnotOptions,
+} from '@/config/erp.confing'
 import { Pagination } from '@mui/material'
-import { useOrderingSearchStore } from '@/stores/outsourcingCompanyStore'
-import { OutsourcingCompanyService } from '@/services/outsourcingCompany/outsourcingCompanyService'
 import CommonButton from '@/components/common/Button'
+import { useOutsourcingSearchStore } from '@/stores/outsourcingCompanyStore'
+import CommonDatePicker from '@/components/common/DatePicker'
+import useOutSourcingCompany from '@/hooks/useOutSourcingCompany'
+import { useSnackbarStore } from '@/stores/useSnackbarStore'
+import { useAccountStore } from '@/stores/accountManagementStore'
+import { useState } from 'react'
+import { useTabOpener } from '@/utils/openTab'
+import { OutsourcingCompanyList } from '@/types/outsourcingCompany'
+import { getTodayDateString } from '@/utils/formatters'
+import { useRouter } from 'next/navigation'
+import { formatAreaNumber } from '@/utils/formatPhoneNumber'
+import { OutsourcingCompanyExcelDownload } from '@/services/outsourcingCompany/outsourcingCompanyService'
+import ExcelModal from '@/components/common/ExcelModal'
+import { outsourcingCompanyExcelFieldMap } from '@/utils/userExcelField'
 
 export default function OutsourcingCompanyView() {
-  const {
-    handleListRemove,
-    handleDownloadExcel,
-    handleNewBusinessCreate,
-    ArrayStatusOptions,
-    displayedRows,
-    page,
-    sortList,
-    setSortList,
-    setPage,
-    // pageSize,
-    setSelectedIds,
-    totalPages,
-  } = OutsourcingCompanyService()
+  const { showSnackbar } = useSnackbarStore()
 
-  const { search } = useOrderingSearchStore()
+  const openTab = useTabOpener()
 
-  // if (isLoading) return <LoadingSkeletion />
-  // if (error) throw error
+  const { search } = useOutsourcingSearchStore()
+  const { typeMethodOptions, OutsourcingListQuery, OutsourcingDeleteMutation } =
+    useOutSourcingCompany()
 
-  // alert(data)
+  const OutsourcingCompanyDataList = OutsourcingListQuery.data?.data.content ?? []
+
+  const totalList = OutsourcingListQuery.data?.data.pageInfo.totalElements ?? 0
+  const pageCount = Number(search.pageCount) || 10
+  const totalPages = Math.ceil(totalList / pageCount)
+
+  console.log(
+    'OutsourcingCompanyDataListOutsourcingCompanyDataListOutsourcingCompanyDataList@#',
+    OutsourcingCompanyDataList,
+  )
+
+  const updateOutsourcingList = OutsourcingCompanyDataList.map((user: OutsourcingCompanyList) => {
+    const mainContact = user.contacts?.find((contact) => contact.isMain === true)
+
+    return {
+      ...user,
+      contactName: mainContact?.name || '-',
+      contactPositionAndDepartment: mainContact
+        ? `${mainContact.position} <br/> ${mainContact.department}`
+        : '-',
+      contactInfo: mainContact
+        ? `${mainContact.phoneNumber || '-'}<br/>${mainContact.email || '-'}`
+        : '-',
+      Deductible: user.defaultDeductions,
+      isActive: 'Y',
+      hasFile: 'Y',
+      createdAt: `${getTodayDateString(user.createdAt)} / ${getTodayDateString(user.updatedAt)}`,
+    }
+  })
+
+  const { selectedIds, setSelectedIds } = useAccountStore()
+
+  const router = useRouter()
+
+  // 그리도 라우팅 로직!
+  const enhancedColumns = outsourcingCompanyList.map((col): GridColDef => {
+    if (col.field === 'name') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 1,
+
+        renderCell: (params: GridRenderCellParams) => {
+          const clientId = params.row.id
+          return (
+            <div
+              onClick={() => router.push(`/outsourcingCompany/registration/${clientId}`)}
+              className="flex justify-center items-center cursor-pointer"
+            >
+              <span className="text-orange-500 font-bold">{params.value}</span>
+            </div>
+          )
+        },
+      }
+    }
+    if (col.field === 'no') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 0.5,
+        renderCell: (params: GridRenderCellParams) => {
+          const sortedRowIds = params.api.getSortedRowIds?.() ?? []
+          const indexInCurrentPage = sortedRowIds.indexOf(params.id)
+          const no = (search.currentPage - 1) * pageCount + indexInCurrentPage + 1
+          return <span>{no}</span>
+        },
+      }
+    }
+    return {
+      ...col,
+      sortable: false,
+      headerAlign: 'center',
+      align: 'center',
+      flex: 1,
+    }
+  })
+
+  const [modalOpen, setModalOpen] = useState(false)
+  // userExcelFieldMap 객체를 { label: string, value: string }[] 배열로 바꿔줍니다.
+
+  const fieldMapArray = Object.entries(outsourcingCompanyExcelFieldMap).map(([label, value]) => ({
+    label,
+    value,
+  }))
+
+  const handleDownloadExcel = async (fields: string[]) => {
+    await OutsourcingCompanyExcelDownload({
+      sort: search.arraySort === '최신순' ? 'id,desc' : 'id,asc',
+      name: search.name,
+      businessNumber: search.businessNumber,
+      ceoName: search.ceoName,
+      landlineNumber: search.landlineNumber,
+      type: search.type,
+      createdStartDate: search.startDate ? getTodayDateString(search.startDate) : undefined,
+      createdEndDate: search.endDate ? getTodayDateString(search.endDate) : undefined,
+      isActive: search.isActive !== 'N',
+      fields, // 필수 필드: ["id", "name", "businessNumber", ...]
+    })
+  }
 
   return (
     <>
@@ -42,8 +147,8 @@ export default function OutsourcingCompanyView() {
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
-                value={search.companyName}
-                onChange={(value) => search.setField('companyName', value)}
+                value={search.name}
+                onChange={(value) => search.setField('name', value)}
                 className=" flex-1"
               />
             </div>
@@ -77,78 +182,77 @@ export default function OutsourcingCompanyView() {
 
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              연락처
+              전화번호
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
               <CommonInput
-                value={search.phoneNumber}
-                onChange={(value) => search.setField('phoneNumber', value)}
-                className="flex-1"
+                placeholder="'-'없이 숫자만 입력"
+                value={search.landlineNumber}
+                onChange={(value) => {
+                  const resultAreaNumber = formatAreaNumber(value)
+                  search.setField('landlineNumber', resultAreaNumber)
+                }}
+                className=" flex-1"
               />
             </div>
           </div>
 
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              외주업체 담당자명
+              구분
             </label>
             <div className="border border-gray-400  px-2 w-full flex gap-3 items-center ">
-              <CommonInput
-                value={search.contractorName}
-                onChange={(value) => search.setField('contractorName', value)}
-                className="flex-1"
+              <CommonSelect
+                fullWidth
+                className="text-2xl"
+                value={search.type || 'BASE'}
+                onChange={(value) => search.setField('type', value)}
+                options={typeMethodOptions}
               />
             </div>
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              이메일
-            </label>
-            <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
-              <CommonInput
-                value={search.email}
-                onChange={(value) => search.setField('email', value)}
-                className="flex-1"
-              />
-            </div>
-          </div>
-
-          <div className="flex">
-            <label className="w-36  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               등록일자
             </label>
-            {/* <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
+            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonDatePicker
                 value={search.startDate}
-                onChange={(value) => search.setField('startDate', value)}
+                onChange={(value) => {
+                  search.setField('startDate', value)
+
+                  if (
+                    value !== null &&
+                    search.endDate !== null &&
+                    new Date(search.endDate) < new Date(value)
+                  ) {
+                    search.setField('endDate', value)
+                  }
+                }}
               />
               ~
               <CommonDatePicker
                 value={search.endDate}
-                onChange={(value) => search.setField('endDate', value)}
-              />
-            </div> */}
-          </div>
-
-          <div className="flex">
-            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              보증서 제출 여부
-            </label>
-            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
-              <CommonSelect
-                fullWidth={true}
-                value={search.isSubmit}
-                onChange={(value) => search.setField('isSubmit', value)}
-                options={SubmitOptions}
+                onChange={(value) => {
+                  if (
+                    value !== null &&
+                    search.startDate !== null &&
+                    new Date(value) < new Date(search.startDate)
+                  ) {
+                    showSnackbar('종료일은 시작일 이후여야 합니다.', 'error')
+                    return
+                  }
+                  search.setField('endDate', value)
+                }}
               />
             </div>
           </div>
           <div className="flex">
-            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               사용 여부
             </label>
 
-            <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
+            <div className="border border-gray-400 p-2 px-2 w-full flex justify-center items-center">
               <CommonSelect
                 fullWidth={true}
                 value={search.isActive}
@@ -156,6 +260,16 @@ export default function OutsourcingCompanyView() {
                 options={UseORnotOptions}
               />
             </div>
+          </div>
+          <div className="flex">
+            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center"></label>
+
+            <div className="border border-gray-400 px-2 w-full flex justify-center items-center"></div>
+          </div>
+          <div className="flex">
+            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center"></label>
+
+            <div className="border border-gray-400 px-2 w-full flex justify-center items-center"></div>
           </div>
         </div>
         <div className="flex items-center justify-center gap-6">
@@ -177,21 +291,22 @@ export default function OutsourcingCompanyView() {
 
       <div className="mt-6 mb-4">
         <div className="bg-white flex justify-between items-center">
-          {/* 왼쪽 상태 요약 */}
           <div className="flex items-center gap-2 text-sm text-gray-700">
-            <span className="font-medium">전체 999개</span>
-            <span className="text-gray-500">(진행중 000 / 종료 000)</span>
+            <span className="font-medium">전체 : {totalList}</span>
+            {/* <span className="text-gray-500">(진행중 000 / 종료 000)</span> */}
           </div>
 
           {/* 오른쪽 컨트롤 영역 */}
           <div className="flex items-center gap-4">
-            {/* 정렬 */}
             <div className="flex items-center gap-2">
               <span className="text-base font-medium text-gray-600">정렬</span>
               <CommonSelect
-                value={sortList}
-                fullWidth={false}
-                onChange={setSortList}
+                value={search.arraySort}
+                className="text-2xl w-full"
+                onChange={(value) => {
+                  search.setField('arraySort', value)
+                  search.setField('currentPage', 1)
+                }}
                 options={ArrayStatusOptions}
               />
             </div>
@@ -199,30 +314,56 @@ export default function OutsourcingCompanyView() {
             <div className="flex items-center gap-2">
               <span className="text-base font-medium text-gray-600">페이지당 목록 수</span>
               <CommonSelect
-                value={sortList}
-                fullWidth={false}
-                onChange={setSortList}
-                options={ArrayStatusOptions}
+                value={search.pageCount}
+                className="text-2xl w-full"
+                onChange={(value) => {
+                  search.setField('pageCount', value)
+                  search.setField('currentPage', 1) // 페이지 초기화 반드시 필요!
+                }}
+                options={PageCount}
               />
             </div>
 
             <div className="flex items-center gap-2">
               <CommonButton
                 label="삭제"
-                variant="reset"
-                onClick={handleListRemove}
+                variant="danger"
+                onClick={() => {
+                  if (!selectedIds || !(selectedIds.ids instanceof Set)) {
+                    alert('체크박스를 선택해주세요.')
+                    return
+                  }
+
+                  const idsArray = [...selectedIds.ids]
+                  if (idsArray.length === 0) {
+                    alert('체크박스를 선택해주세요.')
+                    return
+                  }
+
+                  OutsourcingDeleteMutation.mutate({
+                    outsourcingCompanyIds: idsArray,
+                  })
+                }}
                 className="px-3"
               />
               <CommonButton
                 label="엑셀 다운로드"
                 variant="reset"
-                onClick={handleDownloadExcel}
+                onClick={() => setModalOpen(true)}
                 className="px-3"
+              />
+
+              <ExcelModal
+                open={modalOpen}
+                onClose={() => setModalOpen(false)}
+                title="외주업체 관리 - 엑셀 항목 선택"
+                fieldMap={fieldMapArray}
+                onDownload={handleDownloadExcel}
               />
               <CommonButton
                 label="+ 신규등록"
                 variant="secondary"
-                onClick={handleNewBusinessCreate}
+                onClick={() => openTab('/outsourcingCompany/registration', '외주업체 관리 - 등록')}
                 className="px-3"
               />
             </div>
@@ -231,8 +372,8 @@ export default function OutsourcingCompanyView() {
       </div>
       <div style={{ height: 500, width: '100%' }}>
         <DataGrid
-          rows={displayedRows}
-          columns={CostColumnList.map((col) => ({
+          rows={updateOutsourcingList}
+          columns={enhancedColumns.map((col) => ({
             ...col,
             sortable: false,
             headerAlign: 'center',
@@ -249,14 +390,16 @@ export default function OutsourcingCompanyView() {
           hideFooterPagination
           // pageSize={pageSize}
           rowHeight={60}
-          // selectionMode={selectedIds}
-          onRowSelectionModelChange={(newSelection) => setSelectedIds(newSelection)}
+          onRowSelectionModelChange={(newSelection) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            setSelectedIds(newSelection as any) // 타입 보장된다면 사용 가능
+          }}
         />
         <div className="flex justify-center mt-4 pb-6">
           <Pagination
             count={totalPages}
-            page={page}
-            onChange={(_, newPage) => setPage(newPage)}
+            page={search.currentPage}
+            onChange={(_, newPage) => search.setField('currentPage', newPage)}
             shape="rounded"
             color="primary"
           />

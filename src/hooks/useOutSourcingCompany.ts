@@ -1,0 +1,163 @@
+import {
+  CreateOutsourcingCompany,
+  ModifyOutsourcingCompany,
+  OutsourcingDeductionIdInfoService,
+  OutsourcingTypesIdInfoService,
+} from '@/services/outsourcingCompany/outsourcingCompanyRegistrationService'
+import {
+  OutsourcingCompanyInfoService,
+  OutsourcingCompanyRemoveService,
+} from '@/services/outsourcingCompany/outsourcingCompanyService'
+import {
+  useOutsourcingFormStore,
+  useOutsourcingSearchStore,
+} from '@/stores/outsourcingCompanyStore'
+import { useSnackbarStore } from '@/stores/useSnackbarStore'
+import { getTodayDateString } from '@/utils/formatters'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { usePathname, useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+
+export default function useOutSourcingCompany() {
+  const { showSnackbar } = useSnackbarStore()
+  const { reset } = useOutsourcingFormStore()
+
+  const router = useRouter()
+  const queryClient = useQueryClient()
+
+  // 외주업체 조회
+  const search = useOutsourcingSearchStore((state) => state.search)
+
+  const pathName = usePathname()
+
+  // 초기 화면에 들어왔을 때 currentPage 1로 세팅 (예: useEffect 등에서)
+  useEffect(() => {
+    if (search.searchTrigger && search.currentPage !== 0) {
+      search.setField('currentPage', 1)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.searchTrigger])
+
+  // useQuery 쪽 수정
+  const OutsourcingListQuery = useQuery({
+    queryKey: [
+      'OutsourcingInfo',
+      search.searchTrigger,
+      search.currentPage,
+      search.pageCount,
+      search.arraySort /* 필요한 상태들 추가 */,
+      pathName,
+    ],
+    queryFn: () => {
+      const rawParams = {
+        name: search.name,
+        businessNumber: search.businessNumber,
+        ceoName: search.ceoName,
+        landlineNumber: search.landlineNumber,
+        type: search.type,
+        createdStartDate: getTodayDateString(search.startDate),
+        createdEndDate: getTodayDateString(search.endDate),
+        isActive: search.isActive === '1' ? true : search.isActive === '2' ? false : undefined,
+        page: search.currentPage - 1, // 항상 현재 페이지에 맞춤
+        size: Number(search.pageCount) || 10,
+        sort:
+          search.arraySort === '최신순'
+            ? 'id,desc'
+            : search.arraySort === '오래된순'
+            ? 'id.asc'
+            : 'id.asc',
+      }
+
+      const filteredParams = Object.fromEntries(
+        Object.entries(rawParams).filter(
+          ([, value]) =>
+            value !== undefined &&
+            value !== null &&
+            value !== '' &&
+            !(typeof value === 'number' && isNaN(value)),
+        ),
+      )
+
+      return OutsourcingCompanyInfoService(filteredParams)
+    },
+    staleTime: 1000 * 30,
+    enabled: pathName === '/outsourcingCompany', // 경로 체크
+  })
+
+  const createOutSourcingMutation = useMutation({
+    mutationFn: CreateOutsourcingCompany,
+    onSuccess: () => {
+      showSnackbar('외주업체가 등록 되었습니다.', 'success')
+      // 초기화 로직
+      queryClient.invalidateQueries({ queryKey: ['outsourcingInfo'] })
+      reset()
+      router.push('/outsourcingCompany')
+    },
+    onError: () => {
+      showSnackbar('외주업체 등록이 실패했습니다.', 'error')
+    },
+  })
+
+  const { data: typeInfoId } = useQuery({
+    queryKey: ['typeInfofo'],
+    queryFn: OutsourcingTypesIdInfoService,
+  })
+
+  const typeMethodOptions = [{ code: 'BASE', name: '선택' }, ...(typeInfoId?.data ?? [])]
+
+  const { data: deductionInfoId } = useQuery({
+    queryKey: ['deductionInfo'],
+    queryFn: OutsourcingDeductionIdInfoService,
+  })
+
+  const deductionMethodOptions = [...(deductionInfoId?.data ?? [])]
+
+  const outsourcingCancel = () => {
+    router.push('/outsourcingCompany')
+  }
+
+  // 수정 쿼리
+  const OutsourcingModifyMutation = useMutation({
+    mutationFn: (outsourcingIds: number) => ModifyOutsourcingCompany(outsourcingIds),
+
+    onSuccess: () => {
+      if (window.confirm('수정하시겠습니까?')) {
+        showSnackbar('외주업체가 수정 되었습니다.', 'success')
+        queryClient.invalidateQueries({ queryKey: ['outsourcingInfo'] })
+        reset()
+        router.push('/outsourcingCompany')
+      }
+    },
+
+    onError: () => {
+      showSnackbar(' 외주업체 수정에 실패했습니다.', 'error')
+    },
+  })
+
+  // 삭제
+  const OutsourcingDeleteMutation = useMutation({
+    mutationFn: ({ outsourcingCompanyIds }: { outsourcingCompanyIds: number[] }) =>
+      OutsourcingCompanyRemoveService(outsourcingCompanyIds),
+
+    onSuccess: () => {
+      if (window.confirm('정말 삭제하시겠습니까?')) {
+        showSnackbar('외주업체가 삭제되었습니다.', 'success')
+        queryClient.invalidateQueries({ queryKey: ['OutsourcingInfo'] })
+      }
+    },
+
+    onError: () => {
+      showSnackbar(' 외주업체 삭제에 실패했습니다.', 'error')
+    },
+  })
+
+  return {
+    OutsourcingListQuery,
+    createOutSourcingMutation,
+    typeMethodOptions,
+    deductionMethodOptions,
+    outsourcingCancel,
+    OutsourcingModifyMutation,
+    OutsourcingDeleteMutation,
+  }
+}

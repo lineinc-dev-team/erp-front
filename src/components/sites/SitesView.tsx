@@ -273,16 +273,6 @@ export default function SitesView() {
               현장유형
             </label>
             <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
-              {/* <CommonSelectByName
-                fullWidth={true}
-                className="text-xl"
-                options={SiteOptions}
-                value={search.type || '선택'} // 현재 선택된 name 값
-                onChange={(value) => {
-                  search.setField('type', value) // 선택된 name을 상태로 저장
-                }}
-              /> */}
-
               <CommonSelect
                 fullWidth={true}
                 className="text-xl"

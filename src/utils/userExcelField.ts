@@ -154,3 +154,26 @@ export const AccountExcelFieldMap = {
 
 export type AccountxcelFieldLabel = keyof typeof AccountExcelFieldMap
 export type AccountExcelFieldKey = (typeof AccountExcelFieldMap)[AccountxcelFieldLabel]
+
+// 외주업체관리
+
+export const outsourcingCompanyExcelFieldMap = {
+  No: 'id',
+  업체명: 'name',
+  사업자등록번호: 'businessNumber',
+  구분: 'type',
+  대표자명: 'ceoName',
+  주소: 'address',
+  전화번호: 'landlineNumber',
+  이메일: 'email',
+  담당자명: 'contactName',
+  '직급,부서': 'contactPositionAndDepartment',
+  '공제항목 기본값': 'defaultDeductions',
+  사용여부: 'isActive',
+  '등록일, 수정일': 'createdAtAndUpdatedAt',
+  첨부파일유무: 'hasFile',
+  비고: 'memo',
+} as const
+
+export type WorkoutExcelFieldLabel = keyof typeof outsourcingCompanyExcelFieldMap
+export type WorkoutExcelFieldKey = (typeof outsourcingCompanyExcelFieldMap)[WorkoutExcelFieldLabel]

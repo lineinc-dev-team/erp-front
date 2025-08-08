@@ -48,7 +48,7 @@ export const ProcessStatusOptions = [
 
 export const ArrayStatusOptions = [
   { id: '최신순', name: '최신순' },
-  { id: '날짜순', name: '날짜순' },
+  { id: '오래된순', name: '오래된순' },
   // { label: '이름순', name: '이름순' },
 ]
 
@@ -177,6 +177,26 @@ export const clientCompanyList: GridColDef[] = [
   { field: 'memo', headerName: '비고', width: 100 },
 ]
 
+export const outsourcingCompanyList: GridColDef[] = [
+  { field: 'no', headerName: 'No', width: 70 },
+  // { field: 'id', headerName: 'No', width: 70 },
+  { field: 'name', headerName: '업체명', width: 130 },
+  { field: 'businessNumber', headerName: '사업자등록번호', width: 130 },
+  { field: 'type', headerName: '구분', width: 130 },
+  { field: 'ceoName', headerName: '대표자명', width: 130 },
+  { field: 'address', headerName: '주소', width: 180 },
+  { field: 'landlineNumber', headerName: '전화번호', width: 100 },
+  { field: 'email', headerName: '이메일', width: 100 },
+  { field: 'contactName', headerName: '담당자명', width: 100 },
+  { field: 'contactPositionAndDepartment', headerName: '부서/직급', width: 120 },
+  { field: 'contractHistory', headerName: '계약이력', width: 120 },
+  { field: 'Deductible', headerName: '공제항목 기본값', width: 100 },
+  { field: 'hasFile', headerName: '첨부파일 유부', width: 100 },
+  { field: 'isActive', headerName: '사용여부', width: 100 },
+  { field: 'createdAt', headerName: '등록일/수정일', width: 100 },
+  { field: 'memo', headerName: '비고', width: 100 },
+]
+
 export const AreaCode = [
   { id: '지역번호', name: '지역번호' },
   { id: '02', name: '02' },
@@ -245,11 +265,11 @@ export const materialTypeOptions = [
 ]
 
 export const bankOptions = [
-  { label: '선택', name: '선택' },
-  { label: '기업은행', name: '기업은행' },
-  { label: '농협은행', name: '농협은행' },
-  { label: '우리은행', name: '우리은행' },
-  { label: '카카오뱅크', name: '카카오뱅크' },
-  { label: '국민은행', name: '국민은행' },
-  { label: '신한은행', name: '신한은행' },
+  { id: '0', name: '선택' },
+  { id: '1', name: '기업은행' },
+  { id: '2', name: '농협은행' },
+  { id: '3', name: '우리은행' },
+  { id: '4', name: '카카오뱅크' },
+  { id: '5', name: '국민은행' },
+  { id: '6', name: '신한은행' },
 ]

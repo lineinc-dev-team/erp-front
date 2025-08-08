@@ -207,7 +207,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
       setField('ceoName', client.ceoName)
       setField('email', client.email)
       setField('paymentPeriod', client.paymentPeriod)
-      setField('isActive', client.isActive ? '사용' : '미사용')
+      setField('isActive', client.isActive ? '1' : '2')
 
       setField('userId', client.user.id)
 

@@ -18,7 +18,7 @@ export const useOrderingSearchStore = create<{ search: OrderingSearchState }>((s
     email: '',
     startDate: null,
     endDate: null,
-    isActive: '선택',
+    isActive: '0',
     arraySort: '최신순',
     currentPage: 1,
     pageCount: '10',
@@ -53,7 +53,7 @@ export const useOrderingSearchStore = create<{ search: OrderingSearchState }>((s
           endDate: null,
           arraySort: '최신순',
           pageCount: '10',
-          isActive: '선택',
+          isActive: '0',
         },
       })),
 

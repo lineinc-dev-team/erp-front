@@ -1,93 +1,157 @@
-export type Manager = {
+export type OutsourcingManager = {
   id: number
   name: string
+  position: string
   department: string
-  tel: string
-  phone: string
-  email: string
-  memo: string
-}
-
-export type AttachedFile = {
-  id: number
-  fileName: string
-  memo: string
-  files: File[]
-}
-
-export type FormState = {
-  // 기존 필드들
-  companyName: string
-  businessNumber: string
-  address: string
-  detailAddress: string
-  startDate?: Date | null | undefined
-  endDate?: Date | null | undefined
-  ceoName: string
-  areaNumber: string
-  isModalOpen: boolean
+  managerAreaNumber: string
+  landlineNumber: string
   phoneNumber: string
   email: string
-  deductType: string
-  deductDesc: string
-  guaranteeType: string
-  isActive: string
   memo: string
+  isMain?: boolean //대표 담당자
+}
+
+export type OutsourcingAttachedFile = {
+  id: number
+  name: string
+  memo: string
+  fileUrl?: string
+  originalFileName?: string
+  files: FileUploadInfo[]
+}
+
+// 발주처 조회 리스트 가져오는 타입들
+export interface Contact {
+  id: number
+  name: string
+  phoneNumber: string
+  landlineNumber: string
+  email: string
+  memo?: string
+  position: string
+  department: string
+  isMain?: boolean
+}
+
+// 발주처 조회
+export interface OutsourcingCompanyList {
+  id: number
+  name: string // 발주처 이름
+  businessNumber: string
+  type: string
+  typeCode: string
+  ceoName: string
+  address: string
+  detailAddress: string
+  landlineNumber: string
+  phoneNumber: string
+  email: string
+  isActive: false
+  defaultDeductions: string
+  defaultDeductionsCode: string
+  defaultDeductionsDescription: string
+  memo: string
+  createdAt: string // ISO 날짜 문자열
+  updatedAt: string
+  hasFile: true
+  contacts: Contact[]
+}
+
+export type OutsourcingSearchState = {
+  searchTrigger: number
+  name: string
+  businessNumber: string
+  ceoName: string
+  landlineNumber: string
+  type: string
+  startDate: Date | null
+  endDate: Date | null
+  isActive: string
+  currentPage: number
+  arraySort: string
+  pageCount: string
+
+  reset: () => void
+
+  setField: <K extends keyof Omit<OutsourcingSearchState, 'reset' | 'setField'>>(
+    field: K,
+    value: OutsourcingSearchState[K],
+  ) => void
+
+  handleSearch: () => void
+}
+
+// 수정에 사용 할 타입
+type HistoryItem = {
+  id: number
+  no: number
+  getChanges: string
+  createdAt: string // or Date
+  updatedAt: string
+  content: string // 수정항목
+  updatedBy: string
+  memo: string
+  type: string
+}
+
+export type OutsourcingFormState = {
+  // 기존 필드들
+  name: string
+  businessNumber: string
+  type: string
+  typeDescription: string
+  ceoName: string
+  address: string
+  detailAddress: string
+  isModalOpen: boolean
+  landlineNumber: string
+  landlineLastNumber: string
+  phoneNumber: string
+  email: string
+  defaultDeductions: string
+  defaultDeductionsDescription: string
+  bankName: string
+  accountNumber: string
+  accountHolder: string
+  memo: string
+  isActive: string
 
   // 담당자 배열
-  headManagers: Manager[]
+  headManagers: OutsourcingManager[]
 
   // 선택된 체크박스 id
   checkedManagerIds: number[]
 
   // 파일첨부, 수정이력
-  attachedFiles: AttachedFile[]
+  attachedFiles: OutsourcingAttachedFile[]
   checkedAttachedFileIds: number[]
 
-  modificationHistory: {
-    modifiedAt: Date | null
-    modifiedField: string
-    modifiedBy: string
-    note: string
-  }[]
+  editedHistories?: Pick<HistoryItem, 'id' | 'memo'>[]
+  changeHistories: HistoryItem[] // 수정 이력 포함
+}
+
+type OutsourcingCompanyFormStore = {
+  form: OutsourcingFormState
+
+  reset: () => void
 
   // methods
-  reset: () => void
-  setField: <K extends keyof Omit<FormState, 'reset' | 'setField'>>(
+  setField: <K extends keyof Omit<OutsourcingFormState, 'reset' | 'setField'>>(
     field: K,
-    value: FormState[K],
+    value: OutsourcingFormState[K],
   ) => void
 
   addItem: (type: 'manager' | 'attachedFile') => void
   updateItemField: (type: 'manager' | 'attachedFile', id: number, field: string, value: T) => void
-  toggleCheckItem: (ype: 'manager' | 'attachedFile', id: number, checked: boolean) => void
-  toggleCheckAllItems: (ype: 'manager' | 'attachedFile', checked: boolean) => void
-  removeCheckedItems: (ype: 'manager' | 'attachedFile') => void
+  toggleCheckItem: (type: 'manager' | 'attachedFile', id: number, checked: boolean) => void
+  toggleCheckAllItems: (type: 'manager' | 'attachedFile', checked: boolean) => void
+  removeCheckedItems: (type: 'manager' | 'attachedFile') => void
+  // updateAttachedFileUploads: (id: number, newFiles: FileUploadInfo[]) => void
 
-  //외주업체 등록하기
-  newOutsouringCompany: () => void
-  handleCancelData: () => void
-}
+  updateMemo: (id: number, newMemo: string) => void
+  setRepresentativeManager: (id: number) => void
+  //발주처 등록하기
 
-export type outSourcingCompanySearchProps = {
-  companyName: string
-  businessNumber: string
-  ceoName: string
-  phoneNumber: string
-  contractorName: string
-  email: string
-  startDate: Date | null | undefined
-  endDate: Date | null | undefined
-  bossName: string
-  isSubmit: string
-  isActive: string
-  arraySort: string
-  pageCount: string
-
-  reset: () => void
-  setField: <K extends keyof Omit<outSourcingCompanySearchProps, 'reset' | 'setField'>>(
-    field: K,
-    value: outSourcingCompanySearchProps[K],
-  ) => void
-  handleSearch: () => void
+  //payload 값
+  newOutsourcingCompanyData: () => void
 }
