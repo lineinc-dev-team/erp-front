@@ -16,6 +16,7 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Typography,
 } from '@mui/material'
 import { AreaCode, bankOptions, UseORnotOptions } from '@/config/erp.confing'
 import { idTypeValueToName, useOutsourcingFormStore } from '@/stores/outsourcingCompanyStore'
@@ -26,8 +27,13 @@ import CommonInputnumber from '@/utils/formatBusinessNumber'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { OutsourcingDetailService } from '@/services/outsourcingCompany/outsourcingCompanyRegistrationService'
-import { useEffect } from 'react'
-import { OutsourcingAttachedFile, OutsourcingManager } from '@/types/outsourcingCompany'
+import { useCallback, useEffect, useRef } from 'react'
+import {
+  HistoryItem,
+  OutsourcingAttachedFile,
+  OutsourcingManager,
+} from '@/types/outsourcingCompany'
+import { getTodayDateString } from '@/utils/formatters'
 
 export default function OutsourcingCompanyRegistrationView({ isEditMode = false }) {
   const {
@@ -36,9 +42,9 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     updateItemField,
     removeCheckedItems,
     reset,
+    updateMemo,
     setRepresentativeManager,
     addItem,
-    // updateMemo,
     toggleCheckItem,
     toggleCheckAllItems,
   } = useOutsourcingFormStore()
@@ -49,6 +55,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     outsourcingCancel,
     deductionMethodOptions,
     OutsourcingModifyMutation,
+    useOutsourcingCompanyHistoryDataQuery,
   } = useOutSourcingCompany()
 
   console.log(
@@ -82,6 +89,38 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     queryFn: () => OutsourcingDetailService(outsourcingCompanyId),
     enabled: isEditMode && !!outsourcingCompanyId, // 수정 모드일 때만 fetch
   })
+
+  const PROPERTY_NAME_MAP: Record<string, string> = {
+    departmentName: '부서(소속)',
+    positionName: '직급',
+    gradeName: '직책',
+    phoneNumber: '개인 휴대폰',
+    landlineNumber: '전화번호',
+    email: '이메일',
+    isActive: '계정 상태',
+    memo: '메모',
+    name: '업체명',
+    businessNumber: '사업자등록번호',
+    typeName: '구분명',
+    typeDescription: '구분 설명',
+    defaultDeductionsName: '기본공제 항목',
+    defaultDeductionsDescription: '기본공제 항목 설명',
+    ceoName: '대표자명',
+    detailAddress: '상세주소',
+    bankName: '은행명',
+    accountNumber: '계좌번호',
+    accountHolder: '예금주',
+  }
+
+  const {
+    data: outsourcingHistoryList,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useOutsourcingCompanyHistoryDataQuery(outsourcingCompanyId, isEditMode)
+
+  const historyList = useOutsourcingFormStore((state) => state.form.changeHistories)
 
   useEffect(() => {
     if (outsourcingDetailData && isEditMode === true) {
@@ -219,6 +258,87 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [outsourcingDetailData, isEditMode, reset, setField])
 
+  const formatChangeDetail = (getChanges: string) => {
+    try {
+      const parsed = JSON.parse(getChanges)
+      if (!Array.isArray(parsed)) return '-'
+
+      return parsed.map(
+        (item: { property: string; before: string | null; after: string | null }, idx: number) => {
+          const propertyKo = PROPERTY_NAME_MAP[item.property] || item.property
+
+          const convertValue = (value: string | null) => {
+            if (value === 'true') return '사용'
+            if (value === 'false') return '미사용'
+            if (value === null || value === 'null') return 'null'
+            return value
+          }
+
+          let before = convertValue(item.before)
+          let after = convertValue(item.after)
+
+          // 스타일 결정
+          let style = {}
+          if (before === 'null') {
+            before = '추가'
+            style = { color: '#1976d2' } // 파란색 - 추가
+          } else if (after === 'null') {
+            after = '삭제'
+            style = { color: '#d32f2f' } // 빨간색 - 삭제
+          }
+
+          return (
+            <Typography key={idx} component="div" style={style}>
+              {before === '추가'
+                ? `추가됨 => ${after}`
+                : after === '삭제'
+                ? ` ${before} => 삭제됨`
+                : `${propertyKo} : ${before} => ${after}`}
+            </Typography>
+          )
+        },
+      )
+    } catch (e) {
+      if (e instanceof Error) return '-'
+    }
+  }
+
+  // 수정이력 데이터가 들어옴
+  useEffect(() => {
+    if (outsourcingHistoryList?.pages) {
+      const allHistories = outsourcingHistoryList.pages.flatMap((page) =>
+        page.data.content.map((item: HistoryItem) => ({
+          id: item.id,
+          type: item.type,
+          content: formatChangeDetail(item.getChanges), // 여기 변경
+          createdAt: getTodayDateString(item.createdAt),
+          updatedAt: getTodayDateString(item.updatedAt),
+          updatedBy: item.updatedBy,
+          memo: item.memo ?? '',
+        })),
+      )
+      setField('changeHistories', allHistories)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [outsourcingHistoryList, setField])
+
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  const loadMoreRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (isLoading || isFetchingNextPage) return
+      if (observerRef.current) observerRef.current.disconnect()
+
+      observerRef.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage()
+        }
+      })
+
+      if (node) observerRef.current.observe(node)
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading],
+  )
+
   return (
     <>
       <div>
@@ -238,7 +358,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              사업장등록번호
+              사업자등록번호
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -389,10 +509,10 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
           </div>
 
           <div className="flex">
-            <label className="w-30 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-[119] text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
               공제 항목 기본값
             </label>
-            <div className="flex flex-wrap px-2 items-center gap-4 flex-1">
+            <div className="flex border  border-gray-400 flex-wrap px-2 items-center gap-4 flex-1">
               {deductionMethodOptions.map((opt) => (
                 <label key={opt.code} className="flex items-center gap-1 text-sm">
                   <input
@@ -405,7 +525,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
               ))}
 
               <CommonInput
-                placeholder="텍스트 입력"
+                placeholder="텍스트 입력, ','구분"
                 value={form.defaultDeductionsDescription}
                 onChange={(value) => setField('defaultDeductionsDescription', value)}
                 className="flex-1 text-sm"
@@ -755,81 +875,103 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
         </TableContainer>
       </div>
 
-      {/* <div className="mt-4">
-        <span className="font-bold border-b-2 mb-4">계약이력</span>
-      </div>
-      <div className="flex mt-1">
-        <div className="flex flex-col w-1/4">
-          <label className=" border border-gray-400 w-full flex items-center justify-center bg-gray-300  font-bold text-center">
-            변경일시
-          </label>
-          <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
-            <p>이경호</p>
+      {isEditMode && (
+        <div>
+          <div className="flex justify-between items-center mt-10 mb-2">
+            <span className="font-bold border-b-2 mb-4">수정이력</span>
+            <div className="flex gap-4">
+              {/* <CommonButton
+                    label="삭제"
+                    className="px-7"
+                    variant="danger"
+                    onClick={() => removeCheckedItems('manager')}
+                  />
+                  <CommonButton
+                    label="추가"
+                    className="px-7"
+                    variant="secondary"
+                    onClick={() => addItem('manager')}
+                  /> */}
+            </div>
           </div>
+          <TableContainer component={Paper}>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                  {['No', '수정일시', '항목', '수정항목', '수정자', '비고 / 메모'].map((label) => (
+                    <TableCell
+                      key={label}
+                      align="center"
+                      sx={{
+                        backgroundColor: '#D1D5DB',
+                        border: '1px solid  #9CA3AF',
+                        color: 'black',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {label}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {historyList.map((item: HistoryItem) => (
+                  <TableRow key={item.id}>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      {item.id}
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      {item.createdAt} / {item.updatedAt}
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{
+                        border: '1px solid  #9CA3AF',
+                        textAlign: 'center',
+                        whiteSpace: 'pre-line',
+                      }}
+                    >
+                      {item.type}
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'pre-line' }}
+                    >
+                      {item.content}
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'pre-line' }}
+                    >
+                      {item.updatedBy}
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        value={item.memo ?? ''}
+                        placeholder="메모 입력"
+                        onChange={(e) => updateMemo(item.id, e.target.value)}
+                        multiline
+                        inputProps={{ maxLength: 500 }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {hasNextPage && (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center" sx={{ border: 'none' }}>
+                      <div ref={loadMoreRef} className="p-4 text-gray-500 text-sm">
+                        불러오는 중...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </div>
-        <div className="flex flex-col w-1/4">
-          <label className="w-full  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-            변경 항목
-          </label>
-          <div className="border border-gray-400 px-2 p-2 w-full flex justify-center  gap-2.5 items-center">
-            <p>이경호</p>
-          </div>
-        </div>
-        <div className="flex flex-col w-1/4">
-          <label className="w-full  border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
-            변경자
-          </label>
-          <div className="border border-gray-400 px-2 p-2 flex w-full justify-center  gap-2.5 items-center">
-            <p>이경호</p>
-          </div>
-        </div>
-        <div className="flex flex-col w-1/4">
-          <label className="w-full  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-            수정 사유
-          </label>
-          <div className="border border-gray-400 px-2 p-2 w-full flex justify-center  gap-2.5 items-center">
-            <p>이경호</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-4">
-        <span className="font-bold border-b-2 mb-4">수정이력</span>
-      </div>
-      <div className="flex mt-1">
-        <div className="flex flex-col w-1/4">
-          <label className=" border border-gray-400 w-full flex items-center justify-center bg-gray-300  font-bold text-center">
-            변경일시
-          </label>
-          <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
-            <p>이경호</p>
-          </div>
-        </div>
-        <div className="flex flex-col w-1/4">
-          <label className="w-full  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-            변경 항목
-          </label>
-          <div className="border border-gray-400 px-2 p-2 w-full flex justify-center  gap-2.5 items-center">
-            <p>이경호</p>
-          </div>
-        </div>
-        <div className="flex flex-col w-1/4">
-          <label className="w-full  border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
-            변경자
-          </label>
-          <div className="border border-gray-400 px-2 p-2 flex w-full justify-center  gap-2.5 items-center">
-            <p>이경호</p>
-          </div>
-        </div>
-        <div className="flex flex-col w-1/4">
-          <label className="w-full  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-            수정 사유
-          </label>
-          <div className="border border-gray-400 px-2 p-2 w-full flex justify-center  gap-2.5 items-center">
-            <p>이경호</p>
-          </div>
-        </div>
-      </div> */}
+      )}
 
       <div className="flex justify-center gap-10 mt-10">
         <CommonButton label="취소" variant="reset" className="px-10" onClick={outsourcingCancel} />

@@ -171,20 +171,6 @@ export default function SitesView() {
               현장명
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              {/* <CommonSelectByName
-                value={search.name || '선택'} // 현재 선택된 name 값
-                onChange={(value) => {
-                  search.setField('name', value) // 선택된 name을 상태로 저장
-                }}
-                options={sitesOptions}
-                onScrollToBottom={() => {
-                  if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
-                }}
-                onInputChange={(value) => setSitesSearch(value)}
-                loading={siteNameLoading}
-              />
-               */}
-
               <CommonSelectByName
                 value={search.name || '선택'}
                 onChange={async (value) => {

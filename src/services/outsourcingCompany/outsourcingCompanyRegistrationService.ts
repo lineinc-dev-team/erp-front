@@ -1,8 +1,5 @@
 import { API } from '@/api/config/env'
 import { useOutsourcingFormStore } from '@/stores/outsourcingCompanyStore'
-export default function outsourcingCompanyRegistrationService() {
-  // api 로직이 들어감
-}
 
 export async function CreateOutsourcingCompany() {
   const { newOutsourcingCompanyData } = useOutsourcingFormStore.getState()
@@ -107,13 +104,14 @@ export async function ModifyOutsourcingCompany(outsourcingCompanyId: number) {
 
 // 외주업체 수정이력 조회
 // 외주업체 수정이력 조회 (페이지네이션 추가)
-export async function CLientCompanyInfoHistoryService(
+export async function OutsourcingCompanyInfoHistoryService(
   historyId: number,
   page: number = 0,
   size: number = 4,
+  sort: string,
 ) {
   const resData = await fetch(
-    `${API.CLIENTCOMPANY}/${historyId}/change-histories?page=${page}&size=${size}`,
+    `${API.OUTSOURCINGCOMPANY}/${historyId}/change-histories?page=${page}&size=${size}&sort=${sort}`,
     {
       method: 'GET',
       headers: {

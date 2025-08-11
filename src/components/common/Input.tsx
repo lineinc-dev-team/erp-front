@@ -12,6 +12,7 @@ type CommonInputProps<T> = {
   required?: boolean
   placeholder?: string
   className: string
+  disabled?: boolean
 }
 
 export default function CommonInput<T>({
@@ -24,6 +25,7 @@ export default function CommonInput<T>({
   fullWidth = true,
   required = false,
   className,
+  disabled,
 }: CommonInputProps<T>) {
   return (
     <TextField
@@ -44,6 +46,7 @@ export default function CommonInput<T>({
       fullWidth={fullWidth}
       required={required}
       size="small"
+      disabled={disabled}
       sx={{
         my: 1,
         '& .MuiOutlinedInput-root': {
@@ -55,6 +58,11 @@ export default function CommonInput<T>({
           },
           '&.Mui-focused fieldset': {
             borderColor: 'black',
+          },
+          '&.Mui-disabled': {
+            backgroundColor: '#dadada',
+            color: '#999',
+            cursor: 'not-allowed',
           },
         },
       }}

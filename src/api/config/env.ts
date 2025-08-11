@@ -10,6 +10,7 @@ export const API = {
   PROCESS: `${apiBaseUrl}/site-process`,
   CLIENTCOMPANY: `${apiBaseUrl}/client-companies`,
   OUTSOURCINGCOMPANY: `${apiBaseUrl}/outsourcing-companies`,
+  OUTSOURCINGCONTRACT: `${apiBaseUrl}/outsourcing-company-contracts`,
   LOGIN: `${apiBaseUrl}/auth/login`,
   LOGOUT: `${apiBaseUrl}/auth/logout`,
   RESETPASSWORD: `${apiBaseUrl}/auth/password`,

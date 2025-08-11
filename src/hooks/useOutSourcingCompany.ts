@@ -1,6 +1,7 @@
 import {
   CreateOutsourcingCompany,
   ModifyOutsourcingCompany,
+  OutsourcingCompanyInfoHistoryService,
   OutsourcingDeductionIdInfoService,
   OutsourcingTypesIdInfoService,
 } from '@/services/outsourcingCompany/outsourcingCompanyRegistrationService'
@@ -14,7 +15,7 @@ import {
 } from '@/stores/outsourcingCompanyStore'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { getTodayDateString } from '@/utils/formatters'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
@@ -151,6 +152,24 @@ export default function useOutSourcingCompany() {
     },
   })
 
+  // 수정이력 조회 쿼리
+
+  const useOutsourcingCompanyHistoryDataQuery = (historyId: number, enabled: boolean) => {
+    return useInfiniteQuery({
+      queryKey: ['historyList', historyId],
+      queryFn: ({ pageParam = 0 }) =>
+        OutsourcingCompanyInfoHistoryService(historyId, pageParam, 4, 'id,desc'),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage?.data
+        const nextPage = sliceInfo?.page + 1
+
+        return sliceInfo?.hasNext ? nextPage : undefined
+      },
+      enabled: enabled && !!historyId && !isNaN(historyId),
+    })
+  }
+
   return {
     OutsourcingListQuery,
     createOutSourcingMutation,
@@ -159,5 +178,6 @@ export default function useOutSourcingCompany() {
     outsourcingCancel,
     OutsourcingModifyMutation,
     OutsourcingDeleteMutation,
+    useOutsourcingCompanyHistoryDataQuery,
   }
 }

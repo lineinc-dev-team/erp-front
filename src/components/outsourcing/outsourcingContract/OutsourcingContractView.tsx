@@ -6,26 +6,10 @@ import { Pagination } from '@mui/material'
 import CommonInput from '@/components/common/Input'
 import CommonSelect from '@/components/common/Select'
 import CommonButton from '@/components/common/Button'
-import { useOrderingContractSearchStore } from '@/stores/outsourcingContractStore'
-import { OutsourcingContractService } from '@/services/outsourcingContract/outsourcingContractService'
+import { useContractSearchStore } from '@/stores/outsourcingContractStore'
 
 export default function OutsourcingContractView() {
-  const {
-    handleListRemove,
-    handleDownloadExcel,
-    handleNewBusinessCreate,
-    ArrayStatusOptions,
-    displayedRows,
-    page,
-    sortList,
-    setSortList,
-    setPage,
-    // pageSize,
-    setSelectedIds,
-    totalPages,
-  } = OutsourcingContractService()
-
-  const { search } = useOrderingContractSearchStore()
+  const { search } = useContractSearchStore()
 
   // if (isLoading) return <LoadingSkeletion />
   // if (error) throw error
@@ -92,7 +76,7 @@ export default function OutsourcingContractView() {
 
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              계약구분
+              구분
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonSelect
@@ -109,14 +93,34 @@ export default function OutsourcingContractView() {
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               {/* <CommonDatePicker
-                value={search.startDate}
-                onChange={(value) => search.setField('startDate', value)}
-              />
-              ~
-              <CommonDatePicker
-                value={search.endDate}
-                onChange={(value) => search.setField('endDate', value)}
-              /> */}
+                             value={search.startDate}
+                             onChange={(value) => {
+                               search.setField('startDate', value)
+             
+                               if (
+                                 value !== null &&
+                                 search.endDate !== null &&
+                                 new Date(search.endDate) < new Date(value)
+                               ) {
+                                 search.setField('endDate', value)
+                               }
+                             }}
+                           />
+                           ~
+                           <CommonDatePicker
+                             value={search.endDate}
+                             onChange={(value) => {
+                               if (
+                                 value !== null &&
+                                 search.startDate !== null &&
+                                 new Date(value) < new Date(search.startDate)
+                               ) {
+                                 showSnackbar('종료일은 시작일 이후여야 합니다.', 'error')
+                                 return
+                               }
+                               search.setField('endDate', value)
+                             }}
+                           /> */}
             </div>
           </div>
 
@@ -136,7 +140,7 @@ export default function OutsourcingContractView() {
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              외주업체 담당자명
+              담당자명
             </label>
             <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
               <CommonInput
@@ -147,17 +151,9 @@ export default function OutsourcingContractView() {
             </div>
           </div>
           <div className="flex">
-            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              본사 담당자명
-            </label>
+            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center"></label>
 
-            <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
-              <CommonInput
-                value={search.ceoName}
-                onChange={(value) => search.setField('ceoName', value)}
-                className="flex-1"
-              />
-            </div>
+            <div className="border border-gray-400 px-2 w-full flex justify-center items-center"></div>
           </div>
         </div>
         <div className="flex items-center justify-center gap-6">

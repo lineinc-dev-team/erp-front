@@ -1,5 +1,10 @@
+import OutsourcingContractRegistrationView from '@/components/outsourcing/outsourcingContract/OutsourcingContractRegistrationView'
 import React from 'react'
 
 export default function page() {
-  return <div></div>
+  return (
+    <div>
+      <OutsourcingContractRegistrationView isEditMode={true} />
+    </div>
+  )
 }
