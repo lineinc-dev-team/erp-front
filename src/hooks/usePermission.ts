@@ -91,7 +91,7 @@ export function usePermission() {
   // 조회에서 이름 검색 스크롤
   const useUserAccountInfiniteScroll = () => {
     return useInfiniteQuery({
-      queryKey: ['userInfo', false],
+      queryKey: ['userInfo', false], // 키워드가 바뀔 때 쿼리 리패치 되도록
       queryFn: ({ pageParam = 0 }) =>
         UserInfoService({
           hasRole: false,

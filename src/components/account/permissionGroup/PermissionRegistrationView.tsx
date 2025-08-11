@@ -75,6 +75,8 @@ export default function PermissionManagementUI({ isEditMode = false }) {
 
   // 메뉴 및 권한 타입
 
+  const isAllChecked = form.users.length > 0 && form.userIds.length === form.users.length
+
   useEffect(() => {
     if (
       isEditMode &&
@@ -85,6 +87,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
       const detail = singlepermission.data
 
       setField('name', detail.name)
+      setField('memo', detail.memo)
 
       const siteProcesses = detail.sites.map((site: PermissionGroupDetail, index: number) => ({
         siteId: site.id,
@@ -107,10 +110,6 @@ export default function PermissionManagementUI({ isEditMode = false }) {
       }))
 
       setField('users', users)
-      setField(
-        'userIds',
-        users.map((u: RoleUser) => u.userId),
-      )
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       siteProcesses.forEach(async (sp: any, idx: number) => {
@@ -128,6 +127,8 @@ export default function PermissionManagementUI({ isEditMode = false }) {
           }))
         }
       })
+    } else {
+      reset()
     }
   }, [
     isEditMode,
@@ -138,7 +139,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
     singleperUsermission?.data,
   ])
 
-  const permissionTypes: Permission['action'][] = ['조회', '등록', '수정', '삭제', '승인']
+  const permissionTypes = ['조회', '등록', '수정', '삭제', '승인'] as const
 
   const [processOptionsMap, setProcessOptionsMap] = useState<Record<number, []>>({})
 
@@ -177,6 +178,8 @@ export default function PermissionManagementUI({ isEditMode = false }) {
 
   const loginIdKeywords = form.users.map((u) => u.loginId ?? '')
   const debouncedLoginIds = useDebouncedArrayValue(loginIdKeywords, 300)
+
+  const [focusedUserId, setFocusedUserId] = useState<number | null>(null)
 
   const { data, fetchNextPage, hasNextPage, isFetching, isLoading } = useUserAccountInfiniteScroll()
 
@@ -224,6 +227,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
     setPermissionIds(Array.from(checkedPermissionIds))
   }, [checkedPermissionIds, setPermissionIds])
 
+  console.log('focusedUserIdfocusedUserId', focusedUserId)
   return (
     <div>
       <div className="flex-1">
@@ -394,10 +398,8 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                 <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
                   <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
                     <Checkbox
-                      checked={form.users.length > 0 && form.userIds.length === form.users.length}
-                      indeterminate={
-                        form.userIds.length > 0 && form.userIds.length < form.users.length
-                      }
+                      checked={isAllChecked}
+                      indeterminate={form.userIds.length > 0 && !isAllChecked}
                       onChange={(e) => toggleCheckAllItems(e.target.checked)}
                       sx={{ color: 'black' }}
                     />
@@ -450,10 +452,13 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                           </div>
                         )}
                         // onSelect={handleSelectUser}
+                        shouldShowList={focusedUserId === user.userId} // 여기서 현재 인풋이 포커스 되었는지 비교
                         onSelect={(selectedUser) => handleSelectUser(selectedUser, user.userId)}
-                        shouldShowList={true}
+                        // shouldShowList={focusedUserId === user.userId} // 포커스된 인풋에만 목록 표시
                         isLoading={isLoading || isFetching}
                         debouncedKeyword={debouncedLoginIds[index]}
+                        onFocus={() => setFocusedUserId(user.userId)} // 포커스 진입 시 해당 userId 설정
+                        onBlur={() => setFocusedUserId(null)}
                       />
                     </TableCell>
 

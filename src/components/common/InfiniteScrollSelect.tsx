@@ -14,6 +14,8 @@ type InfiniteScrollSelectProps<T> = {
   onSelect?: (item: T) => void
   shouldShowList?: boolean
   isLoading?: boolean
+  onFocus?: () => void
+  onBlur?: () => void
 }
 
 export default function InfiniteScrollSelect<T>({
@@ -26,6 +28,8 @@ export default function InfiniteScrollSelect<T>({
   fetchNextPage,
   renderItem,
   onSelect,
+  onFocus,
+  onBlur,
   shouldShowList = true,
   isLoading = false,
 }: InfiniteScrollSelectProps<T>) {
@@ -131,11 +135,21 @@ export default function InfiniteScrollSelect<T>({
         value={keyword}
         onChange={(e) => onChangeKeyword(e.target.value)}
         onFocus={() => {
-          if (keyword.trim() !== '') setIsOpen(true)
+          setIsOpen(true)
+          if (onFocus) onFocus()
         }}
         onBlur={() => {
-          // setTimeout(() => setIsOpen(false), 10000)
+          setTimeout(() => {
+            setIsOpen(false)
+            if (onBlur) onBlur()
+          }, 200) // 100~200ms 정도 딜레이 주면 충분합니다.
         }}
+        // onFocus={() => {
+        //   if (keyword.trim() !== '') setIsOpen(true)
+        // }}
+        // onBlur={() => {
+        //   // setTimeout(() => setIsOpen(false), 10000)
+        // }}
         onKeyDown={handleKeyDown}
       />
 

@@ -187,7 +187,6 @@ export default function PermissionView() {
               checkboxSelection
               disableRowSelectionOnClick
               keepNonExistentRowsSelected
-              showToolbar
               disableColumnFilter // 필터 비활성화
               hideFooter
               disableColumnMenu
