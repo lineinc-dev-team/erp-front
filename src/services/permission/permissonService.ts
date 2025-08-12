@@ -152,6 +152,8 @@ export async function ModifyPermissionService(permissionModifyId: number) {
   const { newPermissionGroupData } = usePermissionGroupStore.getState()
   const payload = newPermissionGroupData()
 
+  console.log('권한 수정 시 페이로드 !!', payload)
+
   const res = await fetch(`${API.SINGLEROLE}/${permissionModifyId}`, {
     method: 'PATCH',
     headers: {

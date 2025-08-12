@@ -218,6 +218,10 @@ export const usePermissionGroupStore = create<PermissionFormState>((set, get) =>
 
   newPermissionGroupData: () => {
     const form = get().form
+
+    const filteredSiteProcesses = form.siteProcesses.filter(
+      (sp) => !(sp.siteId === 0 && sp.processId === 0),
+    )
     return {
       name: form.name,
       memo: form.memo,
@@ -227,12 +231,8 @@ export const usePermissionGroupStore = create<PermissionFormState>((set, get) =>
       })),
       permissionIds: form.permissionIds,
       hasGlobalSiteProcessAccess: form.hasGlobalSiteProcessAccess,
-      siteProcesses:
-        form.siteProcesses.length === 1 &&
-        form.siteProcesses[0].siteId === 0 &&
-        form.siteProcesses[0].processId === 0
-          ? []
-          : form.siteProcesses,
+      // siteProcesses: allAreZeros ? [] : form.siteProcesses,
+      siteProcesses: filteredSiteProcesses,
     }
   },
 }))

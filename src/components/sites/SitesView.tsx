@@ -13,10 +13,11 @@ import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
 import {
   ArrayStatusOptions,
+  CityOptions,
+  DistrictGuOptions,
   PageCount,
   SiteColumnList,
   SiteProgressing,
-  UseORnotOptions,
 } from '@/config/erp.confing'
 import { processStatuses, SiteListProps } from '@/types/site'
 import { getTodayDateString } from '@/utils/formatters'
@@ -236,19 +237,19 @@ export default function SitesView() {
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               지역(시/군/구)
             </label>
-            <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
-              <CommonSelect
+            <div className="border border-gray-400 gap-6 px-2 w-full flex justify-center items-center">
+              <CommonSelectByName
                 className="text-2xl w-full"
-                value={search.city}
+                value={search.city || '선택'}
                 onChange={(value) => search.setField('city', value)}
-                options={UseORnotOptions}
+                options={CityOptions}
                 fullWidth={true}
               />
-              <CommonSelect
+              <CommonSelectByName
                 className="text-2xl w-full"
-                value={search.district}
+                value={search.district || '선택'}
                 onChange={(value) => search.setField('district', value)}
-                options={UseORnotOptions}
+                options={DistrictGuOptions}
                 fullWidth={true}
               />
             </div>
@@ -575,7 +576,6 @@ export default function SitesView() {
           checkboxSelection
           disableRowSelectionOnClick
           keepNonExistentRowsSelected
-          showToolbar
           disableColumnFilter // 필터 비활성화
           hideFooter
           disableColumnMenu

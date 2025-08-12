@@ -152,7 +152,8 @@ export const UserDataList: GridColDef[] = [
 ]
 
 export const PermissionDataList: GridColDef[] = [
-  { field: 'id', headerName: 'No', width: 70 },
+  { field: 'no', headerName: 'No', width: 70 },
+  // { field: 'id', headerName: 'No', width: 70 },
   { field: 'name', headerName: '그룹명', width: 130 },
   { field: 'sites', headerName: '현장/공정', width: 130 },
   { field: 'createdAt', headerName: '등록일/수정일', width: 180 },
@@ -272,4 +273,98 @@ export const bankOptions = [
   { id: '4', name: '카카오뱅크' },
   { id: '5', name: '국민은행' },
   { id: '6', name: '신한은행' },
+]
+
+// 시 와  구 를 구분
+
+export const CityOptions = [
+  { id: '0', name: '선택' },
+  { id: 'Seoul', name: '서울시' },
+  { id: 'Busan', name: '부산시' },
+  { id: 'Daegu', name: '대구시' },
+  { id: 'Incheon', name: '인천시' },
+  { id: 'Gwangju', name: '광주시' },
+  { id: 'Daejeon', name: '대전시' },
+  { id: 'Ulsan', name: '울산시' },
+  { id: 'Sejong', name: '세종시' },
+  { id: 'Jeju', name: '제주시' },
+]
+
+export const DistrictGuOptions = [
+  { id: '0', name: '선택' },
+  { id: 'Seoul-Jongno-gu', name: '종로구' },
+  { id: 'Seoul-Jung-gu', name: '중구' },
+  { id: 'Seoul-Yongsan-gu', name: '용산구' },
+  { id: 'Seoul-Seongdong-gu', name: '성동구' },
+  { id: 'Seoul-Gwangjin-gu', name: '광진구' },
+  { id: 'Seoul-Dongdaemun-gu', name: '동대문구' },
+  { id: 'Seoul-Jungnang-gu', name: '중랑구' },
+  { id: 'Seoul-Seongbuk-gu', name: '성북구' },
+  { id: 'Seoul-Gangbuk-gu', name: '강북구' },
+  { id: 'Seoul-Dobong-gu', name: '도봉구' },
+  { id: 'Seoul-Nowon-gu', name: '노원구' },
+  { id: 'Seoul-Eunpyeong-gu', name: '은평구' },
+  { id: 'Seoul-Seodaemun-gu', name: '서대문구' },
+  { id: 'Seoul-Mapo-gu', name: '마포구' },
+  { id: 'Seoul-Yangcheon-gu', name: '양천구' },
+  { id: 'Seoul-Gangseo-gu', name: '강서구' },
+  { id: 'Seoul-Guro-gu', name: '구로구' },
+  { id: 'Seoul-Geumcheon-gu', name: '금천구' },
+  { id: 'Seoul-Yeongdeungpo-gu', name: '영등포구' },
+  { id: 'Seoul-Dongjak-gu', name: '동작구' },
+  { id: 'Seoul-Gwanak-gu', name: '관악구' },
+  { id: 'Seoul-Sadong-gu', name: '서초구' },
+  { id: 'Seoul-Gangnam-gu', name: '강남구' },
+  { id: 'Seoul-Songpa-gu', name: '송파구' },
+  { id: 'Seoul-Gangdong-gu', name: '강동구' },
+  { id: 'Busan-Jung-gu', name: '중구' },
+  { id: 'Busan-Seo-gu', name: '서구' },
+  { id: 'Busan-Dong-gu', name: '동구' },
+  { id: 'Busan-Yeongdo-gu', name: '영도구' },
+  { id: 'Busan-Sasang-gu', name: '사상구' },
+  { id: 'Busan-Saha-gu', name: '사하구' },
+  { id: 'Busan-Buk-gu', name: '북구' },
+  { id: 'Busan-Haeundae-gu', name: '해운대구' },
+  { id: 'Busan-Gijang-gun', name: '기장군' },
+  { id: 'Busan-Gangseo-gu', name: '강서구' },
+  { id: 'Busan-Geumjeong-gu', name: '금정구' },
+  { id: 'Busan-Dongnae-gu', name: '동래구' },
+  { id: 'Daegu-Jung-gu', name: '중구' },
+  { id: 'Daegu-Dalseo-gu', name: '달서구' },
+  { id: 'Daegu-Nam-gu', name: '남구' },
+  { id: 'Daegu-Buk-gu', name: '북구' },
+  { id: 'Daegu-Dalseong-gun', name: '달성군' },
+  { id: 'Daegu-Dong-gu', name: '동구' },
+  { id: 'Daegu-Suseong-gu', name: '수성구' },
+
+  // 인천시
+  { id: 'Incheon-Jung-gu', name: '중구' },
+  { id: 'Incheon-Dong-gu', name: '동구' },
+  { id: 'Incheon-Michuhol-gu', name: '미추홀구' },
+  { id: 'Incheon-Yangcheon-gu', name: '연수구' },
+  { id: 'Incheon-Bupyeong-gu', name: '부평구' },
+  { id: 'Incheon-Namdong-gu', name: '남동구' },
+  { id: 'Incheon-Ganseok-gu', name: '계양구' },
+  { id: 'Incheon-Seo-gu', name: '서구' },
+  { id: 'Incheon-Ongjin-gun', name: '옹진군' },
+
+  // 광주 시
+  { id: 'Gwangju-Dong-gu', name: '동구' },
+  { id: 'Gwangju-Seo-gu', name: '서구' },
+  { id: 'Gwangju-Nam-gu', name: '남구' },
+  { id: 'Gwangju-Gwangsan-gu', name: '광산구' },
+
+  // 대전 시
+
+  { id: 'Daejeon-Jung-gu', name: '중구' },
+  { id: 'Daejeon-Dong-gu', name: '동구' },
+  { id: 'Daejeon-Seo-gu', name: '서구' },
+  { id: 'Daejeon-Yuseong-gu', name: '유성구' },
+  { id: 'Daejeon-Daedeok-gu', name: '대덕구' },
+  // 울산 시
+  { id: 'Ulsan-Jung-gu', name: '중구' },
+  { id: 'Ulsan-Nam-gu', name: '남구' },
+  { id: 'Ulsan-Dong-gu', name: '동구' },
+  { id: 'Ulsan-Buk-gu', name: '북구' },
+  { id: 'Ulsan-Ulsan-myeon', name: '울주군' },
 ]

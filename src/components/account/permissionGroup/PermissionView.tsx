@@ -62,15 +62,17 @@ export default function PermissionView() {
         },
       }
     }
-    if (col.field === 'remark') {
+    if (col.field === 'no') {
       return {
         ...col,
-        sortable: false,
         headerAlign: 'center',
         align: 'center',
-        flex: 1,
+        flex: 0.5,
         renderCell: (params: GridRenderCellParams) => {
-          return <span>{params.value}</span>
+          const sortedRowIds = params.api.getSortedRowIds?.() ?? []
+          const indexInCurrentPage = sortedRowIds.indexOf(params.id)
+          const no = (search.currentPage - 1) * pageCount + indexInCurrentPage + 1
+          return <span>{no}</span>
         },
       }
     }
@@ -170,6 +172,9 @@ export default function PermissionView() {
                   />
                 </div>
               </div>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-700">
+              <span className="font-medium">전체 : {totalList}</span>
             </div>
           </div>
 
