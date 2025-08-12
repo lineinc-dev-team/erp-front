@@ -32,7 +32,6 @@ export default function CommonSelect<T extends string | number>({
   required = false,
   disabled = false,
 }: CommonSelectProps<T>) {
-  console.log('받아온 상태 값 ', value)
   return (
     <FormControl fullWidth={fullWidth} required={required} disabled={disabled} size="small">
       <Select

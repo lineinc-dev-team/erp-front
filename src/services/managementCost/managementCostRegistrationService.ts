@@ -20,7 +20,6 @@ export async function SitesPersonScroll({ pageParam = 0, size = 5, keyword = '',
   }
 
   const data = await resData.json()
-  console.log('파싱된 유저 데이터', data)
   return data
 }
 
@@ -49,7 +48,6 @@ export async function SitesProcessNameScroll({
   }
 
   const data = await resData.json()
-  console.log('파싱된 유저 데이터', data)
   return data
 }
 

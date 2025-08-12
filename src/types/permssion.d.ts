@@ -39,15 +39,19 @@ export type RoleUser = {
   loginId: string
   username: string
   department: string
+  createdAt?: Date | null
   memo: string
 }
 
 export type FormState = {
   name: string
+  userCount?: number
+  Date?: Date | null
   memo: string
   users: {
     userId: number
     loginId: string
+    createdAt: Date | null
     username: string
     department: string
     memo: string
@@ -65,7 +69,7 @@ type PermissionFormState = {
   form: FormState
 
   reset: () => void
-  setField: <K extends keyof FormState>(field: K, value: FormState[K]) => void
+  setField: <K extends keyof FormState>(field: K, value: T) => void
 
   toggleUserCheck: (userId: number, checked: boolean) => void
   toggleCheckAllItems: (checked: boolean) => void

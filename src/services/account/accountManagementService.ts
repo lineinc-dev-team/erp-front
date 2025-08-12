@@ -25,7 +25,6 @@ export async function UserInfoService(params = {}) {
   }
 
   const data = await resData.json()
-  console.log('파싱된 유저 데이터', data)
   return data
 }
 
@@ -48,7 +47,6 @@ export async function UserInfoNameScroll({ pageParam = 0, size = 3, keyword = ''
   }
 
   const data = await resData.json()
-  console.log('파싱된 유저 데이터', data)
   return data
 }
 
@@ -70,7 +68,6 @@ export async function DepartmentIdInfoService() {
   }
 
   const data = await resData.json()
-  console.log('파싱된 유저 부서 데이터@@@ 데이터', data)
   return data
 }
 
@@ -93,7 +90,6 @@ export async function GradeIdInfoService() {
   }
 
   const data = await resData.json()
-  console.log('파싱된 유저 부서 데이터@@@ 데이터', data)
   return data
 }
 // 직잭 목록 조회
@@ -115,7 +111,6 @@ export async function PositionIdInfoService() {
   }
 
   const data = await resData.json()
-  console.log('파싱된 유저 부서 데이터@@@ 데이터', data)
   return data
 }
 
@@ -301,6 +296,5 @@ export async function UserInfoHistoryService(
   }
 
   const data = await resData.json()
-  console.log('파싱된 유저 데이터', data)
   return data
 }

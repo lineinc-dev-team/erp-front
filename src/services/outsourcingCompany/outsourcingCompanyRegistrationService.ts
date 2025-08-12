@@ -39,7 +39,6 @@ export async function OutsourcingTypesIdInfoService() {
   }
 
   const data = await resData.json()
-  console.log('파싱된 유저 부서 데이터@@@ 데이터44444', data)
   return data
 }
 
@@ -61,7 +60,6 @@ export async function OutsourcingDeductionIdInfoService() {
   }
 
   const data = await resData.json()
-  console.log('파싱된 유저 부서 데이터@@@ 데이터OUTSOURCINGCOMPANYOUTSOURCINGCOMPANY', data)
   return data
 }
 
@@ -129,6 +127,5 @@ export async function OutsourcingCompanyInfoHistoryService(
   }
 
   const data = await resData.json()
-  console.log('파싱된 유저 데이터', data)
   return data
 }

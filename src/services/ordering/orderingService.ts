@@ -50,7 +50,6 @@ export async function ClientCompanyInfoService(params = {}) {
   }
 
   const data = await resData.json()
-  console.log('파싱된 유저 데이터', data)
   return data
 }
 

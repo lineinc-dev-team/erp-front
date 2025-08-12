@@ -44,6 +44,8 @@ export const usePermissionSearchStore = create<{ search: permissionSearchProps }
 export const usePermissionGroupStore = create<PermissionFormState>((set, get) => ({
   form: {
     name: '',
+    userCount: 0,
+    Date: null,
     memo: '',
     users: [],
     userIds: [],
@@ -56,6 +58,8 @@ export const usePermissionGroupStore = create<PermissionFormState>((set, get) =>
     set(() => ({
       form: {
         name: '',
+        userCount: 0,
+        Date: null,
         memo: '',
         users: [],
         userIds: [],
@@ -125,6 +129,7 @@ export const usePermissionGroupStore = create<PermissionFormState>((set, get) =>
             {
               userId: newUserId,
               loginId: '',
+              createdAt: null,
               username: '',
               department: '',
               memo: '',
@@ -222,7 +227,12 @@ export const usePermissionGroupStore = create<PermissionFormState>((set, get) =>
       })),
       permissionIds: form.permissionIds,
       hasGlobalSiteProcessAccess: form.hasGlobalSiteProcessAccess,
-      siteProcesses: form.siteProcesses,
+      siteProcesses:
+        form.siteProcesses.length === 1 &&
+        form.siteProcesses[0].siteId === 0 &&
+        form.siteProcesses[0].processId === 0
+          ? []
+          : form.siteProcesses,
     }
   },
 }))

@@ -82,7 +82,6 @@ export async function OrderingInfoNameScroll({ pageParam = 0, size = 5, keyword 
   }
 
   const data = await resData.json()
-  console.log('파싱된 유저 데이터', data)
   return data
 }
 
@@ -104,7 +103,6 @@ export async function PayIdInfoService() {
   }
 
   const data = await resData.json()
-  console.log('파싱된 유저 부서 데이터@@@ 데이터', data)
   return data
 }
 
@@ -171,6 +169,5 @@ export async function CLientCompanyInfoHistoryService(
   }
 
   const data = await resData.json()
-  console.log('파싱된 유저 데이터', data)
   return data
 }

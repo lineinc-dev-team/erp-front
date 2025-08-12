@@ -21,7 +21,6 @@ export async function PermissionService(params = {}) {
   }
 
   const data = await resData.json()
-  console.log('파싱된 유저 데이터', data)
   return data
 }
 
@@ -82,7 +81,6 @@ export async function MenuListService() {
   }
 
   const data = await resData.json()
-  console.log('파싱된 유저 데이터', data)
   return data
 }
 
@@ -104,7 +102,6 @@ export async function SinglepermissionService(singleId: number) {
   }
 
   const data = await resData.json()
-  console.log('파싱된 유저 데이터', data)
   return data
 }
 
@@ -126,7 +123,6 @@ export async function SinglepermissionUserService(singleId: number) {
   }
 
   const data = await resData.json()
-  console.log('파싱된 유저 데이터', data)
   return data
 }
 
@@ -148,7 +144,6 @@ export async function SinglepermissionMenuService(singleId: number) {
   }
 
   const data = await resData.json()
-  console.log('파싱된 유저 데이터', data)
   return data
 }
 

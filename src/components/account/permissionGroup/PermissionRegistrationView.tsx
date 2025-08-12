@@ -8,6 +8,7 @@ import { usePermission } from '@/hooks/usePermission'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import { usePermissionGroupStore } from '@/stores/permissionStore'
 import { Menu, Permission, PermissionGroupDetail, RoleUser } from '@/types/permssion'
+import { getTodayDateString } from '@/utils/formatters'
 import {
   Table,
   TableBody,
@@ -40,8 +41,6 @@ export default function PermissionManagementUI({ isEditMode = false }) {
 
   const [checkedPermissionIds, setCheckedPermissionIds] = useState<Set<number>>(new Set())
 
-  // const users = usePermissionGroupStore((state) => state.form.users) // 배열 통째로 가져오기
-
   const {
     useUserAccountInfiniteScroll,
     useMenuListQuery,
@@ -52,10 +51,6 @@ export default function PermissionManagementUI({ isEditMode = false }) {
     useSinglepermissionUserListQuery,
     handlePermissionCancel,
   } = usePermission()
-
-  // const UserInfo = form.users
-  // const checkedIds = form.userIds
-  // const isAllChecked = UserInfo.length > 0 && checkedIds.length === UserInfo.length
 
   const params = useParams()
   const permissionDetailId = Number(params?.id)
@@ -86,14 +81,23 @@ export default function PermissionManagementUI({ isEditMode = false }) {
     ) {
       const detail = singlepermission.data
 
+      console.log('해당 권한 그룹에 받아온 값 !!!₩', detail)
+
       setField('name', detail.name)
       setField('memo', detail.memo)
+      setField('userCount', detail.userCount)
+      setField(
+        'Date',
+        `${getTodayDateString(detail.createdAt)} / ${getTodayDateString(detail.updatedAt)}`,
+      )
 
-      const siteProcesses = detail.sites.map((site: PermissionGroupDetail, index: number) => ({
-        siteId: site.id,
-        processId: detail.processes?.[index]?.id ?? null,
-      }))
-
+      const siteProcesses =
+        Array.isArray(detail.sites) && detail.sites.length > 0
+          ? detail.sites.map((site: PermissionGroupDetail, index: number) => ({
+              siteId: site.id,
+              processId: detail.processes?.[index]?.id ?? null,
+            }))
+          : [{ siteId: 0, processId: 0 }] // 빈 배열일 경우 기본값 1행
       setField('siteProcesses', siteProcesses)
 
       const permissionIds = singleperMenumission.data.flatMap((menu: Menu) =>
@@ -107,6 +111,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
         username: u.username,
         department: u.department,
         memo: u.memo ?? '',
+        createdAt: u.createdAt,
       }))
 
       setField('users', users)
@@ -227,7 +232,6 @@ export default function PermissionManagementUI({ isEditMode = false }) {
     setPermissionIds(Array.from(checkedPermissionIds))
   }, [checkedPermissionIds, setPermissionIds])
 
-  console.log('focusedUserIdfocusedUserId', focusedUserId)
   return (
     <div>
       <div className="flex-1">
@@ -239,20 +243,24 @@ export default function PermissionManagementUI({ isEditMode = false }) {
           <Table size="small" stickyHeader>
             <TableHead>
               <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                {['그룹명', '현장/공정', '비고'].map((label) => (
-                  <TableCell
-                    key={label}
-                    align="center"
-                    sx={{
-                      backgroundColor: '#D1D5DB',
-                      border: '1px solid  #9CA3AF',
-                      color: 'black',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    {label}
-                  </TableCell>
-                ))}
+                {['그룹명', '현장/공정', '계정 수', '등록일/수정일', '비고']
+                  .filter((label) =>
+                    isEditMode ? true : !['계정 수', '등록일/수정일'].includes(label),
+                  )
+                  .map((label) => (
+                    <TableCell
+                      key={label}
+                      align="center"
+                      sx={{
+                        backgroundColor: '#D1D5DB',
+                        border: '1px solid  #9CA3AF',
+                        color: 'black',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {label}
+                    </TableCell>
+                  ))}
               </TableRow>
             </TableHead>
 
@@ -350,6 +358,36 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                     </div>
                   </TableCell>
                 ))}
+                {/* 계정 수 */}
+                {isEditMode && (
+                  <TableCell
+                    align="center"
+                    sx={{ borderLeft: '1px solid #D1D5DB', width: '110px' }}
+                  >
+                    <TextField
+                      variant="outlined"
+                      size="small"
+                      value={form.userCount ?? ''}
+                      placeholder="텍스트 입력"
+                      inputProps={{
+                        style: { textAlign: 'center', color: 'black' },
+                      }}
+                    />
+                  </TableCell>
+                )}
+
+                {/* 등록일/수정일 */}
+                {isEditMode && (
+                  <TableCell align="center" sx={{ borderLeft: '1px solid #D1D5DB' }}>
+                    <TextField
+                      variant="outlined"
+                      size="small"
+                      value={form.Date ?? ''}
+                      placeholder="텍스트 입력"
+                      fullWidth
+                    />
+                  </TableCell>
+                )}
 
                 <TableCell align="center" sx={{ borderLeft: '1px solid #D1D5DB' }}>
                   <TextField
@@ -404,20 +442,22 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                       sx={{ color: 'black' }}
                     />
                   </TableCell>
-                  {['No.', '계정', '이름', '부서', '비고/메모'].map((label) => (
-                    <TableCell
-                      key={label}
-                      align="center"
-                      sx={{
-                        backgroundColor: '#D1D5DB',
-                        border: '1px solid  #9CA3AF',
-                        color: 'black',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      {label}
-                    </TableCell>
-                  ))}
+                  {['No.', '계정', '이름', '부서', '등록일', '비고/메모']
+                    .filter((label) => (isEditMode ? true : !['등록일'].includes(label)))
+                    .map((label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        {label}
+                      </TableCell>
+                    ))}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -469,6 +509,20 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                     <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
                       {user.department ?? '-'}
                     </TableCell>
+
+                    {isEditMode && (
+                      <TableCell align="center" sx={{ borderLeft: '1px solid #D1D5DB' }}>
+                        <TextField
+                          variant="outlined"
+                          size="small"
+                          value={getTodayDateString(user.createdAt) ?? '-'}
+                          placeholder="텍스트 입력"
+                          inputProps={{
+                            style: { textAlign: 'center', color: 'black' },
+                          }}
+                        />
+                      </TableCell>
+                    )}
 
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
