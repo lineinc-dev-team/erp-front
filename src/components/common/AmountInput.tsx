@@ -2,7 +2,7 @@
 import React from 'react'
 
 type AmountInputProps = {
-  value: string
+  value: string | number
   onChange: (value: string) => void
   placeholder?: string
   disabled?: boolean

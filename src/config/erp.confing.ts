@@ -59,6 +59,14 @@ export const PageCount = [
   { id: '50', name: '50' },
 ]
 
+export const EquipmentType = [
+  { code: 'BASE', name: '선택' },
+  { code: 'PIPE_RENTAL', name: '죽통임대' },
+  { code: 'B_K', name: 'B/K' },
+  { code: 'BIT_USAGE_FEE', name: '비트손료' },
+  { code: 'ETC', name: '기타' },
+]
+
 export const SiteColumnList: GridColDef[] = [
   { field: 'no', headerName: 'No', width: 70 },
   // { field: 'id', headerName: 'No', width: 70 },

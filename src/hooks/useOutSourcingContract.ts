@@ -3,7 +3,6 @@ import {
   SitesProcessNameScroll,
 } from '@/services/managementCost/managementCostRegistrationService'
 import {
-  CreateOutsourcingCompany,
   ModifyOutsourcingCompany,
   OutsourcingCompanyInfoHistoryService,
 } from '@/services/outsourcingCompany/outsourcingCompanyRegistrationService'
@@ -12,6 +11,7 @@ import {
   OutsourcingCompanyRemoveService,
 } from '@/services/outsourcingCompany/outsourcingCompanyService'
 import {
+  CreateOutsourcingContract,
   GetCompanyNameInfoService,
   OutsourcingContractCategoryTypeInfoService,
   OutsourcingContractDeductionIdInfoService,
@@ -96,22 +96,22 @@ export default function useOutSourcingContract() {
     enabled: pathName === '/outsourcingCompany', // 경로 체크
   })
 
-  const createOutSourcingMutation = useMutation({
-    mutationFn: CreateOutsourcingCompany,
+  const createOutSourcingContractMutation = useMutation({
+    mutationFn: CreateOutsourcingContract,
     onSuccess: () => {
-      showSnackbar('외주업체가 등록 되었습니다.', 'success')
+      showSnackbar('외주계약이 등록 되었습니다.', 'success')
       // 초기화 로직
-      queryClient.invalidateQueries({ queryKey: ['outsourcingInfo'] })
+      queryClient.invalidateQueries({ queryKey: ['outsourcingContractInfo'] })
       reset()
-      router.push('/outsourcingCompany')
+      router.push('/outsourcingContract')
     },
     onError: () => {
-      showSnackbar('외주업체 등록이 실패했습니다.', 'error')
+      showSnackbar('외주계약 등록에 실패했습니다.', 'error')
     },
   })
 
   const outsourcingCancel = () => {
-    router.push('/outsourcingCompany')
+    router.push('/outsourcingContract')
   }
 
   // 수정 쿼리
@@ -311,7 +311,7 @@ export default function useOutSourcingContract() {
 
   return {
     OutsourcingListQuery,
-    createOutSourcingMutation,
+    createOutSourcingContractMutation,
 
     typeMethodOptions,
     taxMethodOptions,

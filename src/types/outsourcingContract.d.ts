@@ -20,6 +20,52 @@ export type OutsourcingContractAttachedFile = {
   files: FileUploadInfo[]
 }
 
+//외주공사 항목 타입
+export type OutsourcingContractItem = {
+  id: number
+  no?: number
+  item: string
+  spec: string
+  unit: string
+  contractPrice: number
+  contractQty: string | number
+  contractAmount: string | number
+  outsourceQty: string | number
+  outsourceAmount: string | number
+  memo: string
+}
+
+// 장비 중 기사 타입
+export type OutsourcingArticleInfoAttachedFile = {
+  id: number
+  name: string
+  memo: string
+  fileUrl?: string
+  originalFileName?: string
+  driverLicense: FileUploadInfo[]
+  safeEducation: FileUploadInfo[]
+  ETCfiles: FileUploadInfo[]
+}
+
+// 장비 타입
+
+type subEquipmentInfo = {
+  id: number
+  type: string
+  memo: string
+}
+export type OutsourcingEquipmentInfoAttachedFile = {
+  id: number
+  specification: string
+  vehicleNumber: string
+  category: string
+  unitPrice: number
+  subtotal: number
+  taskDescription: string
+  memo: string
+  subEquipments?: subEquipmentInfo[]
+}
+
 export type OutsourcingContractPersonAttachedFile = {
   id: number
   name: string
@@ -123,16 +169,15 @@ export type OutsourcingContractFormState = {
   type: string
   typeDescription: string
   contractAmount: number
-  startedAt: Date | null
-  endedAt: Date | null
+  contractStartDate: Date | null
+  contractEndDate: Date | null
   defaultDeductions: string
   defaultDeductionsDescription: string
   taxCalculat: string
-  taxDay: string
-  dayType: string
+  taxInvoiceIssueDayOfMonth: number
   memo: string
-  categoryType: string
-  isActive: string
+  category: string
+  status: string
 
   // 담당자 배열
   headManagers: OutsourcingContractManager[]
@@ -150,6 +195,22 @@ export type OutsourcingContractFormState = {
   // 선택된 체크박스 id
   checkedPersonIds: number[]
 
+  // 공사 관련
+  contractManagers: OutsourcingContractItem[]
+
+  // 선택된 체크박스 id
+  checkedContractIds: number[]
+
+  // 장비 관련 타입 정의 (기사)
+
+  equipmentManagers: OutsourcingEquipmentInfoAttachedFile[]
+  checkedEquipmentIds: number[]
+
+  // 기사
+  articleManagers: OutsourcingArticleInfoAttachedFile[]
+  // 선택된 체크박스 id
+  checkedArticleIds: number[]
+
   editedHistories?: Pick<HistoryItem, 'id' | 'memo'>[]
   changeHistories: HistoryItem[] // 수정 이력 포함
 }
@@ -165,27 +226,80 @@ type OutsourcingContractFormStore = {
     value: OutsourcingContractFormState[K],
   ) => void
 
-  addItem: (type: 'manager' | 'attachedFile' | 'personAttachedFile') => void
+  addItem: (
+    type:
+      | 'manager'
+      | 'attachedFile'
+      | 'personAttachedFile'
+      | 'workSize'
+      | 'articleInfo'
+      | 'equipment',
+  ) => void
   updateItemField: (
-    type: 'manager' | 'attachedFile' | 'personAttachedFile',
+    type:
+      | 'manager'
+      | 'attachedFile'
+      | 'personAttachedFile'
+      | 'workSize'
+      | 'articleInfo'
+      | 'equipment',
     id: number,
     field: string,
     value: T,
   ) => void
   toggleCheckItem: (
-    type: 'manager' | 'attachedFile' | 'personAttachedFile',
+    type:
+      | 'manager'
+      | 'attachedFile'
+      | 'personAttachedFile'
+      | 'workSize'
+      | 'articleInfo'
+      | 'equipment',
     id: number,
     checked: boolean,
   ) => void
   toggleCheckAllItems: (
-    type: 'manager' | 'attachedFile' | 'personAttachedFile',
+    type:
+      | 'manager'
+      | 'attachedFile'
+      | 'personAttachedFile'
+      | 'workSize'
+      | 'articleInfo'
+      | 'equipment',
     checked: boolean,
   ) => void
-  removeCheckedItems: (type: 'manager' | 'attachedFile' | 'personAttachedFile') => void
+  removeCheckedItems: (
+    type:
+      | 'manager'
+      | 'attachedFile'
+      | 'personAttachedFile'
+      | 'workSize'
+      | 'articleInfo'
+      | 'equipment',
+  ) => void
+
+  // 공사항목에서만 쓰이는 계산
+  getTotalOutsourceQty: () => number
+  getTotalOutsourceAmount: () => number
+  getTotalContractQty: () => number
+  getTotalContractAmount: () => number
 
   updateMemo: (id: number, newMemo: string) => void
   setRepresentativeManager: (id: number) => void
   //외주계약 등록하기
+
+  // 장비에서 구분에 세부 항목추가!!
+
+  addSubEquipment: (equipmentId: number) => void
+  removeSubEquipment: (equipmentId: number, subEquipmentIndex: number) => void
+
+  // 여기 추가
+  updateSubEquipmentField: (
+    equipmentId: number,
+    subEquipmentId: number,
+    field: keyof subEquipmentInfo,
+    value: T,
+  ) => void
 
   //payload 값
   newOutsourcingContractData: () => void
