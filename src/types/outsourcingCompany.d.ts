@@ -94,6 +94,24 @@ type HistoryItem = {
   type: string
 }
 
+// 외주업체 계약에서 계약이 생성 시 이력이 쌓이는 로직
+
+type ContractHistoryItem = {
+  contractId: number
+  no: number
+  siteName: string
+  processName: string
+  contractAmount: number
+  type: string
+  contactName: string
+  defaultDeductions: string
+  files: []
+  contractStartDate: string
+  contractEndDate: string
+  createdAt: string
+  updatedAt: string
+}
+
 export type OutsourcingFormState = {
   // 기존 필드들
   name: string
@@ -115,6 +133,9 @@ export type OutsourcingFormState = {
   accountHolder: string
   memo: string
   isActive: string
+
+  currentPage: number
+  pageCount: string
 
   // 담당자 배열
   headManagers: OutsourcingManager[]

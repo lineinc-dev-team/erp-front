@@ -1,4 +1,5 @@
 import {
+  ContractHistoryService,
   CreateOutsourcingCompany,
   ModifyOutsourcingCompany,
   OutsourcingCompanyInfoHistoryService,
@@ -16,7 +17,7 @@ import {
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { getTodayDateString } from '@/utils/formatters'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { usePathname, useRouter } from 'next/navigation'
+import { useParams, usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
 export default function useOutSourcingCompany() {
@@ -29,7 +30,12 @@ export default function useOutSourcingCompany() {
   // 외주업체 조회
   const search = useOutsourcingSearchStore((state) => state.search)
 
+  const form = useOutsourcingFormStore((state) => state.form)
+
   const pathName = usePathname()
+
+  const params = useParams()
+  const outsourcingCompanyId = Number(params?.id)
 
   // 초기 화면에 들어왔을 때 currentPage 1로 세팅 (예: useEffect 등에서)
   useEffect(() => {
@@ -170,6 +176,43 @@ export default function useOutSourcingCompany() {
     })
   }
 
+  // 계약이력 조회
+
+  // useEffect(() => {
+  //   if (search.searchTrigger && search.currentPage !== 0) {
+  //     search.setField('currentPage', 1)
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [search.searchTrigger])
+
+  // useQuery 쪽 수정
+  // useQuery 훅
+  const useContractHistoryDataQuery = useQuery({
+    queryKey: ['OutsourcingContractInfo', outsourcingCompanyId, form.currentPage, form.pageCount],
+    queryFn: () => {
+      const rawParams = {
+        page: Math.max(0, (form.currentPage ?? 1) - 1), // 0-based index
+        size: Number(form.pageCount) || 10,
+        sort: 'id,desc',
+        outsourcingCompanyId, // 백엔드에서 필터링 가능하도록
+      }
+
+      // null/undefined/빈문자 제거
+      const filteredParams = Object.fromEntries(
+        Object.entries(rawParams).filter(
+          ([, value]) =>
+            value !== undefined &&
+            value !== null &&
+            value !== '' &&
+            !(typeof value === 'number' && isNaN(value)),
+        ),
+      )
+
+      return ContractHistoryService(outsourcingCompanyId, filteredParams)
+    },
+    staleTime: 1000 * 30,
+  })
+
   return {
     OutsourcingListQuery,
     createOutSourcingMutation,
@@ -179,5 +222,9 @@ export default function useOutSourcingCompany() {
     OutsourcingModifyMutation,
     OutsourcingDeleteMutation,
     useOutsourcingCompanyHistoryDataQuery,
+
+    // 계약이력
+
+    useContractHistoryDataQuery,
   }
 }

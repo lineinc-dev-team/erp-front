@@ -7,6 +7,7 @@ import DaumPostcodeEmbed from 'react-daum-postcode'
 import {
   Box,
   Checkbox,
+  Pagination,
   Paper,
   Radio,
   Table,
@@ -29,6 +30,7 @@ import { useQuery } from '@tanstack/react-query'
 import { OutsourcingDetailService } from '@/services/outsourcingCompany/outsourcingCompanyRegistrationService'
 import { useCallback, useEffect, useRef } from 'react'
 import {
+  ContractHistoryItem,
   HistoryItem,
   OutsourcingAttachedFile,
   OutsourcingManager,
@@ -56,6 +58,8 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     deductionMethodOptions,
     OutsourcingModifyMutation,
     useOutsourcingCompanyHistoryDataQuery,
+
+    useContractHistoryDataQuery,
   } = useOutSourcingCompany()
 
   console.log(
@@ -121,6 +125,12 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
   } = useOutsourcingCompanyHistoryDataQuery(outsourcingCompanyId, isEditMode)
 
   const historyList = useOutsourcingFormStore((state) => state.form.changeHistories)
+
+  const ContractHistoryList = useContractHistoryDataQuery.data?.data.content ?? []
+
+  const totalList = useContractHistoryDataQuery.data?.data.pageInfo.totalElements ?? 0
+  const pageCount = Number(form.pageCount) || 10
+  const totalPages = Math.ceil(totalList / pageCount)
 
   useEffect(() => {
     if (outsourcingDetailData && isEditMode === true) {
@@ -350,7 +360,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
-                value={form.name}
+                value={form.name ?? ''}
                 onChange={(value) => setField('name', value)}
                 className=" flex-1"
               />
@@ -386,7 +396,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                 />
 
                 <CommonInput
-                  value={form.typeDescription}
+                  value={form.typeDescription ?? ''}
                   onChange={(value) => setField('typeDescription', value)}
                   className=" flex-1"
                 />
@@ -400,7 +410,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
             </label>
             <div className="border border-gray-400 flex items-center px-2 w-full">
               <CommonInput
-                value={form.ceoName}
+                value={form.ceoName ?? ''}
                 onChange={(value) => setField('ceoName', value)}
                 className=" flex-1"
               />
@@ -487,7 +497,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
-                value={form.email}
+                value={form.email ?? ''}
                 onChange={(value) => setField('email', value)}
                 className=" flex-1"
               />
@@ -526,7 +536,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
 
               <CommonInput
                 placeholder="텍스트 입력, ','구분"
-                value={form.defaultDeductionsDescription}
+                value={form.defaultDeductionsDescription ?? ''}
                 onChange={(value) => setField('defaultDeductionsDescription', value)}
                 className="flex-1 text-sm"
               />
@@ -545,13 +555,13 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
               />
 
               <CommonInput
-                value={form.accountNumber}
+                value={form.accountNumber ?? ''}
                 onChange={(value) => setField('accountNumber', value)}
                 className=" flex-1"
               />
 
               <CommonInput
-                value={form.accountHolder}
+                value={form.accountHolder ?? ''}
                 onChange={(value) => setField('accountHolder', value)}
                 className=" flex-1"
               />
@@ -564,7 +574,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
-                value={form.memo}
+                value={form.memo ?? ''}
                 onChange={(value) => setField('memo', value)}
                 className=" flex-1"
               />
@@ -813,16 +823,6 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
-                      {/* <CommonFileInput
-                        className=" break-words whitespace-normal"
-                        label="계약서"
-                        acceptedExtensions={['pdf', 'hwp']}
-                        files={form.attachedFiles.find((f) => f.id === m.id)?.files || []}
-                        onChange={(newFiles) =>
-                          form.updateItemField('attachedFile', m.id, 'files', newFiles)
-                        }
-                      />
-                       */}
                       <CommonFileInput
                         acceptedExtensions={[
                           'pdf',
@@ -891,7 +891,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                     '금액',
                     '담당자',
                     '공제항목',
-                    '보증서 제출 여부',
+                    '첨부파일 제출 여부',
                     '계약기간',
                     '등록일/수정일',
                   ].map((label) => (
@@ -911,52 +911,51 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                 </TableRow>
               </TableHead>
               <TableBody>
-                {historyList.map((item: HistoryItem) => (
-                  <TableRow key={item.id}>
+                {ContractHistoryList.map((item: ContractHistoryItem) => (
+                  <TableRow key={item.contractId}>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {item.id}
-                    </TableCell>
-                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {item.createdAt} / {item.updatedAt}
-                    </TableCell>
-                    <TableCell
-                      align="left"
-                      sx={{
-                        border: '1px solid  #9CA3AF',
-                        textAlign: 'center',
-                        whiteSpace: 'pre-line',
-                      }}
-                    >
-                      {item.type}
-                    </TableCell>
-                    <TableCell
-                      align="left"
-                      sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'pre-line' }}
-                    >
-                      {item.content}
-                    </TableCell>
-                    <TableCell
-                      align="left"
-                      sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'pre-line' }}
-                    >
-                      {item.updatedBy}
+                      {item.contractId}
                     </TableCell>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        value={item.memo ?? ''}
-                        placeholder="메모 입력"
-                        onChange={(e) => updateMemo(item.id, e.target.value)}
-                        multiline
-                        inputProps={{ maxLength: 500 }}
-                      />
+                      {item.siteName}
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      {item.processName}
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      {item.contractAmount}
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      {item.contactName}
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      {item.defaultDeductions}
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      {/* {item.files} */}
+                    </TableCell>
+
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      {getTodayDateString(item.contractStartDate)} ~{' '}
+                      {getTodayDateString(item.contractEndDate)}
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      {getTodayDateString(item.createdAt)} / {getTodayDateString(item.updatedAt)}
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </TableContainer>
+          <div className="flex justify-center mt-4 pb-6">
+            <Pagination
+              count={totalPages}
+              page={form.currentPage}
+              // onChange={(_, newPage) => form.setField('currentPage', newPage)}
+              shape="rounded"
+              color="primary"
+            />
+          </div>
         </div>
       )}
 

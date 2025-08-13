@@ -20,7 +20,6 @@ import {
   ExpandLess,
   ExpandMore,
   Groups,
-  AssignmentInd,
   Inventory,
   Description,
   Apartment,
@@ -192,10 +191,7 @@ const menuNameToBasePath: Record<string, string> = {
   '강재 관리': '/managementSteel',
   '자재 관리': '/materials',
   '외주업체 관리': '/outsourcingCompany',
-  '외주계약 관리': '/outsourcingContract',
-  '외주인력 관리': '/outsourcingHuman',
-  '외주장비 관리': '/outsourcingEquipment',
-  '외주정산 관리': '/outsourcingCalculate',
+  '외주업체 계약 관리': '/outsourcingContract',
 }
 
 const menuNameToIcon: Record<string, React.ReactNode> = {
@@ -207,10 +203,7 @@ const menuNameToIcon: Record<string, React.ReactNode> = {
   '강재 관리': <Inventory />,
   '자재 관리': <Inventory />,
   '외주업체 관리': <Groups />,
-  '외주계약 관리': <Description />,
-  '외주인력 관리': <AssignmentInd />,
-  '외주장비 관리': <Inventory />,
-  '외주정산 관리': <Assignment />,
+  '외주업체 계약 관리': <Description />,
 }
 
 function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {
