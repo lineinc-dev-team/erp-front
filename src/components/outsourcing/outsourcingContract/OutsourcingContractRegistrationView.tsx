@@ -96,8 +96,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     categoryMethodOptions,
   } = useOutSourcingContract()
 
-  console.log('statusMethodOptionsstatusMethodOptionsstatusMethodOptions', statusMethodOptions)
-
   const managers = form.headManagers
   const checkedIds = form.checkedManagerIds
   const isAllChecked = managers.length > 0 && checkedIds.length === managers.length
