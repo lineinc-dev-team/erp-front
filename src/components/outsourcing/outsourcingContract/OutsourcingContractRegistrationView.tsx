@@ -22,8 +22,6 @@ import { useOutsourcingFormStore } from '@/stores/outsourcingCompanyStore'
 import { formatPersonNumber, formatPhoneNumber } from '@/utils/formatPhoneNumber'
 import CommonFileInput from '@/components/common/FileInput'
 import { useParams } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
-import { OutsourcingDetailService } from '@/services/outsourcingCompany/outsourcingCompanyRegistrationService'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   HistoryItem,
@@ -149,12 +147,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
     setField('defaultDeductions', updated.join(','))
   }
-
-  const { data: outsourcingDetailData } = useQuery({
-    queryKey: ['OutsourcingDetailInfo'],
-    queryFn: () => OutsourcingDetailService(outsourcingCompanyId),
-    enabled: isEditMode && !!outsourcingCompanyId, // 수정 모드일 때만 fetch
-  })
 
   const PROPERTY_NAME_MAP: Record<string, string> = {
     departmentName: '부서(소속)',

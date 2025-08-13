@@ -1,12 +1,12 @@
 'use client'
 
 import { DataGrid } from '@mui/x-data-grid'
-import { CostColumnList, SubmitOptions, UseORnotOptions } from '@/config/erp.confing'
+import { CostColumnList, UseORnotOptions } from '@/config/erp.confing'
 import { Pagination } from '@mui/material'
 import CommonSelect from '@/components/common/Select'
 import CommonButton from '@/components/common/Button'
-import { useOrderingContractSearchStore } from '@/stores/outsourcingContractStore'
 import { WorkforceService } from '@/services/labor/workforceHourService'
+import { useOrderingSearchStore } from '@/stores/orderingStore'
 
 export default function WorkForceHoursView() {
   const {
@@ -24,7 +24,7 @@ export default function WorkForceHoursView() {
     totalPages,
   } = WorkforceService()
 
-  const { search } = useOrderingContractSearchStore()
+  const { search } = useOrderingSearchStore()
 
   // if (isLoading) return <LoadingSkeletion />
   // if (error) throw error
@@ -106,14 +106,14 @@ export default function WorkForceHoursView() {
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               교육 이수 여부
             </label>
-            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
+            {/* <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
               <CommonSelect
                 fullWidth={true}
                 value={search.isSubmit}
                 onChange={(value) => search.setField('isSubmit', value)}
                 options={SubmitOptions}
               />
-            </div>
+            </div> */}
           </div>
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
