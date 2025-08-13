@@ -177,3 +177,27 @@ export const outsourcingCompanyExcelFieldMap = {
 
 export type WorkoutExcelFieldLabel = keyof typeof outsourcingCompanyExcelFieldMap
 export type WorkoutExcelFieldKey = (typeof outsourcingCompanyExcelFieldMap)[WorkoutExcelFieldLabel]
+
+// 외주계약관리
+
+export const outsourcingContractExcelFieldMap = {
+  No: 'id',
+  현장명: 'siteName',
+  공정명: 'processName',
+  외주업체명: 'companyName',
+  사업자등록번호: 'businessNumber',
+  구분: 'contractType',
+  계약기간: 'contractPeriod',
+  계약금액: 'contractAmount',
+  공제항목: 'defaultDeductions',
+  첨부파일유무: 'hasFile',
+  '세금계산서 발행조건': 'taxInvoiceCondition',
+  담당자: 'contacts',
+  작성일자: 'createdAt',
+  상태: 'contractStatus',
+  비고: 'memo',
+} as const
+
+export type ContractoutExcelFieldLabel = keyof typeof outsourcingContractExcelFieldMap
+export type ContractoutExcelFieldKey =
+  (typeof outsourcingContractExcelFieldMap)[ContractoutExcelFieldLabel]

@@ -6,7 +6,6 @@ import {
   ModifyOutsourcingCompany,
   OutsourcingCompanyInfoHistoryService,
 } from '@/services/outsourcingCompany/outsourcingCompanyRegistrationService'
-import { OutsourcingCompanyRemoveService } from '@/services/outsourcingCompany/outsourcingCompanyService'
 import {
   CreateOutsourcingContract,
   GetCompanyNameInfoService,
@@ -16,7 +15,10 @@ import {
   OutsourcingContractTaxIdInfoService,
   OutsourcingContractTypesIdInfoService,
 } from '@/services/outsourcingContract/outsourcingContractRegistrationService'
-import { OutsourcingContractInfoService } from '@/services/outsourcingContract/outsourcingContractService'
+import {
+  OutsourcingContractInfoService,
+  OutsourcingContractRemoveService,
+} from '@/services/outsourcingContract/outsourcingContractService'
 import { useContractFormStore, useContractSearchStore } from '@/stores/outsourcingContractStore'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { getTodayDateString } from '@/utils/formatters'
@@ -105,6 +107,7 @@ export default function useOutSourcingContract() {
     },
   })
 
+  // 등록 취소
   const outsourcingCancel = () => {
     router.push('/outsourcingContract')
   }
@@ -128,19 +131,19 @@ export default function useOutSourcingContract() {
   })
 
   // 삭제
-  const OutsourcingDeleteMutation = useMutation({
-    mutationFn: ({ outsourcingCompanyIds }: { outsourcingCompanyIds: number[] }) =>
-      OutsourcingCompanyRemoveService(outsourcingCompanyIds),
+  const OutsourcingContractDeleteMutation = useMutation({
+    mutationFn: ({ contractIds }: { contractIds: number[] }) =>
+      OutsourcingContractRemoveService(contractIds),
 
     onSuccess: () => {
       if (window.confirm('정말 삭제하시겠습니까?')) {
-        showSnackbar('외주업체가 삭제되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['OutsourcingInfo'] })
+        showSnackbar('외주업체 계약이 삭제되었습니다.', 'success')
+        queryClient.invalidateQueries({ queryKey: ['OutsourcingContractInfo'] })
       }
     },
 
     onError: () => {
-      showSnackbar(' 외주업체 삭제에 실패했습니다.', 'error')
+      showSnackbar(' 외주업체 계약 삭제에 실패했습니다.', 'error')
     },
   })
 
@@ -316,7 +319,7 @@ export default function useOutSourcingContract() {
 
     outsourcingCancel,
     OutsourcingModifyMutation,
-    OutsourcingDeleteMutation,
+    OutsourcingContractDeleteMutation,
     useOutsourcingCompanyHistoryDataQuery,
 
     // 업체명

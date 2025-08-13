@@ -17,6 +17,10 @@ import { OutsourcingContractList } from '@/types/outsourcingContract'
 import { getTodayDateString } from '@/utils/formatters'
 import CommonSelectByName from '@/components/common/CommonSelectByName'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
+import ExcelModal from '@/components/common/ExcelModal'
+import { useState } from 'react'
+import { OutsourcingContractExcelDownload } from '@/services/outsourcingContract/outsourcingContractService'
+import { outsourcingContractExcelFieldMap } from '@/utils/userExcelField'
 
 export default function OutsourcingContractView() {
   const { search } = useContractSearchStore()
@@ -28,6 +32,8 @@ export default function OutsourcingContractView() {
     OutsourcingContractListQuery,
     statusMethodOptions,
     typeMethodOptions,
+
+    OutsourcingContractDeleteMutation,
 
     setSitesSearch,
     sitesOptions,
@@ -72,7 +78,7 @@ export default function OutsourcingContractView() {
 
   // 그리도 라우팅 로직!
   const enhancedColumns = outsourcingContractListData.map((col): GridColDef => {
-    if (col.field === 'name') {
+    if (col.field === 'companyName') {
       return {
         ...col,
         headerAlign: 'center',
@@ -83,7 +89,7 @@ export default function OutsourcingContractView() {
           const clientId = params.row.id
           return (
             <div
-              onClick={() => router.push(`/outsourcingCompany/registration/${clientId}`)}
+              onClick={() => router.push(`/outsourcingContract/registration/${clientId}`)}
               className="flex justify-center items-center cursor-pointer"
             >
               <span className="text-orange-500 font-bold">{params.value}</span>
@@ -114,6 +120,34 @@ export default function OutsourcingContractView() {
       flex: 1,
     }
   })
+
+  const [modalOpen, setModalOpen] = useState(false)
+  // userExcelFieldMap 객체를 { label: string, value: string }[] 배열로 바꿔줍니다.
+
+  const fieldMapArray = Object.entries(outsourcingContractExcelFieldMap).map(([label, value]) => ({
+    label,
+    value,
+  }))
+
+  const handleDownloadExcel = async (fields: string[]) => {
+    await OutsourcingContractExcelDownload({
+      sort: search.arraySort === '최신순' ? 'id,desc' : 'id,asc',
+      siteName: search.siteName,
+      processName: search.processName,
+      companyName: search.companyName,
+      businessNumber: search.businessNumber,
+      contractType: search.contractType,
+      contractStatus: search.contractStatus,
+      contractStartDate: search.contractStartDate
+        ? getTodayDateString(search.contractStartDate)
+        : undefined,
+      contractEndDate: search.contractEndDate
+        ? getTodayDateString(search.contractEndDate)
+        : undefined,
+      contactName: search.contactName,
+      fields, // 필수 필드: ["id", "name", "businessNumber", ...]
+    })
+  }
 
   return (
     <>
@@ -361,26 +395,26 @@ export default function OutsourcingContractView() {
                     return
                   }
 
-                  // ClientDeleteMutation.mutate({
-                  //   userIds: idsArray,
-                  // })
+                  OutsourcingContractDeleteMutation.mutate({
+                    contractIds: idsArray,
+                  })
                 }}
                 className="px-3"
               />
               <CommonButton
                 label="엑셀 다운로드"
                 variant="reset"
-                // onClick={() => setModalOpen(true)}
+                onClick={() => setModalOpen(true)}
                 className="px-3"
               />
 
-              {/* <ExcelModal
+              <ExcelModal
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
                 title="발주처 관리 - 엑셀 항목 선택"
                 fieldMap={fieldMapArray}
                 onDownload={handleDownloadExcel}
-              /> */}
+              />
               <CommonButton
                 label="+ 신규등록"
                 variant="secondary"

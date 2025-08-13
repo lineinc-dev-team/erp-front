@@ -24,13 +24,13 @@ export async function OutsourcingContractInfoService(params = {}) {
 }
 
 //외주업체 삭제
-export async function OutsourcingCompanyRemoveService(outsourcingCompanyIds: number[]) {
+export async function OutsourcingContractRemoveService(contractIds: number[]) {
   const res = await fetch(API.OUTSOURCINGCONTRACT, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ outsourcingCompanyIds }),
+    body: JSON.stringify({ contractIds }),
     credentials: 'include',
   })
   if (!res.ok) {
@@ -41,47 +41,53 @@ export async function OutsourcingCompanyRemoveService(outsourcingCompanyIds: num
 }
 
 // // 외주업체 엑셀 다운로드
-export async function OutsourcingCompanyExcelDownload({
+export async function OutsourcingContractExcelDownload({
   sort = '',
-  name = '',
+  siteName,
+  processName,
+  companyName,
   businessNumber,
-  ceoName,
-  type,
-  landlineNumber,
+  contractType,
+  contractStatus,
+  contractStartDate,
+  contractEndDate,
+  contactName,
   isActive = true,
-  createdStartDate,
-  createdEndDate,
   fields,
 }: {
   sort?: string
-  name?: string
+  siteName?: string
+  processName?: string
+  companyName?: string
   businessNumber?: string
-  ceoName?: string
-  type: string
-  landlineNumber?: string
+  contractType?: string
+  contractStatus?: string
+  contractStartDate?: string
+  contractEndDate?: string
+  contactName?: string
   isActive?: boolean
-  createdStartDate?: string
-  createdEndDate?: string
   fields?: string[]
 }) {
   const queryParams = new URLSearchParams()
 
   queryParams.append('sort', sort)
-  if (name) queryParams.append('name', name)
+  if (siteName) queryParams.append('siteName', siteName)
+  if (processName) queryParams.append('processName', processName)
+  if (companyName) queryParams.append('companyName', companyName)
   if (businessNumber) queryParams.append('businessNumber', businessNumber)
-  if (type) queryParams.append('type', type)
-  if (ceoName) queryParams.append('ceoName', ceoName)
-  if (landlineNumber) queryParams.append('landlineNumber', landlineNumber)
+  if (contractType) queryParams.append('contractType', contractType)
+  if (contractStatus) queryParams.append('contractStatus', contractStatus)
+  if (contractStartDate) queryParams.append('contractStartDate', contractStartDate)
+  if (contractEndDate) queryParams.append('contractEndDate', contractEndDate)
+  if (contactName) queryParams.append('contactName', contactName)
+
   queryParams.append('isActive', String(isActive))
-  // if (isActive !== undefined) queryParams.append('isActive', String(isActive))
-  if (createdStartDate) queryParams.append('createdStartDate', createdStartDate)
-  if (createdEndDate) queryParams.append('createdEndDate', createdEndDate)
 
   if (fields && fields.length > 0) {
     queryParams.append('fields', fields.join(','))
   }
 
-  const res = await fetch(`${API.OUTSOURCINGCOMPANY}/download?${queryParams.toString()}`, {
+  const res = await fetch(`${API.OUTSOURCINGCONTRACT}/download?${queryParams.toString()}`, {
     method: 'GET',
     // headers: {
     //   Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
