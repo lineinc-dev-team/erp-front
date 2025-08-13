@@ -33,10 +33,18 @@ import { useContractFormStore } from '@/stores/outsourcingContractStore'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import AmountInput from '@/components/common/AmountInput'
-import { GetCompanyNameInfoService } from '@/services/outsourcingContract/outsourcingContractRegistrationService'
-import { CompanyInfo } from '@/types/outsourcingContract'
+import {
+  ContractDetailService,
+  GetCompanyNameInfoService,
+} from '@/services/outsourcingContract/outsourcingContractRegistrationService'
+import {
+  CompanyInfo,
+  OutsourcingContractAttachedFile,
+  OutsourcingContractManager,
+} from '@/types/outsourcingContract'
 import CommonDatePicker from '@/components/common/DatePicker'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
+import { useQuery } from '@tanstack/react-query'
 
 export default function OutsourcingContractRegistrationView({ isEditMode = false }) {
   const {
@@ -44,7 +52,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     form,
     updateItemField,
     removeCheckedItems,
-    // reset,
+    reset,
     updateMemo,
     setRepresentativeManager,
     addItem,
@@ -146,6 +154,14 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     setField('defaultDeductions', updated.join(','))
   }
 
+  // 상세 데이터 넣기
+
+  const { data: contractDetailData } = useQuery({
+    queryKey: ['OutsourcingDetailInfo'],
+    queryFn: () => ContractDetailService(outsourcingCompanyId),
+    enabled: isEditMode && !!outsourcingCompanyId, // 수정 모드일 때만 fetch
+  })
+
   const PROPERTY_NAME_MAP: Record<string, string> = {
     departmentName: '부서(소속)',
     positionName: '직급',
@@ -180,141 +196,98 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
   const historyList = useOutsourcingFormStore((state) => state.form.changeHistories)
 
-  // useEffect(() => {
-  //   if (outsourcingDetailData && isEditMode === true) {
-  //     const client = outsourcingDetailData.data
+  useEffect(() => {
+    if (contractDetailData && isEditMode === true) {
+      const client = contractDetailData.data
 
-  //     console.log('은행 정보를 보자 ', client)
+      console.log('은행 정보를 보자 ', client)
 
-  //     function parseLandlineNumber(landline: string) {
-  //       if (!landline) return { managerAreaNumber: '', landlineNumber: '' }
+      function parseLandlineNumber(landline: string) {
+        if (!landline) return { managerAreaNumber: '', landlineNumber: '' }
 
-  //       const parts = landline.split('-')
+        const parts = landline.split('-')
 
-  //       if (parts.length === 3) {
-  //         return {
-  //           managerAreaNumber: parts[0], // "02"
-  //           landlineNumber: `${parts[1]}-${parts[2]}`, // "123-5678"
-  //         }
-  //       } else if (parts.length === 2) {
-  //         // "02-1234567" → ["02", "1234567"]
-  //         return {
-  //           managerAreaNumber: parts[0], // "02"
-  //           landlineNumber: parts[1], // "1234567"
-  //         }
-  //       } else {
-  //         // 하이픈 없거나 이상한 경우
-  //         return {
-  //           managerAreaNumber: '',
-  //           landlineNumber: landline.replace(/-/g, ''),
-  //         }
-  //       }
-  //     }
+        if (parts.length === 3) {
+          return {
+            managerAreaNumber: parts[0], // "02"
+            landlineNumber: `${parts[1]}-${parts[2]}`, // "123-5678"
+          }
+        } else if (parts.length === 2) {
+          // "02-1234567" → ["02", "1234567"]
+          return {
+            managerAreaNumber: parts[0], // "02"
+            landlineNumber: parts[1], // "1234567"
+          }
+        } else {
+          // 하이픈 없거나 이상한 경우
+          return {
+            managerAreaNumber: '',
+            landlineNumber: landline.replace(/-/g, ''),
+          }
+        }
+      }
 
-  //     // 담당자 데이터 가공
-  //     const formattedContacts = (client.contacts ?? []).map((c: OutsourcingManager) => {
-  //       const { managerAreaNumber, landlineNumber } = parseLandlineNumber(c.landlineNumber ?? '')
+      // 담당자 데이터 가공
+      const formattedContacts = (client.contacts ?? []).map((c: OutsourcingContractManager) => {
+        const { managerAreaNumber, landlineNumber } = parseLandlineNumber(c.landlineNumber ?? '')
 
-  //       return {
-  //         id: c.id,
-  //         name: c.name,
-  //         position: c.position,
-  //         department: c.department,
-  //         phoneNumber: c.phoneNumber,
-  //         email: c.email,
-  //         memo: c.memo,
-  //         isMain: c.isMain,
-  //         // 분리된 값 추가
-  //         managerAreaNumber,
-  //         landlineNumber,
-  //       }
-  //     })
+        return {
+          id: c.id,
+          name: c.name,
+          position: c.position,
+          department: c.department,
+          phoneNumber: c.phoneNumber,
+          email: c.email,
+          memo: c.memo,
+          isMain: c.isMain,
+          // 분리된 값 추가
+          managerAreaNumber,
+          landlineNumber,
+        }
+      })
 
-  //     // 첨부파일 데이터 가공
-  //     const formattedFiles = (client.files ?? []).map((item: OutsourcingAttachedFile) => ({
-  //       id: item.id,
-  //       name: item.name,
-  //       memo: item.memo,
-  //       files: [
-  //         {
-  //           publicUrl: item.fileUrl,
-  //           file: {
-  //             name: item.originalFileName,
-  //           },
-  //         },
-  //       ],
-  //     }))
+      // 첨부파일 데이터 가공
+      const formattedFiles = (client.files ?? []).map((item: OutsourcingContractAttachedFile) => ({
+        id: item.id,
+        name: item.name,
+        memo: item.memo,
+        files: [
+          {
+            publicUrl: item.fileUrl,
+            file: {
+              name: item.originalFileName,
+            },
+          },
+        ],
+      }))
 
-  //     if (client.landlineNumber) {
-  //       const parts = client.landlineNumber.split('-')
-  //       if (parts.length >= 2) {
-  //         const area = parts[0] // 지역번호
-  //         const number = parts.slice(1).join('-') // 나머지 번호
-  //         setField('landlineNumber', area)
-  //         setField('landlineLastNumber', number)
-  //       } else {
-  //         // fallback (예외 처리)
-  //         setField('landlineLastNumber', client.landlineLastNumber)
-  //       }
-  //     } else {
-  //       setField('landlineNumber', '')
-  //       setField('landlineLastNumber', '')
-  //     }
+      // 각 필드에 set
+      setField('siteId', client.site.id)
+      setField('businessNumber', client.businessNumber)
+      setField('type', client.type)
 
-  //     // 각 필드에 set
-  //     setField('name', client.name)
-  //     setField('businessNumber', client.businessNumber)
-  //     setField('type', client.type)
+      if (client.type === '용역') {
+        setField('type', 'SERVICE')
+      } else if (client.type === '장비') {
+        setField('type', 'EQUIPMENT')
+      } else if (client.type === '식당') {
+        setField('type', 'CATERING')
+      } else if (client.type === '기타') {
+        setField('type', 'ETC')
+      }
 
-  //     if (client.type === '용역') {
-  //       setField('type', 'SERVICE')
-  //     } else if (client.type === '장비') {
-  //       setField('type', 'EQUIPMENT')
-  //     } else if (client.type === '식당') {
-  //       setField('type', 'CATERING')
-  //     } else if (client.type === '기타') {
-  //       setField('type', 'ETC')
-  //     }
+      setField('typeDescription', client.typeDescription)
 
-  //     setField('typeDescription', client.typeDescription)
-  //     setField('address', client.address)
-  //     setField('phoneNumber', client.phoneNumber)
-  //     setField('detailAddress', client.detailAddress)
-  //     setField('ceoName', client.ceoName)
-  //     setField('email', client.email)
-  //     setField('isActive', client.isActive ? '1' : '2')
+      setField('defaultDeductionsDescription', client.defaultDeductionsDescription)
 
-  //     if (client.defaultDeductions) {
-  //       const deductionNames = client.defaultDeductions.split(',').map((s: string) => s.trim())
-
-  //       const matchedCodes = deductionMethodOptions
-  //         .filter((opt) => deductionNames.includes(opt.name))
-  //         .map((opt) => opt.code)
-
-  //       setField('defaultDeductions', matchedCodes.join(','))
-  //     }
-  //     setField('defaultDeductionsDescription', client.defaultDeductionsDescription)
-
-  //     const mappedItemType = idTypeValueToName[client.bankName ?? '']
-
-  //     if (mappedItemType) {
-  //       setField('bankName', mappedItemType)
-  //     } else {
-  //       setField('bankName', '') // 혹은 기본값 처리
-  //     }
-
-  //     setField('accountNumber', client.accountNumber)
-
-  //     setField('accountHolder', client.accountHolder)
-
-  //     setField('memo', client.memo)
-  //     setField('headManagers', formattedContacts)
-  //     setField('attachedFiles', formattedFiles)
-  //   } else {
-  //     reset()
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [outsourcingDetailData, isEditMode, reset, setField])
+      setField('memo', client.memo)
+      setField('headManagers', formattedContacts)
+      setField('attachedFiles', formattedFiles)
+    } else {
+      reset()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contractDetailData, isEditMode, reset, setField])
 
   const formatChangeDetail = (getChanges: string) => {
     try {

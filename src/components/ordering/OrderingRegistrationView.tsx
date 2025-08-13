@@ -468,22 +468,6 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
               />
             </div>
           </div>
-          {/* <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              본사 담당자명
-            </label>
-            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelect
-                fullWidth={true}
-                className="text-xl"
-                value={form.isActive}
-                onChange={(value) => setField('isActive', value)}
-                options={UseORnotOptions}
-              />
-            </div>
-          </div>
-          
-          */}
 
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">

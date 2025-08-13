@@ -155,21 +155,67 @@ export async function OutsourcingContractCategoryTypeInfoService() {
   return data
 }
 
-// 외주업체 상세
-// export async function OutsourcingDetailService(outsourcingCompanyId: number) {
-//   const res = await fetch(`${API.OUTSOURCINGCOMPANY}/${outsourcingCompanyId}`, {
-//     method: 'GET',
-//     headers: {
-//       'Content-Type': 'application/json',
-//     },
-//     credentials: 'include',
-//   })
-//   if (!res.ok) {
-//     throw new Error(`서버 오류: ${res.status}`)
-//   }
+// 외주업체 계약 상세
+export async function ContractDetailService(outsourcingContractId: number) {
+  const res = await fetch(`${API.OUTSOURCINGCONTRACT}/${outsourcingContractId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    throw new Error(`서버 오류: ${res.status}`)
+  }
 
-//   return await res.json()
-// }
+  return await res.json()
+}
+
+// 외주업체 계약 상세(인력 정보)
+export async function ContractPersonDetailService(outsourcingContractId: number) {
+  const res = await fetch(`${API.OUTSOURCINGCONTRACT}/${outsourcingContractId}/workers`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    throw new Error(`서버 오류: ${res.status}`)
+  }
+
+  return await res.json()
+}
+// 외주업체 계약 상세(장비 정보)
+export async function ContractEquipmentDetailService(outsourcingContractId: number) {
+  const res = await fetch(`${API.OUTSOURCINGCONTRACT}/${outsourcingContractId}/equipments`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    throw new Error(`서버 오류: ${res.status}`)
+  }
+
+  return await res.json()
+}
+// 외주업체 계약 상세(기사운전사 정보)
+export async function OutsourcingDriverDetailService(outsourcingContractId: number) {
+  const res = await fetch(`${API.OUTSOURCINGCONTRACT}/${outsourcingContractId}/drivers`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    throw new Error(`서버 오류: ${res.status}`)
+  }
+
+  return await res.json()
+}
 
 //  외주업체 수정
 // export async function ModifyOutsourcingCompany(outsourcingCompanyId: number) {

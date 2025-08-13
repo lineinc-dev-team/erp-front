@@ -62,10 +62,6 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     useContractHistoryDataQuery,
   } = useOutSourcingCompany()
 
-  console.log(
-    'deductionMethodOptionsdeductionMethodOptionsdeductionMethodOptions',
-    deductionMethodOptions,
-  )
   const managers = form.headManagers
   const checkedIds = form.checkedManagerIds
   const isAllChecked = managers.length > 0 && checkedIds.length === managers.length
