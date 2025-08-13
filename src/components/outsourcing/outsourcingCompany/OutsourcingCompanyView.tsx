@@ -41,11 +41,6 @@ export default function OutsourcingCompanyView() {
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
-  console.log(
-    'OutsourcingCompanyDataListOutsourcingCompanyDataListOutsourcingCompanyDataList@#',
-    OutsourcingCompanyDataList,
-  )
-
   const updateOutsourcingList = OutsourcingCompanyDataList.map((user: OutsourcingCompanyList) => {
     const mainContact = user.contacts?.find((contact) => contact.isMain === true)
 

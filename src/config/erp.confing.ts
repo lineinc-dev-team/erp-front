@@ -206,6 +206,25 @@ export const outsourcingCompanyList: GridColDef[] = [
   { field: 'memo', headerName: '비고', width: 100 },
 ]
 
+export const outsourcingContractListData: GridColDef[] = [
+  { field: 'no', headerName: 'No', width: 70 },
+  // { field: 'id', headerName: 'No', width: 70 },
+  { field: 'siteName', headerName: '현장명', width: 130 },
+  { field: 'processName', headerName: '공정명', width: 130 },
+  { field: 'companyName', headerName: '외주업체명', width: 130 },
+  { field: 'businessNumber', headerName: '사업자등록번호', width: 130 },
+  { field: 'type', headerName: '구분', width: 130 },
+  { field: 'contractStartDate', headerName: '계약기간(시작/종료)', width: 130 },
+  { field: 'contractAmount', headerName: '계약금액(총액)', width: 180 },
+  { field: 'defaultDeductions', headerName: '공제항목', width: 100 },
+  { field: 'hasFile', headerName: '첨부파일', width: 100 },
+  { field: 'taxInvoiceCondition', headerName: '세금계산서발행조건', width: 120 },
+  { field: 'contactName', headerName: '담당자', width: 100 },
+  { field: 'createdAt', headerName: '작성일자', width: 100 },
+  { field: 'contractStatus', headerName: '상태', width: 100 },
+  { field: 'memo', headerName: '비고', width: 100 },
+]
+
 export const AreaCode = [
   { id: '지역번호', name: '지역번호' },
   { id: '02', name: '02' },

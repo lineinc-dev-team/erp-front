@@ -6,10 +6,7 @@ import {
   ModifyOutsourcingCompany,
   OutsourcingCompanyInfoHistoryService,
 } from '@/services/outsourcingCompany/outsourcingCompanyRegistrationService'
-import {
-  OutsourcingCompanyInfoService,
-  OutsourcingCompanyRemoveService,
-} from '@/services/outsourcingCompany/outsourcingCompanyService'
+import { OutsourcingCompanyRemoveService } from '@/services/outsourcingCompany/outsourcingCompanyService'
 import {
   CreateOutsourcingContract,
   GetCompanyNameInfoService,
@@ -19,11 +16,8 @@ import {
   OutsourcingContractTaxIdInfoService,
   OutsourcingContractTypesIdInfoService,
 } from '@/services/outsourcingContract/outsourcingContractRegistrationService'
-import {
-  useOutsourcingFormStore,
-  useOutsourcingSearchStore,
-} from '@/stores/outsourcingCompanyStore'
-import { useContractFormStore } from '@/stores/outsourcingContractStore'
+import { OutsourcingContractInfoService } from '@/services/outsourcingContract/outsourcingContractService'
+import { useContractFormStore, useContractSearchStore } from '@/stores/outsourcingContractStore'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { getTodayDateString } from '@/utils/formatters'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -32,13 +26,13 @@ import { useEffect, useMemo, useState } from 'react'
 
 export default function useOutSourcingContract() {
   const { showSnackbar } = useSnackbarStore()
-  const { reset } = useOutsourcingFormStore()
+  const { reset } = useContractFormStore()
 
   const router = useRouter()
   const queryClient = useQueryClient()
 
   // 외주업체 조회
-  const search = useOutsourcingSearchStore((state) => state.search)
+  const search = useContractSearchStore((state) => state.search)
 
   const pathName = usePathname()
 
@@ -51,9 +45,9 @@ export default function useOutSourcingContract() {
   }, [search.searchTrigger])
 
   // useQuery 쪽 수정
-  const OutsourcingListQuery = useQuery({
+  const OutsourcingContractListQuery = useQuery({
     queryKey: [
-      'OutsourcingInfo',
+      'OutsourcingContractInfo',
       search.searchTrigger,
       search.currentPage,
       search.pageCount,
@@ -62,14 +56,15 @@ export default function useOutSourcingContract() {
     ],
     queryFn: () => {
       const rawParams = {
-        name: search.name,
+        siteName: search.siteName,
+        processName: search.processName,
+        companyName: search.companyName,
         businessNumber: search.businessNumber,
-        ceoName: search.ceoName,
-        landlineNumber: search.landlineNumber,
-        type: search.type,
-        createdStartDate: getTodayDateString(search.startDate),
-        createdEndDate: getTodayDateString(search.endDate),
-        isActive: search.isActive === '1' ? true : search.isActive === '2' ? false : undefined,
+        contractType: search.contractType,
+        contractStatus: search.contractStatus,
+        contractStartDate: getTodayDateString(search.contractStartDate),
+        contractEndDate: getTodayDateString(search.contractEndDate),
+        contactName: search.contactName,
         page: search.currentPage - 1, // 항상 현재 페이지에 맞춤
         size: Number(search.pageCount) || 10,
         sort:
@@ -90,10 +85,10 @@ export default function useOutSourcingContract() {
         ),
       )
 
-      return OutsourcingCompanyInfoService(filteredParams)
+      return OutsourcingContractInfoService(filteredParams)
     },
     staleTime: 1000 * 30,
-    enabled: pathName === '/outsourcingCompany', // 경로 체크
+    enabled: pathName === '/outsourcingContract', // 경로 체크
   })
 
   const createOutSourcingContractMutation = useMutation({
@@ -202,7 +197,7 @@ export default function useOutSourcingContract() {
 
   const [processSearch, setProcessSearch] = useState('')
 
-  const getSiteName = useContractFormStore((state) => state.form)
+  const getSiteName = useContractSearchStore((state) => state.search)
 
   const {
     data: processInfo,
@@ -310,7 +305,7 @@ export default function useOutSourcingContract() {
   }, [comPanyNameInfo])
 
   return {
-    OutsourcingListQuery,
+    OutsourcingContractListQuery,
     createOutSourcingContractMutation,
 
     typeMethodOptions,

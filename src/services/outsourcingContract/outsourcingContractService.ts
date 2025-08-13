@@ -1,37 +1,10 @@
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { API } from '@/api/config/env'
 
-export default function OutsourcingCompanyService() {
-  const router = useRouter()
-  const [selectedFields, setSelectedFields] = useState<string[]>([])
-
-  // 외주업체 이력
-  const [contract, setContract] = useState(false)
-
-  const handleToggleField = (field: string) => {
-    setSelectedFields((prev) =>
-      prev.includes(field) ? prev.filter((f) => f !== field) : [...prev, field],
-    )
-  }
-
-  const handleNewOrderCreate = () => router.push('/ordering/registration')
-
-  return {
-    selectedFields,
-    handleToggleField,
-
-    handleNewOrderCreate,
-    setContract,
-    contract,
-  }
-}
-
-// 외주업체 조회
-export async function OutsourcingCompanyInfoService(params = {}) {
+// 외주계약 조회
+export async function OutsourcingContractInfoService(params = {}) {
   const query = new URLSearchParams(params).toString()
 
-  const resData = await fetch(`${API.OUTSOURCINGCOMPANY}?${query}`, {
+  const resData = await fetch(`${API.OUTSOURCINGCONTRACT}?${query}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -52,7 +25,7 @@ export async function OutsourcingCompanyInfoService(params = {}) {
 
 //외주업체 삭제
 export async function OutsourcingCompanyRemoveService(outsourcingCompanyIds: number[]) {
-  const res = await fetch(API.OUTSOURCINGCOMPANY, {
+  const res = await fetch(API.OUTSOURCINGCONTRACT, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',

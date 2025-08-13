@@ -878,6 +878,91 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
       {isEditMode && (
         <div>
           <div className="flex justify-between items-center mt-10 mb-2">
+            <span className="font-bold border-b-2 mb-4">계약이력</span>
+          </div>
+          <TableContainer component={Paper}>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                  {[
+                    'No',
+                    '현장명',
+                    '공정명',
+                    '금액',
+                    '담당자',
+                    '공제항목',
+                    '보증서 제출 여부',
+                    '계약기간',
+                    '등록일/수정일',
+                  ].map((label) => (
+                    <TableCell
+                      key={label}
+                      align="center"
+                      sx={{
+                        backgroundColor: '#D1D5DB',
+                        border: '1px solid  #9CA3AF',
+                        color: 'black',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {label}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {historyList.map((item: HistoryItem) => (
+                  <TableRow key={item.id}>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      {item.id}
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      {item.createdAt} / {item.updatedAt}
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{
+                        border: '1px solid  #9CA3AF',
+                        textAlign: 'center',
+                        whiteSpace: 'pre-line',
+                      }}
+                    >
+                      {item.type}
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'pre-line' }}
+                    >
+                      {item.content}
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'pre-line' }}
+                    >
+                      {item.updatedBy}
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        value={item.memo ?? ''}
+                        placeholder="메모 입력"
+                        onChange={(e) => updateMemo(item.id, e.target.value)}
+                        multiline
+                        inputProps={{ maxLength: 500 }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </div>
+      )}
+
+      {isEditMode && (
+        <div>
+          <div className="flex justify-between items-center mt-10 mb-2">
             <span className="font-bold border-b-2 mb-4">수정이력</span>
             <div className="flex gap-4">
               {/* <CommonButton

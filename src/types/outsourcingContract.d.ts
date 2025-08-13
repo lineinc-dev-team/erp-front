@@ -93,46 +93,49 @@ export interface Contact {
 // 외주계약 조회
 export interface OutsourcingContractList {
   id: number
-  name: string // 발주처 이름
+  siteName: string
+  processName: string
+  companyName: string
   businessNumber: string
-  type: string
-  typeCode: string
-  ceoName: string
-  address: string
-  detailAddress: string
-  landlineNumber: string
-  phoneNumber: string
-  email: string
-  isActive: false
+  contractType: string
+  typeDescription: string
+  contractStatus: string
+  categoryType: string
+  contractAmount: 666650
   defaultDeductions: string
-  defaultDeductionsCode: string
-  defaultDeductionsDescription: string
+  taxInvoiceCondition: string
+  taxInvoiceIssueDayOfMonth: 30
   memo: string
-  createdAt: string // ISO 날짜 문자열
+  contractStartDate: string
+  contractEndDate: string
+  createdAt: string
   updatedAt: string
-  hasFile: true
+  hasFile: false
   contacts: Contact[]
 }
 
 export type OutsourcingContractSearchState = {
   searchTrigger: number
-  name: string
+  siteId: number
+  siteName: string
+  processId: number
+  processName: string
+  companyName: string
   businessNumber: string
-  ceoName: string
-  landlineNumber: string
-  type: string
-  startDate: Date | null
-  endDate: Date | null
-  isActive: string
+  contractType: string
+  contractStatus: string
+  contractStartDate: Date | null
+  contractEndDate: Date | null
+  contactName: string
   currentPage: number
   arraySort: string
   pageCount: string
 
   reset: () => void
 
-  setField: <K extends keyof Omit<OutsourcingSearchState, 'reset' | 'setField'>>(
+  setField: <K extends keyof Omit<OutsourcingContractSearchState, 'reset' | 'setField'>>(
     field: K,
-    value: OutsourcingSearchState[K],
+    value: OutsourcingContractSearchState[K],
   ) => void
 
   handleSearch: () => void

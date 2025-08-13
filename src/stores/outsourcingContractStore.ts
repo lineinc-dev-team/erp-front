@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { OutsourcingSearchState } from '@/types/outsourcingCompany'
 import {
   OutsourcingArticleInfoAttachedFile,
   OutsourcingContractAttachedFile,
@@ -7,21 +6,25 @@ import {
   OutsourcingContractItem,
   OutsourcingContractManager,
   OutsourcingContractPersonAttachedFile,
+  OutsourcingContractSearchState,
   OutsourcingEquipmentInfoAttachedFile,
   subEquipmentInfo,
 } from '@/types/outsourcingContract'
 
-export const useContractSearchStore = create<{ search: OutsourcingSearchState }>((set) => ({
+export const useContractSearchStore = create<{ search: OutsourcingContractSearchState }>((set) => ({
   search: {
     searchTrigger: 0,
-    name: '',
+    siteId: 0,
+    siteName: '',
+    processId: 0,
+    processName: '',
+    companyName: '',
     businessNumber: '',
-    ceoName: '',
-    landlineNumber: '',
-    type: '',
-    startDate: null,
-    endDate: null,
-    isActive: '0',
+    contractType: '',
+    contractStatus: '',
+    contractStartDate: null,
+    contractEndDate: null,
+    contactName: '',
     arraySort: '최신순',
     currentPage: 1,
     pageCount: '10',
@@ -43,14 +46,17 @@ export const useContractSearchStore = create<{ search: OutsourcingSearchState }>
       set((state) => ({
         search: {
           ...state.search,
-          name: '',
+          siteId: 0,
+          siteName: '',
+          processId: 0,
+          processName: '',
+          companyName: '',
           businessNumber: '',
-          ceoName: '',
-          landlineNumber: '',
-          type: '',
-          startDate: null,
-          endDate: null,
-          isActive: '0',
+          contractType: '',
+          contractStatus: '',
+          contractStartDate: null,
+          contractEndDate: null,
+          contactName: '',
           arraySort: '최신순',
           pageCount: '10',
           currentPage: 1,
