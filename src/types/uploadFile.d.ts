@@ -1,11 +1,12 @@
 type FileUploadInfo = {
+  id: number
   file: File
   documentTypeCode?: string
   // cdnAccessUrl: string
   originalFileName?: string
   // key: string
   // uploadUrl: string
-  publicUrl: string
+  fileUrl: string
 }
 
 type FileUploadProps = {

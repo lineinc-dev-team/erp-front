@@ -2,13 +2,14 @@ import {
   SitesPersonScroll,
   SitesProcessNameScroll,
 } from '@/services/managementCost/managementCostRegistrationService'
-import { OutsourcingCompanyInfoHistoryService } from '@/services/outsourcingCompany/outsourcingCompanyRegistrationService'
 import {
   ContractModifyMutation,
+  ContractPersonDetailService,
   CreateOutsourcingContract,
   GetCompanyNameInfoService,
   OutsourcingContractCategoryTypeInfoService,
   OutsourcingContractDeductionIdInfoService,
+  OutsourcingContractInfoHistoryService,
   OutsourcingContractStatuseIdInfoService,
   OutsourcingContractTaxIdInfoService,
   OutsourcingContractTypesIdInfoService,
@@ -152,12 +153,11 @@ export default function useOutSourcingContract() {
   })
 
   // 수정이력 조회 쿼리
-
-  const useOutsourcingCompanyHistoryDataQuery = (historyId: number, enabled: boolean) => {
+  const useOutsourcingContractHistoryDataQuery = (historyId: number, enabled: boolean) => {
     return useInfiniteQuery({
-      queryKey: ['historyList', historyId],
+      queryKey: ['ContracthistoryList', historyId],
       queryFn: ({ pageParam = 0 }) =>
-        OutsourcingCompanyInfoHistoryService(historyId, pageParam, 4, 'id,desc'),
+        OutsourcingContractInfoHistoryService(historyId, pageParam, 4, 'id,desc'),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
         const { sliceInfo } = lastPage?.data
@@ -166,6 +166,26 @@ export default function useOutSourcingContract() {
         return sliceInfo?.hasNext ? nextPage : undefined
       },
       enabled: enabled && !!historyId && !isNaN(historyId),
+    })
+  }
+
+  // 인력 정보 조회 무한 스크롤
+  const useOutsourcingContractPersonDataQuery = (
+    outsourcingContractId: number,
+    enabled: boolean,
+  ) => {
+    return useInfiniteQuery({
+      queryKey: ['PersonList', outsourcingContractId],
+      queryFn: ({ pageParam = 0 }) =>
+        ContractPersonDetailService(outsourcingContractId, pageParam, 4, 'id,desc'),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage?.data
+        const nextPage = sliceInfo?.page + 1
+
+        return sliceInfo?.hasNext ? nextPage : undefined
+      },
+      enabled: enabled && !!outsourcingContractId && !isNaN(outsourcingContractId),
     })
   }
 
@@ -334,7 +354,9 @@ export default function useOutSourcingContract() {
     outsourcingCancel,
     ContractModifyMutationView,
     OutsourcingContractDeleteMutation,
-    useOutsourcingCompanyHistoryDataQuery,
+    useOutsourcingContractHistoryDataQuery,
+
+    useOutsourcingContractPersonDataQuery,
 
     // 업체명
     setCompanySearch,

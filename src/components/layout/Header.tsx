@@ -189,7 +189,7 @@ const menuNameToBasePath: Record<string, string> = {
   '현장 관리': '/sites',
   '관리비 관리': '/managementCost',
   '강재 관리': '/managementSteel',
-  '자재 관리': '/materials',
+  '자재 관리': '/materialManagement',
   '외주업체 관리': '/outsourcingCompany',
   '외주업체 계약 관리': '/outsourcingContract',
 }

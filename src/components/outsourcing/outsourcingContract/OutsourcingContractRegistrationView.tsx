@@ -18,7 +18,6 @@ import {
   Typography,
 } from '@mui/material'
 import { AreaCode, EquipmentType } from '@/config/erp.confing'
-import { useOutsourcingFormStore } from '@/stores/outsourcingCompanyStore'
 import { formatPersonNumber, formatPhoneNumber } from '@/utils/formatPhoneNumber'
 import CommonFileInput from '@/components/common/FileInput'
 import { useParams } from 'next/navigation'
@@ -36,7 +35,6 @@ import AmountInput from '@/components/common/AmountInput'
 import {
   ContractDetailService,
   ContractEquipmentDetailService,
-  ContractPersonDetailService,
   GetCompanyNameInfoService,
   OutsourcingConstructionDetailService,
   OutsourcingDriverDetailService,
@@ -107,7 +105,8 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     outsourcingCancel,
     deduMethodOptions,
     ContractModifyMutationView,
-    useOutsourcingCompanyHistoryDataQuery,
+    useOutsourcingContractHistoryDataQuery,
+    useOutsourcingContractPersonDataQuery,
     statusMethodOptions,
     categoryMethodOptions,
   } = useOutSourcingContract()
@@ -170,25 +169,18 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     enabled: isEditMode && !!outsourcingContractId, // 수정 모드일 때만 fetch
   })
 
-  // 인력데이터
-  const { data: contractPersonDetailData } = useQuery({
-    queryKey: ['OutsourcingPersonDetailInfo'],
-    queryFn: () => ContractPersonDetailService(outsourcingContractId),
-    enabled: isEditMode && !!outsourcingContractId, // 수정 모드일 때만 fetch
-  })
-
   // 공사데이터
   const { data: contractConstructionDetailData } = useQuery({
     queryKey: ['OutsourcingConstructionDetailInfo'],
     queryFn: () => OutsourcingConstructionDetailService(outsourcingContractId),
-    enabled: isEditMode && !!outsourcingContractId, // 수정 모드일 때만 fetch
+    enabled: isEditMode && !!outsourcingContractId && contractDetailData?.data?.type === '공사', // 타입이 장비일 때만
   })
 
   // 장비 데이터
   const { data: contractEquipmentDetailData } = useQuery({
     queryKey: ['OutsourcingEqDetailInfo'],
     queryFn: () => ContractEquipmentDetailService(outsourcingContractId),
-    enabled: isEditMode && !!outsourcingContractId, // 수정 모드일 때만 fetch
+    enabled: isEditMode && !!outsourcingContractId && contractDetailData?.data?.type === '장비', // 타입이 장비일 때만
   })
 
   // 기사 데이터
@@ -196,42 +188,47 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
   const { data: contractDriverDetailData } = useQuery({
     queryKey: ['OutsourcingDrDetailInfo'],
     queryFn: () => OutsourcingDriverDetailService(outsourcingContractId),
-    enabled: isEditMode && !!outsourcingContractId, // 수정 모드일 때만 fetch
+    enabled: isEditMode && !!outsourcingContractId && contractDetailData?.data?.type === '장비', // 타입이 장비일 때만
   })
 
   const PROPERTY_NAME_MAP: Record<string, string> = {
-    departmentName: '부서(소속)',
-    positionName: '직급',
-    gradeName: '직책',
-    phoneNumber: '개인 휴대폰',
-    landlineNumber: '전화번호',
-    email: '이메일',
-    isActive: '계정 상태',
+    contractStartDateFormat: '계약기간(시작)',
+    contractEndDateFormat: '계약기간(종료)',
+    taxInvoiceConditionName: '세금계산서 발행조건',
+    statusName: '상태',
+    taxInvoiceIssueDayOfMonth: '세금 발행조건 기간',
+    siteName: '현장명',
+    CompanyName: '업체명',
+    categoryName: '유형',
+    contractAmount: '계약금액(총액)',
     memo: '메모',
-    name: '업체명',
     businessNumber: '사업자등록번호',
     typeName: '구분명',
     typeDescription: '구분 설명',
     defaultDeductionsName: '기본공제 항목',
     defaultDeductionsDescription: '기본공제 항목 설명',
-    ceoName: '대표자명',
-    detailAddress: '상세주소',
-    bankName: '은행명',
-    accountNumber: '계좌번호',
-    accountHolder: '예금주',
   }
 
   const { showSnackbar } = useSnackbarStore()
 
   const {
-    data: outsourcingHistoryList,
+    data: outsourcingContractHistoryList,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-  } = useOutsourcingCompanyHistoryDataQuery(outsourcingContractId, isEditMode)
+  } = useOutsourcingContractHistoryDataQuery(outsourcingContractId, isEditMode)
 
-  const historyList = useOutsourcingFormStore((state) => state.form.changeHistories)
+  // 무한스크롤을 위한 인력 정보
+  const {
+    data: outsourcingPersonList,
+    fetchNextPage: outsourcingPersonFetchNextPage,
+    hasNextPage: outsourcingPersonHasNextPage,
+    isFetchingNextPage: outsourcingPersonIsFetchingNextPage,
+    isLoading: outsourcingPersonIsLoading,
+  } = useOutsourcingContractPersonDataQuery(outsourcingContractId, isEditMode)
+
+  const historyList = useContractFormStore((state) => state.form.changeHistories)
 
   useEffect(() => {
     if (contractDetailData && isEditMode === true) {
@@ -338,27 +335,31 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       setField('attachedFiles', formattedFiles)
 
       if (client.type === '용역') {
-        const PersonData = contractPersonDetailData?.data
+        // 모든 페이지 데이터를 합치기
+        const allPersonPages = outsourcingPersonList?.pages ?? []
+        console.log(
+          'outsourcingPersonListoutsourcingPersonListoutsourcingPersonListoutsourcingPersonList',
+          outsourcingPersonList,
+        )
+        const getPersonData = allPersonPages.flatMap((page) => {
+          const content = page.data.content ?? []
+          return content.map((item: OutsourcingContractPersonAttachedFile) => ({
+            id: item.id,
+            name: item.name,
+            memo: item.memo,
+            category: item.category,
+            taskDescription: item.taskDescription,
+            files: (item.files ?? []).map((file) => ({
+              id: file.id,
+              fileUrl: file.fileUrl,
+              file: {
+                name: file.originalFileName,
+              },
+            })),
+          }))
+        })
 
-        if (PersonData) {
-          const getPersonData = (PersonData.content ?? []).map(
-            (item: OutsourcingContractPersonAttachedFile) => ({
-              id: item.id,
-              name: item.name,
-              memo: item.memo,
-              category: item.category,
-              taskDescription: item.taskDescription,
-              files: (item.files ?? []).map((file) => ({
-                publicUrl: file.publicUrl,
-                file: {
-                  name: file.originalFileName,
-                },
-              })),
-            }),
-          )
-
-          setField('personManagers', getPersonData)
-        }
+        setField('personManagers', getPersonData)
       } else if (client.type === '공사') {
         const contractData = contractConstructionDetailData?.data
 
@@ -422,25 +423,37 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                   f.documentTypeCode !== 'SAFETY_EDUCATION',
               )
 
+              console.log('driverLicenseFilesdriverLicenseFiles', driverLicenseFiles)
+              console.log('safetyEducationFiles', safetyEducationFiles)
+              console.log('etcFiles', etcFiles)
+
               return {
                 id: item.id,
                 name: item.name,
                 memo: item.memo,
                 // 각 문서 타입 배열 그대로 넣기
                 driverLicense: driverLicenseFiles.map((f) => ({
-                  publicUrl: f.publicUrl,
+                  id: f.id,
+                  fileUrl: f.fileUrl,
                   file: { name: f.originalFileName },
                 })),
                 safeEducation: safetyEducationFiles.map((f) => ({
-                  publicUrl: f.publicUrl,
+                  id: f.id,
+                  fileUrl: f.fileUrl,
                   file: { name: f.originalFileName },
                 })),
                 ETCfiles: etcFiles.map((f) => ({
-                  publicUrl: f.publicUrl,
+                  id: f.id,
+                  fileUrl: f.fileUrl,
                   file: { name: f.originalFileName },
                 })),
               }
             },
+          )
+
+          console.log(
+            ' 받아온 값 확인 getArticleItemsgetArticleItemsgetArticleItems',
+            getArticleItems,
           )
           setField('articleManagers', getArticleItems)
         }
@@ -451,7 +464,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     contractDetailData,
-    contractPersonDetailData,
+    outsourcingPersonList,
     contractConstructionDetailData,
     contractEquipmentDetailData,
     contractDriverDetailData,
@@ -507,8 +520,12 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
   // 수정이력 데이터가 들어옴
   useEffect(() => {
-    if (outsourcingHistoryList?.pages) {
-      const allHistories = outsourcingHistoryList.pages.flatMap((page) =>
+    if (outsourcingContractHistoryList?.pages) {
+      console.log(
+        'outsourcingContractHistoryListoutsourcingContractHistoryList',
+        outsourcingContractHistoryList,
+      )
+      const allHistories = outsourcingContractHistoryList.pages.flatMap((page) =>
         page.data.content.map((item: HistoryItem) => ({
           id: item.id,
           type: item.type,
@@ -522,7 +539,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       setField('changeHistories', allHistories)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [outsourcingHistoryList, setField])
+  }, [outsourcingContractHistoryList, setField])
 
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useCallback(
@@ -539,6 +556,33 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       if (node) observerRef.current.observe(node)
     },
     [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading],
+  )
+
+  // 인력 쪽 무한 스크롤 콜백함수구현
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  const loadMorePersonRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (!node || outsourcingPersonIsLoading || outsourcingPersonIsFetchingNextPage) return
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting && outsourcingPersonHasNextPage) {
+            outsourcingPersonFetchNextPage()
+          }
+        },
+        { root: scrollContainerRef.current, threshold: 0.5 },
+      )
+
+      observer.observe(node)
+      return () => observer.unobserve(node)
+    },
+    [
+      outsourcingPersonFetchNextPage,
+      outsourcingPersonIsFetchingNextPage,
+      outsourcingPersonIsLoading,
+      outsourcingPersonHasNextPage,
+    ],
   )
 
   const [isChecked, setIsChecked] = useState(false)
@@ -1148,8 +1192,8 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
       {/* 구분에서 인력 클릭 시  */}
       {form.type === 'SERVICE' && (
-        <div>
-          <div className="flex justify-between items-center mt-10 mb-2">
+        <div ref={scrollContainerRef} className="h-[340px] overflow-y-auto mt-10">
+          <div className="flex justify-between items-center  mb-2">
             <span className="font-bold border-b-2 mb-4">인력</span>
             <div className="flex gap-4">
               <CommonButton
@@ -1283,6 +1327,13 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     </TableCell>
                   </TableRow>
                 ))}
+                {outsourcingPersonHasNextPage && (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center">
+                      <div ref={loadMorePersonRef}>불러오는 중...</div>
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </TableContainer>
@@ -1952,20 +2003,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
         <div>
           <div className="flex justify-between items-center mt-10 mb-2">
             <span className="font-bold border-b-2 mb-4">수정이력</span>
-            <div className="flex gap-4">
-              {/* <CommonButton
-                    label="삭제"
-                    className="px-7"
-                    variant="danger"
-                    onClick={() => removeCheckedItems('manager')}
-                  />
-                  <CommonButton
-                    label="추가"
-                    className="px-7"
-                    variant="secondary"
-                    onClick={() => addItem('manager')}
-                  /> */}
-            </div>
+            <div className="flex gap-4"></div>
           </div>
           <TableContainer component={Paper}>
             <Table size="small">
@@ -1988,10 +2026,10 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                 </TableRow>
               </TableHead>
               <TableBody>
-                {historyList.map((item: HistoryItem) => (
+                {historyList.map((item: HistoryItem, index) => (
                   <TableRow key={item.id}>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {item.id}
+                      {index + 1}
                     </TableCell>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       {item.createdAt} / {item.updatedAt}

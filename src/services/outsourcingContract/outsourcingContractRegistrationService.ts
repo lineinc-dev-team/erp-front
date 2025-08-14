@@ -172,14 +172,22 @@ export async function ContractDetailService(outsourcingContractId: number) {
 }
 
 // 외주업체 계약 상세(인력 정보)
-export async function ContractPersonDetailService(outsourcingContractId: number) {
-  const res = await fetch(`${API.OUTSOURCINGCONTRACT}/${outsourcingContractId}/workers`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
+export async function ContractPersonDetailService(
+  outsourcingContractId: number,
+  page: number = 0,
+  size: number,
+  sort: string,
+) {
+  const res = await fetch(
+    `${API.OUTSOURCINGCONTRACT}/${outsourcingContractId}/workers?page=${page}&size=${size}&sort=${sort}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
     },
-    credentials: 'include',
-  })
+  )
   if (!res.ok) {
     throw new Error(`서버 오류: ${res.status}`)
   }
@@ -254,16 +262,16 @@ export async function ContractModifyMutation(outsourcingContractId: number) {
   return await res.status
 }
 
-// 외주업체 수정이력 조회
-// 외주업체 수정이력 조회 (페이지네이션 추가)
-export async function OutsourcingCompanyInfoHistoryService(
+// 외주업체 계약 수정이력 조회
+// 외주업체 계약 수정이력 조회 (페이지네이션 추가)
+export async function OutsourcingContractInfoHistoryService(
   historyId: number,
   page: number = 0,
   size: number = 4,
   sort: string,
 ) {
   const resData = await fetch(
-    `${API.OUTSOURCINGCOMPANY}/${historyId}/change-histories?page=${page}&size=${size}&sort=${sort}`,
+    `${API.OUTSOURCINGCONTRACT}/${historyId}/change-histories?page=${page}&size=${size}&sort=${sort}`,
     {
       method: 'GET',
       headers: {

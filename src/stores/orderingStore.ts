@@ -297,21 +297,31 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
         memo: m.memo,
         isMain: m.isMain || false, // 여기 추가
       })),
-      // files: form.attachedFiles.map((f) => ({
-      //   name: f.fileName,
-      //   fileUrl: f.files.publicUrl, // 백엔드 업로드 후 URL 받아와서 넣기
-      //   originalFileName: f.files.file.name || 'testFile_2024.pdf',
-      //   memo: f.memo,
-      // })),
-      files: form.attachedFiles.flatMap((f) =>
-        f.files.map((fileObj) => ({
-          id: f.id,
+
+      // 첨부파일에 파일 업로드를 안할 시 null 로 넣는다..
+      files: form.attachedFiles.flatMap((f) => {
+        if (!f.files || f.files.length === 0) {
+          // 파일이 없을 경우에도 name, memo는 전송
+          return [
+            {
+              id: f.id || Date.now(),
+              name: f.name,
+              fileUrl: '',
+              originalFileName: '',
+              memo: f.memo || '',
+            },
+          ]
+        }
+
+        // 파일이 있을 경우
+        return f.files.map((fileObj: FileUploadInfo) => ({
+          id: f.id || Date.now(),
           name: f.name,
-          fileUrl: fileObj.publicUrl,
-          originalFileName: fileObj.file?.name || 'testFile_2024.pdf',
-          memo: f.memo,
-        })),
-      ),
+          fileUrl: fileObj.publicUrl || '',
+          originalFileName: fileObj.file?.name || '',
+          memo: f.memo || '',
+        }))
+      }),
       changeHistories: form.editedHistories ?? [],
     }
   },

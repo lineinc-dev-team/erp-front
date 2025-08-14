@@ -280,8 +280,9 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                       files={contract.files
                         .filter((f) => f.type === type)
                         .map((f) => ({
+                          id: f.id || 0,
                           file: new File([], f.originalFileName), // 화면 표시용 File 객체 (빈 파일)
-                          publicUrl: f.fileUrl,
+                          fileUrl: f.fileUrl,
                         }))}
                       onChange={(uploaded) => {
                         // 기존 type에 해당하는 파일 제거
@@ -292,11 +293,11 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                           .forEach(({ i }) => removeContractFile(idx, i))
 
                         // 새로운 파일 추가
-                        uploaded.forEach(({ publicUrl, file }) =>
+                        uploaded.forEach(({ fileUrl, file }) =>
                           addContractFile(idx, {
                             name: file.name,
                             originalFileName: file.name,
-                            fileUrl: publicUrl,
+                            fileUrl: fileUrl,
                             memo: '',
                             type,
                           }),

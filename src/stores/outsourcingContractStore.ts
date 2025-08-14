@@ -10,6 +10,7 @@ import {
   OutsourcingEquipmentInfoAttachedFile,
   subEquipmentInfo,
 } from '@/types/outsourcingContract'
+import { getTodayDateString } from '@/utils/formatters'
 
 export const useContractSearchStore = create<{ search: OutsourcingContractSearchState }>((set) => ({
   search: {
@@ -98,7 +99,6 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
     checkedArticleIds: [],
     equipmentManagers: [],
     checkedEquipmentIds: [],
-    editedHistories: [],
     changeHistories: [],
   },
 
@@ -136,7 +136,6 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         checkedArticleIds: [],
         equipmentManagers: [],
         checkedEquipmentIds: [],
-        editedHistories: [],
         changeHistories: [],
       },
     })),
@@ -148,12 +147,15 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
 
   updateMemo: (id, value) =>
     set((state) => {
+      // 기존 changeHistories 업데이트
       const updatedHistories = state.form.changeHistories.map((history) =>
         history.id === id ? { ...history, memo: value } : history,
       )
 
+      // 기존에 저장된 editedHistories 복사
       const edited = state.form.editedHistories ?? []
 
+      // 이미 수정된 항목이 있으면 덮어쓰기, 없으면 새로 추가
       const updatedEditedHistories = edited.some((h) => h.id === id)
         ? edited.map((h) => (h.id === id ? { id, memo: value } : h))
         : [...edited, { id, memo: value }]
@@ -171,7 +173,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
     set((state) => {
       if (type === 'manager') {
         const newItem: OutsourcingContractManager = {
-          id: Date.now(),
+          id: 0,
           name: '',
           position: '',
           department: '',
@@ -184,7 +186,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         return { form: { ...state.form, headManagers: [...state.form.headManagers, newItem] } }
       } else if (type === 'personAttachedFile') {
         const personNewItems: OutsourcingContractPersonAttachedFile = {
-          id: Date.now(),
+          id: 0,
           name: '',
           category: '',
           taskDescription: '',
@@ -199,7 +201,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         }
       } else if (type === 'workSize') {
         const contractNewItems: OutsourcingContractItem = {
-          id: Date.now(),
+          id: 0,
           item: '',
           specification: '',
           unit: '',
@@ -218,7 +220,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         }
       } else if (type === 'equipment') {
         const equipmentNewItems: OutsourcingEquipmentInfoAttachedFile = {
-          id: Date.now(),
+          id: 0,
           specification: '',
           vehicleNumber: '',
           category: '',
@@ -235,7 +237,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         }
       } else if (type === 'articleInfo') {
         const articleNewItems: OutsourcingArticleInfoAttachedFile = {
-          id: Date.now(),
+          id: 0,
           name: '',
           memo: '',
           driverLicense: [],
@@ -250,7 +252,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         }
       } else {
         const newItem: OutsourcingContractAttachedFile = {
-          id: Date.now(),
+          id: 0,
           name: '',
           memo: '',
           files: [],
@@ -622,8 +624,8 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
       outsourcingCompanyId: form.CompanyId,
       type: form.type,
       typeDescription: form.typeDescription,
-      contractStartDate: form.contractStartDate,
-      contractEndDate: form.contractEndDate,
+      contractStartDate: getTodayDateString(form.contractStartDate),
+      contractEndDate: getTodayDateString(form.contractEndDate),
       contractAmount: form.contractAmount,
 
       defaultDeductionsType: form.defaultDeductions,
@@ -634,7 +636,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
       status: form.status,
       memo: form.memo,
       contacts: form.headManagers.map((m) => ({
-        id: m.id,
+        id: m.id || 0,
         name: m.name,
         position: m.position,
         department: m.department,
@@ -651,38 +653,40 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
           // 파일이 없을 경우에도 name, memo는 전송
           return [
             {
-              id: f.id || Date.now(),
+              id: f.id || 0,
               name: f.name,
-              fileUrl: null,
-              originalFileName: null,
-              memo: f.memo,
+              fileUrl: '',
+              originalFileName: '',
+              memo: f.memo || '',
             } as OutsourcingContractAttachedFile,
           ]
         }
 
         // 파일이 있을 경우
         return f.files.map((fileObj: FileUploadInfo) => ({
-          id: f.id || Date.now(),
+          id: f.id || 0,
           name: f.name,
-          fileUrl: fileObj.publicUrl || '',
+          fileUrl: fileObj.fileUrl || '',
           originalFileName: fileObj.file?.name || '',
-          memo: f.memo,
+          memo: f.memo || '',
         }))
       }),
 
       workers: form.personManagers.map((item) => ({
+        id: item.id || 0,
         name: item.name,
         category: item.category,
         taskDescription: item.taskDescription,
         memo: item.memo,
         files: (item.files ?? []).map((fileObj) => ({
-          fileUrl: fileObj.publicUrl,
+          id: fileObj.id || 0,
+          fileUrl: fileObj.fileUrl,
           originalFileName: fileObj.file?.name ?? 'testFile_2024.pdf',
         })),
       })),
 
       constructions: form.contractManagers.map((m) => ({
-        id: m.id,
+        id: m.id || 0,
         item: m.item,
         specification: m.specification,
         unit: m.unit,
@@ -695,6 +699,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
       })),
 
       equipments: form.equipmentManagers.map((item) => ({
+        id: item.id ?? 0,
         specification: item.specification,
         vehicleNumber: item.vehicleNumber,
         category: item.category,
@@ -719,36 +724,40 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         const files: any = []
 
         driverLicenseFiles.forEach((fileObj) => {
-          if (fileObj.file || fileObj.publicUrl) {
+          if (fileObj.file || fileObj.fileUrl) {
             files.push({
+              id: fileObj.id || 0,
               documentType: 'DRIVER_LICENSE',
-              fileUrl: fileObj.publicUrl || '',
+              fileUrl: fileObj.fileUrl || '',
               originalFileName: fileObj.file?.name || '',
             })
           }
         })
 
         safeEducationFiles.forEach((fileObj) => {
-          if (fileObj.file || fileObj.publicUrl) {
+          if (fileObj.file || fileObj.fileUrl) {
             files.push({
+              id: fileObj.id || 0,
               documentType: 'SAFETY_EDUCATION',
-              fileUrl: fileObj.publicUrl || '',
+              fileUrl: fileObj.fileUrl || '',
               originalFileName: fileObj.file?.name || '',
             })
           }
         })
 
         etcDocumentFiles.forEach((fileObj) => {
-          if (fileObj.file || fileObj.publicUrl) {
+          if (fileObj.file || fileObj.fileUrl) {
             files.push({
+              id: fileObj.id || 0,
               documentType: 'ETC_DOCUMENT',
-              fileUrl: fileObj.publicUrl || '',
+              fileUrl: fileObj.fileUrl || '',
               originalFileName: fileObj.file?.name || '',
             })
           }
         })
 
         return {
+          id: item.id || 0,
           name: item.name,
           memo: item.memo,
           files,

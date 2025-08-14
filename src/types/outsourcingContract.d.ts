@@ -15,8 +15,8 @@ export type OutsourcingContractAttachedFile = {
   id: number
   name: string
   memo: string
-  fileUrl?: string | null
-  originalFileName?: string | null
+  fileUrl?: string
+  originalFileName?: string
   files?: FileUploadInfo[]
 }
 
