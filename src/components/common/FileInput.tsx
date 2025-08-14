@@ -48,11 +48,12 @@ export default function CommonFileInput({
     onChange(files.filter((_, i) => i !== index))
   }
 
+  const validFiles = files?.filter((f) => f.file?.name) ?? []
   return (
     <div className="flex w-full">
       <div className="flex items-center gap-2 justify-between w-full">
         <ul>
-          {files.map(({ file }, index) => (
+          {validFiles.map(({ file }, index) => (
             <li key={index} className="flex items-center gap-2 mb-1">
               <span className={className}>{file?.name}</span>
               <button
@@ -64,6 +65,7 @@ export default function CommonFileInput({
             </li>
           ))}
         </ul>
+
         <label className="cursor-pointer whitespace-nowrap bg-gray-300 text-black font-medium border border-black px-4 py-2 rounded">
           <input
             type="file"

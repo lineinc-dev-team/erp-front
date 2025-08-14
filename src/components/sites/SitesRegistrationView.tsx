@@ -242,6 +242,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
               '계약금액',
 
               <AmountInput
+                className="w-full"
                 value={formatNumber(contract.amount)}
                 onChange={(val) => {
                   const numericValue = unformatNumber(val)
@@ -556,6 +557,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
             </label>
             <div className="border flex  items-center border-gray-400 px-2 w-full">
               <AmountInput
+                className="w-full"
                 value={formatNumber(form.contractAmount)}
                 onChange={(val) => {
                   const numericValue = unformatNumber(val)

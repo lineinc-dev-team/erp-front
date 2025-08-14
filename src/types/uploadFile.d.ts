@@ -1,6 +1,8 @@
 type FileUploadInfo = {
   file: File
+  documentTypeCode?: string
   // cdnAccessUrl: string
+  originalFileName?: string
   // key: string
   // uploadUrl: string
   publicUrl: string

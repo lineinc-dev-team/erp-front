@@ -2,11 +2,9 @@ import {
   SitesPersonScroll,
   SitesProcessNameScroll,
 } from '@/services/managementCost/managementCostRegistrationService'
+import { OutsourcingCompanyInfoHistoryService } from '@/services/outsourcingCompany/outsourcingCompanyRegistrationService'
 import {
-  ModifyOutsourcingCompany,
-  OutsourcingCompanyInfoHistoryService,
-} from '@/services/outsourcingCompany/outsourcingCompanyRegistrationService'
-import {
+  ContractModifyMutation,
   CreateOutsourcingContract,
   GetCompanyNameInfoService,
   OutsourcingContractCategoryTypeInfoService,
@@ -98,7 +96,7 @@ export default function useOutSourcingContract() {
     onSuccess: () => {
       showSnackbar('외주계약이 등록 되었습니다.', 'success')
       // 초기화 로직
-      queryClient.invalidateQueries({ queryKey: ['outsourcingContractInfo'] })
+      queryClient.invalidateQueries({ queryKey: ['OutsourcingContractInfo'] })
       reset()
       router.push('/outsourcingContract')
     },
@@ -112,21 +110,27 @@ export default function useOutSourcingContract() {
     router.push('/outsourcingContract')
   }
 
-  // 수정 쿼리
-  const OutsourcingModifyMutation = useMutation({
-    mutationFn: (outsourcingIds: number) => ModifyOutsourcingCompany(outsourcingIds),
+  // 외주 업체 수정
+  const ContractModifyMutationView = (outsourcingContractId: number) => {
+    // 사용자가 확인해야만 mutation 실행
+    if (window.confirm('수정하시겠습니까?')) {
+      ContractModifyBtn.mutate(outsourcingContractId)
+    }
+  }
 
-    onSuccess: () => {
-      if (window.confirm('수정하시겠습니까?')) {
-        showSnackbar('외주업체가 수정 되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['outsourcingInfo'] })
-        reset()
-        router.push('/outsourcingCompany')
-      }
+  // mutation 정의
+  const ContractModifyBtn = useMutation({
+    mutationFn: (outsourcingContractId: number) => ContractModifyMutation(outsourcingContractId),
+
+    onSuccess: async () => {
+      showSnackbar('외주업체 계약이 수정 되었습니다.', 'success')
+      await queryClient.invalidateQueries({ queryKey: ['modifyContractInfo'] })
+      reset()
+      router.push('/outsourcingContract')
     },
 
     onError: () => {
-      showSnackbar(' 외주업체 수정에 실패했습니다.', 'error')
+      showSnackbar('외주업체 계약 수정에 실패했습니다.', 'error')
     },
   })
 
@@ -176,7 +180,7 @@ export default function useOutSourcingContract() {
     isFetching: siteNameFetching,
     isLoading: siteNameLoading,
   } = useInfiniteQuery({
-    queryKey: ['siteInfo', sitesSearch],
+    queryKey: ['ContractsiteInfo', sitesSearch],
     queryFn: ({ pageParam }) => SitesPersonScroll({ pageParam, keyword: sitesSearch }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
@@ -200,7 +204,17 @@ export default function useOutSourcingContract() {
 
   const [processSearch, setProcessSearch] = useState('')
 
+  // 예: 어떤 페이지인지 구분하는 값
+
+  const pathname = usePathname()
+  const isSearchPage = pathname === '/outsourcingContract'
+
   const getSiteName = useContractSearchStore((state) => state.search)
+
+  const formSiteName = useContractFormStore((state) => state.form)
+
+  // siteId 결정
+  const siteId = isSearchPage ? getSiteName?.siteId : formSiteName?.siteId
 
   const {
     data: processInfo,
@@ -209,11 +223,11 @@ export default function useOutSourcingContract() {
     isFetching: processInfoIsFetching,
     isLoading: processInfoLoading,
   } = useInfiniteQuery({
-    queryKey: ['processInfo', processSearch, getSiteName.siteId],
+    queryKey: ['ContractprocessInfo', processSearch, siteId],
     queryFn: ({ pageParam }) =>
       SitesProcessNameScroll({
         pageParam,
-        siteId: getSiteName.siteId,
+        siteId: siteId || 0,
         keyword: processSearch,
       }),
     initialPageParam: 0,
@@ -221,7 +235,7 @@ export default function useOutSourcingContract() {
       const { sliceInfo } = lastPage.data
       return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
     },
-    enabled: !!getSiteName.siteId,
+    enabled: !!siteId, // siteId가 있을 때만 실행
   })
 
   const processOptions = useMemo(() => {
@@ -257,7 +271,7 @@ export default function useOutSourcingContract() {
     queryFn: OutsourcingContractDeductionIdInfoService,
   })
 
-  const deduMethodOptions = [{ code: 'BASE', name: '선택' }, ...(daduInfoId?.data ?? [])]
+  const deduMethodOptions = [...(daduInfoId?.data ?? [])]
 
   const { data: statusInfoId } = useQuery({
     queryKey: ['ContractStatusInfo'],
@@ -318,7 +332,7 @@ export default function useOutSourcingContract() {
     categoryMethodOptions,
 
     outsourcingCancel,
-    OutsourcingModifyMutation,
+    ContractModifyMutationView,
     OutsourcingContractDeleteMutation,
     useOutsourcingCompanyHistoryDataQuery,
 

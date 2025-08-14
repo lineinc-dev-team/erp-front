@@ -186,8 +186,8 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         const personNewItems: OutsourcingContractPersonAttachedFile = {
           id: Date.now(),
           name: '',
-          type: '',
-          content: '',
+          category: '',
+          taskDescription: '',
           memo: '',
           files: [],
         }
@@ -201,13 +201,13 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         const contractNewItems: OutsourcingContractItem = {
           id: Date.now(),
           item: '',
-          spec: '',
+          specification: '',
           unit: '',
-          contractPrice: 0,
-          contractQty: '',
-          contractAmount: '',
-          outsourceQty: '',
-          outsourceAmount: '',
+          unitPrice: 0,
+          contractQuantity: '',
+          contractPrice: '',
+          outsourcingContractQuantity: '',
+          outsourcingContractPrice: '',
           memo: '',
         }
         return {
@@ -524,14 +524,14 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
                       ...equipment.subEquipments,
                       {
                         id: Date.now(),
-                        type: 'BASE',
+                        typeCode: 'BASE',
                         memo: '',
                       },
                     ]
                   : [
                       {
                         id: Date.now(),
-                        type: 'BASE',
+                        typeCode: 'BASE',
                         memo: '',
                       },
                     ],
@@ -582,7 +582,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
   getTotalContractQty: () => {
     const { contractManagers } = get().form
     return contractManagers.reduce((sum, item) => {
-      const qty = Number(item.contractQty)
+      const qty = Number(item.contractQuantity)
       return sum + (isNaN(qty) ? 0 : qty)
     }, 0)
   },
@@ -591,7 +591,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
   getTotalContractAmount: () => {
     const { contractManagers } = get().form
     return contractManagers.reduce((sum, item) => {
-      const amount = Number(item.contractAmount)
+      const amount = Number(item.contractPrice)
       return sum + (isNaN(amount) ? 0 : amount)
     }, 0)
   },
@@ -600,7 +600,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
   getTotalOutsourceQty: () => {
     const { contractManagers } = get().form
     return contractManagers.reduce((sum, item) => {
-      const qty = Number(item.outsourceQty)
+      const qty = Number(item.outsourcingContractQuantity)
       return sum + (isNaN(qty) ? 0 : qty)
     }, 0)
   },
@@ -609,7 +609,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
   getTotalOutsourceAmount: () => {
     const { contractManagers } = get().form
     return contractManagers.reduce((sum, item) => {
-      const amount = Number(item.outsourceAmount)
+      const amount = Number(item.outsourcingContractPrice)
       return sum + (isNaN(amount) ? 0 : amount)
     }, 0)
   },
@@ -644,37 +644,53 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         memo: m.memo,
         isMain: m.isMain ?? false,
       })),
-      files: form.attachedFiles.flatMap((f) =>
-        f.files.map((fileObj) => ({
-          id: f.id,
+
+      // 첨부파일에 파일 업로드를 안할 시 null 로 넣는다..
+      files: form.attachedFiles.flatMap((f) => {
+        if (!f.files || f.files.length === 0) {
+          // 파일이 없을 경우에도 name, memo는 전송
+          return [
+            {
+              id: f.id || Date.now(),
+              name: f.name,
+              fileUrl: null,
+              originalFileName: null,
+              memo: f.memo,
+            } as OutsourcingContractAttachedFile,
+          ]
+        }
+
+        // 파일이 있을 경우
+        return f.files.map((fileObj: FileUploadInfo) => ({
+          id: f.id || Date.now(),
           name: f.name,
-          fileUrl: fileObj.publicUrl,
-          originalFileName: fileObj.file?.name ?? 'testFile_2024.pdf',
+          fileUrl: fileObj.publicUrl || '',
+          originalFileName: fileObj.file?.name || '',
           memo: f.memo,
-        })),
-      ),
-      workers: form.personManagers.flatMap((item) =>
-        item.files.map((fileObj) => ({
-          name: item.name,
-          category: item.type,
-          taskDescription: item.content,
+        }))
+      }),
+
+      workers: form.personManagers.map((item) => ({
+        name: item.name,
+        category: item.category,
+        taskDescription: item.taskDescription,
+        memo: item.memo,
+        files: (item.files ?? []).map((fileObj) => ({
           fileUrl: fileObj.publicUrl,
-          fileName: fileObj.file.name,
           originalFileName: fileObj.file?.name ?? 'testFile_2024.pdf',
-          memo: item.memo,
         })),
-      ),
+      })),
 
       constructions: form.contractManagers.map((m) => ({
         id: m.id,
         item: m.item,
-        specification: m.spec,
+        specification: m.specification,
         unit: m.unit,
-        unitPrice: m.contractPrice,
-        contractQuantity: m.contractQty,
-        contractPrice: m.contractAmount,
-        outsourcingContractQuantity: m.outsourceQty,
-        outsourcingContractPrice: m.outsourceAmount,
+        unitPrice: m.unitPrice,
+        contractQuantity: m.contractQuantity,
+        contractPrice: m.contractPrice,
+        outsourcingContractQuantity: m.outsourcingContractQuantity,
+        outsourcingContractPrice: m.outsourcingContractPrice,
         memo: m.memo,
       })),
 
@@ -688,29 +704,54 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         memo: item.memo,
         subEquipments:
           item.subEquipments?.map((sub) => ({
-            type: sub.type,
+            type: sub.typeCode,
             memo: sub.memo,
           })) || [],
       })),
 
       // 우선은 한일 파일만 첨부됌
       drivers: form.articleManagers.map((item) => {
-        const driverLicense = (item.driverLicense && item.driverLicense[0]) || {}
-        const safeEducation = (item.safeEducation && item.safeEducation[0]) || {}
-        const etcDocument = (item.ETCfiles && item.ETCfiles[0]) || {}
+        const driverLicenseFiles = item.driverLicense || []
+        const safeEducationFiles = item.safeEducation || []
+        const etcDocumentFiles = item.ETCfiles || []
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const files: any = []
+
+        driverLicenseFiles.forEach((fileObj) => {
+          if (fileObj.file || fileObj.publicUrl) {
+            files.push({
+              documentType: 'DRIVER_LICENSE',
+              fileUrl: fileObj.publicUrl || '',
+              originalFileName: fileObj.file?.name || '',
+            })
+          }
+        })
+
+        safeEducationFiles.forEach((fileObj) => {
+          if (fileObj.file || fileObj.publicUrl) {
+            files.push({
+              documentType: 'SAFETY_EDUCATION',
+              fileUrl: fileObj.publicUrl || '',
+              originalFileName: fileObj.file?.name || '',
+            })
+          }
+        })
+
+        etcDocumentFiles.forEach((fileObj) => {
+          if (fileObj.file || fileObj.publicUrl) {
+            files.push({
+              documentType: 'ETC_DOCUMENT',
+              fileUrl: fileObj.publicUrl || '',
+              originalFileName: fileObj.file?.name || '',
+            })
+          }
+        })
 
         return {
           name: item.name,
           memo: item.memo,
-          driverLicenseName: driverLicense.file?.name || '',
-          driverLicenseFileUrl: driverLicense.publicUrl || '',
-          driverLicenseOriginalFileName: driverLicense.file?.name || '',
-          safetyEducationName: safeEducation.file?.name || '',
-          safetyEducationFileUrl: safeEducation.publicUrl || '',
-          safetyEducationOriginalFileName: safeEducation.file?.name || '',
-          etcDocumentName: etcDocument.file?.name || '',
-          etcDocumentFileUrl: etcDocument.publicUrl || '',
-          etcDocumentOriginalFileName: etcDocument.file?.name || '',
+          files,
         }
       }),
 

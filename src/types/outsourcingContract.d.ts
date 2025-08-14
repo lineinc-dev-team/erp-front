@@ -15,9 +15,9 @@ export type OutsourcingContractAttachedFile = {
   id: number
   name: string
   memo: string
-  fileUrl?: string
-  originalFileName?: string
-  files: FileUploadInfo[]
+  fileUrl?: string | null
+  originalFileName?: string | null
+  files?: FileUploadInfo[]
 }
 
 //외주공사 항목 타입
@@ -25,13 +25,13 @@ export type OutsourcingContractItem = {
   id: number
   no?: number
   item: string
-  spec: string
+  specification: string
   unit: string
-  contractPrice: number
-  contractQty: string | number
-  contractAmount: string | number
-  outsourceQty: string | number
-  outsourceAmount: string | number
+  unitPrice: number
+  contractQuantity: string | number
+  contractPrice: string | number
+  outsourcingContractQuantity: string | number
+  outsourcingContractPrice: string | number
   memo: string
 }
 
@@ -45,13 +45,14 @@ export type OutsourcingArticleInfoAttachedFile = {
   driverLicense: FileUploadInfo[]
   safeEducation: FileUploadInfo[]
   ETCfiles: FileUploadInfo[]
+  files?: FileUploadInfo[]
 }
 
 // 장비 타입
 
 type subEquipmentInfo = {
   id: number
-  type: string
+  typeCode: string
   memo: string
 }
 export type OutsourcingEquipmentInfoAttachedFile = {
@@ -69,8 +70,8 @@ export type OutsourcingEquipmentInfoAttachedFile = {
 export type OutsourcingContractPersonAttachedFile = {
   id: number
   name: string
-  type: string
-  content: string
+  category: string
+  taskDescription: string
   memo: string
   fileUrl?: string
   originalFileName?: string

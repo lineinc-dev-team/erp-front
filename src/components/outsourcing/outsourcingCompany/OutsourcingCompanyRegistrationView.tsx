@@ -420,7 +420,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
             <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
               <div className="flex gap-2">
                 <input
-                  value={form.address}
+                  value={form.address ?? ''}
                   readOnly
                   placeholder="주소를 검색해 주세요."
                   className="flex-1 border px-3 py-2 rounded"
@@ -433,7 +433,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                 />
               </div>
               <input
-                value={form.detailAddress}
+                value={form.detailAddress ?? ''}
                 onChange={(e) => setField('detailAddress', e.target.value)}
                 placeholder="상세주소"
                 className="w-full border px-3 py-2 rounded"

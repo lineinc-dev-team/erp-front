@@ -35,12 +35,20 @@ import { SitesProcessNameScroll } from '@/services/managementCost/managementCost
 import AmountInput from '@/components/common/AmountInput'
 import {
   ContractDetailService,
+  ContractEquipmentDetailService,
+  ContractPersonDetailService,
   GetCompanyNameInfoService,
+  OutsourcingConstructionDetailService,
+  OutsourcingDriverDetailService,
 } from '@/services/outsourcingContract/outsourcingContractRegistrationService'
 import {
   CompanyInfo,
+  OutsourcingArticleInfoAttachedFile,
   OutsourcingContractAttachedFile,
+  OutsourcingContractItem,
   OutsourcingContractManager,
+  OutsourcingContractPersonAttachedFile,
+  OutsourcingEquipmentInfoAttachedFile,
 } from '@/types/outsourcingContract'
 import CommonDatePicker from '@/components/common/DatePicker'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
@@ -98,7 +106,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     taxMethodOptions,
     outsourcingCancel,
     deduMethodOptions,
-    OutsourcingModifyMutation,
+    ContractModifyMutationView,
     useOutsourcingCompanyHistoryDataQuery,
     statusMethodOptions,
     categoryMethodOptions,
@@ -141,7 +149,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     contractCheckIds.length === contractAddAttachedFiles.length
 
   const params = useParams()
-  const outsourcingCompanyId = Number(params?.id)
+  const outsourcingContractId = Number(params?.id)
 
   const selectedValues = (form.defaultDeductions?.split(',') || []).filter(Boolean)
 
@@ -158,8 +166,37 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
   const { data: contractDetailData } = useQuery({
     queryKey: ['OutsourcingDetailInfo'],
-    queryFn: () => ContractDetailService(outsourcingCompanyId),
-    enabled: isEditMode && !!outsourcingCompanyId, // 수정 모드일 때만 fetch
+    queryFn: () => ContractDetailService(outsourcingContractId),
+    enabled: isEditMode && !!outsourcingContractId, // 수정 모드일 때만 fetch
+  })
+
+  // 인력데이터
+  const { data: contractPersonDetailData } = useQuery({
+    queryKey: ['OutsourcingPersonDetailInfo'],
+    queryFn: () => ContractPersonDetailService(outsourcingContractId),
+    enabled: isEditMode && !!outsourcingContractId, // 수정 모드일 때만 fetch
+  })
+
+  // 공사데이터
+  const { data: contractConstructionDetailData } = useQuery({
+    queryKey: ['OutsourcingConstructionDetailInfo'],
+    queryFn: () => OutsourcingConstructionDetailService(outsourcingContractId),
+    enabled: isEditMode && !!outsourcingContractId, // 수정 모드일 때만 fetch
+  })
+
+  // 장비 데이터
+  const { data: contractEquipmentDetailData } = useQuery({
+    queryKey: ['OutsourcingEqDetailInfo'],
+    queryFn: () => ContractEquipmentDetailService(outsourcingContractId),
+    enabled: isEditMode && !!outsourcingContractId, // 수정 모드일 때만 fetch
+  })
+
+  // 기사 데이터
+
+  const { data: contractDriverDetailData } = useQuery({
+    queryKey: ['OutsourcingDrDetailInfo'],
+    queryFn: () => OutsourcingDriverDetailService(outsourcingContractId),
+    enabled: isEditMode && !!outsourcingContractId, // 수정 모드일 때만 fetch
   })
 
   const PROPERTY_NAME_MAP: Record<string, string> = {
@@ -192,7 +229,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-  } = useOutsourcingCompanyHistoryDataQuery(outsourcingCompanyId, isEditMode)
+  } = useOutsourcingCompanyHistoryDataQuery(outsourcingContractId, isEditMode)
 
   const historyList = useOutsourcingFormStore((state) => state.form.changeHistories)
 
@@ -263,31 +300,165 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
       // 각 필드에 set
       setField('siteId', client.site.id)
-      setField('businessNumber', client.businessNumber)
-      setField('type', client.type)
-
-      if (client.type === '용역') {
-        setField('type', 'SERVICE')
-      } else if (client.type === '장비') {
-        setField('type', 'EQUIPMENT')
-      } else if (client.type === '식당') {
-        setField('type', 'CATERING')
-      } else if (client.type === '기타') {
-        setField('type', 'ETC')
-      }
-
+      setField('processId', client.siteProcess.id)
+      setField('CompanyId', client.outsourcingCompany.id)
+      setField('businessNumber', client.outsourcingCompany.businessNumber)
+      setField('type', client.typeCode)
       setField('typeDescription', client.typeDescription)
 
-      setField('defaultDeductionsDescription', client.defaultDeductionsDescription)
+      // 계약 기간
+      setField('contractStartDate', new Date(client.contractStartDate) || null)
+      setField('contractEndDate', new Date(client.contractEndDate) || null)
+      // 계약 금액
+      setField('contractAmount', client.contractAmount || 0)
 
-      setField('memo', client.memo)
+      if (client.defaultDeductions) {
+        const deductionNames = client.defaultDeductions.split(',').map((s: string) => s.trim())
+
+        const matchedCodes = deduMethodOptions
+          .filter((opt) => deductionNames.includes(opt.name))
+          .map((opt) => opt.code)
+
+        setField('defaultDeductions', matchedCodes.join(','))
+      }
+      setField('defaultDeductionsDescription', client.defaultDeductionsDescription)
+      // 세금 계산서 조건
+      setField('taxCalculat', client.taxInvoiceConditionCode || '')
+      setField('taxInvoiceIssueDayOfMonth', client.taxInvoiceIssueDayOfMonth || 0)
+
+      // 유형(설비 등일 때)
+      setField('category', client.categoryCode || '')
+
+      // 상태
+      setField('status', client.statusCode || '')
+
+      // 메모
+      setField('memo', client.memo || '')
       setField('headManagers', formattedContacts)
       setField('attachedFiles', formattedFiles)
+
+      if (client.type === '용역') {
+        const PersonData = contractPersonDetailData?.data
+
+        if (PersonData) {
+          const getPersonData = (PersonData.content ?? []).map(
+            (item: OutsourcingContractPersonAttachedFile) => ({
+              id: item.id,
+              name: item.name,
+              memo: item.memo,
+              category: item.category,
+              taskDescription: item.taskDescription,
+              files: (item.files ?? []).map((file) => ({
+                publicUrl: file.publicUrl,
+                file: {
+                  name: file.originalFileName,
+                },
+              })),
+            }),
+          )
+
+          setField('personManagers', getPersonData)
+        }
+      } else if (client.type === '공사') {
+        const contractData = contractConstructionDetailData?.data
+
+        if (contractData) {
+          const getContractItems = (contractData.content ?? []).map(
+            (item: OutsourcingContractItem) => ({
+              id: item.id,
+              item: item.item,
+              specification: item.specification,
+              unit: item.unit,
+              unitPrice: item.unitPrice,
+              contractQuantity: item.contractQuantity,
+              contractPrice: item.contractPrice,
+              outsourcingContractQuantity: item.outsourcingContractQuantity,
+              outsourcingContractPrice: item.outsourcingContractPrice,
+              memo: item.memo,
+            }),
+          )
+
+          setField('contractManagers', getContractItems)
+        }
+      } else if (client.type === '장비') {
+        const Equipment = contractEquipmentDetailData?.data
+
+        if (Equipment) {
+          const getEquipmentItems = (Equipment.content ?? []).map(
+            (item: OutsourcingEquipmentInfoAttachedFile) => ({
+              id: item.id,
+              specification: item.specification,
+              vehicleNumber: item.vehicleNumber,
+              category: item.category,
+              unitPrice: item.unitPrice,
+              subtotal: item.subtotal,
+              taskDescription: item.taskDescription,
+              memo: item.memo,
+              subEquipments: (item.subEquipments ?? []).map((sub) => ({
+                id: sub.id,
+                typeCode: sub.typeCode,
+                memo: sub.memo,
+              })),
+            }),
+          )
+          setField('equipmentManagers', getEquipmentItems)
+        }
+
+        const DriverData = contractDriverDetailData?.data
+
+        if (DriverData) {
+          const getArticleItems = (DriverData.content ?? []).map(
+            (item: OutsourcingArticleInfoAttachedFile) => {
+              // files 분류
+              const driverLicenseFiles = (item?.files ?? []).filter(
+                (f) => f.documentTypeCode === 'DRIVER_LICENSE',
+              )
+              const safetyEducationFiles = (item?.files ?? []).filter(
+                (f) => f.documentTypeCode === 'SAFETY_EDUCATION',
+              )
+              const etcFiles = (item?.files ?? []).filter(
+                (f) =>
+                  f.documentTypeCode !== 'DRIVER_LICENSE' &&
+                  f.documentTypeCode !== 'SAFETY_EDUCATION',
+              )
+
+              return {
+                id: item.id,
+                name: item.name,
+                memo: item.memo,
+                // 각 문서 타입 배열 그대로 넣기
+                driverLicense: driverLicenseFiles.map((f) => ({
+                  publicUrl: f.publicUrl,
+                  file: { name: f.originalFileName },
+                })),
+                safeEducation: safetyEducationFiles.map((f) => ({
+                  publicUrl: f.publicUrl,
+                  file: { name: f.originalFileName },
+                })),
+                ETCfiles: etcFiles.map((f) => ({
+                  publicUrl: f.publicUrl,
+                  file: { name: f.originalFileName },
+                })),
+              }
+            },
+          )
+          setField('articleManagers', getArticleItems)
+        }
+      }
     } else {
       reset()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contractDetailData, isEditMode, reset, setField])
+  }, [
+    contractDetailData,
+    contractPersonDetailData,
+    contractConstructionDetailData,
+    contractEquipmentDetailData,
+    contractDriverDetailData,
+    isEditMode,
+    reset,
+    setField,
+  ])
 
   const formatChangeDetail = (getChanges: string) => {
     try {
@@ -435,7 +606,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                 className="text-xl"
                 value={form.processId || 0}
                 onChange={(value) => {
-                  const selectedProcess = processOptions.find((opt) => opt.id === value)
+                  const selectedProcess = processOptions.find((opt) => opt.name === value)
                   if (selectedProcess) {
                     setField('processId', selectedProcess.id)
                     setField('processName', selectedProcess.name)
@@ -930,17 +1101,8 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
-                      {/* <CommonFileInput
-                        className=" break-words whitespace-normal"
-                        label="계약서"
-                        acceptedExtensions={['pdf', 'hwp']}
-                        files={form.attachedFiles.find((f) => f.id === m.id)?.files || []}
-                        onChange={(newFiles) =>
-                          form.updateItemField('attachedFile', m.id, 'files', newFiles)
-                        }
-                      />
-                       */}
                       <CommonFileInput
+                        className="text-left"
                         acceptedExtensions={[
                           'pdf',
                           'jpg',
@@ -951,27 +1113,19 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                           'jpeg',
                           'ppt',
                         ]}
-                        files={m.files} // 각 항목별 files
-                        onChange={
-                          (newFiles) => updateItemField('attachedFile', m.id, 'files', newFiles) //  해당 항목만 업데이트
-                        }
+                        files={(m.files ?? []).filter((f) => f.file?.name)}
+                        onChange={(newFiles) => {
+                          // 0개 또는 1개만 가능
+                          if (newFiles.length <= 1) {
+                            updateItemField('attachedFile', m.id, 'files', newFiles)
+                          } else {
+                            // 1개 초과 시 첫 번째 파일만 유지
+                            showSnackbar('1개 이상의 파일은 업로드 할 수 없습니다.', 'error')
+                            updateItemField('attachedFile', m.id, 'files', [newFiles[0]])
+                          }
+                        }}
                         uploadTarget="CLIENT_COMPANY"
                       />
-                      {/* <CommonFileInput
-                        acceptedExtensions={[
-                          'pdf',
-                          'jpg',
-                          'png',
-                          'hwp',
-                          'xlsx',
-                          'zip',
-                          'jpeg',
-                          'ppt',
-                        ]}
-                        files={uploadedFiles}
-                        onChange={setUploadedFiles}
-                        uploadTarget={'CLIENT_COMPANY'}
-                      /> */}
                     </div>
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -1071,9 +1225,9 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                         size="small"
                         placeholder="텍스트 입력"
                         sx={{ width: '100%' }}
-                        value={m.type}
+                        value={m.category}
                         onChange={(e) =>
-                          updateItemField('personAttachedFile', m.id, 'type', e.target.value)
+                          updateItemField('personAttachedFile', m.id, 'category', e.target.value)
                         }
                       />
                     </TableCell>
@@ -1082,15 +1236,21 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                         size="small"
                         placeholder="텍스트 입력"
                         sx={{ width: '100%' }}
-                        value={m.content}
+                        value={m.taskDescription}
                         onChange={(e) =>
-                          updateItemField('personAttachedFile', m.id, 'content', e.target.value)
+                          updateItemField(
+                            'personAttachedFile',
+                            m.id,
+                            'taskDescription',
+                            e.target.value,
+                          )
                         }
                       />
                     </TableCell>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
                         <CommonFileInput
+                          className="text-left"
                           acceptedExtensions={[
                             'pdf',
                             'jpg',
@@ -1108,21 +1268,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                           }
                           uploadTarget="CLIENT_COMPANY"
                         />
-                        {/* <CommonFileInput
-                        acceptedExtensions={[
-                          'pdf',
-                          'jpg',
-                          'png',
-                          'hwp',
-                          'xlsx',
-                          'zip',
-                          'jpeg',
-                          'ppt',
-                        ]}
-                        files={uploadedFiles}
-                        onChange={setUploadedFiles}
-                        uploadTarget={'CLIENT_COMPANY'}
-                      /> */}
                       </div>
                     </TableCell>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -1291,8 +1436,10 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       <TextField
                         size="small"
                         placeholder="텍스트 입력(50자)"
-                        value={m.spec || ''}
-                        onChange={(e) => updateItemField('workSize', m.id, 'spec', e.target.value)}
+                        value={m.specification || ''}
+                        onChange={(e) =>
+                          updateItemField('workSize', m.id, 'specification', e.target.value)
+                        }
                         inputProps={{ maxLength: 50 }}
                         fullWidth
                       />
@@ -1311,9 +1458,9 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       <TextField
                         size="small"
                         placeholder="10자"
-                        value={m.contractPrice || ''}
+                        value={m.unitPrice || ''}
                         onChange={(e) =>
-                          updateItemField('workSize', m.id, 'contractPrice', e.target.value)
+                          updateItemField('workSize', m.id, 'unitPrice', e.target.value)
                         }
                         inputProps={{ maxLength: 10 }}
                         fullWidth
@@ -1325,9 +1472,9 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       <TextField
                         size="small"
                         placeholder="숫자만"
-                        value={m.contractQty || ''}
+                        value={m.contractQuantity || ''}
                         onChange={(e) =>
-                          updateItemField('workSize', m.id, 'contractQty', e.target.value)
+                          updateItemField('workSize', m.id, 'contractQuantity', e.target.value)
                         }
                         inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
                         fullWidth
@@ -1339,9 +1486,9 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       <TextField
                         size="small"
                         placeholder="숫자만"
-                        value={m.contractAmount || ''}
+                        value={m.contractPrice || ''}
                         onChange={(e) =>
-                          updateItemField('workSize', m.id, 'contractAmount', e.target.value)
+                          updateItemField('workSize', m.id, 'contractPrice', e.target.value)
                         }
                         inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
                         fullWidth
@@ -1353,9 +1500,14 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       <TextField
                         size="small"
                         placeholder="숫자만"
-                        value={m.outsourceQty || ''}
+                        value={m.outsourcingContractQuantity || ''}
                         onChange={(e) =>
-                          updateItemField('workSize', m.id, 'outsourceQty', e.target.value)
+                          updateItemField(
+                            'workSize',
+                            m.id,
+                            'outsourcingContractQuantity',
+                            e.target.value,
+                          )
                         }
                         inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
                         fullWidth
@@ -1367,9 +1519,14 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       <TextField
                         size="small"
                         placeholder="숫자만"
-                        value={m.outsourceAmount || ''}
+                        value={m.outsourcingContractPrice || ''}
                         onChange={(e) =>
-                          updateItemField('workSize', m.id, 'outsourceAmount', e.target.value)
+                          updateItemField(
+                            'workSize',
+                            m.id,
+                            'outsourcingContractPrice',
+                            e.target.value,
+                          )
                         }
                         inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
                         fullWidth
@@ -1558,9 +1715,9 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                             <div className="flex gap-6 ">
                               <CommonSelect
                                 className="text-2xl w-[110px]"
-                                value={item.type || 'BASE'}
+                                value={item.typeCode || 'BASE'}
                                 onChange={(value) =>
-                                  updateSubEquipmentField(m.id, item.id, 'type', value)
+                                  updateSubEquipmentField(m.id, item.id, 'typeCode', value)
                                 }
                                 options={EquipmentType}
                               />
@@ -1707,6 +1864,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
                         <CommonFileInput
+                          className="text-left"
                           acceptedExtensions={[
                             'pdf',
                             'jpg',
@@ -1729,6 +1887,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
                         <CommonFileInput
+                          className="text-left"
                           acceptedExtensions={[
                             'pdf',
                             'jpg',
@@ -1751,6 +1910,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
                         <CommonFileInput
+                          className="text-left"
                           acceptedExtensions={[
                             'pdf',
                             'jpg',
@@ -1894,7 +2054,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
           variant="secondary"
           onClick={() => {
             if (isEditMode) {
-              OutsourcingModifyMutation.mutate(outsourcingCompanyId)
+              ContractModifyMutationView(outsourcingContractId)
             } else {
               createOutSourcingContractMutation.mutate()
             }

@@ -217,26 +217,42 @@ export async function OutsourcingDriverDetailService(outsourcingContractId: numb
   return await res.json()
 }
 
+// 외주업체 계약 상세(공사 정보)
+export async function OutsourcingConstructionDetailService(outsourcingContractId: number) {
+  const res = await fetch(`${API.OUTSOURCINGCONTRACT}/${outsourcingContractId}/constructions`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    throw new Error(`서버 오류: ${res.status}`)
+  }
+
+  return await res.json()
+}
+
 //  외주업체 수정
-// export async function ModifyOutsourcingCompany(outsourcingCompanyId: number) {
-//   const { newOutsourcingContractData } = useContractFormStore.getState()
-//   const payload = newOutsourcingContractData()
+export async function ContractModifyMutation(outsourcingContractId: number) {
+  const { newOutsourcingContractData } = useContractFormStore.getState()
+  const payload = newOutsourcingContractData()
 
-//   const res = await fetch(`${API.OUTSOURCINGCOMPANY}/${outsourcingCompanyId}`, {
-//     method: 'PATCH',
-//     headers: {
-//       'Content-Type': 'application/json',
-//     },
-//     body: JSON.stringify(payload),
-//     credentials: 'include',
-//   })
+  const res = await fetch(`${API.OUTSOURCINGCONTRACT}/${outsourcingContractId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+    credentials: 'include',
+  })
 
-//   if (!res.ok) {
-//     throw new Error(`서버 오류: ${res.status}`)
-//   }
+  if (!res.ok) {
+    throw new Error(`서버 오류: ${res.status}`)
+  }
 
-//   return await res.status
-// }
+  return await res.status
+}
 
 // 외주업체 수정이력 조회
 // 외주업체 수정이력 조회 (페이지네이션 추가)
