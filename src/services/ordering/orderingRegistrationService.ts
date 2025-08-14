@@ -3,7 +3,7 @@ import { useOrderingFormStore } from '@/stores/orderingStore'
 
 type PresignedUrlResponse = {
   uploadUrl: string
-  publicUrl: string
+  fileUrl: string
 }
 
 export async function getPresignedUrl(
@@ -23,8 +23,8 @@ export async function getPresignedUrl(
 
   console.log('파일 업로드 전 데이터 확인 ', data)
 
-  const { publicUrl, uploadUrl } = data
-  return { publicUrl, uploadUrl }
+  const { fileUrl, uploadUrl } = data
+  return { fileUrl, uploadUrl }
 }
 
 export async function uploadToS3(uploadUrl: string, file: File) {

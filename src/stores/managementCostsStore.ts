@@ -262,7 +262,7 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
       files: form.attachedFiles.flatMap((f) =>
         f.files.map((fileObj) => ({
           name: f.name,
-          fileUrl: fileObj.publicUrl,
+          fileUrl: fileObj.fileUrl,
           originalFileName: fileObj.file?.name || '',
           memo: f.memo,
         })),

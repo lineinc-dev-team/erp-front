@@ -317,7 +317,7 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
         return f.files.map((fileObj: FileUploadInfo) => ({
           id: f.id || Date.now(),
           name: f.name,
-          fileUrl: fileObj.publicUrl || '',
+          fileUrl: fileObj.fileUrl || '',
           originalFileName: fileObj.file?.name || '',
           memo: f.memo || '',
         }))

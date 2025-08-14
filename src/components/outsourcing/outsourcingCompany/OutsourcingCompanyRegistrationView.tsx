@@ -185,7 +185,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
         memo: item.memo,
         files: [
           {
-            publicUrl: item.fileUrl,
+            fileUrl: item.fileUrl,
             file: {
               name: item.originalFileName,
             },
