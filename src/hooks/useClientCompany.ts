@@ -59,8 +59,8 @@ export function useClientCompany() {
         sort:
           search.arraySort === '최신순'
             ? 'id,desc'
-            : search.arraySort === '날짜순'
-            ? 'createdAt.desc'
+            : search.arraySort === '오래된순'
+            ? 'id.asc'
             : 'id.asc',
       }
 
@@ -76,7 +76,6 @@ export function useClientCompany() {
 
       return ClientCompanyInfoService(filteredParams)
     },
-    staleTime: 1000 * 30,
     enabled: pathName === '/ordering', // 경로 체크
   })
 
@@ -86,7 +85,7 @@ export function useClientCompany() {
     onSuccess: () => {
       showSnackbar('발주처가 등록 되었습니다.', 'success')
       // 초기화 로직
-      queryClient.invalidateQueries({ queryKey: ['clientInfo'] })
+      queryClient.invalidateQueries({ queryKey: ['ClientInfo'] })
       reset()
       router.push('/ordering')
     },

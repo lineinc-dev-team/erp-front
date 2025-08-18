@@ -24,6 +24,7 @@ import { getTodayDateString } from '@/utils/formatters'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
+import { useSiteId } from './useSiteIdNumber'
 
 export default function useOutSourcingContract() {
   const { showSnackbar } = useSnackbarStore()
@@ -226,15 +227,9 @@ export default function useOutSourcingContract() {
 
   // 예: 어떤 페이지인지 구분하는 값
 
-  const pathname = usePathname()
-  const isSearchPage = pathname === '/outsourcingContract'
+  const siteId = useSiteId() // 훅 실행해서 값 받기
 
-  const getSiteName = useContractSearchStore((state) => state.search)
-
-  const formSiteName = useContractFormStore((state) => state.form)
-
-  // siteId 결정
-  const siteId = isSearchPage ? getSiteName?.siteId : formSiteName?.siteId
+  console.log('받아온 현장명 값!!!', siteId)
 
   const {
     data: processInfo,

@@ -58,7 +58,10 @@ export default function CommonSelect<T extends string | number>({
         }}
       >
         {options.map((opt) => (
-          <MenuItem key={opt.id} value={opt.code || opt.id}>
+          <MenuItem
+            key={opt.code ?? opt.id} // key는 유니크하게
+            value={opt.code ?? opt.id} // value는 항상 옵션 code로
+          >
             {displayLabel ? opt.label ?? opt.name : opt.name}
           </MenuItem>
         ))}

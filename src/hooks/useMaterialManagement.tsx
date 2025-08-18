@@ -1,13 +1,11 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
-import {
-  SitesPersonScroll,
-  SitesProcessNameScroll,
-} from '@/services/managementCost/managementCostRegistrationService'
+import { useEffect } from 'react'
 import {
   CreateManagementMaterial,
+  MaterialInfoHistoryService,
+  MaterialInputTypeService,
   ModifyMaterialManagement,
 } from '@/services/materialManagement/materialManagementRegistrationService'
 import {
@@ -27,13 +25,23 @@ export function useManagementMaterial() {
   const router = useRouter()
   const queryClient = useQueryClient()
 
+  const { data: materialTypeInfoId } = useQuery({
+    queryKey: ['InputTypeInfo'],
+    queryFn: MaterialInputTypeService,
+  })
+
+  const InputTypeMethodOptions = [
+    { code: 'BASE', label: '선택' },
+    ...(materialTypeInfoId?.data ?? []),
+  ]
+
   // 강재 관리등록
   const createMaterialMutation = useMutation({
     mutationFn: CreateManagementMaterial,
     onSuccess: () => {
       showSnackbar('자재가 등록 되었습니다.', 'success')
       // 초기화 로직
-      queryClient.invalidateQueries({ queryKey: ['materialInfo'] })
+      queryClient.invalidateQueries({ queryKey: ['MaterialInfo'] })
       reset()
       router.push('/materialManagement')
     },
@@ -48,11 +56,16 @@ export function useManagementMaterial() {
 
   const pathName = usePathname()
 
+  // const params = useParams()
+  // const outsourcingCompanyId = Number(params?.id)
+
+  // 초기 화면에 들어왔을 때 currentPage 1로 세팅 (예: useEffect 등에서)
   useEffect(() => {
-    if (search.currentPage !== 1) {
+    if (search.searchTrigger && search.currentPage !== 0) {
       search.setField('currentPage', 1)
     }
-  }, [search])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.searchTrigger])
 
   // useQuery 쪽 수정
   const MaterialListQuery = useQuery({
@@ -69,6 +82,7 @@ export function useManagementMaterial() {
         siteName: search.siteName,
         processName: search.processName,
         materialName: search.materialName,
+        outsourcingCompanyName: search.outsourcingCompanyName,
         deliveryStartDate: getTodayDateString(search.deliveryStartDate),
         deliveryEndDate: getTodayDateString(search.deliveryEndDate),
         page: search.currentPage - 1,
@@ -76,8 +90,8 @@ export function useManagementMaterial() {
         sort:
           search.arraySort === '최신순'
             ? 'id,desc'
-            : search.arraySort === '날짜순'
-            ? 'paymentDate.desc'
+            : search.arraySort === '오래된순'
+            ? 'id.asc'
             : 'id.asc',
       }
 
@@ -91,11 +105,9 @@ export function useManagementMaterial() {
         ),
       )
 
-      console.log('검색 파라미터', filteredParams)
-
       return ManagementMaterialInfoService(filteredParams)
     },
-    staleTime: 1000 * 30,
+    enabled: pathName === '/materialManagement', // 경로 체크
   })
 
   //자재데이터 삭제!
@@ -121,12 +133,10 @@ export function useManagementMaterial() {
     mutationFn: (materialId: number) => ModifyMaterialManagement(materialId),
 
     onSuccess: () => {
-      if (window.confirm('수정하시겠습니까?')) {
-        showSnackbar('자재비가 수정 되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['MaterialInfo'] })
-        reset()
-        router.push('/materialManagement')
-      }
+      showSnackbar('자재비가 수정 되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['MaterialInfo'] })
+      reset()
+      router.push('/materialManagement')
     },
 
     onError: () => {
@@ -134,118 +144,35 @@ export function useManagementMaterial() {
     },
   })
 
-  // 현장명데이터를 가져옴 무한 스크롤
-
-  const useSitesPersonInfiniteScroll = (keyword: string) => {
+  // 수정이력 조회 쿼리
+  const useMaterialHistoryDataQuery = (historyId: number, enabled: boolean) => {
     return useInfiniteQuery({
-      queryKey: ['siteInfo', keyword],
-      queryFn: ({ pageParam }) => SitesPersonScroll({ pageParam, keyword }),
+      queryKey: ['MaterialHistoryList', historyId],
+      queryFn: ({ pageParam = 0 }) =>
+        MaterialInfoHistoryService(historyId, pageParam, 4, 'id,desc'),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
-        const { sliceInfo } = lastPage.data
-        const nextPage = sliceInfo.page + 1
+        const { sliceInfo } = lastPage?.data
+        const nextPage = sliceInfo?.page + 1
 
-        return sliceInfo.hasNext ? nextPage : undefined
+        return sliceInfo?.hasNext ? nextPage : undefined
       },
+      enabled: enabled && !!historyId && !isNaN(historyId),
     })
   }
 
-  const [sitesSearch, setSitesSearch] = useState('')
-
-  const {
-    data: orderPersonInfo,
-    // fetchNextPage,
-    // hasNextPage,
-    // isFetching,
-    // isLoading,
-  } = useInfiniteQuery({
-    queryKey: ['siteInfo', sitesSearch],
-    queryFn: ({ pageParam }) => SitesPersonScroll({ pageParam, keyword: sitesSearch }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
-      const { sliceInfo } = lastPage.data
-      const nextPage = sliceInfo.page + 1
-      return sliceInfo.hasNext ? nextPage : undefined
-    },
-  })
-
-  const sitesOptions = useMemo(() => {
-    const defaultOption = { label: '선택', value: '0' }
-    const options = (orderPersonInfo?.pages || [])
-      .flatMap((page) => page.data.content)
-      .map((user) => ({
-        label: user.name,
-        value: user.id,
-      }))
-
-    return [defaultOption, ...options]
-  }, [orderPersonInfo])
-
-  // 공정명
-
-  const useProcessNameInfiniteScroll = (keyword: string) => {
-    return useInfiniteQuery({
-      queryKey: ['processInfo', keyword],
-      queryFn: ({ pageParam }) => SitesProcessNameScroll({ pageParam, keyword }),
-      initialPageParam: 0,
-      getNextPageParam: (lastPage) => {
-        const { sliceInfo } = lastPage.data
-        const nextPage = sliceInfo.page + 1
-
-        return sliceInfo.hasNext ? nextPage : undefined
-      },
-    })
+  const materialCancel = () => {
+    router.push('/materialManagement')
   }
-
-  const [processSearch, setProcessSearch] = useState('')
-
-  const {
-    data: processInfo,
-    fetchNextPage,
-    hasNextPage,
-    isFetching,
-    isLoading,
-  } = useInfiniteQuery({
-    queryKey: ['processInfo', processSearch],
-    queryFn: ({ pageParam }) => SitesProcessNameScroll({ pageParam, keyword: processSearch }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
-      const { sliceInfo } = lastPage.data
-      const nextPage = sliceInfo.page + 1
-      return sliceInfo.hasNext ? nextPage : undefined
-    },
-  })
-
-  const processOptions = useMemo(() => {
-    const defaultOption = { label: '선택', value: '0' }
-    const options = (processInfo?.pages || [])
-      .flatMap((page) => page.data.content)
-      .map((user) => ({
-        label: user.name,
-        value: user.id,
-      }))
-
-    return [defaultOption, ...options]
-  }, [processInfo])
 
   return {
     createMaterialMutation,
     MaterialModifyMutation,
     MaterialListQuery,
     MaterialDeleteMutation,
+    materialCancel,
+    InputTypeMethodOptions,
 
-    // 현장명 무한 스크롤
-    useSitesPersonInfiniteScroll,
-    setSitesSearch,
-    sitesOptions,
-    fetchNextPage,
-    hasNextPage,
-    isFetching,
-    isLoading,
-
-    // 공정명
-    useProcessNameInfiniteScroll,
-    setProcessSearch,
-    processOptions,
+    useMaterialHistoryDataQuery,
   }
 }

@@ -4,6 +4,7 @@ import {
   MaterialItem,
   MaterialSearchState,
 } from '@/types/materialManagement'
+import { getTodayDateString } from '@/utils/formatters'
 import { create } from 'zustand'
 
 export const MaterialTypeLabelToValue: Record<string, string> = {
@@ -21,8 +22,11 @@ export const MaterialTypeLabelToValue: Record<string, string> = {
 export const useMaterialSearchStore = create<{ search: MaterialSearchState }>((set) => ({
   search: {
     searchTrigger: 0,
+    siteId: 0,
     siteName: '',
     processName: '',
+    outsourcingCompanyName: '',
+    outsourcingCompanyId: 0,
     materialName: '',
     deliveryStartDate: null,
     deliveryEndDate: null,
@@ -49,6 +53,9 @@ export const useMaterialSearchStore = create<{ search: MaterialSearchState }>((s
           ...state.search,
           siteName: '',
           processName: '',
+          siteNameId: 0,
+          outsourcingCompanyName: '',
+          outsourcingCompanyId: 0,
           materialName: '',
           deliveryStartDate: null,
           deliveryEndDate: null,
@@ -64,10 +71,14 @@ export const useMaterialSearchStore = create<{ search: MaterialSearchState }>((s
 export const useManagementMaterialFormStore = create<MaterialFormStore>((set, get) => ({
   form: {
     siteId: 0,
+    siteName: '선택',
     siteProcessId: 0,
-    inputType: '선택',
+    siteProcessName: '선택',
+    outsourcingCompanyId: 0,
+    inputType: 'BASE',
     inputTypeDescription: '',
     deliveryDate: null,
+    initialDeliveryDateAt: '',
     memo: '',
     details: [],
     checkedMaterialItemIds: [],
@@ -76,22 +87,29 @@ export const useManagementMaterialFormStore = create<MaterialFormStore>((set, ge
     checkedAttachedFileIds: [],
 
     modificationHistory: [],
+    changeHistories: [],
   },
 
   reset: () =>
     set(() => ({
       form: {
         siteId: 0,
+        siteName: '선택',
         siteProcessId: 0,
-        inputType: '선택',
+        siteProcessName: '선택',
+        outsourcingCompanyId: 0,
+        inputType: 'BASE',
         inputTypeDescription: '',
         deliveryDate: null,
+        initialDeliveryDateAt: '',
         memo: '',
         details: [],
         checkedMaterialItemIds: [],
         attachedFiles: [],
         checkedAttachedFileIds: [],
         modificationHistory: [],
+
+        changeHistories: [],
       },
     })),
 
@@ -99,6 +117,30 @@ export const useManagementMaterialFormStore = create<MaterialFormStore>((set, ge
     set((state) => ({
       form: { ...state.form, [field]: value },
     })),
+
+  updateMemo: (id, value) =>
+    set((state) => {
+      // 기존 changeHistories 업데이트
+      const updatedHistories = state.form.changeHistories.map((history) =>
+        history.id === id ? { ...history, memo: value } : history,
+      )
+
+      // 기존에 저장된 editedHistories 복사
+      const edited = state.form.editedHistories ?? []
+
+      // 이미 수정된 항목이 있으면 덮어쓰기, 없으면 새로 추가
+      const updatedEditedHistories = edited.some((h) => h.id === id)
+        ? edited.map((h) => (h.id === id ? { id, memo: value } : h))
+        : [...edited, { id, memo: value }]
+
+      return {
+        form: {
+          ...state.form,
+          changeHistories: updatedHistories,
+          editedHistories: updatedEditedHistories,
+        },
+      }
+    }),
 
   addItem: (typeName) =>
     set((state) => {
@@ -125,7 +167,6 @@ export const useManagementMaterialFormStore = create<MaterialFormStore>((set, ge
       } else {
         const newFile: AttachedFile = {
           id,
-          name: '',
           memo: '',
           files: [],
         }
@@ -225,17 +266,39 @@ export const useManagementMaterialFormStore = create<MaterialFormStore>((set, ge
 
   newMaterialData: () => {
     const form = get().form
+
+    const deliveryDateStr = getTodayDateString(form.deliveryDate)
+
     return {
       ...form,
       details: form.details,
-      files: form.attachedFiles.flatMap((f) =>
-        f.files.map((fileObj) => ({
-          name: f.name,
-          fileUrl: fileObj.fileUrl,
+      deliveryDate:
+        deliveryDateStr !== form.initialDeliveryDateAt
+          ? deliveryDateStr
+          : form.initialDeliveryDateAt,
+      // 첨부파일에 파일 업로드를 안할 시 null 로 넣는다..
+      files: form.attachedFiles.flatMap((f) => {
+        if (!f.files || f.files.length === 0) {
+          // 파일이 없을 경우에도 name, memo는 전송
+          return [
+            {
+              id: f.id || 0,
+              fileUrl: '',
+              originalFileName: '',
+              memo: f.memo || '',
+            } as AttachedFile,
+          ]
+        }
+
+        // 파일이 있을 경우
+        return f.files.map((fileObj: FileUploadInfo) => ({
+          id: f.id || 0,
+          fileUrl: fileObj.fileUrl || '',
           originalFileName: fileObj.file?.name || '',
-          memo: f.memo,
-        })),
-      ),
+          memo: f.memo || '',
+        }))
+      }),
+      changeHistories: form.editedHistories ?? [],
     }
   },
 }))

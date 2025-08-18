@@ -119,7 +119,7 @@ export const MaterialExcelFieldMap = {
   공정명: 'processName',
   투입구분: 'inputType',
   납품일자: 'deliveryDate',
-  // 자채업체명: 'name',
+  자재업체명: 'outsourcingCompanyName',
   품명: 'name',
   규격: 'standard',
   사용용도: 'usage',

@@ -20,38 +20,48 @@ import {
 import { useMaterialSearchStore } from '@/stores/materialManagementStore'
 import { DetailItem, MaterialList } from '@/types/materialManagement'
 import { getTodayDateString } from '@/utils/formatters'
+import useOutSourcingContract from '@/hooks/useOutSourcingContract'
+import CommonSelectByName from '../common/CommonSelectByName'
+import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 
 export default function MaterialManagementView() {
   const { handleNewMaterialCreate } = ManagementMaterialService()
 
   const { search } = useMaterialSearchStore()
 
+  const { MaterialListQuery, MaterialDeleteMutation } = useManagementMaterial()
+
   const {
-    MaterialListQuery,
-    MaterialDeleteMutation,
+    setSitesSearch,
+    sitesOptions,
+    siteNameFetchNextPage,
+    siteNamehasNextPage,
+    siteNameFetching,
+    siteNameLoading,
 
-    // 해당 개발 시 다시 수정해야함
-    // 현장명 무한 스크롤
-    // setSitesSearch,
-    // sitesOptions,
-    // fetchNextPage,
-    // hasNextPage,
-    // isFetching,
-    // isLoading,
+    // 공정명
+    setProcessSearch,
+    processOptions,
+    processInfoFetchNextPage,
+    processInfoHasNextPage,
+    processInfoIsFetching,
+    processInfoLoading,
 
-    // // 공정명
+    // 업체명
 
-    // setProcessSearch,
-    // processOptions,
-  } = useManagementMaterial()
+    setCompanySearch,
+    companyOptions,
+    comPanyNameFetchNextPage,
+    comPanyNamehasNextPage,
+    comPanyNameFetching,
+    comPanyNameLoading,
+  } = useOutSourcingContract()
 
   const MaterialDataList = MaterialListQuery.data?.data.content ?? []
 
   const totalList = MaterialListQuery.data?.data.pageInfo.totalElements ?? 0
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
-
-  console.log('자재 관리', MaterialDataList)
 
   const updateMaterialList = MaterialDataList.flatMap((material: MaterialList) => {
     if (!material.details || material.details.length === 0) {
@@ -62,6 +72,7 @@ export default function MaterialManagementView() {
           site: material.site?.name ?? '',
           process: material.process?.name ?? '',
           deliveryDate: getTodayDateString(material.deliveryDate),
+          outsourcingCompanyName: material.outsourcingCompany?.name,
           memo: material.memo ?? '',
           inputType: material.inputType,
           inputTypeDescription: material.inputTypeDescription,
@@ -88,6 +99,7 @@ export default function MaterialManagementView() {
     // details가 있는 경우 펼쳐서 처리
     return material.details.map((detail: DetailItem) => ({
       id: material.id,
+      outsourcingCompanyName: material.outsourcingCompany?.name,
       site: material.site?.name ?? '',
       process: material.process?.name ?? '',
       deliveryDate: getTodayDateString(material.deliveryDate),
@@ -120,7 +132,7 @@ export default function MaterialManagementView() {
 
   // 그리도 라우팅 로직!
   const enhancedColumns = MaterialColumnList.map((col): GridColDef => {
-    if (col.field === 'process') {
+    if (col.field === 'name') {
       return {
         ...col,
         headerAlign: 'center',
@@ -140,15 +152,17 @@ export default function MaterialManagementView() {
         },
       }
     }
-    if (col.field === 'remark') {
+    if (col.field === 'no') {
       return {
         ...col,
-        sortable: false,
         headerAlign: 'center',
         align: 'center',
-        flex: 1,
+        flex: 0.5,
         renderCell: (params: GridRenderCellParams) => {
-          return <span>{params.value}</span>
+          const sortedRowIds = params.api.getSortedRowIds?.() ?? []
+          const indexInCurrentPage = sortedRowIds.indexOf(params.id)
+          const no = (search.currentPage - 1) * pageCount + indexInCurrentPage + 1
+          return <span>{no}</span>
         },
       }
     }
@@ -175,75 +189,76 @@ export default function MaterialManagementView() {
     <>
       <div className="border-10 border-gray-400 p-4">
         <div className="grid grid-cols-3">
-          {/* <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+          <div className="flex">
+            <label className="w-[144px] text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelect
-                fullWidth
-                className="text-xl"
-                value={
-                  search.siteName === ''
-                    ? '0' // '선택'일 경우 value는 '0'
-                    : sitesOptions.find((opt) => opt.label === search.siteName)?.value || '0'
-                }
-                onChange={(value) => {
-                  if (value === '0') {
-                    // '선택'을 고른 경우 '' 저장
-                    search.setField('siteName', '')
+              <CommonSelectByName
+                value={search.siteName || '선택'}
+                onChange={async (value) => {
+                  const selectedSite = sitesOptions.find((opt) => opt.name === value)
+                  if (!selectedSite) return
+
+                  search.setField('siteId', selectedSite.id)
+                  search.setField('siteName', selectedSite.name)
+
+                  const res = await SitesProcessNameScroll({
+                    pageParam: 0,
+                    siteId: selectedSite.id,
+                    keyword: '',
+                  })
+
+                  const processes = res.data?.content || []
+                  if (processes.length > 0) {
+                    search.setField('processId', processes[0].id)
+                    search.setField('processName', processes[0].name)
                   } else {
-                    const selected = sitesOptions.find((opt) => opt.value === value)
-                    search.setField('siteName', selected?.label ?? '')
+                    search.setField('processId', 0)
+                    search.setField('processName', '')
                   }
                 }}
                 options={sitesOptions}
-                displayLabel
                 onScrollToBottom={() => {
-                  if (hasNextPage && !isFetching) fetchNextPage()
+                  if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
                 }}
                 onInputChange={(value) => setSitesSearch(value)}
-                loading={isLoading}
+                loading={siteNameLoading}
               />
             </div>
           </div>
           <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               공정명
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelect
+              <CommonSelectByName
                 fullWidth
                 className="text-xl"
-                value={
-                  search.processName === ''
-                    ? '0'
-                    : processOptions.find((opt) => opt.label === search.processName)?.value || '0'
-                }
+                value={search.processName || '선택'}
                 onChange={(value) => {
-                  if (value === '0') {
-                    search.setField('processName', '')
-                  } else {
-                    const selected = processOptions.find((opt) => opt.value === value)
-                    search.setField('processName', selected?.label ?? '')
+                  const selectedProcess = processOptions.find((opt) => opt.name === value)
+                  if (selectedProcess) {
+                    search.setField('processName', selectedProcess.name)
                   }
                 }}
                 options={processOptions}
                 displayLabel
                 onScrollToBottom={() => {
-                  if (hasNextPage && !isFetching) fetchNextPage()
+                  if (processInfoHasNextPage && !processInfoIsFetching) processInfoFetchNextPage()
                 }}
                 onInputChange={(value) => setProcessSearch(value)}
-                loading={isLoading}
+                loading={processInfoLoading}
               />
             </div>
-          </div> */}
+          </div>
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               품명
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-2  justify-center items-center">
               <CommonInput
+                placeholder="품명을 적어주세요."
                 value={search.materialName}
                 onChange={(value) => search.setField('materialName', value)}
                 className=" flex-1"
@@ -251,27 +266,31 @@ export default function MaterialManagementView() {
             </div>
           </div>
           <div className="flex">
-            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              업체명
+            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+              자재업체명
             </label>
-            <div className="border border-gray-400 p-2 px-2 w-full flex justify-center items-center">
-              {/* <CommonSelect
-                fullWidth={true}
-                className="text-xl"
-                value={search.type}
-                displayLabel
-                onChange={(value) =>
-                  search.setField(
-                    'type',
-                    value as 'CONSTRUCTION' | 'CIVIL_ENGINEERING' | 'OUTSOURCING' | '선택',
-                  )
-                }
-                options={SiteOptions}
-              /> */}
+            <div className="border border-gray-400 p-2 px-2 w-full">
+              <CommonSelectByName
+                fullWidth
+                value={search.outsourcingCompanyName || '선택'}
+                onChange={async (value) => {
+                  const selectedCompany = companyOptions.find((opt) => opt.name === value)
+                  if (!selectedCompany) return
+
+                  search.setField('outsourcingCompanyId', selectedCompany.id)
+                  search.setField('outsourcingCompanyName', selectedCompany.name)
+                }}
+                options={companyOptions}
+                onScrollToBottom={() => {
+                  if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
+                }}
+                onInputChange={(value) => setCompanySearch(value)}
+                loading={comPanyNameLoading}
+              />
             </div>
           </div>
           <div className="flex">
-            <label className="w-36  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36 text-[14px]   border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               납품일자(기간)
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
@@ -294,13 +313,6 @@ export default function MaterialManagementView() {
             onClick={search.reset}
             className="mt-3 px-20"
           />
-
-          {/* <CommonButton
-             label="검색"
-             variant="secondary"
-             onClick={search.handleSearch}
-             className="mt-3 px-20"
-           /> */}
 
           <CommonButton
             label="검색"
@@ -383,7 +395,7 @@ export default function MaterialManagementView() {
               <ExcelModal
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
-                title="현장 관리 - 엑셀 항목 선택"
+                title="자재 관리 - 엑셀 항목 선택"
                 fieldMap={fieldMapArray}
                 onDownload={handleDownloadExcel}
               />
@@ -410,7 +422,6 @@ export default function MaterialManagementView() {
           checkboxSelection
           disableRowSelectionOnClick
           keepNonExistentRowsSelected
-          showToolbar
           disableColumnFilter // 필터 비활성화
           hideFooter
           disableColumnMenu
@@ -432,8 +443,6 @@ export default function MaterialManagementView() {
           />
         </div>
       </div>
-
-      {/* <ContractHistory open={contract} onClose={() => setContract(false)} /> */}
     </>
   )
 }

@@ -125,12 +125,13 @@ export const SteelColumnList: GridColDef[] = [
 ]
 
 export const MaterialColumnList: GridColDef[] = [
-  { field: 'id', headerName: 'No', width: 70 },
+  { field: 'no', headerName: 'No', width: 70 },
+  // { field: 'id', headerName: 'No', width: 70 },
   { field: 'site', headerName: '현장명', width: 130 },
   { field: 'process', headerName: '공정명', width: 130 },
   { field: 'inputType', headerName: '투입구분', width: 180 },
   { field: 'deliveryDate', headerName: '납품일자', width: 100 },
-  // { field: 'unit', headerName: '자재업체명', width: 120 },
+  { field: 'outsourcingCompanyName', headerName: '자재업체명', width: 120 },
   { field: 'name', headerName: '품명', width: 120 },
   { field: 'standard', headerName: '규격', width: 100 },
   { field: 'usage', headerName: '사용용도', width: 100 },

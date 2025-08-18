@@ -26,6 +26,12 @@ export interface Process {
   name: string
 }
 
+export interface OutsourcingData {
+  businessNumber: number
+  id: number
+  name: string
+}
+
 export interface MaterialList {
   id: number
   inputType: string
@@ -36,13 +42,17 @@ export interface MaterialList {
   details: DetailItem[]
   site: Site
   process: Process
+  outsourcingCompany: OutsourcingData
 }
 
 // 검색타입
 export type MaterialSearchState = {
   searchTrigger: number
   siteName: string
+  siteId: number
   processName: string
+  outsourcingCompanyName: string
+  outsourcingCompanyId: number
   materialName: string
   deliveryStartDate: Date | null
   deliveryEndDate: Date | null
@@ -74,21 +84,36 @@ export type MaterialItem = {
   memo: string
 }
 
+type HistoryItem = {
+  id: number
+  no: number
+  getChanges: string
+  createdAt: string // or Date
+  updatedAt: string
+  content: string // 수정항목
+  updatedBy: string
+  memo: string
+  type: string
+}
+
 export type AttachedFile = {
   id: number
-  name: string
   memo: string
   fileUrl?: string
   originalFileName?: string
-  files: FileUploadInfo[]
+  files?: FileUploadInfo[]
 }
 
 export type ManagementMaterialFormState = {
   siteId: number // 발행부서
+  siteName: string
   siteProcessId: number // 공정명
+  siteProcessName: string
+  outsourcingCompanyId: number
   inputType: string
   inputTypeDescription: string
   deliveryDate: Date | null
+  initialDeliveryDateAt: string
   memo: string
 
   // === Material Items ===
@@ -99,13 +124,8 @@ export type ManagementMaterialFormState = {
   attachedFiles: AttachedFile[]
   checkedAttachedFileIds: number[]
 
-  //수정페이지에서 이력 조회 시 사용
-  modificationHistory: {
-    modifiedAt: Date | null
-    modifiedField: string
-    modifiedBy: string
-    memo: string
-  }[]
+  editedHistories?: Pick<HistoryItem, 'id' | 'memo'>[]
+  changeHistories: HistoryItem[] // 수정 이력 포함
 }
 
 type MaterialFormStore = {
@@ -125,6 +145,8 @@ type MaterialFormStore = {
   toggleCheckItem: (type: 'MaterialItem' | 'attachedFile', id: number, checked: boolean) => void
   toggleCheckAllItems: (type: 'MaterialItem' | 'attachedFile', checked: boolean) => void
   removeCheckedItems: (type: 'MaterialItem' | 'attachedFile') => void
+
+  updateMemo: (id: number, newMemo: string) => void
 
   //관리비 등록하기
 

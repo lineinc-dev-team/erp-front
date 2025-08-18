@@ -170,6 +170,7 @@ type OutsourcingCompanyFormStore = {
   // updateAttachedFileUploads: (id: number, newFiles: FileUploadInfo[]) => void
 
   updateMemo: (id: number, newMemo: string) => void
+
   setRepresentativeManager: (id: number) => void
   //발주처 등록하기
 

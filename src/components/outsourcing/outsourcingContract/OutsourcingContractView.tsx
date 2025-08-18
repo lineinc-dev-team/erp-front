@@ -338,7 +338,10 @@ export default function OutsourcingContractView() {
           <CommonButton
             label="검색"
             variant="secondary"
-            onClick={search.handleSearch}
+            onClick={() => {
+              search.setField('currentPage', 1) // 페이지 초기화
+              search.handleSearch()
+            }}
             className="mt-3 px-20"
           />
         </div>

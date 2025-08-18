@@ -14,11 +14,10 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Typography,
 } from '@mui/material'
-import { materialTypeOptions } from '@/config/erp.confing'
 import CommonDatePicker from '../common/DatePicker'
-import { useManagementCost } from '@/hooks/useManagementCost'
-import { formatNumber, unformatNumber } from '@/utils/formatters'
+import { formatNumber, getTodayDateString, unformatNumber } from '@/utils/formatters'
 import { useManagementMaterial } from '@/hooks/useMaterialManagement'
 import {
   MaterialTypeLabelToValue,
@@ -27,8 +26,10 @@ import {
 import { MaterialDetailService } from '@/services/materialManagement/materialManagementRegistrationService'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { useEffect } from 'react'
-import { AttachedFile, DetailItem } from '@/types/materialManagement'
+import { useCallback, useEffect, useRef } from 'react'
+import { AttachedFile, DetailItem, HistoryItem } from '@/types/materialManagement'
+import useOutSourcingContract from '@/hooks/useOutSourcingContract'
+import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 // import { useEffect } from 'react'
 // import { AttachedFile, DetailItem } from '@/types/managementSteel'
 
@@ -40,6 +41,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     removeCheckedItems,
     reset,
     addItem,
+    updateMemo,
     toggleCheckItem,
     toggleCheckAllItems,
   } = useManagementMaterialFormStore()
@@ -52,15 +54,31 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     siteNameFetching,
     siteNameLoading,
 
+    // 공정명
     setProcessSearch,
     processOptions,
     processInfoFetchNextPage,
     processInfoHasNextPage,
     processInfoIsFetching,
     processInfoLoading,
-  } = useManagementCost()
 
-  const { createMaterialMutation, MaterialModifyMutation } = useManagementMaterial()
+    // 업체명
+
+    setCompanySearch,
+    companyOptions,
+    comPanyNameFetchNextPage,
+    comPanyNamehasNextPage,
+    comPanyNameFetching,
+    comPanyNameLoading,
+  } = useOutSourcingContract()
+
+  const {
+    createMaterialMutation,
+    useMaterialHistoryDataQuery,
+    materialCancel,
+    MaterialModifyMutation,
+    InputTypeMethodOptions,
+  } = useManagementMaterial()
 
   // 체크 박스에 활용
   const managers = form.details
@@ -82,12 +100,39 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     enabled: isEditMode && !!materialDetailId, // 수정 모드일 때만 fetch
   })
 
+  const PROPERTY_NAME_MAP: Record<string, string> = {
+    siteName: '현장명',
+    processName: '공정명',
+    outsourcingCompanyName: '자재업체명',
+    inputTypeName: '투입 구분',
+    inputTypeDescription: '투입 구분 설명',
+    deliveryDateFormat: '납품일자',
+    memo: '메모',
+    name: '품명',
+    vat: '부가세',
+    standard: '규격',
+    unitPrice: '단가',
+    total: '합계',
+    quantity: '수량',
+    supplyPrice: '공급가',
+    usage: '사용용도',
+  }
+
+  const {
+    data: materialHistoryList,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useMaterialHistoryDataQuery(materialDetailId, isEditMode)
+
+  const historyList = useManagementMaterialFormStore((state) => state.form.changeHistories)
+
   useEffect(() => {
     if (data && isEditMode === true) {
       const client = data.data
 
-      console.log('발주처 데이터 확2222인', client)
-
+      console.log('상세 자재 !!', client)
       // // 상세 항목 가공
       const formattedDetails = (client.details ?? []).map((c: DetailItem) => ({
         id: c.id,
@@ -107,7 +152,6 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
       // // 첨부 파일 가공
       const formattedFiles = (client.files ?? []).map((item: AttachedFile) => ({
         id: item.id,
-        name: item.name,
         memo: item.memo,
         files: [
           {
@@ -126,6 +170,8 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
       // 각 필드에 값 세팅
       setField('siteId', client.site?.id ?? '')
       setField('siteProcessId', client.process?.id ?? '')
+      setField('outsourcingCompanyId', client.company?.id ?? '')
+
       setField('deliveryDate', client.deliveryDate ? new Date(client.deliveryDate) : null)
       setField('inputType', mappedItemType)
       setField('inputTypeDescription', client.inputTypeDescription)
@@ -135,23 +181,123 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     }
   }, [data, isEditMode, reset, setField])
 
+  const formatChangeDetail = (getChanges: string) => {
+    try {
+      const parsed = JSON.parse(getChanges)
+      if (!Array.isArray(parsed)) return '-'
+
+      return parsed.map(
+        (item: { property: string; before: string | null; after: string | null }, idx: number) => {
+          const propertyKo = PROPERTY_NAME_MAP[item.property] || item.property
+
+          const convertValue = (value: string | null) => {
+            if (value === 'true') return '사용'
+            if (value === 'false') return '미사용'
+            if (value === null || value === 'null') return 'null'
+            return value
+          }
+
+          let before = convertValue(item.before)
+          let after = convertValue(item.after)
+
+          // 스타일 결정
+          let style = {}
+          if (before === 'null') {
+            before = '추가'
+            style = { color: '#1976d2' } // 파란색 - 추가
+          } else if (after === 'null') {
+            after = '삭제'
+            style = { color: '#d32f2f' } // 빨간색 - 삭제
+          }
+
+          return (
+            <Typography key={idx} component="div" style={style}>
+              {before === '추가'
+                ? `추가됨 => ${after}`
+                : after === '삭제'
+                ? ` ${before} => 삭제됨`
+                : `${propertyKo} : ${before} => ${after}`}
+            </Typography>
+          )
+        },
+      )
+    } catch (e) {
+      if (e instanceof Error) return '-'
+    }
+  }
+
+  // 수정이력 데이터가 들어옴
+  useEffect(() => {
+    if (materialHistoryList?.pages) {
+      const allHistories = materialHistoryList.pages.flatMap((page) =>
+        page.data.content.map((item: HistoryItem) => ({
+          id: item.id,
+          type: item.type,
+          content: formatChangeDetail(item.getChanges), // 여기 변경
+          createdAt: getTodayDateString(item.createdAt),
+          updatedAt: getTodayDateString(item.updatedAt),
+          updatedBy: item.updatedBy,
+          memo: item.memo ?? '',
+        })),
+      )
+      setField('changeHistories', allHistories)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [materialHistoryList, setField])
+
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  const loadMoreRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (isLoading || isFetchingNextPage) return
+      if (observerRef.current) observerRef.current.disconnect()
+
+      observerRef.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage()
+        }
+      })
+
+      if (node) observerRef.current.observe(node)
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading],
+  )
+
   return (
     <>
       <div>
         <span className="font-bold border-b-2 mb-4">기본 정보</span>
         <div className="grid grid-cols-2 mt-1 ">
           <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
               <CommonSelect
                 fullWidth
-                className="text-xl"
-                value={form.siteId}
-                onChange={(value) => setField('siteId', value)}
+                value={form.siteId || 0}
+                onChange={async (value) => {
+                  const selectedSite = sitesOptions.find((opt) => opt.id === value)
+                  if (!selectedSite) return
+
+                  setField('siteId', selectedSite.id)
+                  setField('siteName', selectedSite.name)
+
+                  const res = await SitesProcessNameScroll({
+                    pageParam: 0,
+                    siteId: selectedSite.id,
+                    keyword: '',
+                  })
+
+                  const processes = res.data?.content || []
+                  if (processes.length > 0) {
+                    setField('siteProcessId', processes[0].id)
+                    setField('siteProcessName', processes[0].name)
+                  } else {
+                    setField('siteProcessId', 0)
+                    setField('siteProcessName', '')
+                  }
+                }}
                 options={sitesOptions}
-                displayLabel
                 onScrollToBottom={() => {
                   if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
                 }}
@@ -161,15 +307,21 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
             </div>
           </div>
           <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               공정명
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
               <CommonSelect
                 fullWidth
                 className="text-xl"
-                value={form.siteProcessId}
-                onChange={(value) => setField('siteProcessId', value)}
+                value={form.siteProcessId || 0}
+                onChange={(value) => {
+                  const selectedProcess = processOptions.find((opt) => opt.name === value)
+                  if (selectedProcess) {
+                    setField('siteProcessId', selectedProcess.id)
+                    setField('siteProcessName', selectedProcess.name)
+                  }
+                }}
                 options={processOptions}
                 displayLabel
                 onScrollToBottom={() => {
@@ -187,10 +339,10 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
             <div className="border flex items-center p-2 gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
                 className="text-2xl"
-                value={form.inputType}
+                value={form.inputType || 'BASE'} //  값
                 displayLabel
                 onChange={(value) => setField('inputType', value)}
-                options={materialTypeOptions}
+                options={InputTypeMethodOptions}
               />
 
               <CommonInput
@@ -215,22 +367,32 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
           </div>
 
           <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              자재업체명 추후 넣기
+            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+              자재업체명
             </label>
-            <div className="border flex  items-center border-gray-400 px-2 w-full">
-              {/* <CommonInput
-                placeholder="텍스트 입력"
-                value={form.usage}
-                onChange={(value) => setField('usage', value)}
-                className="flex-1"
-              /> */}
+            <div className="border border-gray-400 p-2 px-2 w-full">
+              <CommonSelect
+                fullWidth
+                value={form.outsourcingCompanyId || 0}
+                onChange={async (value) => {
+                  const selectedCompany = companyOptions.find((opt) => opt.id === value)
+                  if (!selectedCompany) return
+
+                  setField('outsourcingCompanyId', selectedCompany.id)
+                }}
+                options={companyOptions}
+                onScrollToBottom={() => {
+                  if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
+                }}
+                onInputChange={(value) => setCompanySearch(value)}
+                loading={comPanyNameLoading}
+              />
             </div>
           </div>
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              비교
+              비고
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -318,9 +480,9 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                     <TextField
                       size="small"
                       placeholder="입력"
-                      value={m.standard}
+                      value={m.name}
                       onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'standard', e.target.value)
+                        updateItemField('MaterialItem', m.id, 'name', e.target.value)
                       }
                       variant="outlined"
                       sx={{
@@ -342,9 +504,9 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                     <TextField
                       size="small"
                       placeholder=" 입력"
-                      value={m.name}
+                      value={m.standard}
                       onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'name', e.target.value)
+                        updateItemField('MaterialItem', m.id, 'standard', e.target.value)
                       }
                       variant="outlined"
                       sx={{
@@ -537,7 +699,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                     sx={{ color: 'black' }}
                   />
                 </TableCell>
-                {['문서명', '첨부', '비고'].map((label) => (
+                {['첨부', '비고'].map((label) => (
                   <TableCell
                     key={label}
                     align="center"
@@ -566,7 +728,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                       onChange={(e) => toggleCheckItem('attachedFile', m.id, e.target.checked)}
                     />
                   </TableCell>
-                  <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
+                  {/* <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
                     <TextField
                       size="small"
                       placeholder="텍스트 입력"
@@ -576,7 +738,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                         updateItemField('attachedFile', m.id, 'name', e.target.value)
                       }
                     />
-                  </TableCell>
+                  </TableCell> */}
 
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
@@ -591,7 +753,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                           'jpeg',
                           'ppt',
                         ]}
-                        files={m.files} // 각 항목별 files
+                        files={(m.files ?? []).filter((f) => f.file?.name)}
                         onChange={
                           (newFiles) => updateItemField('attachedFile', m.id, 'files', newFiles) //  해당 항목만 업데이트
                         }
@@ -617,20 +779,115 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
         </TableContainer>
       </div>
 
+      {isEditMode && (
+        <div>
+          <div className="flex justify-between items-center mt-10 mb-2">
+            <span className="font-bold border-b-2 mb-4">수정이력</span>
+            <div className="flex gap-4">
+              {/* <CommonButton
+                          label="삭제"
+                          className="px-7"
+                          variant="danger"
+                          onClick={() => removeCheckedItems('manager')}
+                        />
+                        <CommonButton
+                          label="추가"
+                          className="px-7"
+                          variant="secondary"
+                          onClick={() => addItem('manager')}
+                        /> */}
+            </div>
+          </div>
+          <TableContainer component={Paper}>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                  {['No', '수정일시', '항목', '수정항목', '수정자', '비고 / 메모'].map((label) => (
+                    <TableCell
+                      key={label}
+                      align="center"
+                      sx={{
+                        backgroundColor: '#D1D5DB',
+                        border: '1px solid  #9CA3AF',
+                        color: 'black',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {label}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {historyList.map((item: HistoryItem, index) => (
+                  <TableRow key={item.id}>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      {index + 1}
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      {item.createdAt} / {item.updatedAt}
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{
+                        border: '1px solid  #9CA3AF',
+                        textAlign: 'center',
+                        whiteSpace: 'pre-line',
+                      }}
+                    >
+                      {item.type}
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'pre-line' }}
+                    >
+                      {item.content}
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'pre-line' }}
+                    >
+                      {item.updatedBy}
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        value={item.memo ?? ''}
+                        placeholder="메모 입력"
+                        onChange={(e) => updateMemo(item.id, e.target.value)}
+                        multiline
+                        inputProps={{ maxLength: 500 }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {hasNextPage && (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center" sx={{ border: 'none' }}>
+                      <div ref={loadMoreRef} className="p-4 text-gray-500 text-sm">
+                        불러오는 중...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </div>
+      )}
+
       <div className="flex justify-center gap-10 mt-10">
-        <CommonButton
-          label="취소"
-          variant="reset"
-          className="px-10"
-          onClick={() => console.log('취소')}
-        />
+        <CommonButton label="취소" variant="reset" className="px-10" onClick={materialCancel} />
         <CommonButton
           label={isEditMode ? '+ 수정' : '+ 등록'}
           className="px-10 font-bold"
           variant="secondary"
           onClick={() => {
             if (isEditMode) {
-              MaterialModifyMutation.mutate(materialDetailId)
+              if (window.confirm('수정하시겠습니까?')) {
+                MaterialModifyMutation.mutate(materialDetailId)
+              }
             } else {
               createMaterialMutation.mutate()
             }

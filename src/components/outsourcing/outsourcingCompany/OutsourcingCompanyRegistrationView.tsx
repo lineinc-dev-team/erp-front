@@ -995,10 +995,10 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                 </TableRow>
               </TableHead>
               <TableBody>
-                {historyList.map((item: HistoryItem) => (
+                {historyList.map((item: HistoryItem, index) => (
                   <TableRow key={item.id}>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {item.id}
+                      {index + 1}
                     </TableCell>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       {item.createdAt} / {item.updatedAt}
