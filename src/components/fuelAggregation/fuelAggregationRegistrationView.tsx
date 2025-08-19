@@ -1,9 +1,7 @@
 'use client'
 
-import CommonInput from '../common/Input'
 import CommonSelect from '../common/Select'
 import CommonButton from '../common/Button'
-import CommonFileInput from '../common/FileInput'
 import {
   Checkbox,
   Paper,
@@ -36,7 +34,7 @@ import { useSnackbarStore } from '@/stores/useSnackbarStore'
 // import { useEffect } from 'react'
 // import { AttachedFile, DetailItem } from '@/types/managementSteel'
 
-export default function MaterialManagementRegistrationView({ isEditMode = false }) {
+export default function FuelAggregationRegistrationView({ isEditMode = false }) {
   const {
     setField,
     form,
@@ -46,13 +44,6 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     addItem,
     updateMemo,
     toggleCheckItem,
-    toggleCheckAllItems,
-
-    getTotalQuantityAmount,
-    getTotalUnitPrice,
-    getTotalSupplyAmount,
-    getTotalSurtax,
-    getTotalSum,
   } = useManagementMaterialFormStore()
 
   const { showSnackbar } = useSnackbarStore()
@@ -88,7 +79,6 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     useMaterialHistoryDataQuery,
     materialCancel,
     MaterialModifyMutation,
-    InputTypeMethodOptions,
 
     productOptions,
     setProductSearch,
@@ -110,10 +100,6 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
   const managers = form.details
   const checkedIds = form.checkedMaterialItemIds
   // const isAllChecked = managers.length > 0 && checkedIds.length === managers.length
-
-  const attachedFiles = form.attachedFiles
-  const fileCheckIds = form.checkedAttachedFileIds
-  const isFilesAllChecked = attachedFiles.length > 0 && fileCheckIds.length === attachedFiles.length
 
   // 상세페이지 로직
 
@@ -358,31 +344,10 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
               />
             </div>
           </div>
-          <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              투입구분
-            </label>
-            <div className="border flex items-center p-2 gap-4 border-gray-400 px-2 w-full">
-              <CommonSelect
-                className="text-2xl"
-                value={form.inputType || 'BASE'} //  값
-                displayLabel
-                onChange={(value) => setField('inputType', value)}
-                options={InputTypeMethodOptions}
-              />
-
-              <CommonInput
-                placeholder="텍스트 입력"
-                value={form.inputTypeDescription}
-                onChange={(value) => setField('inputTypeDescription', value)}
-                className=" flex-1"
-              />
-            </div>
-          </div>
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              납품일자
+              일자
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonDatePicker
@@ -394,7 +359,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
 
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              자재업체명
+              날씨
             </label>
             <div className="border border-gray-400 p-2 px-2 w-full">
               <CommonSelect
@@ -412,19 +377,6 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                 }}
                 onInputChange={(value) => setCompanySearch(value)}
                 loading={comPanyNameLoading}
-              />
-            </div>
-          </div>
-
-          <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              비고
-            </label>
-            <div className="border border-gray-400 px-2 w-full">
-              <CommonInput
-                value={form.memo}
-                onChange={(value) => setField('memo', value)}
-                className="flex-1"
               />
             </div>
           </div>
@@ -454,30 +406,22 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
             <TableHead>
               <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
                 <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}></TableCell>
-                {[
-                  '품명',
-                  '규격',
-                  '사용용도',
-                  '수량',
-                  '단가',
-                  '공급가',
-                  '부가세',
-                  '합계',
-                  '비고',
-                ].map((label) => (
-                  <TableCell
-                    key={label}
-                    align="center"
-                    sx={{
-                      backgroundColor: '#D1D5DB',
-                      border: '1px solid  #9CA3AF',
-                      color: 'black',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    {label}
-                  </TableCell>
-                ))}
+                {['업체명', '기사명', '차량번호', '장비명', '유종', '주유량', '비고'].map(
+                  (label) => (
+                    <TableCell
+                      key={label}
+                      align="center"
+                      sx={{
+                        backgroundColor: '#D1D5DB',
+                        border: '1px solid  #9CA3AF',
+                        color: 'black',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {label}
+                    </TableCell>
+                  ),
+                )}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -623,51 +567,6 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                     <TotalInput supplyPrice={m.supplyPrice} />
                   </TableCell>
 
-                  {/* <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      type="number"
-                      inputMode="numeric"
-                      placeholder="숫자 입력"
-                      value={m.supplyPrice || ''}
-                      onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'supplyPrice', Number(e.target.value))
-                      }
-                      variant="outlined"
-                      sx={textFieldStyle}
-                    />
-                  </TableCell>
-
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      type="number"
-                      inputMode="numeric"
-                      placeholder="숫자 입력"
-                      value={m.vat || ''}
-                      onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'vat', Number(e.target.value))
-                      }
-                      variant="outlined"
-                      sx={textFieldStyle}
-                    />
-                  </TableCell>
-
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      type="number"
-                      inputMode="numeric"
-                      placeholder="숫자 입력"
-                      value={m.total || ''}
-                      onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'total', Number(e.target.value))
-                      }
-                      variant="outlined"
-                      sx={textFieldStyle}
-                    />
-                  </TableCell> */}
-
                   {/* 비고 */}
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
@@ -679,188 +578,6 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                       }
                       variant="outlined"
                       sx={textFieldStyle}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-              <TableRow sx={{ backgroundColor: '#f3f3f3' }}>
-                <TableCell
-                  colSpan={4}
-                  align="right"
-                  sx={{
-                    border: '1px solid #9CA3AF',
-                    fontSize: '16px',
-                    textAlign: 'center',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  소계
-                </TableCell>
-
-                <TableCell
-                  align="center"
-                  sx={{
-                    border: '1px solid #9CA3AF',
-                    textAlign: 'right',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  {getTotalQuantityAmount()}
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{
-                    border: '1px solid #9CA3AF',
-                    textAlign: 'right',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  {getTotalUnitPrice().toLocaleString()}
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{
-                    border: '1px solid #9CA3AF',
-                    textAlign: 'right',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  {getTotalSupplyAmount().toLocaleString()}
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{
-                    border: '1px solid #9CA3AF',
-                    textAlign: 'right',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  {getTotalSurtax().toLocaleString()}
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{
-                    border: '1px solid #9CA3AF',
-                    textAlign: 'right',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  {getTotalSum().toLocaleString()}
-                </TableCell>
-                <TableCell sx={{ border: '1px solid #9CA3AF' }} />
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </div>
-
-      {/* 첨부파일 */}
-      <div>
-        <div className="flex justify-between items-center mt-10 mb-2">
-          <span className="font-bold border-b-2 mb-4">증빙서류</span>
-          <div className="flex gap-4">
-            <CommonButton
-              label="삭제"
-              className="px-7"
-              variant="danger"
-              onClick={() => removeCheckedItems('attachedFile')}
-            />
-            <CommonButton
-              label="추가"
-              className="px-7"
-              variant="secondary"
-              onClick={() => addItem('attachedFile')}
-            />
-          </div>
-        </div>
-        <TableContainer component={Paper}>
-          <Table size="small">
-            <TableHead>
-              <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
-                  <Checkbox
-                    checked={isFilesAllChecked}
-                    indeterminate={fileCheckIds.length > 0 && !isFilesAllChecked}
-                    onChange={(e) => toggleCheckAllItems('attachedFile', e.target.checked)}
-                    sx={{ color: 'black' }}
-                  />
-                </TableCell>
-                {['첨부', '비고'].map((label) => (
-                  <TableCell
-                    key={label}
-                    align="center"
-                    sx={{
-                      backgroundColor: '#D1D5DB',
-                      border: '1px solid  #9CA3AF',
-                      color: 'black',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    {label}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {attachedFiles.map((m) => (
-                <TableRow key={m.id} sx={{ border: '1px solid  #9CA3AF' }}>
-                  <TableCell
-                    padding="checkbox"
-                    align="center"
-                    sx={{ border: '1px solid  #9CA3AF' }}
-                  >
-                    <Checkbox
-                      checked={fileCheckIds.includes(m.id)}
-                      onChange={(e) => toggleCheckItem('attachedFile', m.id, e.target.checked)}
-                    />
-                  </TableCell>
-                  {/* <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
-                    <TextField
-                      size="small"
-                      placeholder="텍스트 입력"
-                      sx={{ width: '100%' }}
-                      value={m.name}
-                      onChange={(e) =>
-                        updateItemField('attachedFile', m.id, 'name', e.target.value)
-                      }
-                    />
-                  </TableCell> */}
-
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
-                      <CommonFileInput
-                        acceptedExtensions={[
-                          'pdf',
-                          'jpg',
-                          'png',
-                          'hwp',
-                          'xlsx',
-                          'zip',
-                          'jpeg',
-                          'ppt',
-                        ]}
-                        files={(m.files ?? []).filter((f) => f.file?.name)}
-                        onChange={
-                          (newFiles) => updateItemField('attachedFile', m.id, 'files', newFiles) //  해당 항목만 업데이트
-                        }
-                        uploadTarget="CLIENT_COMPANY"
-                      />
-                    </div>
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      placeholder="텍스트 입력"
-                      sx={{ width: '100%' }}
-                      value={m.memo}
-                      onChange={(e) =>
-                        updateItemField('attachedFile', m.id, 'memo', e.target.value)
-                      }
                     />
                   </TableCell>
                 </TableRow>
