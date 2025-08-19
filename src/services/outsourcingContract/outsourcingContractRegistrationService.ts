@@ -15,7 +15,12 @@ export async function CreateOutsourcingContract() {
   })
 
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
 
   return await res.status
@@ -33,7 +38,9 @@ export async function OutsourcingContractTypesIdInfoService() {
 
   if (!resData.ok) {
     if (resData.status === 401) {
-      throw new Error('권한이 없습니다.')
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
     throw new Error(`서버 에러: ${resData.status}`)
   }
@@ -54,7 +61,9 @@ export async function OutsourcingContractTaxIdInfoService() {
 
   if (!resData.ok) {
     if (resData.status === 401) {
-      throw new Error('권한이 없습니다.')
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
     throw new Error(`서버 에러: ${resData.status}`)
   }
@@ -75,7 +84,9 @@ export async function OutsourcingContractStatuseIdInfoService() {
 
   if (!resData.ok) {
     if (resData.status === 401) {
-      throw new Error('권한이 없습니다.')
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
     throw new Error(`서버 에러: ${resData.status}`)
   }
@@ -96,7 +107,9 @@ export async function OutsourcingContractDeductionIdInfoService() {
 
   if (!resData.ok) {
     if (resData.status === 401) {
-      throw new Error('권한이 없습니다.')
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
     throw new Error(`서버 에러: ${resData.status}`)
   }
@@ -125,7 +138,9 @@ export async function GetCompanyNameInfoService({
 
   if (!resData.ok) {
     if (resData.status === 401) {
-      throw new Error('권한이 없습니다.')
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
     throw new Error(`서버 에러: ${resData.status}`)
   }
@@ -146,7 +161,9 @@ export async function OutsourcingContractCategoryTypeInfoService() {
 
   if (!resData.ok) {
     if (resData.status === 401) {
-      throw new Error('권한이 없습니다.')
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
     throw new Error(`서버 에러: ${resData.status}`)
   }
@@ -165,7 +182,12 @@ export async function ContractDetailService(outsourcingContractId: number) {
     credentials: 'include',
   })
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
 
   return await res.json()
@@ -189,9 +211,13 @@ export async function ContractPersonDetailService(
     },
   )
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
-
   return await res.json()
 }
 // 외주업체 계약 상세(장비 정보)
@@ -204,7 +230,12 @@ export async function ContractEquipmentDetailService(outsourcingContractId: numb
     credentials: 'include',
   })
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
 
   return await res.json()
@@ -219,9 +250,13 @@ export async function OutsourcingDriverDetailService(outsourcingContractId: numb
     credentials: 'include',
   })
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
-
   return await res.json()
 }
 
@@ -235,7 +270,12 @@ export async function OutsourcingConstructionDetailService(outsourcingContractId
     credentials: 'include',
   })
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
 
   return await res.json()
@@ -256,7 +296,12 @@ export async function ContractModifyMutation(outsourcingContractId: number) {
   })
 
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
 
   return await res.status
@@ -283,7 +328,9 @@ export async function OutsourcingContractInfoHistoryService(
 
   if (!resData.ok) {
     if (resData.status === 401) {
-      throw new Error('권한이 없습니다.')
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
     throw new Error(`서버 에러: ${resData.status}`)
   }

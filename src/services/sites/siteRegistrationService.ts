@@ -31,7 +31,12 @@ export async function CreateSiteInfo() {
   })
 
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
 
   return await res.status
@@ -51,7 +56,11 @@ export async function OrderingPersonScroll({ pageParam = 0, size = 5, keyword = 
   )
 
   if (!resData.ok) {
-    if (resData.status === 401) throw new Error('권한이 없습니다.')
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
     throw new Error(`서버 에러: ${resData.status}`)
   }
 
@@ -69,7 +78,12 @@ export async function SiteDetailService(siteId: number) {
     credentials: 'include',
   })
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
 
   return await res.json()
@@ -90,7 +104,12 @@ export async function ModifySiteService(siteModifyId: number) {
   })
 
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
 
   return await res.status
@@ -108,7 +127,9 @@ export async function SiteIdInfoService() {
 
   if (!resData.ok) {
     if (resData.status === 401) {
-      throw new Error('권한이 없습니다.')
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
     throw new Error(`서버 에러: ${resData.status}`)
   }
@@ -136,7 +157,9 @@ export async function SiteInfoHistoryService(
 
   if (!resData.ok) {
     if (resData.status === 401) {
-      throw new Error('권한이 없습니다.')
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
     throw new Error(`서버 에러: ${resData.status}`)
   }

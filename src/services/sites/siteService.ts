@@ -1,24 +1,6 @@
 'use client'
 
-import { useState } from 'react'
 import { API } from '@/api/config/env'
-
-export function SiteMoveService() {
-  const [selectedFields, setSelectedFields] = useState<string[]>([])
-
-  // 계약 이력
-
-  const handleToggleField = (field: string) => {
-    setSelectedFields((prev) =>
-      prev.includes(field) ? prev.filter((f) => f !== field) : [...prev, field],
-    )
-  }
-
-  return {
-    selectedFields,
-    handleToggleField,
-  }
-}
 
 // 현장 조회
 
@@ -35,7 +17,9 @@ export async function SiteInfoService(params = {}) {
 
   if (!resData.ok) {
     if (resData.status === 401) {
-      throw new Error('권한이 없습니다.')
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
     throw new Error(`서버 에러: ${resData.status}`)
   }
@@ -54,8 +38,14 @@ export async function SiteRemoveService(siteIds: number[]) {
     body: JSON.stringify({ siteIds }),
     credentials: 'include',
   })
+
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
 
   return await res.status
@@ -127,7 +117,12 @@ export async function SiteExcelDownload({
   })
 
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
 
   const blob = await res.blob()

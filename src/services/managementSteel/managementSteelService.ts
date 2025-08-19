@@ -27,7 +27,9 @@ export async function ManagementSteelInfoService(params = {}) {
 
   if (!resData.ok) {
     if (resData.status === 401) {
-      throw new Error('권한이 없습니다.')
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
     throw new Error(`서버 에러: ${resData.status}`)
   }
@@ -47,9 +49,13 @@ export async function SteelRemoveService(steelManagementIds: number[]) {
     credentials: 'include',
   })
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
-
   return await res.status
 }
 
@@ -64,7 +70,12 @@ export async function SteelApproveService(steelManagementIds: number[]) {
     credentials: 'include',
   })
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
 
   return await res.status
@@ -81,9 +92,13 @@ export async function SteelReleaseService(steelManagementIds: number[]) {
     credentials: 'include',
   })
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
-
   return await res.status
 }
 
@@ -131,7 +146,12 @@ export async function SteelExcelDownload({
   })
 
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
 
   const blob = await res.blob()

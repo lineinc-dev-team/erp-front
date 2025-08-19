@@ -15,9 +15,13 @@ export async function CreateOutsourcingCompany() {
   })
 
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
-
   return await res.status
 }
 
@@ -33,7 +37,9 @@ export async function OutsourcingTypesIdInfoService() {
 
   if (!resData.ok) {
     if (resData.status === 401) {
-      throw new Error('권한이 없습니다.')
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
     throw new Error(`서버 에러: ${resData.status}`)
   }
@@ -54,7 +60,9 @@ export async function OutsourcingDeductionIdInfoService() {
 
   if (!resData.ok) {
     if (resData.status === 401) {
-      throw new Error('권한이 없습니다.')
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
     throw new Error(`서버 에러: ${resData.status}`)
   }
@@ -73,7 +81,12 @@ export async function OutsourcingDetailService(outsourcingCompanyId: number) {
     credentials: 'include',
   })
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
 
   return await res.json()
@@ -92,9 +105,13 @@ export async function ModifyOutsourcingCompany(outsourcingCompanyId: number) {
     body: JSON.stringify(payload),
     credentials: 'include',
   })
-
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
 
   return await res.status
@@ -121,7 +138,9 @@ export async function OutsourcingCompanyInfoHistoryService(
 
   if (!resData.ok) {
     if (resData.status === 401) {
-      throw new Error('권한이 없습니다.')
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
     throw new Error(`서버 에러: ${resData.status}`)
   }
@@ -144,7 +163,9 @@ export async function ContractHistoryService(historyId: number, params = {}) {
 
   if (!resData.ok) {
     if (resData.status === 401) {
-      throw new Error('권한이 없습니다.')
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
     throw new Error(`서버 에러: ${resData.status}`)
   }

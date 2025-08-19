@@ -21,8 +21,6 @@ export async function getPresignedUrl(
   if (!response.ok) throw new Error('Presigned URL 요청 실패')
   const { data } = await response.json()
 
-  console.log('파일 업로드 전 데이터 확인 ', data)
-
   const { fileUrl, uploadUrl } = data
   return { fileUrl, uploadUrl }
 }
@@ -37,7 +35,12 @@ export async function uploadToS3(uploadUrl: string, file: File) {
   })
 
   if (!res.ok) {
-    throw new Error(`S3 업로드 실패: ${res.statusText}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
 }
 // 발주처 생성 엔드포인트
@@ -56,7 +59,12 @@ export async function CreateClientCompany() {
   })
 
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
 
   return await res.status
@@ -77,10 +85,13 @@ export async function OrderingInfoNameScroll({ pageParam = 0, size = 5, keyword 
   )
 
   if (!resData.ok) {
-    if (resData.status === 401) throw new Error('권한이 없습니다.')
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
     throw new Error(`서버 에러: ${resData.status}`)
   }
-
   const data = await resData.json()
   return data
 }
@@ -97,7 +108,9 @@ export async function PayIdInfoService() {
 
   if (!resData.ok) {
     if (resData.status === 401) {
-      throw new Error('권한이 없습니다.')
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
     throw new Error(`서버 에러: ${resData.status}`)
   }
@@ -115,8 +128,14 @@ export async function ClientDetailService(clientCompanyId: number) {
     },
     credentials: 'include',
   })
+
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
 
   return await res.json()
@@ -137,7 +156,12 @@ export async function ModifyClientCompany(clientModifyId: number) {
   })
 
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
 
   return await res.status
@@ -163,11 +187,12 @@ export async function CLientCompanyInfoHistoryService(
 
   if (!resData.ok) {
     if (resData.status === 401) {
-      throw new Error('권한이 없습니다.')
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
     throw new Error(`서버 에러: ${resData.status}`)
   }
-
   const data = await resData.json()
   return data
 }
