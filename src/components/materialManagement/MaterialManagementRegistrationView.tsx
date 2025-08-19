@@ -656,7 +656,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                   </TableCell>
                 </TableRow>
               ))}
-              <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
+              <TableRow sx={{ backgroundColor: '#f3f3f3' }}>
                 <TableCell
                   colSpan={4}
                   align="right"
@@ -672,31 +672,56 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
 
                 <TableCell
                   align="center"
-                  sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  sx={{
+                    border: '1px solid #9CA3AF',
+                    textAlign: 'right',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                  }}
                 >
                   {getTotalQuantityAmount()}
                 </TableCell>
                 <TableCell
                   align="center"
-                  sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  sx={{
+                    border: '1px solid #9CA3AF',
+                    textAlign: 'right',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                  }}
                 >
                   {getTotalUnitPrice().toLocaleString()}
                 </TableCell>
                 <TableCell
                   align="center"
-                  sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  sx={{
+                    border: '1px solid #9CA3AF',
+                    textAlign: 'right',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                  }}
                 >
                   {getTotalSupplyAmount().toLocaleString()}
                 </TableCell>
                 <TableCell
                   align="center"
-                  sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  sx={{
+                    border: '1px solid #9CA3AF',
+                    textAlign: 'right',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                  }}
                 >
                   {getTotalSurtax().toLocaleString()}
                 </TableCell>
                 <TableCell
                   align="center"
-                  sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  sx={{
+                    border: '1px solid #9CA3AF',
+                    textAlign: 'right',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                  }}
                 >
                   {getTotalSum().toLocaleString()}
                 </TableCell>

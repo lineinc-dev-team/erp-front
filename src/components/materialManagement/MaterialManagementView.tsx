@@ -11,7 +11,6 @@ import { ArrayStatusOptions, MaterialColumnList, PageCount } from '@/config/erp.
 import { useState } from 'react'
 import ExcelModal from '../common/ExcelModal'
 import { MaterialExcelFieldMap } from '@/utils/userExcelField'
-import CommonInput from '../common/Input'
 import { useManagementMaterial } from '@/hooks/useMaterialManagement'
 import {
   ManagementMaterialService,
@@ -29,7 +28,16 @@ export default function MaterialManagementView() {
 
   const { search } = useMaterialSearchStore()
 
-  const { MaterialListQuery, MaterialDeleteMutation } = useManagementMaterial()
+  const {
+    MaterialListQuery,
+    MaterialDeleteMutation,
+    productOptions,
+    setProductSearch,
+    productNameFetchNextPage,
+    productNamehasNextPage,
+    productNameFetching,
+    productNameLoading,
+  } = useManagementMaterial()
 
   const {
     setSitesSearch,
@@ -68,6 +76,7 @@ export default function MaterialManagementView() {
       // details가 없을 경우 기본 정보만 반환
       return [
         {
+          id: material.id,
           site: material.site?.name ?? '',
           process: material.process?.name ?? '',
           deliveryDate: getTodayDateString(material.deliveryDate),
@@ -252,15 +261,23 @@ export default function MaterialManagementView() {
             </div>
           </div>
           <div className="flex">
-            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-[144px] text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               품명
             </label>
-            <div className="border border-gray-400 px-2 w-full flex gap-2  justify-center items-center">
-              <CommonInput
-                placeholder="품명을 적어주세요."
-                value={search.materialName}
-                onChange={(value) => search.setField('materialName', value)}
-                className=" flex-1"
+            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
+              <CommonSelectByName
+                value={search.materialName || '선택'}
+                onChange={async (value) => {
+                  const selectedProduct = productOptions.find((opt) => opt.name === value)
+                  if (!selectedProduct) return
+                  search.setField('materialName', selectedProduct.name)
+                }}
+                options={productOptions}
+                onScrollToBottom={() => {
+                  if (productNamehasNextPage && !productNameFetching) productNameFetchNextPage()
+                }}
+                onInputChange={(value) => setProductSearch(value)}
+                loading={productNameLoading}
               />
             </div>
           </div>

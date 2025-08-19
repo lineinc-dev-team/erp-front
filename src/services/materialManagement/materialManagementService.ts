@@ -110,3 +110,29 @@ export async function MaterialExcelDownload({
 
   return res.status
 }
+
+// 추가 내용 ==> 품명
+
+// 자재관리 투입구분 목록 조회
+export async function MaterialSearchTypeService({ pageParam = 0, size = 5, keyword = '' }) {
+  const resData = await fetch(
+    `${API.MATERIAL}/detail-names/search?page=${pageParam}&size=${size}&keyword=${keyword}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    },
+  )
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      throw new Error('권한이 없습니다.')
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}

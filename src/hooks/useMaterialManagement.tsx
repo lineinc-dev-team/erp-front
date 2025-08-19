@@ -1,7 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   CreateManagementMaterial,
   MaterialInfoHistoryService,
@@ -16,6 +16,7 @@ import { getTodayDateString } from '@/utils/formatters'
 import {
   ManagementMaterialInfoService,
   MaterialRemoveService,
+  MaterialSearchTypeService,
 } from '@/services/materialManagement/materialManagementService'
 
 export function useManagementMaterial() {
@@ -165,6 +166,38 @@ export function useManagementMaterial() {
     router.push('/materialManagement')
   }
 
+  // 품명 셀렉트 박스
+
+  const [productSearch, setProductSearch] = useState('')
+
+  const {
+    data: productNameInfo,
+    fetchNextPage: productNameFetchNextPage,
+    hasNextPage: productNamehasNextPage,
+    isFetching: productNameFetching,
+    isLoading: productNameLoading,
+  } = useInfiniteQuery({
+    queryKey: ['ProductInfo', productSearch],
+    queryFn: ({ pageParam }) => MaterialSearchTypeService({ pageParam, keyword: productSearch }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      const nextPage = sliceInfo.page + 1
+      return sliceInfo.hasNext ? nextPage : undefined
+    },
+  })
+
+  const productOptions = useMemo(() => {
+    const defaultOption = { id: 0, name: '선택' }
+    const options = (productNameInfo?.pages || [])
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+      }))
+
+    return [defaultOption, ...options]
+  }, [productNameInfo])
   return {
     createMaterialMutation,
     MaterialModifyMutation,
@@ -174,5 +207,14 @@ export function useManagementMaterial() {
     InputTypeMethodOptions,
 
     useMaterialHistoryDataQuery,
+
+    // 품명에 대한 스크롤
+
+    productOptions,
+    setProductSearch,
+    productNameFetchNextPage,
+    productNamehasNextPage,
+    productNameFetching,
+    productNameLoading,
   }
 }
