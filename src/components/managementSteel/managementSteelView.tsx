@@ -30,7 +30,7 @@ export default function ManagementSteel() {
   const { search } = useSteelSearchStore()
 
   const {
-    SteelDeleteMutation,
+    // SteelDeleteMutation,
     SteelListQuery,
     SteelApproveMutation,
     SteelTypeMethodOptions,
@@ -382,7 +382,7 @@ export default function ManagementSteel() {
             </div>
 
             <div className="flex items-center gap-3">
-              <CommonButton
+              {/* <CommonButton
                 label="삭제"
                 variant="danger"
                 onClick={() => {
@@ -402,7 +402,7 @@ export default function ManagementSteel() {
                   }
                 }}
                 className="px-3"
-              />
+              /> */}
               <CommonButton
                 label="승인"
                 variant="primary"
@@ -437,7 +437,7 @@ export default function ManagementSteel() {
 
               <CommonButton
                 label="반출"
-                variant="secondary"
+                variant="danger"
                 onClick={() => {
                   if (!selectedIds || !(selectedIds.ids instanceof Set)) {
                     alert('체크박스를 선택해주세요.')

@@ -17,7 +17,7 @@ import {
   Typography,
 } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import CommonDatePicker from '../common/DatePicker'
 import { useManagementSteelFormStore } from '@/stores/managementSteelStore'
 import { useManagementSteel } from '@/hooks/useManagementSteel'
@@ -33,6 +33,9 @@ import { getTodayDateString } from '@/utils/formatters'
 
 export default function ManagementSteelRegistrationView({ isEditMode = false }) {
   const { showSnackbar } = useSnackbarStore()
+
+  const router = useRouter()
+
   const {
     setField,
     form,
@@ -79,6 +82,8 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     useSteelHistoryDataQuery,
     SteelModifyMutation,
     SteelTypeMethodOptions,
+    SteelApproveMutation,
+    SteelReleaseMutation,
   } = useManagementSteel()
 
   console.log('SteelTypeMethodOptionsSteelTypeMethodOptions', SteelTypeMethodOptions)
@@ -431,7 +436,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
           <span className="font-bold border-b-2 mb-4">거래선</span>
           <div className="grid grid-cols-2 mt-1 ">
             <div className="flex">
-              <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+              <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
                 업체명
               </label>
               <div className="border border-gray-400 p-2 px-2 w-full">
@@ -486,11 +491,6 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                   className=" flex-1"
                 />
               </div>
-            </div>
-
-            <div className="flex">
-              <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center"></label>
-              <div className="border flex  items-center border-gray-400 px-2 w-full"></div>
             </div>
           </div>
         </div>
@@ -1086,6 +1086,43 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
             }
           }}
         />
+
+        {/* 승인 버튼 */}
+        {isEditMode && ['ORDER', 'PURCHASE', 'LEASE'].includes(form.type) && (
+          <CommonButton
+            label="승인"
+            className="px-10 font-bold"
+            variant="primary"
+            onClick={() =>
+              SteelApproveMutation.mutate(
+                { steelManagementIds: [steelDetailId] },
+                {
+                  onSuccess: () => {
+                    router.push('/managementSteel')
+                  },
+                },
+              )
+            }
+          />
+        )}
+
+        {isEditMode && form.type === 'APPROVAL' && (
+          <CommonButton
+            label="반출"
+            className="px-10 font-bold"
+            variant="danger"
+            onClick={() =>
+              SteelReleaseMutation.mutate(
+                { steelManagementIds: [steelDetailId] },
+                {
+                  onSuccess: () => {
+                    router.push('/managementSteel')
+                  },
+                },
+              )
+            }
+          />
+        )}
       </div>
     </>
   )

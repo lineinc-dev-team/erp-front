@@ -31,6 +31,7 @@ import { AttachedFile, DetailItem, HistoryItem } from '@/types/materialManagemen
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import { SupplyPriceInput, TotalInput, VatInput } from '@/utils/supplyVatTotalInput'
+import CommonSelectByName from '../common/CommonSelectByName'
 // import { useEffect } from 'react'
 // import { AttachedFile, DetailItem } from '@/types/managementSteel'
 
@@ -85,6 +86,13 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     materialCancel,
     MaterialModifyMutation,
     InputTypeMethodOptions,
+
+    productOptions,
+    setProductSearch,
+    productNameFetchNextPage,
+    productNamehasNextPage,
+    productNameFetching,
+    productNameLoading,
   } = useManagementMaterial()
 
   const textFieldStyle = {
@@ -491,22 +499,45 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                     />
                   </TableCell>
 
-                  {/* 품명 */}
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                  <TableCell sx={{ display: 'flex', gap: '4px', width: '320px' }}>
+                    <CommonSelectByName
+                      value={m.inputType === 'manual' ? '직접입력' : m.name || '선택'}
+                      onChange={async (value) => {
+                        if (value === '직접입력') {
+                          updateItemField('MaterialItem', m.id, 'inputType', 'manual')
+                          updateItemField('MaterialItem', m.id, 'name', '') // 직접입력 모드 전환 시 빈 값
+                          return
+                        }
+
+                        const selectedProduct = productOptions.find((opt) => opt.name === value)
+                        if (!selectedProduct) return
+                        updateItemField('MaterialItem', m.id, 'inputType', 'select')
+                        updateItemField('MaterialItem', m.id, 'name', selectedProduct.name)
+                      }}
+                      options={[...productOptions, { id: -1, name: '직접입력' }]}
+                      onScrollToBottom={() => {
+                        if (productNamehasNextPage && !productNameFetching)
+                          productNameFetchNextPage()
+                      }}
+                      onInputChange={(value) => setProductSearch(value)}
+                      loading={productNameLoading}
+                    />
+
                     <TextField
                       size="small"
                       placeholder="텍스트 입력"
-                      value={m.name}
+                      value={m.inputType === 'manual' ? m.name : ''} // manual 모드일 때만 값 표시
                       onChange={(e) =>
                         updateItemField('MaterialItem', m.id, 'name', e.target.value)
                       }
                       variant="outlined"
                       sx={textFieldStyle}
+                      disabled={m.inputType !== 'manual'} // manual 모드일 때만 활성화
                     />
                   </TableCell>
 
                   {/* 규격 */}
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                  <TableCell sx={{ border: '1px solid  #9CA3AF', width: '140px' }}>
                     <TextField
                       size="small"
                       placeholder="텍스트 입력"
@@ -520,7 +551,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                   </TableCell>
 
                   {/* 사용용도 */}
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                  <TableCell sx={{ border: '1px solid  #9CA3AF', width: '140px' }}>
                     <TextField
                       size="small"
                       placeholder="텍스트 입력"
@@ -533,10 +564,10 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                     />
                   </TableCell>
                   {/* 수량 */}
-                  <TableCell sx={{ border: '1px solid #9CA3AF' }}>
+                  <TableCell sx={{ border: '1px solid  #9CA3AF', width: '90px' }}>
                     <TextField
                       size="small"
-                      placeholder="숫자 입력"
+                      placeholder="수량"
                       value={m.quantity || ''}
                       onChange={(e) => {
                         const numericValue = e.target.value === '' ? '' : Number(e.target.value)

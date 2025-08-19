@@ -121,7 +121,7 @@ export const SteelColumnList: GridColDef[] = [
 
 export const MaterialColumnList: GridColDef[] = [
   { field: 'no', headerName: 'No', width: 70 },
-  // { field: 'id', headerName: 'No', width: 70 },
+  // { field: 'backendId', headerName: 'No', width: 70 },
   { field: 'site', headerName: '현장명', width: 130 },
   { field: 'process', headerName: '공정명', width: 130 },
   { field: 'inputType', headerName: '투입구분', width: 180 },

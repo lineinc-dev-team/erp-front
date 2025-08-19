@@ -90,10 +90,10 @@ export function useManagementMaterial() {
         size: Number(search.pageCount) || 10,
         sort:
           search.arraySort === '최신순'
-            ? 'id,desc'
+            ? 'createdAt,desc'
             : search.arraySort === '오래된순'
-            ? 'id.asc'
-            : 'id.asc',
+            ? 'createdAt,asc'
+            : 'id,asc',
       }
 
       const filteredParams = Object.fromEntries(

@@ -13,8 +13,7 @@ import {
 } from '@/config/erp.confing'
 import { Pagination } from '@mui/material'
 import { useOrderingSearchStore } from '@/stores/orderingStore'
-import { ClientCompanyExcelDownload, OrderingService } from '@/services/ordering/orderingService'
-import ContractHistory from '../common/ContractHistory'
+import { ClientCompanyExcelDownload } from '@/services/ordering/orderingService'
 import { useClientCompany } from '@/hooks/useClientCompany'
 import { ClientCompany } from '@/types/ordering'
 import { useAccountStore } from '@/stores/accountManagementStore'
@@ -28,8 +27,6 @@ import { formatAreaNumber } from '@/utils/formatPhoneNumber'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 
 export default function OrderingView() {
-  const { contract, setContract } = OrderingService()
-
   const openTab = useTabOpener()
 
   const { showSnackbar } = useSnackbarStore()
@@ -434,7 +431,7 @@ export default function OrderingView() {
         </div>
       </div>
 
-      <ContractHistory open={contract} onClose={() => setContract(false)} />
+      {/* <ContractHistory open={contract} onClose={() => setContract(false)} /> */}
     </>
   )
 }

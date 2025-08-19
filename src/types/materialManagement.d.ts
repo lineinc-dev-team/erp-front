@@ -39,7 +39,7 @@ export interface MaterialList {
   deliveryDate: Date | null
   hasFile: boolean
   memo: string
-  details: DetailItem[]
+  detail: DetailItem[]
   site: Site
   process: Process
   outsourcingCompany: OutsourcingData
@@ -74,6 +74,7 @@ export type MaterialSearchState = {
 export type MaterialItem = {
   id: number
   name: string
+  inputType: string
   standard: string
   usage: string
   quantity: number

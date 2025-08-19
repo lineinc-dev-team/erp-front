@@ -17,7 +17,7 @@ import {
   MaterialExcelDownload,
 } from '@/services/materialManagement/materialManagementService'
 import { useMaterialSearchStore } from '@/stores/materialManagementStore'
-import { DetailItem, MaterialList } from '@/types/materialManagement'
+import { MaterialList } from '@/types/materialManagement'
 import { getTodayDateString } from '@/utils/formatters'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import CommonSelectByName from '../common/CommonSelectByName'
@@ -30,7 +30,7 @@ export default function MaterialManagementView() {
 
   const {
     MaterialListQuery,
-    MaterialDeleteMutation,
+    // MaterialDeleteMutation,
     productOptions,
     setProductSearch,
     productNameFetchNextPage,
@@ -71,70 +71,79 @@ export default function MaterialManagementView() {
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
-  const updateMaterialList = MaterialDataList.flatMap((material: MaterialList) => {
-    if (!material.details || material.details.length === 0) {
-      // details가 없을 경우 기본 정보만 반환
-      return [
-        {
-          id: material.id,
-          site: material.site?.name ?? '',
-          process: material.process?.name ?? '',
-          deliveryDate: getTodayDateString(material.deliveryDate),
-          outsourcingCompanyName: material.outsourcingCompany?.name,
-          memo: material.memo ?? '',
-          inputType: material.inputType,
-          inputTypeDescription: material.inputTypeDescription,
-          hasFile: material.hasFile ? 'Y' : 'N',
-          // detail 관련 항목은 null로 채움
-          detailId: null,
-          name: null,
-          standard: null,
-          unit: null,
-          count: null,
-          length: null,
-          totalLength: null,
-          unitWeight: null,
-          quantity: null,
-          unitPrice: null,
-          supplyPrice: null,
-          total: null,
-          vat: null,
-          usage: null,
-        },
-      ]
-    }
+  const updateMaterialList = MaterialDataList.flatMap(
+    (material: MaterialList, materialIndex: number) => {
+      // detail이 없을 때 기본값
+      if (!material.detail) {
+        return [
+          {
+            rowId: `material-${materialIndex}`, // DataGrid용 고유 ID
+            backendId: material.id, // 백엔드 수정용
+            detailId: null,
 
-    // details가 있는 경우 펼쳐서 처리
-    return material.details.map((detail: DetailItem) => ({
-      id: detail.id,
-      outsourcingCompanyName: material.outsourcingCompany?.name,
-      site: material.site?.name ?? '',
-      process: material.process?.name ?? '',
-      deliveryDate: getTodayDateString(material.deliveryDate),
-      memo: material.memo ?? '',
-      inputType: material.inputType,
-      inputTypeDescription: material.inputTypeDescription,
-      hasFile: material.hasFile ? 'Y' : 'N',
+            outsourcingCompanyName: material.outsourcingCompany?.name ?? '-',
+            site: material.site?.name ?? '-',
+            process: material.process?.name ?? '-',
+            deliveryDate: getTodayDateString(material.deliveryDate) ?? '-',
+            memo: material.memo ?? '-',
+            inputType: material.inputType ?? '-',
+            inputTypeDescription: material.inputTypeDescription ?? '-',
+            hasFile: material.hasFile ? 'Y' : 'N',
 
-      // detail 정보
-      detailId: detail.id,
-      name: detail.name ?? '',
-      standard: detail.standard ?? '',
-      unit: detail.unit ?? '',
-      count: detail.count ?? null,
-      length: detail.length ?? null,
-      totalLength: detail.totalLength ?? null,
-      unitWeight: detail.unitWeight ?? null,
-      quantity: detail.quantity ?? null,
-      unitPrice: detail.unitPrice ?? null,
-      supplyPrice: detail.supplyPrice ?? null,
-      total: detail.total ?? null,
-      vat: detail.vat ?? null,
-      usage: detail.usage ?? '',
-    }))
-  })
+            // detail 관련 항목은 null/빈값
+            name: '-',
+            standard: '-',
+            unit: '-',
+            count: '-',
+            length: '-',
+            totalLength: '-',
+            unitWeight: '-',
+            quantity: '-',
+            unitPrice: '-',
+            supplyPrice: '-',
+            total: '-',
+            vat: '-',
+            usage: '-',
+          },
+        ]
+      }
 
-  const { selectedIds, setSelectedIds } = useAccountStore()
+      // detail이 있는 경우 (단일 객체이므로 배열로 감쌈)
+      const details = Array.isArray(material.detail) ? material.detail : [material.detail]
+
+      return details.map((detail, detailIndex) => ({
+        rowId: `material-${materialIndex}-detail-${detailIndex}`, // DataGrid용 고유 ID
+        backendId: material.id, // 백엔드 수정용
+        detailId: detail.id, // 백엔드 수정용
+
+        outsourcingCompanyName: material.outsourcingCompany?.name ?? '-',
+        site: material.site?.name ?? '-',
+        process: material.process?.name ?? '-',
+        deliveryDate: getTodayDateString(material.deliveryDate) ?? '-',
+        memo: material.memo ?? '-',
+        inputType: material.inputType ?? '-',
+        inputTypeDescription: material.inputTypeDescription ?? '-',
+        hasFile: material.hasFile ? 'Y' : 'N',
+
+        // detail 정보
+        name: detail.name ?? '-',
+        standard: detail.standard ?? '-',
+        unit: detail.unit ?? '-',
+        count: detail.count ?? '-',
+        length: detail.length ?? '-',
+        totalLength: detail.totalLength ?? '-',
+        unitWeight: detail.unitWeight ?? '-',
+        quantity: detail.quantity ?? '-',
+        unitPrice: detail.unitPrice ?? '-',
+        supplyPrice: detail.supplyPrice ?? '-',
+        total: detail.total ?? '-',
+        vat: detail.vat ?? '-',
+        usage: detail.usage ?? '-',
+      }))
+    },
+  )
+
+  const { setSelectedIds } = useAccountStore()
 
   const router = useRouter()
 
@@ -148,7 +157,7 @@ export default function MaterialManagementView() {
         flex: 1,
 
         renderCell: (params: GridRenderCellParams) => {
-          const materialId = params.row.id
+          const materialId = params.row.backendId
           return (
             <div
               onClick={() => router.push(`/materialManagement/registration/${materialId}`)}
@@ -383,7 +392,7 @@ export default function MaterialManagementView() {
             </div>
 
             <div className="flex items-center gap-2">
-              <CommonButton
+              {/* <CommonButton
                 label="삭제"
                 variant="danger"
                 onClick={() => {
@@ -403,7 +412,7 @@ export default function MaterialManagementView() {
                   })
                 }}
                 className="px-3"
-              />
+              /> */}
               <CommonButton
                 label="엑셀 다운로드"
                 variant="reset"
@@ -439,6 +448,7 @@ export default function MaterialManagementView() {
             align: 'center',
             flex: 1,
           }))}
+          getRowId={(row) => row.rowId} // DataGrid에는 rowId를 유니크 키로 사용
           checkboxSelection
           disableRowSelectionOnClick
           keepNonExistentRowsSelected

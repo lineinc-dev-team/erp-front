@@ -149,6 +149,7 @@ export const useManagementMaterialFormStore = create<MaterialFormStore>((set, ge
         const newItem: MaterialItem = {
           id,
           name: '',
+          inputType: '',
           standard: '',
           usage: '',
           quantity: 0,
