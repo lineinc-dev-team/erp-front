@@ -104,23 +104,18 @@ export const CostColumnList: GridColDef[] = [
 ]
 
 export const SteelColumnList: GridColDef[] = [
-  { field: 'id', headerName: 'No', width: 70 },
+  { field: 'no', headerName: 'No', width: 70 },
+  // { field: 'id', headerName: 'No', width: 70 },
   { field: 'site', headerName: '현장명', width: 130 },
   { field: 'process', headerName: '공정명', width: 130 },
-  { field: 'standard', headerName: '규격', width: 180 },
-  { field: 'name', headerName: '품목', width: 100 },
-  { field: 'unit', headerName: '단위', width: 120 },
-  { field: 'count', headerName: '본', width: 120 },
-  { field: 'length', headerName: '길이', width: 100 },
-  { field: 'totalLength', headerName: '총 길이', width: 100 },
-  { field: 'unitWeight', headerName: '단위중량', width: 100 },
-  { field: 'quantity', headerName: '수량', width: 100 },
-  { field: 'unitPrice', headerName: '단가', width: 100 },
-  { field: 'supplyPrice', headerName: '공급가', width: 100 },
-  // { field: 'supplyPrice', headerName: '거래선', width: 100 },
-  { field: 'usage', headerName: '용도', width: 100 },
-  { field: 'hasFile', headerName: '첨부', width: 100 },
-  { field: 'type', headerName: '구분', width: 100 },
+  { field: 'type', headerName: '구분', width: 180 },
+  { field: 'orderDate', headerName: '발주일', width: 100 },
+  { field: 'approvalDate', headerName: '승인일', width: 120 },
+  { field: 'releaseDate', headerName: '반출일', width: 120 },
+  { field: 'startDate', headerName: '기간', width: 100 },
+  { field: 'outsourcingCompanyName', headerName: '업체명', width: 100 },
+  { field: 'outsourcingCompanyBusinessNumber', headerName: '사업자등록번호', width: 100 },
+  { field: 'totalAmount', headerName: '총금액', width: 100 },
   { field: 'memo', headerName: '비고', width: 100 },
 ]
 

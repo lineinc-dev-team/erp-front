@@ -90,35 +90,35 @@ export async function SteelReleaseService(steelManagementIds: number[]) {
 // 강재수불부 엑셀 다운로드
 export async function SteelExcelDownload({
   sort = '',
-  username = '',
-  roleId,
-  isActive,
-  createdStartDate,
-  createdEndDate,
-  lastLoginStartDate,
-  lastLoginEndDate,
+  siteName = '',
+  processName = '',
+  outsourcingCompanyName = '',
+  itemName = '',
+  type = '',
+  startDate,
+  endDate,
   fields,
 }: {
   sort?: string
-  username?: string
-  roleId?: number
-  isActive?: boolean
-  createdStartDate?: string
-  createdEndDate?: string
-  lastLoginStartDate?: string
-  lastLoginEndDate?: string
+  siteName?: string
+  processName?: string
+  outsourcingCompanyName?: string
+  itemName?: string
+  type?: string
+  startDate?: string
+  endDate?: string
   fields?: string[]
 }) {
   const queryParams = new URLSearchParams()
 
-  queryParams.append('sort', sort)
-  if (username) queryParams.append('username', username)
-  if (roleId !== undefined) queryParams.append('roleId', String(roleId))
-  if (isActive !== undefined) queryParams.append('isActive', String(isActive))
-  if (createdStartDate) queryParams.append('createdStartDate', createdStartDate)
-  if (createdEndDate) queryParams.append('createdEndDate', createdEndDate)
-  if (lastLoginStartDate) queryParams.append('lastLoginStartDate', lastLoginStartDate)
-  if (lastLoginEndDate) queryParams.append('lastLoginEndDate', lastLoginEndDate)
+  if (sort) queryParams.append('sort', sort)
+  if (siteName) queryParams.append('siteName', siteName)
+  if (processName) queryParams.append('processName', processName)
+  if (outsourcingCompanyName) queryParams.append('outsourcingCompanyName', outsourcingCompanyName)
+  if (itemName) queryParams.append('itemName', itemName)
+  if (type) queryParams.append('type', type)
+  if (startDate) queryParams.append('startDate', startDate)
+  if (endDate) queryParams.append('endDate', endDate)
 
   if (fields && fields.length > 0) {
     queryParams.append('fields', fields.join(','))

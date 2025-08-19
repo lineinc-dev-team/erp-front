@@ -1,6 +1,7 @@
 import { API } from '@/api/config/env'
 import { useManagementSteelFormStore } from '@/stores/managementSteelStore'
 
+// 등록
 export async function CreateManagementSteel() {
   const { newSteelData } = useManagementSteelFormStore.getState()
   const payload = newSteelData()
@@ -42,18 +43,14 @@ export async function ModifySteelManagement(steelId: number) {
   const { newSteelData } = useManagementSteelFormStore.getState()
   const originalPayload = newSteelData()
 
-  // 'type' 필드를 제외한 새로운 payload 생성
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { type, ...payloadWithoutType } = originalPayload
-
-  console.log('수정 페이로드 (type 제외)', payloadWithoutType)
+  console.log('수정 페이로드 (type 제외)', originalPayload)
 
   const res = await fetch(`${API.STEEL}/${steelId}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(payloadWithoutType),
+    body: JSON.stringify(originalPayload),
     credentials: 'include',
   })
 
@@ -62,4 +59,56 @@ export async function ModifySteelManagement(steelId: number) {
   }
 
   return res.status
+}
+
+// 외주 업체 등록 시 필요한 공제 항목 조회
+export async function SteelTypeIdInfoService() {
+  const resData = await fetch(`${API.STEEL}/steel-management-types`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      throw new Error('권한이 없습니다.')
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+
+// 수정 이력 조회
+
+// 자재 계약 수정이력 조회
+export async function SteelInfoHistoryService(
+  historyId: number,
+  page: number = 0,
+  size: number = 4,
+  sort: string,
+) {
+  const resData = await fetch(
+    `${API.STEEL}/${historyId}/change-histories?page=${page}&size=${size}&sort=${sort}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    },
+  )
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      throw new Error('권한이 없습니다.')
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
 }

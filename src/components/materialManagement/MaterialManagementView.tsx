@@ -68,7 +68,6 @@ export default function MaterialManagementView() {
       // details가 없을 경우 기본 정보만 반환
       return [
         {
-          id: material.id,
           site: material.site?.name ?? '',
           process: material.process?.name ?? '',
           deliveryDate: getTodayDateString(material.deliveryDate),
@@ -98,7 +97,7 @@ export default function MaterialManagementView() {
 
     // details가 있는 경우 펼쳐서 처리
     return material.details.map((detail: DetailItem) => ({
-      id: material.id,
+      id: detail.id,
       outsourcingCompanyName: material.outsourcingCompany?.name,
       site: material.site?.name ?? '',
       process: material.process?.name ?? '',
@@ -304,6 +303,10 @@ export default function MaterialManagementView() {
                 onChange={(value) => search.setField('deliveryEndDate', value)}
               />
             </div>
+          </div>
+          <div className="flex">
+            <label className="w-36 text-[14px]   border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center"></label>
+            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center "></div>
           </div>
         </div>
         <div className="flex items-center justify-center gap-6">

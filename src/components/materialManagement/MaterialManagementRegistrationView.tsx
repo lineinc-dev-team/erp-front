@@ -30,6 +30,7 @@ import { useCallback, useEffect, useRef } from 'react'
 import { AttachedFile, DetailItem, HistoryItem } from '@/types/materialManagement'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
+import { SupplyPriceInput, TotalInput, VatInput } from '@/utils/supplyVatTotalInput'
 // import { useEffect } from 'react'
 // import { AttachedFile, DetailItem } from '@/types/managementSteel'
 
@@ -44,6 +45,12 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     updateMemo,
     toggleCheckItem,
     toggleCheckAllItems,
+
+    getTotalQuantityAmount,
+    getTotalUnitPrice,
+    getTotalSupplyAmount,
+    getTotalSurtax,
+    getTotalSum,
   } = useManagementMaterialFormStore()
 
   const {
@@ -79,6 +86,14 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     MaterialModifyMutation,
     InputTypeMethodOptions,
   } = useManagementMaterial()
+
+  const textFieldStyle = {
+    '& .MuiOutlinedInput-root': {
+      '& fieldset': { borderColor: 'black' },
+      '&:hover fieldset': { borderColor: 'black' },
+      '&.Mui-focused fieldset': { borderColor: 'black' },
+    },
+  }
 
   // 체크 박스에 활용
   const managers = form.details
@@ -405,7 +420,6 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
         </div>
       </div>
 
-      {/* 담당자 */}
       <div>
         <div className="flex justify-between items-center mt-10 mb-2">
           <span className="font-bold border-b-2 mb-4">자재</span>
@@ -465,6 +479,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
             <TableBody>
               {managers.map((m) => (
                 <TableRow key={m.id}>
+                  {/* 체크박스 */}
                   <TableCell
                     padding="checkbox"
                     align="center"
@@ -476,167 +491,157 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                     />
                   </TableCell>
 
+                  {/* 품명 */}
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder="입력"
+                      placeholder="텍스트 입력"
                       value={m.name}
                       onChange={(e) =>
                         updateItemField('MaterialItem', m.id, 'name', e.target.value)
                       }
                       variant="outlined"
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          '& fieldset': {
-                            borderColor: 'black', // 기본 테두리 색 검은색
-                          },
-                          '&:hover fieldset': {
-                            borderColor: 'black', // 호버 시에도 검은색 유지
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: 'black', // 포커스 시에도 검은색 유지
-                          },
-                        },
-                      }}
+                      sx={textFieldStyle}
                     />
                   </TableCell>
+
+                  {/* 규격 */}
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder=" 입력"
+                      placeholder="텍스트 입력"
                       value={m.standard}
                       onChange={(e) =>
                         updateItemField('MaterialItem', m.id, 'standard', e.target.value)
                       }
                       variant="outlined"
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          '& fieldset': {
-                            borderColor: 'black', // 기본 테두리 색 검은색
-                          },
-                          '&:hover fieldset': {
-                            borderColor: 'black', // 호버 시에도 검은색 유지
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: 'black', // 포커스 시에도 검은색 유지
-                          },
-                        },
-                      }}
+                      sx={textFieldStyle}
                     />
                   </TableCell>
+
+                  {/* 사용용도 */}
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder=" 입력"
+                      placeholder="텍스트 입력"
                       value={m.usage}
                       onChange={(e) =>
                         updateItemField('MaterialItem', m.id, 'usage', e.target.value)
                       }
                       variant="outlined"
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          '& fieldset': {
-                            borderColor: 'black', // 기본 테두리 색 검은색
-                          },
-                          '&:hover fieldset': {
-                            borderColor: 'black', // 호버 시에도 검은색 유지
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: 'black', // 포커스 시에도 검은색 유지
-                          },
-                        },
-                      }}
+                      sx={textFieldStyle}
                     />
                   </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <CommonInput
-                      className="flex-1 "
-                      value={formatNumber(m.quantity)}
-                      onChange={(value) => {
-                        const numericValue = unformatNumber(value)
+                  {/* 수량 */}
+                  <TableCell sx={{ border: '1px solid #9CA3AF' }}>
+                    <TextField
+                      size="small"
+                      placeholder="숫자 입력"
+                      value={m.quantity || ''}
+                      onChange={(e) => {
+                        const numericValue = e.target.value === '' ? '' : Number(e.target.value)
                         updateItemField('MaterialItem', m.id, 'quantity', numericValue)
+                      }}
+                      variant="outlined"
+                      sx={textFieldStyle}
+                      inputProps={{ style: { textAlign: 'right' } }} // 오른쪽 정렬
+                    />
+                  </TableCell>
+
+                  {/* 단가 */}
+                  <TableCell align="right" sx={{ border: '1px solid  #9CA3AF' }}>
+                    <TextField
+                      size="small"
+                      inputMode="numeric"
+                      placeholder="숫자 입력"
+                      value={formatNumber(m.unitPrice) || ''}
+                      onChange={(e) => {
+                        const numericValue =
+                          e.target.value === '' ? '' : unformatNumber(e.target.value)
+                        updateItemField('MaterialItem', m.id, 'unitPrice', numericValue)
+                      }}
+                      variant="outlined"
+                      sx={textFieldStyle}
+                      inputProps={{
+                        style: {
+                          textAlign: 'right',
+                        },
                       }}
                     />
                   </TableCell>
 
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <CommonInput
-                      className="flex-1 "
-                      value={formatNumber(m.unitPrice)}
-                      onChange={(value) => {
-                        const numericValue = unformatNumber(value)
-                        updateItemField('MaterialItem', m.id, 'unitPrice', numericValue)
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
+                  {/* 공급가 */}
+                  <TableCell align="right" sx={{ border: '1px solid #9CA3AF' }}>
+                    <SupplyPriceInput
                       value={m.supplyPrice}
-                      onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'supplyPrice', e.target.value)
-                      }
-                      variant="outlined"
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          '& fieldset': {
-                            borderColor: 'black', // 기본 테두리 색 검은색
-                          },
-                          '&:hover fieldset': {
-                            borderColor: 'black', // 호버 시에도 검은색 유지
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: 'black', // 포커스 시에도 검은색 유지
-                          },
-                        },
+                      onChange={(supply) => {
+                        const vat = Math.floor(supply * 0.1)
+                        const total = supply + vat
+
+                        // MaterialItem 객체 업데이트
+                        updateItemField('MaterialItem', m.id, 'supplyPrice', supply)
+                        updateItemField('MaterialItem', m.id, 'vat', vat)
+                        updateItemField('MaterialItem', m.id, 'total', total)
                       }}
                     />
                   </TableCell>
+
+                  {/* 부가세 */}
+                  <TableCell align="right" sx={{ border: '1px solid #9CA3AF' }}>
+                    <VatInput supplyPrice={m.supplyPrice} />
+                  </TableCell>
+
+                  {/* 합계 */}
+                  <TableCell align="right" sx={{ border: '1px solid #9CA3AF' }}>
+                    <TotalInput supplyPrice={m.supplyPrice} />
+                  </TableCell>
+
+                  {/* <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                    <TextField
+                      size="small"
+                      type="number"
+                      inputMode="numeric"
+                      placeholder="숫자 입력"
+                      value={m.supplyPrice || ''}
+                      onChange={(e) =>
+                        updateItemField('MaterialItem', m.id, 'supplyPrice', Number(e.target.value))
+                      }
+                      variant="outlined"
+                      sx={textFieldStyle}
+                    />
+                  </TableCell>
+
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
-                      value={m.vat}
-                      onChange={(e) => updateItemField('MaterialItem', m.id, 'vat', e.target.value)}
+                      type="number"
+                      inputMode="numeric"
+                      placeholder="숫자 입력"
+                      value={m.vat || ''}
+                      onChange={(e) =>
+                        updateItemField('MaterialItem', m.id, 'vat', Number(e.target.value))
+                      }
                       variant="outlined"
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          '& fieldset': {
-                            borderColor: 'black', // 기본 테두리 색 검은색
-                          },
-                          '&:hover fieldset': {
-                            borderColor: 'black', // 호버 시에도 검은색 유지
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: 'black', // 포커스 시에도 검은색 유지
-                          },
-                        },
-                      }}
+                      sx={textFieldStyle}
                     />
                   </TableCell>
+
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder="텍스트 입력"
-                      value={m.total}
+                      type="number"
+                      inputMode="numeric"
+                      placeholder="숫자 입력"
+                      value={m.total || ''}
                       onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'total', e.target.value)
+                        updateItemField('MaterialItem', m.id, 'total', Number(e.target.value))
                       }
                       variant="outlined"
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          '& fieldset': {
-                            borderColor: 'black', // 기본 테두리 색 검은색
-                          },
-                          '&:hover fieldset': {
-                            borderColor: 'black', // 호버 시에도 검은색 유지
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: 'black', // 포커스 시에도 검은색 유지
-                          },
-                        },
-                      }}
+                      sx={textFieldStyle}
                     />
-                  </TableCell>
+                  </TableCell> */}
+
+                  {/* 비고 */}
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
@@ -646,23 +651,57 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                         updateItemField('MaterialItem', m.id, 'memo', e.target.value)
                       }
                       variant="outlined"
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          '& fieldset': {
-                            borderColor: 'black', // 기본 테두리 색 검은색
-                          },
-                          '&:hover fieldset': {
-                            borderColor: 'black', // 호버 시에도 검은색 유지
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: 'black', // 포커스 시에도 검은색 유지
-                          },
-                        },
-                      }}
+                      sx={textFieldStyle}
                     />
                   </TableCell>
                 </TableRow>
               ))}
+              <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
+                <TableCell
+                  colSpan={4}
+                  align="right"
+                  sx={{
+                    border: '1px solid #9CA3AF',
+                    fontSize: '16px',
+                    textAlign: 'center',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  소계
+                </TableCell>
+
+                <TableCell
+                  align="center"
+                  sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                >
+                  {getTotalQuantityAmount()}
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                >
+                  {getTotalUnitPrice().toLocaleString()}
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                >
+                  {getTotalSupplyAmount().toLocaleString()}
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                >
+                  {getTotalSurtax().toLocaleString()}
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                >
+                  {getTotalSum().toLocaleString()}
+                </TableCell>
+                <TableCell sx={{ border: '1px solid #9CA3AF' }} />
+              </TableRow>
             </TableBody>
           </Table>
         </TableContainer>

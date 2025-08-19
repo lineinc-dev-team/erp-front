@@ -20,6 +20,9 @@ import {
   ManagementSteelService,
   SteelExcelDownload,
 } from '@/services/managementSteel/managementSteelService'
+import CommonSelectByName from '../common/CommonSelectByName'
+import useOutSourcingContract from '@/hooks/useOutSourcingContract'
+import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 
 export default function ManagementSteel() {
   const { handleNewSteelCreate } = ManagementSteelService()
@@ -30,21 +33,32 @@ export default function ManagementSteel() {
     SteelDeleteMutation,
     SteelListQuery,
     SteelApproveMutation,
+    SteelTypeMethodOptions,
     SteelReleaseMutation,
-
-    // 현장명 무한 스크롤
-    // setSitesSearch,
-    // sitesOptions,
-    // fetchNextPage,
-    // hasNextPage,
-    // isFetching,
-    // isLoading,
-
-    // // 공정명
-
-    // setProcessSearch,
-    // processOptions,
   } = useManagementSteel()
+
+  const {
+    setSitesSearch,
+    sitesOptions,
+    siteNameFetchNextPage,
+    siteNamehasNextPage,
+    siteNameFetching,
+    siteNameLoading,
+
+    setProcessSearch,
+    processOptions,
+    processInfoFetchNextPage,
+    processInfoHasNextPage,
+    processInfoIsFetching,
+    processInfoLoading,
+
+    setCompanySearch,
+    companyOptions,
+    comPanyNameFetchNextPage,
+    comPanyNamehasNextPage,
+    comPanyNameFetching,
+    comPanyNameLoading,
+  } = useOutSourcingContract()
 
   const SteelDataList = SteelListQuery.data?.data.content ?? []
 
@@ -52,61 +66,38 @@ export default function ManagementSteel() {
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
+  console.log('SteelDataListSteelDataList', SteelDataList)
+
   const updateSteelList = SteelDataList.flatMap((steel: SteelList) => {
-    if (steel.details.length === 0) {
-      // details가 없는 경우에도 steel 정보를 넣음
-      return [
-        {
-          count: null,
-          standard: null,
-          quantity: null,
-          unit: null,
-          length: null,
-          totalLength: null,
-          unitWeight: null,
-          unitPrice: null,
-          supplyPrice: null,
-          name: null, // 또는 '', 또는 '상세 없음'
-
-          // steel 항목
-          id: steel.id,
-          site: steel.site.name,
-          process: steel.process.name,
-          hasFile: steel.hasFile ? 'Y' : 'N',
-          paymentDate: getTodayDateString(steel.paymentDate),
-          memo: steel.memo,
-          type: steel.type,
-          usage: steel.usage,
-        },
-      ]
-    }
-
-    // details가 있는 경우 각각 펼쳐서 리턴
-    return steel.details.map((detail) => ({
-      count: detail.count,
-      standard: detail.standard,
-      quantity: detail.quantity,
-      unit: detail.unit,
-      length: detail.length,
-      totalLength: detail.totalLength,
-      unitWeight: detail.unitWeight,
-      unitPrice: detail.unitPrice,
-      supplyPrice: detail.supplyPrice,
-      name: detail.name,
-
-      // steel 항목
-      id: steel.id,
-      site: steel.site.name,
-      process: steel.process.name,
-      hasFile: steel.hasFile ? 'Y' : 'N',
-      paymentDate: getTodayDateString(steel.paymentDate),
-      memo: steel.memo,
-      type: steel.type,
+    return {
+      id: steel.id, // 고유 ID
       usage: steel.usage,
-    }))
-  })
+      type: steel.type,
+      typeCode: steel.typeCode,
 
-  console.log('@@updateSteelList', updateSteelList)
+      // 날짜들 (string 변환 처리)
+      orderDate: steel.orderDate ? getTodayDateString(steel.orderDate) : '-',
+      startDate:
+        steel.startDate && steel.endDate
+          ? `${getTodayDateString(steel.startDate)} ~ ${getTodayDateString(steel.endDate)}`
+          : '-',
+
+      endDate: steel.endDate ? getTodayDateString(steel.endDate) : '-',
+      approvalDate: steel.approvalDate ? getTodayDateString(steel.approvalDate) : '-',
+      releaseDate: steel.releaseDate ? getTodayDateString(steel.releaseDate) : '-',
+
+      memo: steel.memo,
+
+      // 관계 객체
+      site: steel.site?.name ?? '',
+      process: steel.process?.name ?? '',
+      outsourcingCompanyName: steel.outsourcingCompany?.name ?? '-',
+      outsourcingCompanyBusinessNumber: steel.outsourcingCompany?.businessNumber ?? '-',
+
+      // 숫자
+      totalAmount: steel.totalAmount ?? null,
+    }
+  })
 
   const { selectedIds, setSelectedIds } = useAccountStore()
 
@@ -133,15 +124,18 @@ export default function ManagementSteel() {
         },
       }
     }
-
-    if (col.field === 'remark') {
+    if (col.field === 'no') {
       return {
         ...col,
-        sortable: false,
         headerAlign: 'center',
         align: 'center',
-        flex: 1,
-        renderCell: (params: GridRenderCellParams) => <span>{params.value}</span>,
+        flex: 0.5,
+        renderCell: (params: GridRenderCellParams) => {
+          const sortedRowIds = params.api.getSortedRowIds?.() ?? []
+          const indexInCurrentPage = sortedRowIds.indexOf(params.id)
+          const no = (search.currentPage - 1) * pageCount + indexInCurrentPage + 1
+          return <span>{no}</span>
+        },
       }
     }
 
@@ -183,67 +177,87 @@ export default function ManagementSteel() {
   }))
 
   const handleDownloadExcel = async (fields: string[]) => {
-    await SteelExcelDownload({ fields })
+    await SteelExcelDownload({
+      sort: search.arraySort === '최신순' ? 'id,desc' : 'id,asc',
+      siteName: search.siteName,
+      processName: search.processName,
+      outsourcingCompanyName: search.outsourcingCompanyName,
+      itemName: search.itemName,
+      type: search.type,
+      startDate: search.startDate ? getTodayDateString(search.startDate) : undefined,
+      endDate: search.endDate ? getTodayDateString(search.endDate) : undefined,
+      fields, // 필수 필드: ["id", "name", "businessNumber", ...] })
+    })
   }
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
         <div className="grid grid-cols-3">
-          {/* <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+          <div className="flex">
+            <label className="w-[144px] text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelect
-                fullWidth
-                className="text-xl"
-                value={
-                  search.siteName === ''
-                    ? '0' // '선택'일 경우 value는 '0'
-                    : sitesOptions.find((opt) => opt.label === search.siteName)?.value || '0'
-                }
-                onChange={(value) => {
-                  if (value === '0') {
-                    // '선택'을 고른 경우 '' 저장
-                    search.setField('siteName', '')
+              <CommonSelectByName
+                value={search.siteName || '선택'}
+                onChange={async (value) => {
+                  const selectedSite = sitesOptions.find((opt) => opt.name === value)
+                  if (!selectedSite) return
+
+                  search.setField('siteId', selectedSite.id)
+                  search.setField('siteName', selectedSite.name)
+
+                  const res = await SitesProcessNameScroll({
+                    pageParam: 0,
+                    siteId: selectedSite.id,
+                    keyword: '',
+                  })
+
+                  const processes = res.data?.content || []
+                  if (processes.length > 0) {
+                    // search.setField('processId', processes[0].id)
+                    search.setField('processName', processes[0].name)
                   } else {
-                    const selected = sitesOptions.find((opt) => opt.value === value)
-                    search.setField('siteName', selected?.label ?? '')
+                    // search.setField('processId', 0)
+                    search.setField('processName', '')
                   }
                 }}
                 options={sitesOptions}
-                displayLabel
                 onScrollToBottom={() => {
-                  if (hasNextPage && !isFetching) fetchNextPage()
+                  if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
                 }}
                 onInputChange={(value) => setSitesSearch(value)}
-                loading={isLoading}
+                loading={siteNameLoading}
               />
             </div>
-          </div> */}
-          {/* <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+          </div>
+
+          <div className="flex">
+            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               공정명
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelect
+              <CommonSelectByName
                 fullWidth
                 className="text-xl"
-                value={processOptions.find((opt) => opt.label === search.processName)?.value || '0'}
+                value={search.processName || '선택'}
                 onChange={(value) => {
-                  const selected = processOptions.find((opt) => opt.value === value)
-                  search.setField('processName', selected?.label ?? '')
+                  const selectedProcess = processOptions.find((opt) => opt.name === value)
+                  if (selectedProcess) {
+                    // search.setField('processId', selectedProcess.id)
+                    search.setField('processName', selectedProcess.name)
+                  }
                 }}
                 options={processOptions}
                 displayLabel
                 onScrollToBottom={() => {
-                  if (hasNextPage && !isFetching) fetchNextPage()
+                  if (processInfoHasNextPage && !processInfoIsFetching) processInfoFetchNextPage()
                 }}
                 onInputChange={(value) => setProcessSearch(value)}
-                loading={isLoading}
+                loading={processInfoLoading}
               />
             </div>
-          </div> */}
+          </div>
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               품목
@@ -257,42 +271,56 @@ export default function ManagementSteel() {
             </div>
           </div>
           <div className="flex">
-            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               구분
             </label>
-            <div className="border border-gray-400 p-2 px-2 w-full flex justify-center items-center">
-              <CommonInput
-                value={search.type}
+            <div className="border flex items-center p-2 gap-4 border-gray-400 px-2 w-full">
+              <CommonSelect
+                fullWidth={true}
+                className="text-2xl"
+                value={search.type || 'BASE'}
+                displayLabel
                 onChange={(value) => search.setField('type', value)}
-                className=" flex-1"
+                options={SteelTypeMethodOptions}
               />
             </div>
           </div>
-          {/* <div className="flex">
+          <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              거래선
+              업체명
             </label>
-            <div className="border border-gray-400 p-2 px-2 w-full flex justify-center items-center">
-              <CommonInput
-                value={search.itemDescription}
-                onChange={(value) => search.setField('itemDescription', value)}
-                className=" flex-1"
+            <div className="border border-gray-400 p-2 px-2 w-full">
+              <CommonSelectByName
+                fullWidth
+                value={search.outsourcingCompanyName || '선택'}
+                onChange={async (value) => {
+                  const selectedCompany = companyOptions.find((opt) => opt.name === value)
+                  if (!selectedCompany) return
+
+                  search.setField('outsourcingCompanyName', selectedCompany.name)
+                }}
+                options={companyOptions}
+                onScrollToBottom={() => {
+                  if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
+                }}
+                onInputChange={(value) => setCompanySearch(value)}
+                loading={comPanyNameLoading}
               />
             </div>
-          </div> */}
+          </div>
           <div className="flex">
-            <label className="w-36  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               일자(기간)
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonDatePicker
-                value={search.paymentStartDate}
-                onChange={(value) => search.setField('paymentStartDate', value)}
+                value={search.startDate}
+                onChange={(value) => search.setField('startDate', value)}
               />
               ~
               <CommonDatePicker
-                value={search.paymentEndDate}
-                onChange={(value) => search.setField('paymentEndDate', value)}
+                value={search.endDate}
+                onChange={(value) => search.setField('endDate', value)}
               />
             </div>
           </div>
@@ -369,9 +397,9 @@ export default function ManagementSteel() {
                     return
                   }
 
-                  SteelDeleteMutation.mutate({
-                    steelManagementIds: idsArray,
-                  })
+                  if (window.confirm('정말 삭제하시겠습니까?')) {
+                    SteelDeleteMutation.mutate({ steelManagementIds: idsArray })
+                  }
                 }}
                 className="px-3"
               />
@@ -449,7 +477,7 @@ export default function ManagementSteel() {
               <ExcelModal
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
-                title="현장 관리 - 엑셀 항목 선택"
+                title="강재수불부 - 엑셀 항목 선택"
                 fieldMap={fieldMapArray}
                 onDownload={handleDownloadExcel}
               />
@@ -476,7 +504,6 @@ export default function ManagementSteel() {
           checkboxSelection
           disableRowSelectionOnClick
           keepNonExistentRowsSelected
-          showToolbar
           disableColumnFilter // 필터 비활성화
           hideFooter
           disableColumnMenu

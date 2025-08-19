@@ -190,6 +190,7 @@ const menuNameToBasePath: Record<string, string> = {
   '관리비 관리': '/managementCost',
   '강재 관리': '/managementSteel',
   '자재 관리': '/materialManagement',
+  '강재수불부 관리': '/managementSteel',
   '외주업체 관리': '/outsourcingCompany',
   '외주업체 계약 관리': '/outsourcingContract',
 }
@@ -202,6 +203,7 @@ const menuNameToIcon: Record<string, React.ReactNode> = {
   '관리비 관리': <Assignment />,
   '강재 관리': <Inventory />,
   '자재 관리': <Inventory />,
+  '강재수불부 관리': <Inventory />,
   '외주업체 관리': <Groups />,
   '외주업체 계약 관리': <Description />,
 }

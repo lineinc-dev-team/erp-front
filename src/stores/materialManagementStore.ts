@@ -196,6 +196,41 @@ export const useManagementMaterialFormStore = create<MaterialFormStore>((set, ge
         }
       }
     }),
+  getTotalQuantityAmount: () => {
+    const { details } = get().form
+    return details.reduce((sum, item) => {
+      const qty = Number(item.quantity)
+      return sum + (isNaN(qty) ? 0 : qty)
+    }, 0)
+  },
+  getTotalUnitPrice: () => {
+    const { details } = get().form
+    return details.reduce((sum, item) => {
+      const amount = Number(item.unitPrice)
+      return sum + (isNaN(amount) ? 0 : amount)
+    }, 0)
+  },
+  getTotalSupplyAmount: () => {
+    const { details } = get().form
+    return details.reduce((sum, item) => {
+      const amount = Number(item.supplyPrice)
+      return sum + (isNaN(amount) ? 0 : amount)
+    }, 0)
+  },
+  getTotalSurtax: () => {
+    const { details } = get().form
+    return details.reduce((sum, item) => {
+      const amount = Number(item.vat)
+      return sum + (isNaN(amount) ? 0 : amount)
+    }, 0)
+  },
+  getTotalSum: () => {
+    const { details } = get().form
+    return details.reduce((sum, item) => {
+      const amount = Number(item.total)
+      return sum + (isNaN(amount) ? 0 : amount)
+    }, 0)
+  },
 
   toggleCheckItem: (typeName, id, checked) =>
     set((state) => {

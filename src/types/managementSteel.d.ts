@@ -27,23 +27,35 @@ export interface SteelList {
   id: number
   usage: string
   type: string
-  paymentDate: Date | null
+  typeCode: string
+  startDate: Date | null
+  endDate: Date | null
+  orderDate: Date | null
+  approvalDate: null
+  releaseDate: null
   hasFile: true
   memo: string
-  details: DetailItem[]
   site: Site
   process: Process
+  outsourcingCompany?: {
+    id: number
+    name: string
+    businessNumber: string
+  }
+  totalAmount?: number
 }
 
 // 검색타입
 export type SteelSearchState = {
   searchTrigger: number
+  siteId: number
   siteName: string
   processName: string
   itemName: string
   type: string
-  paymentStartDate: Date | null
-  paymentEndDate: Date | null
+  outsourcingCompanyName: string
+  startDate: Date | null
+  endDate: Date | null
   arraySort: string
   currentPage: number
   pageCount: string
@@ -83,19 +95,37 @@ export type AttachedFile = {
   files: FileUploadInfo[]
 }
 
+type HistoryItem = {
+  id: number
+  no: number
+  getChanges: string
+  createdAt: string // or Date
+  updatedAt: string
+  content: string // 수정항목
+  updatedBy: string
+  memo: string
+  type: string
+}
+
 export type ManagementSteelFormState = {
   siteId: number // 발행부서
   siteProcessId: number // 공정명
+  outsourcingCompanyId?: number
   usage: string // 구분
   type: string // 용도
-  paymentDate: Date | null // 일자 (YYYY-MM-DD)
+  typeCode: string
+  approvalDate: string
+  orderDate: string
+  releaseDate: string
+
+  startDate: Date | null // 일자 (YYYY-MM-DD)
+  endDate: Date | null // 일자 (YYYY-MM-DD)
+  initialStartDateAt: string
+  initialEndDateAt: string
   memo: string // 비고
 
   // === Client Info ===
-  clientName: string // 업체명
   businessNumber: string // 사업자등록번호
-  rentalStartDate: Date | null // 임대기간 시작
-  rentalEndDate: Date | null // 임대기간 종료
 
   // === Material Items ===
   details: MaterialItem[]
@@ -105,13 +135,8 @@ export type ManagementSteelFormState = {
   attachedFiles: AttachedFile[]
   checkedAttachedFileIds: number[]
 
-  //수정페이지에서 이력 조회 시 사용
-  modificationHistory: {
-    modifiedAt: Date | null
-    modifiedField: string
-    modifiedBy: string
-    memo: string
-  }[]
+  editedHistories?: Pick<HistoryItem, 'id' | 'memo'>[]
+  changeHistories: HistoryItem[] // 수정 이력 포함
 }
 
 export type SteelPayload = Omit<
@@ -144,8 +169,13 @@ type SteelFormStore = {
   toggleCheckAllItems: (type: 'MaterialItem' | 'attachedFile', checked: boolean) => void
   removeCheckedItems: (type: 'MaterialItem' | 'attachedFile') => void
 
+  getTotalContractAmount: () => number
+  getTotalOutsourceQty: () => number
+  getTotalOutsourceAmount: () => number
   //관리비 등록하기
 
+  updateMemo: (id: number, newMemo: string) => void
+
   //payload 값
-  newSteelData: () => SteelPayload
+  newSteelData: () => void
 }

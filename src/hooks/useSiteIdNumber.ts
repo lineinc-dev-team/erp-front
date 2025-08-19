@@ -1,3 +1,4 @@
+import { useManagementSteelFormStore, useSteelSearchStore } from '@/stores/managementSteelStore'
 import {
   useManagementMaterialFormStore,
   useMaterialSearchStore,
@@ -12,6 +13,10 @@ export const useSiteId = () => {
   const materialForm = useManagementMaterialFormStore((state) => state.form)
   const materialSearchForm = useMaterialSearchStore((state) => state.search)
 
+  // 강재수불부
+  const SteelForm = useManagementSteelFormStore((state) => state.form)
+  const SteelSearchForm = useSteelSearchStore((state) => state.search)
+
   if (pathname.startsWith('/outsourcingContract/registration')) {
     return form?.siteId
   }
@@ -23,6 +28,12 @@ export const useSiteId = () => {
   }
   if (pathname.startsWith('/materialManagement')) {
     return materialSearchForm?.siteId ?? 0
+  }
+  if (pathname.startsWith('/managementSteel/registration')) {
+    return SteelForm?.siteId ?? 0
+  }
+  if (pathname.startsWith('/managementSteel')) {
+    return SteelSearchForm?.siteId ?? 0
   }
 
   return 0

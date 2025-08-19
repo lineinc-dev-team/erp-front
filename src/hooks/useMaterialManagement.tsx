@@ -31,7 +31,7 @@ export function useManagementMaterial() {
   })
 
   const InputTypeMethodOptions = [
-    { code: 'BASE', label: '선택' },
+    { code: 'BASE', name: '선택' },
     ...(materialTypeInfoId?.data ?? []),
   ]
 

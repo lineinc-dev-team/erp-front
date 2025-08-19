@@ -4,6 +4,8 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   CreateManagementSteel,
   ModifySteelManagement,
+  SteelInfoHistoryService,
+  SteelTypeIdInfoService,
 } from '@/services/managementSteel/managementSteelRegistrationService'
 import { useManagementSteelFormStore, useSteelSearchStore } from '@/stores/managementSteelStore'
 import {
@@ -12,12 +14,8 @@ import {
   SteelReleaseService,
   SteelRemoveService,
 } from '@/services/managementSteel/managementSteelService'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect } from 'react'
 import { getTodayDateString } from '@/utils/formatters'
-import {
-  SitesPersonScroll,
-  SitesProcessNameScroll,
-} from '@/services/managementCost/managementCostRegistrationService'
 
 export function useManagementSteel() {
   const { showSnackbar } = useSnackbarStore()
@@ -32,7 +30,7 @@ export function useManagementSteel() {
     onSuccess: () => {
       showSnackbar('강재관리가 등록 되었습니다.', 'success')
       // 초기화 로직
-      queryClient.invalidateQueries({ queryKey: ['steelInfo'] })
+      queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
       reset()
       router.push('/managementSteel')
     },
@@ -47,11 +45,13 @@ export function useManagementSteel() {
 
   const pathName = usePathname()
 
+  // 초기 화면에 들어왔을 때 currentPage 1로 세팅 (예: useEffect 등에서)
   useEffect(() => {
-    if (search.currentPage !== 1) {
+    if (search.searchTrigger && search.currentPage !== 0) {
       search.setField('currentPage', 1)
     }
-  }, [search])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.searchTrigger])
 
   // useQuery 쪽 수정
   const SteelListQuery = useQuery({
@@ -69,8 +69,9 @@ export function useManagementSteel() {
         processName: search.processName,
         itemName: search.itemName,
         type: search.type === '선택' ? '' : search.type,
-        paymentStartDate: getTodayDateString(search.paymentStartDate),
-        paymentEndDate: getTodayDateString(search.paymentEndDate),
+        outsourcingCompanyName: search.outsourcingCompanyName,
+        startDate: getTodayDateString(search.startDate),
+        endDate: getTodayDateString(search.endDate),
         page: search.currentPage - 1,
         size: Number(search.pageCount) || 10,
         sort:
@@ -91,11 +92,9 @@ export function useManagementSteel() {
         ),
       )
 
-      console.log('검색 파라미터', filteredParams)
-
       return ManagementSteelInfoService(filteredParams)
     },
-    staleTime: 1000 * 30,
+    enabled: pathName === '/managementSteel',
   })
 
   //강재데이터 삭제!
@@ -104,10 +103,8 @@ export function useManagementSteel() {
       SteelRemoveService(steelManagementIds),
 
     onSuccess: () => {
-      if (window.confirm('정말 삭제하시겠습니까?')) {
-        showSnackbar('강재 관리가 삭제되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
-      }
+      showSnackbar('강재 관리가 삭제되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
     },
 
     onError: () => {
@@ -168,99 +165,32 @@ export function useManagementSteel() {
     },
   })
 
-  // 현장명데이터를 가져옴 무한 스크롤
+  // 수정 이력
 
-  const useSitesPersonInfiniteScroll = (keyword: string) => {
+  // 수정이력 조회 쿼리
+  const useSteelHistoryDataQuery = (historyId: number, enabled: boolean) => {
     return useInfiniteQuery({
-      queryKey: ['siteInfo', keyword],
-      queryFn: ({ pageParam }) => SitesPersonScroll({ pageParam, keyword }),
+      queryKey: ['SteelHistoryList', historyId],
+      queryFn: ({ pageParam = 0 }) => SteelInfoHistoryService(historyId, pageParam, 4, 'id,desc'),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
-        const { sliceInfo } = lastPage.data
-        const nextPage = sliceInfo.page + 1
+        const { sliceInfo } = lastPage?.data
+        const nextPage = sliceInfo?.page + 1
 
-        return sliceInfo.hasNext ? nextPage : undefined
+        return sliceInfo?.hasNext ? nextPage : undefined
       },
+      enabled: enabled && !!historyId && !isNaN(historyId),
     })
   }
 
-  const [sitesSearch, setSitesSearch] = useState('')
+  // 구분 조회
 
-  const {
-    data: orderPersonInfo,
-    // fetchNextPage,
-    // hasNextPage,
-    // isFetching,
-    // isLoading,
-  } = useInfiniteQuery({
-    queryKey: ['siteInfo', sitesSearch],
-    queryFn: ({ pageParam }) => SitesPersonScroll({ pageParam, keyword: sitesSearch }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
-      const { sliceInfo } = lastPage.data
-      const nextPage = sliceInfo.page + 1
-      return sliceInfo.hasNext ? nextPage : undefined
-    },
+  const { data: steelTypeInfoId } = useQuery({
+    queryKey: ['steelTypeInfo'],
+    queryFn: SteelTypeIdInfoService,
   })
 
-  const sitesOptions = useMemo(() => {
-    const defaultOption = { label: '선택', value: '0' }
-    const options = (orderPersonInfo?.pages || [])
-      .flatMap((page) => page.data.content)
-      .map((user) => ({
-        label: user.name,
-        value: user.id,
-      }))
-
-    return [defaultOption, ...options]
-  }, [orderPersonInfo])
-
-  // 공정명
-
-  const useProcessNameInfiniteScroll = (keyword: string) => {
-    return useInfiniteQuery({
-      queryKey: ['processInfo', keyword],
-      queryFn: ({ pageParam }) => SitesProcessNameScroll({ pageParam, keyword }),
-      initialPageParam: 0,
-      getNextPageParam: (lastPage) => {
-        const { sliceInfo } = lastPage.data
-        const nextPage = sliceInfo.page + 1
-
-        return sliceInfo.hasNext ? nextPage : undefined
-      },
-    })
-  }
-
-  const [processSearch, setProcessSearch] = useState('')
-
-  const {
-    data: processInfo,
-    fetchNextPage,
-    hasNextPage,
-    isFetching,
-    isLoading,
-  } = useInfiniteQuery({
-    queryKey: ['processInfo', processSearch],
-    queryFn: ({ pageParam }) => SitesProcessNameScroll({ pageParam, keyword: processSearch }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
-      const { sliceInfo } = lastPage.data
-      const nextPage = sliceInfo.page + 1
-      return sliceInfo.hasNext ? nextPage : undefined
-    },
-  })
-
-  const processOptions = useMemo(() => {
-    const defaultOption = { label: '선택', value: '0' }
-    const options = (processInfo?.pages || [])
-      .flatMap((page) => page.data.content)
-      .map((user) => ({
-        label: user.name,
-        value: user.id,
-      }))
-
-    return [defaultOption, ...options]
-  }, [processInfo])
+  const SteelTypeMethodOptions = [{ code: 'BASE', name: '선택' }, ...(steelTypeInfoId?.data ?? [])]
 
   return {
     createSteelMutation,
@@ -270,19 +200,8 @@ export function useManagementSteel() {
     SteelReleaseMutation,
     SteelModifyMutation,
 
-    // 현장명 무한 스크롤
-    useSitesPersonInfiniteScroll,
-    setSitesSearch,
-    sitesOptions,
-    fetchNextPage,
-    hasNextPage,
-    isFetching,
-    isLoading,
+    SteelTypeMethodOptions,
 
-    // 공정명
-
-    useProcessNameInfiniteScroll,
-    setProcessSearch,
-    processOptions,
+    useSteelHistoryDataQuery,
   }
 }

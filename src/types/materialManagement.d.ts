@@ -148,6 +148,14 @@ type MaterialFormStore = {
 
   updateMemo: (id: number, newMemo: string) => void
 
+  // 자재비 자재 수량, 단가, 공급가, 부가세, 합계
+
+  getTotalQuantityAmount: () => number
+  getTotalUnitPrice: () => number
+  getTotalSupplyAmount: () => number
+  getTotalSurtax: () => number
+  getTotalSum: () => number
+
   //관리비 등록하기
 
   //payload 값

@@ -4,17 +4,20 @@ import {
   SteelFormStore,
   SteelSearchState,
 } from '@/types/managementSteel'
+import { getTodayDateString } from '@/utils/formatters'
 import { create } from 'zustand'
 
 export const useSteelSearchStore = create<{ search: SteelSearchState }>((set) => ({
   search: {
     searchTrigger: 0,
+    siteId: 0,
     siteName: '',
     processName: '',
     itemName: '',
     type: '',
-    paymentStartDate: null,
-    paymentEndDate: null,
+    outsourcingCompanyName: '',
+    startDate: null,
+    endDate: null,
     arraySort: '최신순',
     currentPage: 1,
     pageCount: '10',
@@ -36,12 +39,14 @@ export const useSteelSearchStore = create<{ search: SteelSearchState }>((set) =>
       set((state) => ({
         search: {
           ...state.search,
+          siteId: 0,
           siteName: '',
           processName: '',
           itemName: '',
           type: '',
-          paymentStartDate: null,
-          paymentEndDate: null,
+          outsourcingCompanyName: '',
+          startDate: null,
+          endDate: null,
           arraySort: '최신순',
           currentPage: 1,
           pageCount: '10',
@@ -55,16 +60,19 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
   form: {
     siteId: 0,
     siteProcessId: 0,
+    outsourcingCompanyId: 0,
     usage: '',
-    type: '선택',
-    paymentDate: null,
+    type: 'BASE',
+    typeCode: '',
+    approvalDate: '',
+    orderDate: '',
+    releaseDate: '',
+    startDate: null,
+    endDate: null,
+    initialStartDateAt: '',
+    initialEndDateAt: '',
     memo: '',
-
-    clientName: '',
     businessNumber: '',
-    rentalStartDate: null,
-    rentalEndDate: null,
-
     details: [],
     checkedMaterialItemIds: [],
 
@@ -72,6 +80,7 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
     checkedAttachedFileIds: [],
 
     modificationHistory: [],
+    changeHistories: [],
   },
 
   reset: () =>
@@ -79,19 +88,26 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
       form: {
         siteId: 0,
         siteProcessId: 0,
+        outsourcingCompanyId: 0,
         usage: '',
-        type: '선택',
-        paymentDate: null,
+        type: 'BASE',
+        typeCode: '',
+        approvalDate: '',
+        orderDate: '',
+        releaseDate: '',
+        startDate: null,
+        endDate: null,
+        initialStartDateAt: '',
+        initialEndDateAt: '',
         memo: '',
-        clientName: '',
         businessNumber: '',
-        rentalStartDate: null,
-        rentalEndDate: null,
         details: [],
         checkedMaterialItemIds: [],
         attachedFiles: [],
         checkedAttachedFileIds: [],
+
         modificationHistory: [],
+        changeHistories: [],
       },
     })),
 
@@ -158,6 +174,57 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
       }
     }),
 
+  updateMemo: (id, value) =>
+    set((state) => {
+      // 기존 changeHistories 업데이트
+      const updatedHistories = state.form.changeHistories.map((history) =>
+        history.id === id ? { ...history, memo: value } : history,
+      )
+
+      // 기존에 저장된 editedHistories 복사
+      const edited = state.form.editedHistories ?? []
+
+      // 이미 수정된 항목이 있으면 덮어쓰기, 없으면 새로 추가
+      const updatedEditedHistories = edited.some((h) => h.id === id)
+        ? edited.map((h) => (h.id === id ? { id, memo: value } : h))
+        : [...edited, { id, memo: value }]
+
+      return {
+        form: {
+          ...state.form,
+          changeHistories: updatedHistories,
+          editedHistories: updatedEditedHistories,
+        },
+      }
+    }),
+
+  // 도급금액 금액 합계
+  getTotalContractAmount: () => {
+    const { details } = get().form
+    return details.reduce((sum, item) => {
+      const amount = Number(item.quantity)
+      return sum + (isNaN(amount) ? 0 : amount)
+    }, 0)
+  },
+
+  // 외주계약금액 수량 합계
+  getTotalOutsourceQty: () => {
+    const { details } = get().form
+    return details.reduce((sum, item) => {
+      const qty = Number(item.unitPrice)
+      return sum + (isNaN(qty) ? 0 : qty)
+    }, 0)
+  },
+
+  // 외주계약금액 금액 합계
+  getTotalOutsourceAmount: () => {
+    const { details } = get().form
+    return details.reduce((sum, item) => {
+      const amount = Number(item.supplyPrice)
+      return sum + (isNaN(amount) ? 0 : amount)
+    }, 0)
+  },
+
   toggleCheckItem: (typeName, id, checked) =>
     set((state) => {
       if (typeName === 'MaterialItem') {
@@ -181,20 +248,20 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
       }
     }),
 
-  toggleCheckAllItems: (typeName, checked) =>
+  toggleCheckAllItems: (type, checked) =>
     set((state) => {
-      if (typeName === 'MaterialItem') {
+      if (type === 'MaterialItem') {
         return {
           form: {
             ...state.form,
-            checkedMaterialItemIds: checked ? state.form.details.map((i) => i.id) : [],
+            checkedMaterialItemIds: checked ? state.form.details.map((m) => m.id) : [],
           },
         }
       } else {
         return {
           form: {
             ...state.form,
-            checkedAttachmentFileIds: checked ? state.form.attachedFiles.map((f) => f.id) : [],
+            checkedAttachedFileIds: checked ? state.form.attachedFiles.map((f) => f.id) : [],
           },
         }
       }
@@ -227,20 +294,41 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
 
   newSteelData: () => {
     const form = get().form
-    console.log('폼 데이터가 들어옴>>', form.details)
+
+    const startedAtStr = getTodayDateString(form.startDate)
+    const endedAtStr = getTodayDateString(form.endDate)
+
     return {
       ...form,
+      outsourcingCompanyId: form.outsourcingCompanyId === 0 ? undefined : form.outsourcingCompanyId,
+      startDate: startedAtStr !== form.initialStartDateAt ? startedAtStr : form.initialStartDateAt,
+      endDate: endedAtStr !== form.initialEndDateAt ? endedAtStr : form.initialEndDateAt,
       details: form.details,
-      files: form.attachedFiles.flatMap((f) =>
-        f.files.map((fileObj) => ({
+      // 첨부파일에 파일 업로드를 안할 시 null 로 넣는다..
+      files: form.attachedFiles.flatMap((f) => {
+        if (!f.files || f.files.length === 0) {
+          // 파일이 없을 경우에도 name, memo는 전송
+          return [
+            {
+              id: f.id || 0,
+              name: f.name,
+              fileUrl: '',
+              originalFileName: '',
+              memo: f.memo || '',
+            },
+          ]
+        }
+
+        // 파일이 있을 경우
+        return f.files.map((fileObj: FileUploadInfo) => ({
+          id: f.id || 0,
           name: f.name,
-          fileUrl: fileObj.fileUrl,
+          fileUrl: fileObj.fileUrl || '',
           originalFileName: fileObj.file?.name || '',
-          memo: f.memo,
-        })),
-      ),
+          memo: f.memo || '',
+        }))
+      }),
+      changeHistories: form.editedHistories ?? [],
     }
   },
 }))
-
-// materialItems
