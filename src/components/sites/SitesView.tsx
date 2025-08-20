@@ -72,8 +72,6 @@ export default function SitesView() {
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
-  console.log('SiteDataListSiteDataListSiteDataListSiteDataListSiteDataList', SiteListQuery.data)
-
   const updateSiteList = SiteDataList.map((site: SiteListProps) => ({
     ...site,
     processName: site.process?.name ?? '-', // 공정명

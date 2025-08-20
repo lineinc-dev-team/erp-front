@@ -2,63 +2,155 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
-import {
-  CreateManagementMaterial,
-  MaterialInfoHistoryService,
-  MaterialInputTypeService,
-  ModifyMaterialManagement,
-} from '@/services/materialManagement/materialManagementRegistrationService'
-import {
-  useManagementMaterialFormStore,
-  useMaterialSearchStore,
-} from '@/stores/materialManagementStore'
 import { getTodayDateString } from '@/utils/formatters'
 import {
-  ManagementMaterialInfoService,
-  MaterialRemoveService,
-  MaterialSearchTypeService,
-} from '@/services/materialManagement/materialManagementService'
+  CreateFuelInfo,
+  FuelDriverNameScroll,
+  FuelEquipmentNameScroll,
+  FuelInfoHistoryService,
+  FuelOilTypeService,
+  FuelWeatherTypeService,
+  ModifyFuel,
+} from '@/services/fuelAggregation/fuelAggregationRegistrationService'
+import { useFuelFormStore, useFuelSearchStore } from '@/stores/fuelAggregationStore'
+import { useOutSourcingClientId } from './useOutsourcingClientIdNumber'
+import {
+  FuelAggregationInfoService,
+  FuelCarNumberTypeService,
+} from '@/services/fuelAggregation/fuelAggregationService'
 
-export function useManagementMaterial() {
+export function useFuelAggregation() {
   const { showSnackbar } = useSnackbarStore()
-  const { reset } = useManagementMaterialFormStore()
+  const { reset } = useFuelFormStore()
 
   const router = useRouter()
   const queryClient = useQueryClient()
 
-  const { data: materialTypeInfoId } = useQuery({
-    queryKey: ['InputTypeInfo'],
-    queryFn: MaterialInputTypeService,
+  const { data: weatherTypeInfoId } = useQuery({
+    queryKey: ['WeatherTypeInfo'],
+    queryFn: FuelWeatherTypeService,
   })
 
-  const InputTypeMethodOptions = [
+  const WeatherTypeMethodOptions = [
     { code: 'BASE', name: '선택' },
-    ...(materialTypeInfoId?.data ?? []),
+    ...(weatherTypeInfoId?.data ?? []),
   ]
 
-  // 강재 관리등록
-  const createMaterialMutation = useMutation({
-    mutationFn: CreateManagementMaterial,
+  // 기름 종류 셀렉트
+
+  const { data: oilTypeInfoId } = useQuery({
+    queryKey: ['OilTypeInfo'],
+    queryFn: FuelOilTypeService,
+  })
+
+  const OilTypeMethodOptions = [{ code: 'BASE', name: '선택' }, ...(oilTypeInfoId?.data ?? [])]
+
+  // 기사명 무한 스클로
+
+  // 업체명 id
+  const clientId = useOutSourcingClientId()
+
+  console.log('clientIdclientId2324', clientId)
+
+  const [driverSearch, setDriverSearch] = useState('')
+
+  const {
+    data: fuelDriver,
+    fetchNextPage: fuelDriverFetchNextPage,
+    hasNextPage: fuelDriverHasNextPage,
+    isFetching: fuelDriverIsFetching,
+    isLoading: fuelDriverLoading,
+  } = useInfiniteQuery({
+    queryKey: ['FuelDriverInfo', driverSearch, clientId],
+    queryFn: ({ pageParam }) =>
+      FuelDriverNameScroll({
+        pageParam,
+        id: clientId || 0,
+        keyword: driverSearch,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+    },
+    enabled: !!clientId,
+  })
+
+  const fuelDriverOptions = useMemo(() => {
+    const defaultOption = { id: 0, name: '선택' }
+    const options = (fuelDriver?.pages || [])
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+      }))
+
+    return [defaultOption, ...options]
+  }, [fuelDriver])
+
+  //차량번호 & 규격 무한 스크롤
+
+  const [equipmentSearch, setEquipmentSearch] = useState('')
+
+  const {
+    data: fuelEquipment,
+    fetchNextPage: fuelEquipmentFetchNextPage,
+    hasNextPage: fuelEquipmentHasNextPage,
+    isFetching: fuelEquipmentIsFetching,
+    isLoading: fuelEquipmentLoading,
+  } = useInfiniteQuery({
+    queryKey: ['FuelEquipmentInfo', equipmentSearch, clientId],
+    queryFn: ({ pageParam }) =>
+      FuelEquipmentNameScroll({
+        pageParam,
+        id: clientId || 0,
+        keyword: equipmentSearch,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+    },
+    enabled: !!clientId,
+  })
+
+  const fuelEquipmentOptions = useMemo(() => {
+    const defaultOption = {
+      id: 0,
+      specification: '',
+      vehicleNumber: '선택',
+    }
+    const options = (fuelEquipment?.pages || [])
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        specification: user.specification,
+        vehicleNumber: user.vehicleNumber,
+      }))
+
+    return [defaultOption, ...options]
+  }, [fuelEquipment])
+
+  // 유류집계 관리등록
+  const createFuelMutation = useMutation({
+    mutationFn: CreateFuelInfo,
     onSuccess: () => {
-      showSnackbar('자재가 등록 되었습니다.', 'success')
+      showSnackbar('유류집계가 등록 되었습니다.', 'success')
       // 초기화 로직
-      queryClient.invalidateQueries({ queryKey: ['MaterialInfo'] })
+      queryClient.invalidateQueries({ queryKey: ['FuelAggregationInfo'] })
       reset()
-      router.push('/materialManagement')
+      router.push('/fuelAggregation')
     },
     onError: () => {
-      showSnackbar('자재 등록에 실패했습니다.', 'error')
+      showSnackbar('유류집계 등록에 실패했습니다.', 'error')
     },
   })
 
-  // 자재 관리 조회
+  // 유류집계 관리 조회
 
-  const search = useMaterialSearchStore((state) => state.search)
+  const search = useFuelSearchStore((state) => state.search)
 
   const pathName = usePathname()
-
-  // const params = useParams()
-  // const outsourcingCompanyId = Number(params?.id)
 
   // 초기 화면에 들어왔을 때 currentPage 1로 세팅 (예: useEffect 등에서)
   useEffect(() => {
@@ -69,9 +161,9 @@ export function useManagementMaterial() {
   }, [search.searchTrigger])
 
   // useQuery 쪽 수정
-  const MaterialListQuery = useQuery({
+  const FuelListQuery = useQuery({
     queryKey: [
-      'MaterialInfo',
+      'FuelAggregationInfo',
       search.searchTrigger,
       search.currentPage,
       search.pageCount,
@@ -82,10 +174,11 @@ export function useManagementMaterial() {
       const rawParams = {
         siteName: search.siteName,
         processName: search.processName,
-        materialName: search.materialName,
+        fuelTypes: search.fuelTypes,
         outsourcingCompanyName: search.outsourcingCompanyName,
-        deliveryStartDate: getTodayDateString(search.deliveryStartDate),
-        deliveryEndDate: getTodayDateString(search.deliveryEndDate),
+        vehicleNumber: search.vehicleNumber,
+        dateStartDate: getTodayDateString(search.dateStartDate),
+        dateEndDate: getTodayDateString(search.dateEndDate),
         page: search.currentPage - 1,
         size: Number(search.pageCount) || 10,
         sort:
@@ -106,51 +199,50 @@ export function useManagementMaterial() {
         ),
       )
 
-      return ManagementMaterialInfoService(filteredParams)
+      return FuelAggregationInfoService(filteredParams)
     },
-    enabled: pathName === '/materialManagement', // 경로 체크
+    enabled: pathName === '/fuelAggregation', // 경로 체크
   })
 
   //자재데이터 삭제!
-  const MaterialDeleteMutation = useMutation({
-    mutationFn: ({ materialManagementIds }: { materialManagementIds: number[] }) =>
-      MaterialRemoveService(materialManagementIds),
+  // const MaterialDeleteMutation = useMutation({
+  //   mutationFn: ({ materialManagementIds }: { materialManagementIds: number[] }) =>
+  //     MaterialRemoveService(materialManagementIds),
 
-    onSuccess: () => {
-      if (window.confirm('정말 삭제하시겠습니까?')) {
-        showSnackbar('자재 관리가 삭제되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['MaterialInfo'] })
-      }
-    },
+  //   onSuccess: () => {
+  //     if (window.confirm('정말 삭제하시겠습니까?')) {
+  //       showSnackbar('자재 관리가 삭제되었습니다.', 'success')
+  //       queryClient.invalidateQueries({ queryKey: ['MaterialInfo'] })
+  //     }
+  //   },
 
-    onError: () => {
-      showSnackbar('자재 관리 삭제에 실패했습니다.', 'error')
-    },
-  })
+  //   onError: () => {
+  //     showSnackbar('자재 관리 삭제에 실패했습니다.', 'error')
+  //   },
+  // })
 
   // 자재데이터 수정
 
-  const MaterialModifyMutation = useMutation({
-    mutationFn: (materialId: number) => ModifyMaterialManagement(materialId),
+  const FuelModifyMutation = useMutation({
+    mutationFn: (fuelId: number) => ModifyFuel(fuelId),
 
     onSuccess: () => {
-      showSnackbar('자재비가 수정 되었습니다.', 'success')
-      queryClient.invalidateQueries({ queryKey: ['MaterialInfo'] })
+      showSnackbar('유류집계가 수정 되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['FuelAggregationInfo'] })
       reset()
-      router.push('/materialManagement')
+      router.push('/fuelAggregation')
     },
 
     onError: () => {
-      showSnackbar('자재비 수정에 실패했습니다.', 'error')
+      showSnackbar('유류집계 수정에 실패했습니다.', 'error')
     },
   })
 
-  // 수정이력 조회 쿼리
-  const useMaterialHistoryDataQuery = (historyId: number, enabled: boolean) => {
+  // 유류쪽 !! 수정이력 조회 쿼리
+  const useFuelHistoryDataQuery = (historyId: number, enabled: boolean) => {
     return useInfiniteQuery({
-      queryKey: ['MaterialHistoryList', historyId],
-      queryFn: ({ pageParam = 0 }) =>
-        MaterialInfoHistoryService(historyId, pageParam, 4, 'id,desc'),
+      queryKey: ['FuelHistoryList', historyId],
+      queryFn: ({ pageParam = 0 }) => FuelInfoHistoryService(historyId, pageParam, 4, 'id,desc'),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
         const { sliceInfo } = lastPage?.data
@@ -162,59 +254,84 @@ export function useManagementMaterial() {
     })
   }
 
-  const materialCancel = () => {
-    router.push('/materialManagement')
+  const FuelCancel = () => {
+    router.push('/fuelAggregation')
   }
 
-  // 품명 셀렉트 박스
+  //차량번호 & 규격 무한 스크롤
 
-  const [productSearch, setProductSearch] = useState('')
+  const [carNumberSearch, setCarNumberSearch] = useState('')
 
   const {
-    data: productNameInfo,
-    fetchNextPage: productNameFetchNextPage,
-    hasNextPage: productNamehasNextPage,
-    isFetching: productNameFetching,
-    isLoading: productNameLoading,
+    data: carNumberSearchData,
+    fetchNextPage: carNumberFetchNextPage,
+    hasNextPage: carNumberHasNextPage,
+    isFetching: carNumberIsFetching,
+    isLoading: carNumberLoading,
   } = useInfiniteQuery({
-    queryKey: ['ProductInfo', productSearch],
-    queryFn: ({ pageParam }) => MaterialSearchTypeService({ pageParam, keyword: productSearch }),
+    queryKey: ['CarNumberInfo', carNumberSearch],
+    queryFn: ({ pageParam }) =>
+      FuelCarNumberTypeService({
+        pageParam,
+        keyword: carNumberSearch,
+      }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
       const { sliceInfo } = lastPage.data
-      const nextPage = sliceInfo.page + 1
-      return sliceInfo.hasNext ? nextPage : undefined
+      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
     },
   })
 
-  const productOptions = useMemo(() => {
-    const defaultOption = { id: 0, name: '선택' }
-    const options = (productNameInfo?.pages || [])
+  const carNumberOptions = useMemo(() => {
+    const defaultOption = {
+      id: 0,
+      specification: '',
+      vehicleNumber: '선택',
+    }
+    const options = (carNumberSearchData?.pages || [])
       .flatMap((page) => page.data.content)
       .map((user) => ({
         id: user.id,
-        name: user.name,
+        specification: user.specification,
+        vehicleNumber: user.vehicleNumber,
       }))
 
     return [defaultOption, ...options]
-  }, [productNameInfo])
+  }, [carNumberSearchData])
+
   return {
-    createMaterialMutation,
-    MaterialModifyMutation,
-    MaterialListQuery,
-    MaterialDeleteMutation,
-    materialCancel,
-    InputTypeMethodOptions,
+    createFuelMutation,
+    FuelModifyMutation,
 
-    useMaterialHistoryDataQuery,
+    FuelListQuery,
+    FuelCancel,
+    WeatherTypeMethodOptions,
+    OilTypeMethodOptions,
 
-    // 품명에 대한 스크롤
+    useFuelHistoryDataQuery,
 
-    productOptions,
-    setProductSearch,
-    productNameFetchNextPage,
-    productNamehasNextPage,
-    productNameFetching,
-    productNameLoading,
+    // 기사 정보
+    setDriverSearch,
+    fuelDriverOptions,
+    fuelDriverFetchNextPage,
+    fuelDriverHasNextPage,
+    fuelDriverIsFetching,
+    fuelDriverLoading,
+
+    // 차량번호 & 장비명
+    setEquipmentSearch,
+    fuelEquipmentOptions,
+    fuelEquipmentFetchNextPage,
+    fuelEquipmentHasNextPage,
+    fuelEquipmentIsFetching,
+    fuelEquipmentLoading,
+
+    // 조회에서 사용하는 차량번호 조회
+    carNumberOptions,
+    setCarNumberSearch,
+    carNumberFetchNextPage,
+    carNumberHasNextPage,
+    carNumberIsFetching,
+    carNumberLoading,
   }
 }

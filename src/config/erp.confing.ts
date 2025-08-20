@@ -14,6 +14,14 @@ export const SiteProgressing = [
   { id: 3, name: '완료', code: 'COMPLETED' },
 ]
 
+export const FuelStatusesing = [
+  { id: 0, name: '선택', code: '선택' },
+  { id: 1, name: '경유', code: 'DIESEL' },
+  { id: 2, name: '휘발유', code: 'GASOLINE' },
+  { id: 3, name: '요소수', code: 'UREA' },
+  { id: 4, name: '기타', code: 'ETC' },
+]
+
 export const LocationStatusOptions = [
   { label: '전체', name: '전체' },
   { label: '서울', name: '서울' },
@@ -136,6 +144,19 @@ export const MaterialColumnList: GridColDef[] = [
   { field: 'vat', headerName: '부가세', width: 100 },
   { field: 'total', headerName: '합계', width: 100 },
   { field: 'hasFile', headerName: '첨부파일', width: 100 },
+  { field: 'memo', headerName: '비고', width: 100 },
+]
+
+export const FuelColumnList: GridColDef[] = [
+  { field: 'no', headerName: 'No', width: 70 },
+  // { field: 'backendId', headerName: 'No', width: 70 },
+  { field: 'outsourcingCompany', headerName: '업체명', width: 130 },
+  { field: 'driverName', headerName: '기사명', width: 130 },
+  { field: 'vehicleNumber', headerName: '차량번호', width: 180 },
+  { field: 'specification', headerName: '규격', width: 100 },
+  { field: 'fuelType', headerName: '유중', width: 120 },
+  { field: 'fuelAmount', headerName: '주유량', width: 120 },
+  { field: 'createdAt', headerName: '등록/수정일', width: 100 },
   { field: 'memo', headerName: '비고', width: 100 },
 ]
 

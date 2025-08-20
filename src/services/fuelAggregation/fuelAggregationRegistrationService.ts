@@ -1,9 +1,9 @@
 import { API } from '@/api/config/env'
-import { useManagementMaterialFormStore } from '@/stores/materialManagementStore'
+import { useFuelFormStore } from '@/stores/fuelAggregationStore'
 
-// 자재관리 투입구분 목록 조회
-export async function MaterialInputTypeService() {
-  const resData = await fetch(`${API.MATERIAL}/input-types`, {
+// 유류집계에서 날씨 조회 타입
+export async function FuelWeatherTypeService() {
+  const resData = await fetch(`${API.FUELAGGRE}/weather-types`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -24,12 +24,35 @@ export async function MaterialInputTypeService() {
   return data
 }
 
-// 자재 등록
-export async function CreateManagementMaterial() {
-  const { newMaterialData } = useManagementMaterialFormStore.getState()
-  const payload = newMaterialData()
+// 유류집계에서 유종 조회 타입
+export async function FuelOilTypeService() {
+  const resData = await fetch(`${API.FUELAGGRE}/fuel-types`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
 
-  const res = await fetch(API.MATERIAL, {
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+
+// 유류집계 등록
+export async function CreateFuelInfo() {
+  const { newFuelData } = useFuelFormStore.getState()
+  const payload = newFuelData()
+
+  const res = await fetch(API.FUELAGGRE, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -50,9 +73,65 @@ export async function CreateManagementMaterial() {
   return await res.status
 }
 
-// 자재 상세
-export async function MaterialDetailService(materialDetailId: number) {
-  const res = await fetch(`${API.MATERIAL}/${materialDetailId}`, {
+// 외주 업체에 대한 기사명
+export async function FuelDriverNameScroll({
+  pageParam = 0,
+  size = 5,
+  keyword = '',
+  id = 0,
+  sort = '',
+}) {
+  const resData = await fetch(
+    `${API.OUTSOURCINGCOMPANY}/${id}/contract-drivers?page=${pageParam}&size=${size}&keyword=${keyword}&sort=${sort}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    },
+  )
+
+  if (!resData.ok) {
+    if (resData.status === 401) throw new Error('권한이 없습니다.')
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+
+// 외주 업체에 대한 차량번호
+export async function FuelEquipmentNameScroll({
+  pageParam = 0,
+  size = 5,
+  keyword = '',
+  id = 0,
+  sort = '',
+}) {
+  const resData = await fetch(
+    `${API.OUTSOURCINGCOMPANY}/${id}/contract-equipments?page=${pageParam}&size=${size}&keyword=${keyword}&sort=${sort}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    },
+  )
+
+  if (!resData.ok) {
+    if (resData.status === 401) throw new Error('권한이 없습니다.')
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+
+// 유류 상세
+export async function FuelDetailService(fuelDetailId: number) {
+  const res = await fetch(`${API.FUELAGGRE}/${fuelDetailId}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -72,12 +151,12 @@ export async function MaterialDetailService(materialDetailId: number) {
 }
 
 //자재 수정
-export async function ModifyMaterialManagement(materialId: number) {
-  const { newMaterialData } = useManagementMaterialFormStore.getState()
+export async function ModifyFuel(fuelId: number) {
+  const { newFuelData } = useFuelFormStore.getState()
 
-  const payload = newMaterialData()
+  const payload = newFuelData()
 
-  const res = await fetch(`${API.MATERIAL}/${materialId}`, {
+  const res = await fetch(`${API.FUELAGGRE}/${fuelId}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -100,14 +179,14 @@ export async function ModifyMaterialManagement(materialId: number) {
 
 // 자재 계약 수정이력 조회
 // 자재 계약 수정이력 조회 (페이지네이션 추가)
-export async function MaterialInfoHistoryService(
+export async function FuelInfoHistoryService(
   historyId: number,
   page: number = 0,
   size: number = 4,
   sort: string,
 ) {
   const resData = await fetch(
-    `${API.MATERIAL}/${historyId}/change-histories?page=${page}&size=${size}&sort=${sort}`,
+    `${API.FUELAGGRE}/${historyId}/change-histories?page=${page}&size=${size}&sort=${sort}`,
     {
       method: 'GET',
       headers: {

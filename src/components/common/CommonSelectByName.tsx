@@ -3,9 +3,11 @@ import { FormControl, MenuItem, Select } from '@mui/material'
 
 type OptionType<T extends string> = {
   label?: string
-  name: T
+  name?: T
   id?: string | number
   code?: string | number
+  specification?: string
+  vehicleNumber?: string
 }
 
 type CommonSelectByNameProps<T extends string> = {
@@ -31,7 +33,6 @@ export default function CommonSelectByName<T extends string>({
   onScrollToBottom,
   required = false,
   disabled = false,
-  displayLabel = false,
 }: CommonSelectByNameProps<T>) {
   return (
     <FormControl fullWidth={fullWidth} required={required} disabled={disabled} size="small">
@@ -74,7 +75,7 @@ export default function CommonSelectByName<T extends string>({
         {options.map((opt) => (
           <MenuItem
             key={opt.id}
-            value={opt.name}
+            value={opt.name || opt.vehicleNumber}
             sx={{
               fontSize: '14px',
               whiteSpace: 'nowrap',
@@ -82,7 +83,7 @@ export default function CommonSelectByName<T extends string>({
               textOverflow: 'ellipsis',
             }}
           >
-            {displayLabel ? opt.label ?? opt.name : opt.name}
+            {opt.label || opt.name || opt.vehicleNumber}
           </MenuItem>
         ))}
       </Select>

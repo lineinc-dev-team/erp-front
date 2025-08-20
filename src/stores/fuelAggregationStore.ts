@@ -1,25 +1,8 @@
-import {
-  AttachedFile,
-  MaterialFormStore,
-  MaterialItem,
-  MaterialSearchState,
-} from '@/types/materialManagement'
+import { fuelDetailItem, FuelFormStore, FuelSearchState } from '@/types/fuelAggregation'
 import { getTodayDateString } from '@/utils/formatters'
 import { create } from 'zustand'
 
-export const MaterialTypeLabelToValue: Record<string, string> = {
-  '주요자재(구매)': 'MAJOR_PURCHASE',
-  '주요자재(임대)': 'MAJOR_LEASE',
-  '주요자재(자사)': 'MAJOR_INTERNAL',
-  부대토목자재: 'CIVIL_SUPPORT',
-  '잡자재(공구)': 'TOOL_MISC',
-  '잡자재(잡철)': 'METAL_MISC',
-  '안전(안전관리비)': 'SAFETY',
-  '환경(환경관리비)': 'ENVIRONMENT',
-  운반비: 'TRANSPORT',
-}
-
-export const useMaterialSearchStore = create<{ search: MaterialSearchState }>((set) => ({
+export const useFuelSearchStore = create<{ search: FuelSearchState }>((set) => ({
   search: {
     searchTrigger: 0,
     siteId: 0,
@@ -27,9 +10,10 @@ export const useMaterialSearchStore = create<{ search: MaterialSearchState }>((s
     processName: '',
     outsourcingCompanyName: '',
     outsourcingCompanyId: 0,
-    materialName: '',
-    deliveryStartDate: null,
-    deliveryEndDate: null,
+    fuelTypes: [],
+    vehicleNumber: '',
+    dateStartDate: null,
+    dateEndDate: null,
     arraySort: '최신순',
     currentPage: 1,
     pageCount: '10',
@@ -56,9 +40,10 @@ export const useMaterialSearchStore = create<{ search: MaterialSearchState }>((s
           siteNameId: 0,
           outsourcingCompanyName: '',
           outsourcingCompanyId: 0,
-          materialName: '',
-          deliveryStartDate: null,
-          deliveryEndDate: null,
+          fuelTypes: [],
+          vehicleNumber: '',
+          dateStartDate: null,
+          dateEndDate: null,
           arraySort: '최신순',
           currentPage: 1,
           pageCount: '10',
@@ -68,25 +53,18 @@ export const useMaterialSearchStore = create<{ search: MaterialSearchState }>((s
   },
 }))
 
-export const useManagementMaterialFormStore = create<MaterialFormStore>((set, get) => ({
+export const useFuelFormStore = create<FuelFormStore>((set, get) => ({
   form: {
     siteId: 0,
     siteName: '선택',
     siteProcessId: 0,
     siteProcessName: '선택',
-    outsourcingCompanyId: 0,
-    inputType: 'BASE',
-    inputTypeDescription: '',
-    deliveryDate: null,
-    initialDeliveryDateAt: '',
-    memo: '',
-    details: [],
-    checkedMaterialItemIds: [],
+    date: null,
+    initialDateAt: '',
+    weather: 'BASE',
+    fuelInfos: [],
+    checkedFuelItemIds: [],
 
-    attachedFiles: [],
-    checkedAttachedFileIds: [],
-
-    modificationHistory: [],
     changeHistories: [],
   },
 
@@ -97,17 +75,11 @@ export const useManagementMaterialFormStore = create<MaterialFormStore>((set, ge
         siteName: '선택',
         siteProcessId: 0,
         siteProcessName: '선택',
-        outsourcingCompanyId: 0,
-        inputType: 'BASE',
-        inputTypeDescription: '',
-        deliveryDate: null,
-        initialDeliveryDateAt: '',
-        memo: '',
-        details: [],
-        checkedMaterialItemIds: [],
-        attachedFiles: [],
-        checkedAttachedFileIds: [],
-        modificationHistory: [],
+        date: null,
+        initialDateAt: '',
+        weather: 'BASE',
+        fuelInfos: [],
+        checkedFuelItemIds: [],
 
         changeHistories: [],
       },
@@ -144,199 +116,96 @@ export const useManagementMaterialFormStore = create<MaterialFormStore>((set, ge
 
   addItem: (typeName) =>
     set((state) => {
-      const id = Date.now()
-      if (typeName === 'MaterialItem') {
-        const newItem: MaterialItem = {
-          id,
-          name: '',
-          inputType: '',
-          standard: '',
-          usage: '',
-          quantity: 0,
-          unitPrice: 0,
-          supplyPrice: 0,
-          vat: 0,
-          total: 0,
+      if (typeName === 'FuelInfo') {
+        const newItem: fuelDetailItem = {
+          id: Date.now(),
+          outsourcingCompanyId: 0,
+          driverId: 0,
+          specificationName: '',
+          equipmentId: 0,
+          fuelType: '',
+          fuelAmount: 0,
           memo: '',
         }
         return {
           form: {
             ...state.form,
-            details: [...state.form.details, newItem],
+            fuelInfos: [...state.form.fuelInfos, newItem],
           },
         }
-      } else {
-        const newFile: AttachedFile = {
-          id,
-          memo: '',
-          files: [],
-        }
-        return { form: { ...state.form, attachedFiles: [...state.form.attachedFiles, newFile] } }
       }
+      return state
     }),
 
   updateItemField: (typeName, id, field, value) =>
     set((state) => {
-      if (typeName === 'MaterialItem') {
+      if (typeName === 'FuelInfo') {
         return {
           form: {
             ...state.form,
-            details: state.form.details.map((item) =>
+            fuelInfos: state.form.fuelInfos.map((item) =>
               item.id === id ? { ...item, [field]: value } : item,
             ),
           },
         }
-      } else {
-        return {
-          form: {
-            ...state.form,
-            attachedFiles: state.form.attachedFiles.map((file) =>
-              file.id === id ? { ...file, [field]: value } : file,
-            ),
-          },
-        }
       }
+      return state
     }),
-  getTotalQuantityAmount: () => {
-    const { details } = get().form
-    return details.reduce((sum, item) => {
-      const qty = Number(item.quantity)
-      return sum + (isNaN(qty) ? 0 : qty)
-    }, 0)
-  },
-  getTotalUnitPrice: () => {
-    const { details } = get().form
-    return details.reduce((sum, item) => {
-      const amount = Number(item.unitPrice)
-      return sum + (isNaN(amount) ? 0 : amount)
-    }, 0)
-  },
-  getTotalSupplyAmount: () => {
-    const { details } = get().form
-    return details.reduce((sum, item) => {
-      const amount = Number(item.supplyPrice)
-      return sum + (isNaN(amount) ? 0 : amount)
-    }, 0)
-  },
-  getTotalSurtax: () => {
-    const { details } = get().form
-    return details.reduce((sum, item) => {
-      const amount = Number(item.vat)
-      return sum + (isNaN(amount) ? 0 : amount)
-    }, 0)
-  },
-  getTotalSum: () => {
-    const { details } = get().form
-    return details.reduce((sum, item) => {
-      const amount = Number(item.total)
-      return sum + (isNaN(amount) ? 0 : amount)
-    }, 0)
-  },
 
   toggleCheckItem: (typeName, id, checked) =>
     set((state) => {
-      if (typeName === 'MaterialItem') {
+      if (typeName === 'FuelInfo') {
         return {
           form: {
             ...state.form,
-            checkedMaterialItemIds: checked
-              ? [...state.form.checkedMaterialItemIds, id]
-              : state.form.checkedMaterialItemIds.filter((cid) => cid !== id),
-          },
-        }
-      } else {
-        return {
-          form: {
-            ...state.form,
-            checkedAttachedFileIds: checked
-              ? [...state.form.checkedAttachedFileIds, id]
-              : state.form.checkedAttachedFileIds.filter((cid) => cid !== id),
+            checkedFuelItemIds: checked
+              ? [...state.form.checkedFuelItemIds, id]
+              : state.form.checkedFuelItemIds.filter((cid) => cid !== id),
           },
         }
       }
+      return state // undefined 대신 기존 상태 그래도 반환
     }),
 
   toggleCheckAllItems: (typeName, checked) =>
     set((state) => {
-      if (typeName === 'MaterialItem') {
+      if (typeName === 'FuelInfo') {
         return {
           form: {
             ...state.form,
-            checkedMaterialItemIds: checked ? state.form.details.map((i) => i.id) : [],
-          },
-        }
-      } else {
-        return {
-          form: {
-            ...state.form,
-            checkedAttachmentFileIds: checked ? state.form.attachedFiles.map((f) => f.id) : [],
+            checkedFuelItemIds: checked ? state.form.fuelInfos.map((i) => i.id) : [],
           },
         }
       }
+      return state
     }),
 
   removeCheckedItems: (typeName) =>
     set((state) => {
-      if (typeName === 'MaterialItem') {
+      if (typeName === 'FuelInfo') {
         return {
           form: {
             ...state.form,
-            details: state.form.details.filter(
-              (item) => !state.form.checkedMaterialItemIds.includes(item.id),
+            fuelInfos: state.form.fuelInfos.filter(
+              (item) => !state.form.checkedFuelItemIds.includes(item.id),
             ),
-            checkedMaterialItemIds: [],
-          },
-        }
-      } else {
-        return {
-          form: {
-            ...state.form,
-            attachedFiles: state.form.attachedFiles.filter(
-              (f) => !state.form.checkedAttachedFileIds.includes(f.id),
-            ),
-            checkedAttachedFileIds: [],
+            checkedFuelItemIds: [],
           },
         }
       }
+      return state
     }),
 
-  newMaterialData: () => {
+  newFuelData: () => {
     const form = get().form
+    const { initialDateAt, ...restForm } = form // initialDateAt 제외
 
-    const deliveryDateStr = getTodayDateString(form.deliveryDate)
+    const dateStr = getTodayDateString(form.date)
 
     return {
-      ...form,
-      details: form.details,
-      deliveryDate:
-        deliveryDateStr !== form.initialDeliveryDateAt
-          ? deliveryDateStr
-          : form.initialDeliveryDateAt,
-      // 첨부파일에 파일 업로드를 안할 시 null 로 넣는다..
-      files: form.attachedFiles.flatMap((f) => {
-        if (!f.files || f.files.length === 0) {
-          // 파일이 없을 경우에도 name, memo는 전송
-          return [
-            {
-              id: f.id || 0,
-              fileUrl: '',
-              originalFileName: '',
-              memo: f.memo || '',
-            } as AttachedFile,
-          ]
-        }
-
-        // 파일이 있을 경우
-        return f.files.map((fileObj: FileUploadInfo) => ({
-          id: f.id || 0,
-          fileUrl: fileObj.fileUrl || '',
-          originalFileName: fileObj.file?.name || '',
-          memo: f.memo || '',
-        }))
-      }),
+      ...restForm, // initialDateAt 제외한 나머지
+      date: dateStr !== initialDateAt ? dateStr : initialDateAt,
       changeHistories: form.editedHistories ?? [],
     }
   },
 }))
-
-// materialItems

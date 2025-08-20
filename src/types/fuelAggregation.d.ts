@@ -1,21 +1,3 @@
-export interface DetailItem {
-  id: number
-  standard: string
-  name: string
-  unit: string
-  count: number
-  length: number
-  totalLength: number
-  unitWeight: number
-  quantity: number
-  unitPrice: number
-  supplyPrice: number
-  usage: string
-  total: number
-  vat: number
-  memo: string
-}
-
 export interface Site {
   id: number
   name: string
@@ -27,62 +9,88 @@ export interface Process {
 }
 
 export interface OutsourcingData {
-  businessNumber: number
+  id: number
+  name: string
+  businessNumber: string // 백엔드 예제에서는 문자열로 되어 있음
+}
+
+export interface driverInfoData {
   id: number
   name: string
 }
 
-export interface MaterialList {
+export interface equipmentInfoData {
   id: number
-  inputType: string
-  inputTypeDescription: string
-  deliveryDate: Date | null
-  hasFile: boolean
+  specification: string
+  vehicleNumber: string
+}
+
+export interface FuelListInfoData {
+  id: number
+  driver: driverInfoData
+  equipment: equipmentInfoData
+
+  vehicleNumber: string
+  specification: string
+  fuelType: string
+  fuelTypeCode: string
+  fuelAmount: number
+  createdAt: string
+  updatedAt: string
   memo: string
-  detail: DetailItem[]
-  site: Site
-  process: Process
   outsourcingCompany: OutsourcingData
 }
 
+export interface FuelDataList {
+  id: number
+  date: string // Date로 변환할 수도 있지만, 백엔드가 ISO 문자열을 보내므로 string 유지
+  createdAt: string
+  updatedAt: string
+  site: Site
+  process: Process
+  fuelInfo: FuelListInfoData
+}
+export type fuelStatuses = 'DIESEL' | 'GASOLINE' | 'UREA' | 'ETC' | '선택'
+
 // 검색타입
-export type MaterialSearchState = {
+export type FuelSearchState = {
   searchTrigger: number
   siteName: string
   siteId: number
   processName: string
   outsourcingCompanyName: string
   outsourcingCompanyId: number
-  materialName: string
-  deliveryStartDate: Date | null
-  deliveryEndDate: Date | null
+  fuelTypes: fuelStatuses[]
+  vehicleNumber: string
+  dateStartDate: Date | null
+  dateEndDate: Date | null
   arraySort: string
   currentPage: number
   pageCount: string
 
   reset: () => void
 
-  setField: <K extends keyof Omit<SteelSearchState, 'reset' | 'setField'>>(
+  setField: <K extends keyof Omit<FuelSearchState, 'reset' | 'setField'>>(
     field: K,
-    value: SteelSearchState[K],
+    value: FuelSearchState[K],
   ) => void
 
   handleSearch: () => void
 }
 
+/** ===================================== 밑에는 등록 타입 로직 */
+
 // 등록 타입
-export type MaterialItem = {
+export type fuelDetailItem = {
   id: number
-  name: string
-  inputType: string
-  standard: string
-  usage: string
-  quantity: number
-  unitPrice: number
-  supplyPrice: number
-  vat: number
-  total: number
+  outsourcingCompanyId: number
+  driverId: number
+  equipmentId: number
+  specificationName: string
+  fuelType: string
+  fuelAmount: number
   memo: string
+  modifyDate?: string
 }
 
 type HistoryItem = {
@@ -97,68 +105,41 @@ type HistoryItem = {
   type: string
 }
 
-export type AttachedFile = {
-  id: number
-  memo: string
-  fileUrl?: string
-  originalFileName?: string
-  files?: FileUploadInfo[]
-}
-
-export type ManagementMaterialFormState = {
-  siteId: number // 발행부서
+export type FuelInfo = {
+  siteId: number
   siteName: string
-  siteProcessId: number // 공정명
+  siteProcessId: number
   siteProcessName: string
-  outsourcingCompanyId: number
-  inputType: string
-  inputTypeDescription: string
-  deliveryDate: Date | null
-  initialDeliveryDateAt: string
-  memo: string
+  date: Date | null
+  initialDateAt: string
+  weather: string
 
-  // === Material Items ===
-  details: MaterialItem[]
-  checkedMaterialItemIds: number[]
-
-  // 파일첨부, 수정이력
-  attachedFiles: AttachedFile[]
-  checkedAttachedFileIds: number[]
+  fuelInfos: fuelDetailItem[]
+  checkedFuelItemIds: number[]
 
   editedHistories?: Pick<HistoryItem, 'id' | 'memo'>[]
   changeHistories: HistoryItem[] // 수정 이력 포함
 }
 
-type MaterialFormStore = {
-  form: ManagementMaterialFormState
+type FuelFormStore = {
+  form: FuelInfo
 
   reset: () => void
 
   // methods
-  setField: <K extends keyof Omit<ManagementMaterialFormState, 'reset' | 'setField'>>(
+  setField: <K extends keyof Omit<FuelInfo, 'reset' | 'setField'>>(
     field: K,
-    value: ManagementMaterialFormState[K],
+    value: FuelInfo[K],
   ) => void
 
-  addItem: (type: 'MaterialItem' | 'attachedFile') => void
-  updateItemField: (type: 'MaterialItem' | 'attachedFile', id: T, field: T, value: T) => void
+  addItem: (type: 'FuelInfo') => void
+  updateItemField: (type: 'FuelInfo', id: T, field: T, value: T) => void
 
-  toggleCheckItem: (type: 'MaterialItem' | 'attachedFile', id: number, checked: boolean) => void
-  toggleCheckAllItems: (type: 'MaterialItem' | 'attachedFile', checked: boolean) => void
-  removeCheckedItems: (type: 'MaterialItem' | 'attachedFile') => void
+  toggleCheckItem: (type: 'FuelInfo', id: number, checked: boolean) => void
+  toggleCheckAllItems: (type: 'FuelInfo', checked: boolean) => void
+  removeCheckedItems: (type: 'FuelInfo') => void
 
   updateMemo: (id: number, newMemo: string) => void
 
-  // 자재비 자재 수량, 단가, 공급가, 부가세, 합계
-
-  getTotalQuantityAmount: () => number
-  getTotalUnitPrice: () => number
-  getTotalSupplyAmount: () => number
-  getTotalSurtax: () => number
-  getTotalSum: () => number
-
-  //관리비 등록하기
-
-  //payload 값
-  newMaterialData: () => void
+  newFuelData: () => void
 }

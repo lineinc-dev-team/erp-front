@@ -5,7 +5,9 @@ type OptionType<T extends string | number> = {
   label?: string
   id?: string | number
   code?: string | number
-  name: T
+  name?: T
+  specification?: string
+  vehicleNumber?: string
 }
 
 type CommonSelectProps<T extends string | number> = {
@@ -28,7 +30,6 @@ export default function CommonSelect<T extends string | number>({
   options,
   fullWidth,
   className,
-  displayLabel,
   required = false,
   disabled = false,
 }: CommonSelectProps<T>) {
@@ -59,10 +60,10 @@ export default function CommonSelect<T extends string | number>({
       >
         {options.map((opt) => (
           <MenuItem
-            key={opt.code ?? opt.id} // key는 유니크하게
-            value={opt.code ?? opt.id} // value는 항상 옵션 code로
+            key={opt.code || opt.id} // key는 유니크하게
+            value={opt.code || opt.id} // value는 항상 옵션 code로
           >
-            {displayLabel ? opt.label ?? opt.name : opt.name}
+            {opt.name || opt.label || opt.vehicleNumber || opt.specification || '선택'}
           </MenuItem>
         ))}
       </Select>

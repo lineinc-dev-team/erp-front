@@ -229,7 +229,7 @@ export default function useOutSourcingContract() {
 
   const siteId = useSiteId() // 훅 실행해서 값 받기
 
-  console.log('받아온 현장명 값!!!', siteId)
+  console.log('siteID', siteId)
 
   const {
     data: processInfo,

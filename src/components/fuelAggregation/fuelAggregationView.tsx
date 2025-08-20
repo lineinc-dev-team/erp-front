@@ -4,40 +4,46 @@ import CommonButton from '../common/Button'
 import CommonSelect from '../common/Select'
 import CommonDatePicker from '../common/DatePicker'
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-import { Pagination } from '@mui/material'
+import { Checkbox, ListItemText, MenuItem, Pagination, Select } from '@mui/material'
 import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
-import { ArrayStatusOptions, MaterialColumnList, PageCount } from '@/config/erp.confing'
+import {
+  ArrayStatusOptions,
+  FuelColumnList,
+  FuelStatusesing,
+  PageCount,
+} from '@/config/erp.confing'
 import { useState } from 'react'
 import ExcelModal from '../common/ExcelModal'
-import { MaterialExcelFieldMap } from '@/utils/userExcelField'
+import { fuelExcelFieldMap } from '@/utils/userExcelField'
 import { useManagementMaterial } from '@/hooks/useMaterialManagement'
-import {
-  ManagementMaterialService,
-  MaterialExcelDownload,
-} from '@/services/materialManagement/materialManagementService'
-import { useMaterialSearchStore } from '@/stores/materialManagementStore'
-import { MaterialList } from '@/types/materialManagement'
 import { getTodayDateString } from '@/utils/formatters'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import CommonSelectByName from '../common/CommonSelectByName'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
+import { useTabOpener } from '@/utils/openTab'
+import { useFuelAggregation } from '@/hooks/useFuelAggregation'
+import { FuelDataList, fuelStatuses } from '@/types/fuelAggregation'
+import { useFuelSearchStore } from '@/stores/fuelAggregationStore'
+import { FuelExcelDownload } from '@/services/fuelAggregation/fuelAggregationService'
 
 export default function FuelAggregationView() {
-  const { handleNewMaterialCreate } = ManagementMaterialService()
-
-  const { search } = useMaterialSearchStore()
+  const openTab = useTabOpener()
+  const { search } = useFuelSearchStore()
 
   const {
-    MaterialListQuery,
     // MaterialDeleteMutation,
-    productOptions,
-    setProductSearch,
-    productNameFetchNextPage,
-    productNamehasNextPage,
-    productNameFetching,
-    productNameLoading,
   } = useManagementMaterial()
+
+  const {
+    FuelListQuery,
+    carNumberOptions,
+    setCarNumberSearch,
+    carNumberFetchNextPage,
+    carNumberHasNextPage,
+    carNumberIsFetching,
+    carNumberLoading,
+  } = useFuelAggregation()
 
   const {
     setSitesSearch,
@@ -65,91 +71,42 @@ export default function FuelAggregationView() {
     comPanyNameLoading,
   } = useOutSourcingContract()
 
-  const MaterialDataList = MaterialListQuery.data?.data.content ?? []
+  const FuelDataList = FuelListQuery.data?.data.content ?? []
 
-  const totalList = MaterialListQuery.data?.data.pageInfo.totalElements ?? 0
+  const totalList = FuelListQuery.data?.data.pageInfo.totalElements ?? 0
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
-  const updateMaterialList = MaterialDataList.flatMap(
-    (material: MaterialList, materialIndex: number) => {
-      // detail이 없을 때 기본값
-      if (!material.detail) {
-        return [
-          {
-            rowId: `material-${materialIndex}`, // DataGrid용 고유 ID
-            backendId: material.id, // 백엔드 수정용
-            detailId: null,
+  const updateFuelList = FuelDataList.flatMap((fuel: FuelDataList, fuelIndex: number) => {
+    const fuelInfo = fuel.fuelInfo
 
-            outsourcingCompanyName: material.outsourcingCompany?.name ?? '-',
-            site: material.site?.name ?? '-',
-            process: material.process?.name ?? '-',
-            deliveryDate: getTodayDateString(material.deliveryDate) ?? '-',
-            memo: material.memo ?? '-',
-            inputType: material.inputType ?? '-',
-            inputTypeDescription: material.inputTypeDescription ?? '-',
-            hasFile: material.hasFile ? 'Y' : 'N',
+    return [
+      {
+        rowId: `fuel-${fuelIndex}`,
+        backendId: fuel.id,
+        fuelInfoId: fuelInfo?.id ?? null,
 
-            // detail 관련 항목은 null/빈값
-            name: '-',
-            standard: '-',
-            unit: '-',
-            count: '-',
-            length: '-',
-            totalLength: '-',
-            unitWeight: '-',
-            quantity: '-',
-            unitPrice: '-',
-            supplyPrice: '-',
-            total: '-',
-            vat: '-',
-            usage: '-',
-          },
-        ]
-      }
+        outsourcingCompany: fuelInfo?.outsourcingCompany?.name ?? '-',
+        createdAt: `${getTodayDateString(fuel.createdAt)} / ${getTodayDateString(fuel.updatedAt)}`,
+        memo: fuelInfo?.memo ?? '-',
 
-      // detail이 있는 경우 (단일 객체이므로 배열로 감쌈)
-      const details = Array.isArray(material.detail) ? material.detail : [material.detail]
-
-      return details.map((detail, detailIndex) => ({
-        rowId: `material-${materialIndex}-detail-${detailIndex}`, // DataGrid용 고유 ID
-        backendId: material.id, // 백엔드 수정용
-        detailId: detail.id, // 백엔드 수정용
-
-        outsourcingCompanyName: material.outsourcingCompany?.name ?? '-',
-        site: material.site?.name ?? '-',
-        process: material.process?.name ?? '-',
-        deliveryDate: getTodayDateString(material.deliveryDate) ?? '-',
-        memo: material.memo ?? '-',
-        inputType: material.inputType ?? '-',
-        inputTypeDescription: material.inputTypeDescription ?? '-',
-        hasFile: material.hasFile ? 'Y' : 'N',
-
-        // detail 정보
-        name: detail.name ?? '-',
-        standard: detail.standard ?? '-',
-        unit: detail.unit ?? '-',
-        count: detail.count ?? '-',
-        length: detail.length ?? '-',
-        totalLength: detail.totalLength ?? '-',
-        unitWeight: detail.unitWeight ?? '-',
-        quantity: detail.quantity ?? '-',
-        unitPrice: detail.unitPrice ?? '-',
-        supplyPrice: detail.supplyPrice ?? '-',
-        total: detail.total ?? '-',
-        vat: detail.vat ?? '-',
-        usage: detail.usage ?? '-',
-      }))
-    },
-  )
+        // fuelInfo 필드
+        driverName: fuelInfo?.driver.name ?? '-',
+        vehicleNumber: fuelInfo?.equipment.vehicleNumber ?? '-',
+        fuelType: fuelInfo?.fuelType ?? '-',
+        fuelAmount: fuelInfo?.fuelAmount ?? '-',
+        specification: fuelInfo?.equipment.specification ?? '-',
+      },
+    ]
+  })
 
   const { setSelectedIds } = useAccountStore()
 
   const router = useRouter()
 
   // 그리도 라우팅 로직!
-  const enhancedColumns = MaterialColumnList.map((col): GridColDef => {
-    if (col.field === 'name') {
+  const enhancedColumns = FuelColumnList.map((col): GridColDef => {
+    if (col.field === 'vehicleNumber') {
       return {
         ...col,
         headerAlign: 'center',
@@ -160,7 +117,7 @@ export default function FuelAggregationView() {
           const materialId = params.row.backendId
           return (
             <div
-              onClick={() => router.push(`/materialManagement/registration/${materialId}`)}
+              onClick={() => router.push(`/fuelAggregation/registration/${materialId}`)}
               className="flex justify-center items-center cursor-pointer"
             >
               <span className="text-orange-500 font-bold">{params.value}</span>
@@ -194,13 +151,23 @@ export default function FuelAggregationView() {
 
   const [modalOpen, setModalOpen] = useState(false)
   // // userExcelFieldMap 객체를 { label: string, value: string }[] 배열로 바꿔줍니다.
-  const fieldMapArray = Object.entries(MaterialExcelFieldMap).map(([label, value]) => ({
+  const fieldMapArray = Object.entries(fuelExcelFieldMap).map(([label, value]) => ({
     label,
     value,
   }))
 
   const handleDownloadExcel = async (fields: string[]) => {
-    await MaterialExcelDownload({ fields })
+    await FuelExcelDownload({
+      sort: search.arraySort === '최신순' ? 'id,desc' : 'id,asc',
+      siteName: search.siteName,
+      processName: search.processName,
+      fuelTypes: search.fuelTypes,
+      outsourcingCompanyName: search.outsourcingCompanyName,
+      vehicleNumber: search.vehicleNumber,
+      dateStartDate: search.dateStartDate ? getTodayDateString(search.dateStartDate) : undefined,
+      dateEndDate: search.dateEndDate ? getTodayDateString(search.dateEndDate) : undefined,
+      fields,
+    })
   }
   return (
     <>
@@ -228,10 +195,8 @@ export default function FuelAggregationView() {
 
                   const processes = res.data?.content || []
                   if (processes.length > 0) {
-                    search.setField('processId', processes[0].id)
                     search.setField('processName', processes[0].name)
                   } else {
-                    search.setField('processId', 0)
                     search.setField('processName', '')
                   }
                 }}
@@ -270,24 +235,54 @@ export default function FuelAggregationView() {
             </div>
           </div>
           <div className="flex">
-            <label className="w-[144px] text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               유종
             </label>
-            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelectByName
-                value={search.materialName || '선택'}
-                onChange={async (value) => {
-                  const selectedProduct = productOptions.find((opt) => opt.name === value)
-                  if (!selectedProduct) return
-                  search.setField('materialName', selectedProduct.name)
+            <div className="border p-2 border-gray-400 px-2 w-full flex justify-center items-center">
+              <Select
+                multiple
+                value={search.fuelTypes} // ProcessStatus[] (code 배열)
+                onChange={(e) => {
+                  search.setField('fuelTypes', e.target.value as fuelStatuses[])
                 }}
-                options={productOptions}
-                onScrollToBottom={() => {
-                  if (productNamehasNextPage && !productNameFetching) productNameFetchNextPage()
+                renderValue={(selected) => {
+                  if ((selected as fuelStatuses[]).length === 0) return '선택'
+
+                  return (selected as fuelStatuses[])
+                    .map((code) => FuelStatusesing.find((item) => item.code === code)?.name ?? code)
+                    .join(', ')
                 }}
-                onInputChange={(value) => setProductSearch(value)}
-                loading={productNameLoading}
-              />
+                displayEmpty
+                className="w-full"
+                sx={{
+                  minHeight: 40,
+                  '&.MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: 'black',
+                      borderWidth: '1px',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'black',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: 'black',
+                    },
+                  },
+                  '& .MuiSelect-select': {
+                    paddingTop: '4px',
+                    paddingBottom: '4px',
+                    fontSize: '1rem',
+                  },
+                }}
+              >
+                {FuelStatusesing.filter((item) => item.code !== '선택').map((option) => (
+                  <MenuItem key={option.id} value={option.code}>
+                    <Checkbox checked={search.fuelTypes.includes(option.code as fuelStatuses)} />
+
+                    <ListItemText primary={option.name} />
+                  </MenuItem>
+                ))}
+              </Select>
             </div>
           </div>
           <div className="flex">
@@ -314,6 +309,7 @@ export default function FuelAggregationView() {
               />
             </div>
           </div>
+
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               차량번호
@@ -321,20 +317,21 @@ export default function FuelAggregationView() {
             <div className="border border-gray-400 p-2 px-2 w-full">
               <CommonSelectByName
                 fullWidth
-                value={search.outsourcingCompanyName || '선택'}
+                value={search.vehicleNumber || '선택'}
                 onChange={async (value) => {
-                  const selectedCompany = companyOptions.find((opt) => opt.name === value)
-                  if (!selectedCompany) return
+                  const selectedVehicleNumber = carNumberOptions.find(
+                    (opt) => opt.vehicleNumber === value,
+                  )
+                  if (!selectedVehicleNumber) return
 
-                  search.setField('outsourcingCompanyId', selectedCompany.id)
-                  search.setField('outsourcingCompanyName', selectedCompany.name)
+                  search.setField('vehicleNumber', selectedVehicleNumber.vehicleNumber)
                 }}
-                options={companyOptions}
+                options={carNumberOptions}
                 onScrollToBottom={() => {
-                  if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
+                  if (carNumberHasNextPage && !carNumberIsFetching) carNumberFetchNextPage()
                 }}
-                onInputChange={(value) => setCompanySearch(value)}
-                loading={comPanyNameLoading}
+                onInputChange={(value) => setCarNumberSearch(value)}
+                loading={carNumberLoading}
               />
             </div>
           </div>
@@ -344,13 +341,13 @@ export default function FuelAggregationView() {
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonDatePicker
-                value={search.deliveryStartDate}
-                onChange={(value) => search.setField('deliveryStartDate', value)}
+                value={search.dateStartDate}
+                onChange={(value) => search.setField('dateStartDate', value)}
               />
               ~
               <CommonDatePicker
-                value={search.deliveryEndDate}
-                onChange={(value) => search.setField('deliveryEndDate', value)}
+                value={search.dateEndDate}
+                onChange={(value) => search.setField('dateEndDate', value)}
               />
             </div>
           </div>
@@ -455,7 +452,7 @@ export default function FuelAggregationView() {
               <CommonButton
                 label="+ 신규등록"
                 variant="secondary"
-                onClick={handleNewMaterialCreate}
+                onClick={() => openTab('/fuelAggregation/registration', '유류집계 관리 - 등록')}
                 className="px-3"
               />
             </div>
@@ -464,7 +461,7 @@ export default function FuelAggregationView() {
       </div>
       <div style={{ height: 500, width: '100%' }}>
         <DataGrid
-          rows={updateMaterialList}
+          rows={updateFuelList}
           columns={enhancedColumns.map((col) => ({
             ...col,
             sortable: false,
@@ -480,7 +477,6 @@ export default function FuelAggregationView() {
           hideFooter
           disableColumnMenu
           hideFooterPagination
-          // pageSize={pageSize}
           rowHeight={60}
           onRowSelectionModelChange={(newSelection) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

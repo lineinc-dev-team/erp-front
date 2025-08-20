@@ -15,22 +15,18 @@ import {
   Typography,
 } from '@mui/material'
 import CommonDatePicker from '../common/DatePicker'
-import { formatNumber, getTodayDateString, unformatNumber } from '@/utils/formatters'
-import { useManagementMaterial } from '@/hooks/useMaterialManagement'
-import {
-  MaterialTypeLabelToValue,
-  useManagementMaterialFormStore,
-} from '@/stores/materialManagementStore'
-import { MaterialDetailService } from '@/services/materialManagement/materialManagementRegistrationService'
+import { getTodayDateString } from '@/utils/formatters'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef } from 'react'
-import { AttachedFile, DetailItem, HistoryItem } from '@/types/materialManagement'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
-import { SupplyPriceInput, TotalInput, VatInput } from '@/utils/supplyVatTotalInput'
-import CommonSelectByName from '../common/CommonSelectByName'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
+import { useFuelAggregation } from '@/hooks/useFuelAggregation'
+import { useFuelFormStore } from '@/stores/fuelAggregationStore'
+import CommonInput from '../common/Input'
+import { FuelDetailService } from '@/services/fuelAggregation/fuelAggregationRegistrationService'
+import { FuelListInfoData, HistoryItem } from '@/types/fuelAggregation'
 // import { useEffect } from 'react'
 // import { AttachedFile, DetailItem } from '@/types/managementSteel'
 
@@ -44,7 +40,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     addItem,
     updateMemo,
     toggleCheckItem,
-  } = useManagementMaterialFormStore()
+  } = useFuelFormStore()
 
   const { showSnackbar } = useSnackbarStore()
 
@@ -75,18 +71,30 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
   } = useOutSourcingContract()
 
   const {
-    createMaterialMutation,
-    useMaterialHistoryDataQuery,
-    materialCancel,
-    MaterialModifyMutation,
+    WeatherTypeMethodOptions,
+    FuelCancel,
+    FuelModifyMutation,
 
-    productOptions,
-    setProductSearch,
-    productNameFetchNextPage,
-    productNamehasNextPage,
-    productNameFetching,
-    productNameLoading,
-  } = useManagementMaterial()
+    setDriverSearch,
+    fuelDriverOptions,
+    fuelDriverFetchNextPage,
+    fuelDriverHasNextPage,
+    fuelDriverIsFetching,
+    fuelDriverLoading,
+
+    // 차량번호 & 장비명
+    setEquipmentSearch,
+    fuelEquipmentOptions,
+    fuelEquipmentFetchNextPage,
+    fuelEquipmentHasNextPage,
+    fuelEquipmentIsFetching,
+    fuelEquipmentLoading,
+
+    createFuelMutation,
+    OilTypeMethodOptions,
+
+    useFuelHistoryDataQuery,
+  } = useFuelAggregation()
 
   const textFieldStyle = {
     '& .MuiOutlinedInput-root': {
@@ -97,37 +105,32 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
   }
 
   // 체크 박스에 활용
-  const managers = form.details
-  const checkedIds = form.checkedMaterialItemIds
+  const fuelInfo = form.fuelInfos
+  const checkedIds = form.checkedFuelItemIds
   // const isAllChecked = managers.length > 0 && checkedIds.length === managers.length
 
   // 상세페이지 로직
 
   const params = useParams()
-  const materialDetailId = Number(params?.id)
+  const fuelDetailId = Number(params?.id)
 
   const { data } = useQuery({
-    queryKey: ['MaterialDetailInfo'],
-    queryFn: () => MaterialDetailService(materialDetailId),
-    enabled: isEditMode && !!materialDetailId, // 수정 모드일 때만 fetch
+    queryKey: ['FuelDetailInfo'],
+    queryFn: () => FuelDetailService(fuelDetailId),
+    enabled: isEditMode && !!fuelDetailId, // 수정 모드일 때만 fetch
   })
 
   const PROPERTY_NAME_MAP: Record<string, string> = {
     siteName: '현장명',
     processName: '공정명',
-    outsourcingCompanyName: '자재업체명',
-    inputTypeName: '투입 구분',
-    inputTypeDescription: '투입 구분 설명',
-    deliveryDateFormat: '납품일자',
+    outsourcingCompanyName: '업체명',
+    dateFormat: '일자',
+    weatherName: '날씨',
+    driverName: '기사명',
+    equipmentSpecification: '차량번호',
+    fuelTypeName: '유종',
+    fuelAmount: '주유량',
     memo: '메모',
-    name: '품명',
-    vat: '부가세',
-    standard: '규격',
-    unitPrice: '단가',
-    total: '합계',
-    quantity: '수량',
-    supplyPrice: '공급가',
-    usage: '사용용도',
   }
 
   const {
@@ -136,9 +139,9 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-  } = useMaterialHistoryDataQuery(materialDetailId, isEditMode)
+  } = useFuelHistoryDataQuery(fuelDetailId, isEditMode)
 
-  const historyList = useManagementMaterialFormStore((state) => state.form.changeHistories)
+  const historyList = useFuelFormStore((state) => state.form.changeHistories)
 
   useEffect(() => {
     if (data && isEditMode === true) {
@@ -146,48 +149,30 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
 
       console.log('상세 자재 !!', client)
       // // 상세 항목 가공
-      const formattedDetails = (client.details ?? []).map((c: DetailItem) => ({
-        id: c.id,
-        name: c.name,
-        quantity: c.quantity,
-        total: c.total,
-        usage: c.usage,
-        vat: c.vat,
-        unitPrice: c.unitPrice,
-        supplyPrice: c.supplyPrice,
-        unitWeight: c.unitWeight,
-        standard: c.standard,
-        memo: c.memo,
-      }))
-      setField('details', formattedDetails)
-
-      // // 첨부 파일 가공
-      const formattedFiles = (client.files ?? []).map((item: AttachedFile) => ({
+      const formattedDetails = (client.fuelInfos ?? []).map((item: FuelListInfoData) => ({
         id: item.id,
+        outsourcingCompanyId: item.outsourcingCompany?.id ?? 0,
+        businessNumber: item.outsourcingCompany?.businessNumber ?? '',
+        driverId: item.driver.id ?? '',
+        specificationName: item.equipment.specification ?? '',
+        fuelType: item.fuelTypeCode ?? '',
+        fuelAmount: item.fuelAmount ?? '0',
+        equipmentId: item.equipment.id ?? '',
+        createdAt: item.createdAt ?? '',
+        updatedAt: item.updatedAt ?? '',
         memo: item.memo,
-        files: [
-          {
-            publicUrl: item.fileUrl,
-            file: {
-              name: item.originalFileName,
-            },
-          },
-        ],
+        modifyDate: `${getTodayDateString(item.createdAt)} / ${getTodayDateString(item.updatedAt)}`,
       }))
 
-      const mappedItemType = MaterialTypeLabelToValue[client.inputType ?? '']
-
-      setField('attachedFiles', formattedFiles)
+      console.log('formattedDetailsformattedDetails', formattedDetails)
+      setField('fuelInfos', formattedDetails)
 
       // 각 필드에 값 세팅
       setField('siteId', client.site?.id ?? '')
       setField('siteProcessId', client.process?.id ?? '')
-      setField('outsourcingCompanyId', client.company?.id ?? '')
 
-      setField('deliveryDate', client.deliveryDate ? new Date(client.deliveryDate) : null)
-      setField('inputType', mappedItemType)
-      setField('inputTypeDescription', client.inputTypeDescription)
-      setField('memo', client.memo ?? '')
+      setField('date', client.date ? new Date(client.date) : null)
+      setField('weather', client.weatherCode)
     } else {
       reset()
     }
@@ -350,10 +335,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
               일자
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
-              <CommonDatePicker
-                value={form.deliveryDate}
-                onChange={(value) => setField('deliveryDate', value)}
-              />
+              <CommonDatePicker value={form.date} onChange={(value) => setField('date', value)} />
             </div>
           </div>
 
@@ -361,22 +343,12 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               날씨
             </label>
-            <div className="border border-gray-400 p-2 px-2 w-full">
+            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
               <CommonSelect
-                fullWidth
-                value={form.outsourcingCompanyId || 0}
-                onChange={async (value) => {
-                  const selectedCompany = companyOptions.find((opt) => opt.id === value)
-                  if (!selectedCompany) return
-
-                  setField('outsourcingCompanyId', selectedCompany.id)
-                }}
-                options={companyOptions}
-                onScrollToBottom={() => {
-                  if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
-                }}
-                onInputChange={(value) => setCompanySearch(value)}
-                loading={comPanyNameLoading}
+                fullWidth={true}
+                value={form.weather || 'BASE'}
+                onChange={(value) => setField('weather', value)}
+                options={WeatherTypeMethodOptions}
               />
             </div>
           </div>
@@ -385,19 +357,19 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
 
       <div>
         <div className="flex justify-between items-center mt-10 mb-2">
-          <span className="font-bold border-b-2 mb-4">자재</span>
+          <span className="font-bold border-b-2 mb-4">유류정보</span>
           <div className="flex gap-4">
             <CommonButton
               label="삭제"
               className="px-7"
               variant="danger"
-              onClick={() => removeCheckedItems('MaterialItem')}
+              onClick={() => removeCheckedItems('FuelInfo')}
             />
             <CommonButton
               label="추가"
               className="px-7"
               variant="secondary"
-              onClick={() => addItem('MaterialItem')}
+              onClick={() => addItem('FuelInfo')}
             />
           </div>
         </div>
@@ -406,180 +378,181 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
             <TableHead>
               <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
                 <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}></TableCell>
-                {['업체명', '기사명', '차량번호', '장비명', '유종', '주유량', '비고'].map(
-                  (label) => (
-                    <TableCell
-                      key={label}
-                      align="center"
-                      sx={{
-                        backgroundColor: '#D1D5DB',
-                        border: '1px solid  #9CA3AF',
-                        color: 'black',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      {label}
-                    </TableCell>
-                  ),
+                {['업체명', '기사명', '차량번호', '규격', '유종', '주유량', '비고'].map((label) => (
+                  <TableCell
+                    key={label}
+                    align="center"
+                    sx={{
+                      backgroundColor: '#D1D5DB',
+                      border: '1px solid  #9CA3AF',
+                      color: 'black',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    {label}
+                  </TableCell>
+                ))}
+                {isEditMode && (
+                  <TableCell
+                    align="center"
+                    sx={{
+                      backgroundColor: '#D1D5DB',
+                      border: '1px solid  #9CA3AF',
+                      color: 'black',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    등록/수정일
+                  </TableCell>
                 )}
               </TableRow>
             </TableHead>
             <TableBody>
-              {managers.map((m) => (
+              {fuelInfo.map((m) => (
                 <TableRow key={m.id}>
                   {/* 체크박스 */}
-                  <TableCell
-                    padding="checkbox"
-                    align="center"
-                    sx={{ border: '1px solid  #9CA3AF' }}
-                  >
+                  <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
                     <Checkbox
                       checked={checkedIds.includes(m.id)}
-                      onChange={(e) => toggleCheckItem('MaterialItem', m.id, e.target.checked)}
+                      onChange={(e) => toggleCheckItem('FuelInfo', m.id, e.target.checked)}
                     />
                   </TableCell>
-
-                  <TableCell sx={{ display: 'flex', gap: '4px', width: '320px' }}>
-                    <CommonSelectByName
-                      value={m.inputType === 'manual' ? '직접입력' : m.name || '선택'}
+                  {/*   업체명 */}
+                  <TableCell>
+                    <CommonSelect
+                      fullWidth
+                      value={m.outsourcingCompanyId || 0}
                       onChange={async (value) => {
-                        if (value === '직접입력') {
-                          updateItemField('MaterialItem', m.id, 'inputType', 'manual')
-                          updateItemField('MaterialItem', m.id, 'name', '') // 직접입력 모드 전환 시 빈 값
-                          return
-                        }
+                        const selectedCompany = companyOptions.find((opt) => opt.id === value)
+                        if (!selectedCompany) return
 
-                        const selectedProduct = productOptions.find((opt) => opt.name === value)
-                        if (!selectedProduct) return
-                        updateItemField('MaterialItem', m.id, 'inputType', 'select')
-                        updateItemField('MaterialItem', m.id, 'name', selectedProduct.name)
+                        updateItemField(
+                          'FuelInfo',
+                          m.id,
+                          'outsourcingCompanyId',
+                          selectedCompany.id,
+                        )
                       }}
-                      options={[...productOptions, { id: -1, name: '직접입력' }]}
+                      options={companyOptions}
                       onScrollToBottom={() => {
-                        if (productNamehasNextPage && !productNameFetching)
-                          productNameFetchNextPage()
+                        if (comPanyNamehasNextPage && !comPanyNameFetching)
+                          comPanyNameFetchNextPage()
                       }}
-                      onInputChange={(value) => setProductSearch(value)}
-                      loading={productNameLoading}
+                      onInputChange={(value) => setCompanySearch(value)}
+                      loading={comPanyNameLoading}
                     />
+                  </TableCell>
+                  {/* 기사명 */}
+                  <TableCell sx={{ border: '1px solid  #9CA3AF', width: '140px' }}>
+                    <CommonSelect
+                      fullWidth
+                      value={m.driverId}
+                      onChange={async (value) => {
+                        const selectedDriver = fuelDriverOptions.find((opt) => opt.id === value)
+                        if (!selectedDriver) return
 
-                    <TextField
-                      size="small"
-                      placeholder="텍스트 입력"
-                      value={m.inputType === 'manual' ? m.name : ''} // manual 모드일 때만 값 표시
-                      onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'name', e.target.value)
-                      }
-                      variant="outlined"
-                      sx={textFieldStyle}
-                      disabled={m.inputType !== 'manual'} // manual 모드일 때만 활성화
+                        updateItemField('FuelInfo', m.id, 'driverId', selectedDriver.id)
+                      }}
+                      options={fuelDriverOptions}
+                      onScrollToBottom={() => {
+                        if (fuelDriverHasNextPage && !fuelDriverIsFetching)
+                          fuelDriverFetchNextPage()
+                      }}
+                      onInputChange={(value) => setDriverSearch(value)}
+                      loading={fuelDriverLoading}
+                    />
+                  </TableCell>
+                  {/* 차량번호 */}
+                  {/* 차량번호 */}
+                  <TableCell sx={{ border: '1px solid  #9CA3AF', width: '140px' }}>
+                    <CommonSelect
+                      fullWidth
+                      value={m.equipmentId || 0} // 장비 선택은 ID 기준
+                      onChange={async (value) => {
+                        const selectedEquipment = fuelEquipmentOptions.find(
+                          (opt) => opt.id === value,
+                        )
+                        if (!selectedEquipment) return
+
+                        // 차량번호
+                        updateItemField('FuelInfo', m.id, 'equipmentId', selectedEquipment.id)
+
+                        // ID는 equipmentId에, 차량번호는 specificationName 필드에 저장
+                        updateItemField(
+                          'FuelInfo',
+                          m.id,
+                          'specificationName',
+                          selectedEquipment.specification || '',
+                        )
+                      }}
+                      options={fuelEquipmentOptions}
+                      onScrollToBottom={() => {
+                        if (fuelEquipmentHasNextPage && !fuelEquipmentIsFetching)
+                          fuelEquipmentFetchNextPage()
+                      }}
+                      onInputChange={(value) => setEquipmentSearch(value)}
+                      loading={fuelEquipmentLoading}
                     />
                   </TableCell>
 
                   {/* 규격 */}
-                  <TableCell sx={{ border: '1px solid  #9CA3AF', width: '140px' }}>
-                    <TextField
-                      size="small"
-                      placeholder="텍스트 입력"
-                      value={m.standard}
-                      onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'standard', e.target.value)
+                  <TableCell sx={{ border: '1px solid  #9CA3AF', width: '150px' }}>
+                    <CommonInput
+                      placeholder="자동 입력"
+                      value={m.specificationName ?? ''}
+                      onChange={(value) =>
+                        updateItemField('FuelInfo', m.id, 'specificationName', value)
                       }
-                      variant="outlined"
-                      sx={textFieldStyle}
+                      disabled={true}
+                      className=" flex-1"
                     />
                   </TableCell>
-
-                  {/* 사용용도 */}
-                  <TableCell sx={{ border: '1px solid  #9CA3AF', width: '140px' }}>
+                  {/* 유종 */}
+                  <TableCell sx={{ border: '1px solid  #9CA3AF' }}>
+                    <CommonSelect
+                      fullWidth={true}
+                      value={m.fuelType || 'BASE'}
+                      onChange={async (value) => {
+                        updateItemField('FuelInfo', m.id, 'fuelType', value)
+                      }}
+                      options={OilTypeMethodOptions}
+                    />
+                  </TableCell>
+                  {/* 주유량 */}
+                  <TableCell align="center" sx={{ border: '1px solid #9CA3AF', width: '120px' }}>
                     <TextField
                       size="small"
-                      placeholder="텍스트 입력"
-                      value={m.usage}
+                      placeholder="입력"
+                      value={m.fuelAmount || ''}
                       onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'usage', e.target.value)
+                        updateItemField('FuelInfo', m.id, 'fuelAmount', e.target.value)
                       }
-                      variant="outlined"
-                      sx={textFieldStyle}
+                      inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                      fullWidth
                     />
                   </TableCell>
-                  {/* 수량 */}
-                  <TableCell sx={{ border: '1px solid  #9CA3AF', width: '90px' }}>
-                    <TextField
-                      size="small"
-                      placeholder="수량"
-                      value={m.quantity || ''}
-                      onChange={(e) => {
-                        const numericValue = e.target.value === '' ? '' : Number(e.target.value)
-                        updateItemField('MaterialItem', m.id, 'quantity', numericValue)
-                      }}
-                      variant="outlined"
-                      sx={textFieldStyle}
-                      inputProps={{ style: { textAlign: 'right' } }} // 오른쪽 정렬
-                    />
-                  </TableCell>
-
-                  {/* 단가 */}
-                  <TableCell align="right" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      inputMode="numeric"
-                      placeholder="숫자 입력"
-                      value={formatNumber(m.unitPrice) || ''}
-                      onChange={(e) => {
-                        const numericValue =
-                          e.target.value === '' ? '' : unformatNumber(e.target.value)
-                        updateItemField('MaterialItem', m.id, 'unitPrice', numericValue)
-                      }}
-                      variant="outlined"
-                      sx={textFieldStyle}
-                      inputProps={{
-                        style: {
-                          textAlign: 'right',
-                        },
-                      }}
-                    />
-                  </TableCell>
-
-                  {/* 공급가 */}
-                  <TableCell align="right" sx={{ border: '1px solid #9CA3AF' }}>
-                    <SupplyPriceInput
-                      value={m.supplyPrice}
-                      onChange={(supply) => {
-                        const vat = Math.floor(supply * 0.1)
-                        const total = supply + vat
-
-                        // MaterialItem 객체 업데이트
-                        updateItemField('MaterialItem', m.id, 'supplyPrice', supply)
-                        updateItemField('MaterialItem', m.id, 'vat', vat)
-                        updateItemField('MaterialItem', m.id, 'total', total)
-                      }}
-                    />
-                  </TableCell>
-
-                  {/* 부가세 */}
-                  <TableCell align="right" sx={{ border: '1px solid #9CA3AF' }}>
-                    <VatInput supplyPrice={m.supplyPrice} />
-                  </TableCell>
-
-                  {/* 합계 */}
-                  <TableCell align="right" sx={{ border: '1px solid #9CA3AF' }}>
-                    <TotalInput supplyPrice={m.supplyPrice} />
-                  </TableCell>
-
                   {/* 비고 */}
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
                       placeholder="텍스트 입력"
                       value={m.memo}
-                      onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'memo', e.target.value)
-                      }
+                      onChange={(e) => updateItemField('FuelInfo', m.id, 'memo', e.target.value)}
                       variant="outlined"
                       sx={textFieldStyle}
                     />
                   </TableCell>
+                  {isEditMode && (
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF', width: '260px' }}>
+                      <CommonInput
+                        placeholder="자동 입력"
+                        value={m.modifyDate ?? ''}
+                        onChange={(value) => updateItemField('FuelInfo', m.id, 'modifyDate', value)}
+                        disabled={true}
+                        className=" flex-1"
+                      />
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -686,22 +659,22 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
       )}
 
       <div className="flex justify-center gap-10 mt-10">
-        <CommonButton label="취소" variant="reset" className="px-10" onClick={materialCancel} />
+        <CommonButton label="취소" variant="reset" className="px-10" onClick={FuelCancel} />
         <CommonButton
           label={isEditMode ? '+ 수정' : '+ 등록'}
           className="px-10 font-bold"
           variant="secondary"
           onClick={() => {
-            if (!form.details || form.details.length === 0) {
-              showSnackbar('자재 항목을 1개 이상 입력해주세요.', 'warning')
+            if (!form.fuelInfos || form.fuelInfos.length === 0) {
+              showSnackbar('유류정보 항목을 1개 이상 입력해주세요.', 'warning')
               return
             }
             if (isEditMode) {
               if (window.confirm('수정하시겠습니까?')) {
-                MaterialModifyMutation.mutate(materialDetailId)
+                FuelModifyMutation.mutate(fuelDetailId)
               }
             } else {
-              createMaterialMutation.mutate()
+              createFuelMutation.mutate()
             }
           }}
         />

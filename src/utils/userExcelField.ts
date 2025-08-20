@@ -195,3 +195,20 @@ export const outsourcingContractExcelFieldMap = {
 export type ContractoutExcelFieldLabel = keyof typeof outsourcingContractExcelFieldMap
 export type ContractoutExcelFieldKey =
   (typeof outsourcingContractExcelFieldMap)[ContractoutExcelFieldLabel]
+
+// 유류집계 조회 컬럼 리스트
+
+export const fuelExcelFieldMap = {
+  No: 'id',
+  업체명: 'outsourcingCompanyName',
+  기사명: 'driverName',
+  차량번호: 'vehicleNumber',
+  규격: 'specification',
+  유중: 'fuelType',
+  주유량: 'fuelAmount',
+  '등록/수정일': 'createdAtAndUpdatedAt',
+  비고: 'memo',
+} as const
+
+export type FuelExcelFieldLabel = keyof typeof fuelExcelFieldMap
+export type FuelExcelFieldKey = (typeof fuelExcelFieldMap)[FuelExcelFieldLabel]

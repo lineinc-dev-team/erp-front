@@ -11,6 +11,7 @@ export const API = {
   CLIENTCOMPANY: `${apiBaseUrl}/client-companies`,
   OUTSOURCINGCOMPANY: `${apiBaseUrl}/outsourcing-companies`,
   OUTSOURCINGCONTRACT: `${apiBaseUrl}/outsourcing-company-contracts`,
+  FUELAGGRE: `${apiBaseUrl}/fuel-aggregations`,
   LOGIN: `${apiBaseUrl}/auth/login`,
   LOGOUT: `${apiBaseUrl}/auth/logout`,
   RESETPASSWORD: `${apiBaseUrl}/auth/password`,
