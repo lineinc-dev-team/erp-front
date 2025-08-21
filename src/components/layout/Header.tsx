@@ -194,6 +194,7 @@ const menuNameToBasePath: Record<string, string> = {
   '강재수불부 관리': '/managementSteel',
   '외주업체 관리': '/outsourcingCompany',
   '외주업체 계약 관리': '/outsourcingContract',
+  '노무 관리': '/labors',
 }
 
 const menuNameToIcon: Record<string, React.ReactNode> = {
@@ -208,6 +209,7 @@ const menuNameToIcon: Record<string, React.ReactNode> = {
   '강재수불부 관리': <Inventory />,
   '외주업체 관리': <Groups />,
   '외주업체 계약 관리': <Description />,
+  '노무 관리': <Description />,
 }
 
 function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {

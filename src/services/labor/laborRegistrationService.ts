@@ -1,0 +1,154 @@
+import { API } from '@/api/config/env'
+import { useLaborFormStore } from '@/stores/laborStore'
+
+//  노무(인력) 공종 구분 목록 조회
+export async function WorkTypeService() {
+  const resData = await fetch(`${API.LABOR}/work-types`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+
+//  노무(인력) 구분 목록 조회
+export async function LabelTypeService() {
+  const resData = await fetch(`${API.LABOR}/labor-types`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+
+// 노무(인력) 등록
+export async function CreateLabor() {
+  const { newLaborData } = useLaborFormStore.getState()
+  const payload = newLaborData()
+
+  const res = await fetch(API.LABOR, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
+  }
+
+  return await res.status
+}
+
+//  노무(인력) 상세
+export async function LaborDetailService(laborDetailId: number) {
+  const res = await fetch(`${API.LABOR}/${laborDetailId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
+  }
+
+  return await res.json()
+}
+
+// 노무(인력) 수정
+export async function ModifyLaborData(laborId: number) {
+  const { newLaborData } = useLaborFormStore.getState()
+
+  const payload = newLaborData()
+
+  const res = await fetch(`${API.LABOR}/${laborId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
+  }
+
+  return res.status
+}
+
+// 노무(인력) 수정이력 조회
+//  노무(인력)수정이력 조회 (페이지네이션 추가)
+export async function LaborInfoHistoryService(
+  historyId: number,
+  page: number = 0,
+  size: number = 4,
+  sort: string,
+) {
+  const resData = await fetch(
+    `${API.LABOR}/${historyId}/change-histories?page=${page}&size=${size}&sort=${sort}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    },
+  )
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}

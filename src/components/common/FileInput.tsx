@@ -27,15 +27,18 @@ export default function CommonFileInput({
 
     for (const file of validFiles) {
       try {
-        const { fileUrl, uploadUrl } = await getPresignedUrl(file.type, uploadTarget)
+        const { publicUrl, uploadUrl } = await getPresignedUrl(file.type, uploadTarget)
 
-        console.log('s3 요청 @@', uploadUrl, file, fileUrl)
+        console.log('s3 요청 @@1', uploadUrl)
+        console.log('s3 요청 @@2', file)
+        console.log('가장 중요한 파일 업로드 ', publicUrl)
+
         await uploadToS3(uploadUrl, file)
 
         uploadedFiles.push({
           id: 0, // 신규 업로드 파일이라 서버 저장 전이므로 0 같은 기본값
           file, // 원본 File 객체
-          fileUrl: fileUrl, // presigned url에서 받은 publicUrl을 저장
+          fileUrl: publicUrl, // presigned url에서 받은 publicUrl을 저장
           originalFileName: file.name, // 선택 사항: 원본 파일명 저장
         })
       } catch (error) {

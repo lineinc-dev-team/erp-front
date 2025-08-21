@@ -212,3 +212,23 @@ export const fuelExcelFieldMap = {
 
 export type FuelExcelFieldLabel = keyof typeof fuelExcelFieldMap
 export type FuelExcelFieldKey = (typeof fuelExcelFieldMap)[FuelExcelFieldLabel]
+
+//노무(인력정보) 조회 컬럼 리스트
+export const laborExcelFieldMap = {
+  No: 'id',
+  구분: 'type',
+  이름: 'name',
+  주민번호: 'residentNumber',
+  소속업체: 'outsourcingCompanyName',
+  공종: 'workType',
+  '주 작업': 'mainWork',
+  연락처: 'phoneNumber',
+  기준일당: 'dailyWage',
+  계좌번호: 'accountNumber',
+  입사일: 'hireDate',
+  퇴사일: 'resignationDate',
+  첨부파일: 'hasFile',
+} as const
+
+export type LaborExcelFieldLabel = keyof typeof laborExcelFieldMap
+export type LaborExcelFieldKey = (typeof laborExcelFieldMap)[LaborExcelFieldLabel]

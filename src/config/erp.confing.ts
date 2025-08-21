@@ -203,6 +203,25 @@ export const clientCompanyList: GridColDef[] = [
   { field: 'memo', headerName: '비고', width: 100 },
 ]
 
+export const LaborColumnList: GridColDef[] = [
+  { field: 'no', headerName: 'No', width: 70 },
+  // { field: 'id', headerName: 'No', width: 70 },
+  { field: 'type', headerName: '구분', width: 130 },
+  { field: 'name', headerName: '이름', width: 130 },
+  { field: 'residentNumber', headerName: '주민번호', width: 130 },
+  { field: 'outsourcingCompanyName', headerName: '소속업체', width: 180 },
+  { field: 'workType', headerName: '공종', width: 100 },
+  { field: 'mainWork', headerName: '주 작업', width: 100 },
+  { field: 'phoneNumber', headerName: '연락처', width: 120 },
+  { field: 'dailyWage', headerName: '기준일당', width: 100 },
+  { field: 'accountNumber', headerName: '계좌번호', width: 100 },
+  { field: 'hireDate', headerName: '입사일', width: 100 },
+  { field: 'resignationDate', headerName: '퇴사일', width: 100 },
+  // { field: 'hasFile', headerName: '근속일수', width: 100 },
+  // { field: 'hasFile', headerName: '퇴직금 발생', width: 100 },
+  { field: 'hasFile', headerName: '첨부파일', width: 100 },
+]
+
 export const outsourcingCompanyList: GridColDef[] = [
   { field: 'no', headerName: 'No', width: 70 },
   // { field: 'id', headerName: 'No', width: 70 },
@@ -310,13 +329,13 @@ export const materialTypeOptions = [
 ]
 
 export const bankOptions = [
-  { id: '0', name: '선택' },
-  { id: '1', name: '기업은행' },
-  { id: '2', name: '농협은행' },
-  { id: '3', name: '우리은행' },
-  { id: '4', name: '카카오뱅크' },
-  { id: '5', name: '국민은행' },
-  { id: '6', name: '신한은행' },
+  { id: '선택', name: '선택' },
+  { id: '기업은행', name: '기업은행' },
+  { id: '농협은행', name: '농협은행' },
+  { id: '우리은행', name: '우리은행' },
+  { id: '카카오뱅크', name: '카카오뱅크' },
+  { id: '국민은행', name: '국민은행' },
+  { id: '신한은행', name: '신한은행' },
 ]
 
 // 시 와  구 를 구분
