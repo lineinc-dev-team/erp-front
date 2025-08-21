@@ -113,3 +113,30 @@ export async function LaborExcelDownload({
 
   return res.status
 }
+
+// 검색 시 구분 을 기타로 설정하느 경우 해당하는 설명에 대한 팝업 창 뜨기
+
+export async function GetTypeDesInfoService({ pageParam = 0, size = 5, keyword = '', sort = '' }) {
+  const resData = await fetch(
+    `${API.LABOR}/etc-type-descriptions/search?page=${pageParam}&size=${size}&keyword=${keyword}&sort=${sort}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    },
+  )
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}

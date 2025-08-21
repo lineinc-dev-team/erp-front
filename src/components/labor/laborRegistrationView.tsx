@@ -82,7 +82,6 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     resignationDateFormat: '퇴사일',
     workTypeName: '공종',
     workTypeDescription: '공종 설명',
-    residentNumber: '주민번호',
     typeName: '구분명',
     typeDescription: '구분 설명',
     detailAddress: '상세주소',

@@ -18,6 +18,7 @@ import { LaborDataList } from '@/types/labor'
 import { formatNumber, getTodayDateString } from '@/utils/formatters'
 import { formatPhoneNumber } from '@/utils/formatPhoneNumber'
 import { LaborExcelDownload } from '@/services/labor/laborService'
+import CommonSelectByName from '../common/CommonSelectByName'
 
 export default function LaborView() {
   const openTab = useTabOpener()
@@ -35,12 +36,19 @@ export default function LaborView() {
     comPanyNameFetching,
     comPanyNameLoading,
 
+    etcDesOptions,
+    setETCdesSearch,
+    etcDescriptionFetchNextPage,
+    etcDescriptionhasNextPage,
+    etcDescriptionFetching,
+    etcDescriptionLoading,
+
     LaborTypeMethodOptions,
   } = useLaborInfo()
 
   const laborList = LaborListQuery.data?.data.content ?? []
 
-  console.log('laborList@@', laborList)
+  console.log('laborList@@', etcDesOptions)
 
   const totalList = LaborListQuery.data?.data.pageInfo.totalElements ?? 0
   const pageCount = Number(search.pageCount) || 10
@@ -145,6 +153,36 @@ export default function LaborView() {
               />
             </div>
           </div>
+
+          {search.type === 'ETC' && (
+            <div className="flex">
+              <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+                구분(설명)
+              </label>
+              <div className="border border-gray-400 p-2 w-full">
+                <CommonSelectByName
+                  fullWidth
+                  value={search.typeDescription || '선택'}
+                  onChange={async (value) => {
+                    const selectedEtcDes = etcDesOptions.find(
+                      (opt) => opt.typeDescription === value,
+                    )
+                    if (!selectedEtcDes) return
+                    search.setField('typeDescription', selectedEtcDes.typeDescription)
+                  }}
+                  options={etcDesOptions}
+                  displayLabel
+                  onScrollToBottom={() => {
+                    if (etcDescriptionhasNextPage && !etcDescriptionFetching) {
+                      etcDescriptionFetchNextPage()
+                    }
+                  }}
+                  onInputChange={(value) => setETCdesSearch(value)}
+                  loading={etcDescriptionLoading}
+                />
+              </div>
+            </div>
+          )}
 
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">

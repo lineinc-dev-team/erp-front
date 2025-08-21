@@ -8,6 +8,7 @@ type OptionType<T extends string> = {
   code?: string | number
   specification?: string
   vehicleNumber?: string
+  typeDescription?: string
 }
 
 type CommonSelectByNameProps<T extends string> = {
@@ -75,7 +76,7 @@ export default function CommonSelectByName<T extends string>({
         {options.map((opt) => (
           <MenuItem
             key={opt.id}
-            value={opt.name || opt.vehicleNumber}
+            value={opt.name || opt.vehicleNumber || opt.typeDescription}
             sx={{
               fontSize: '14px',
               whiteSpace: 'nowrap',
@@ -83,7 +84,7 @@ export default function CommonSelectByName<T extends string>({
               textOverflow: 'ellipsis',
             }}
           >
-            {opt.label || opt.name || opt.vehicleNumber}
+            {opt.label || opt.name || opt.vehicleNumber || opt.typeDescription}
           </MenuItem>
         ))}
       </Select>

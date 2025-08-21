@@ -12,7 +12,11 @@ import {
   WorkTypeService,
 } from '@/services/labor/laborRegistrationService'
 import { GetCompanyNameInfoService } from '@/services/outsourcingContract/outsourcingContractRegistrationService'
-import { LaborListInfoService, LaborListRemoveService } from '@/services/labor/laborService'
+import {
+  GetTypeDesInfoService,
+  LaborListInfoService,
+  LaborListRemoveService,
+} from '@/services/labor/laborService'
 import { useLaborSearchStore } from '@/stores/laborStore'
 
 export function useLaborInfo() {
@@ -78,8 +82,8 @@ export function useLaborInfo() {
     ],
     queryFn: () => {
       const rawParams = {
-        type: search.type,
-        typeDescription: search.typeDescription,
+        type: search.type === 'BASE' ? undefined : search.type,
+        typeDescription: search.typeDescription === '선택' ? undefined : search.typeDescription,
         name: search.name,
         residentNumber: search.residentNumber,
         outsourcingCompanyId:
@@ -205,6 +209,40 @@ export function useLaborInfo() {
     return [...defaultOptions, ...options]
   }, [comPanyNameInfo])
 
+  // 구분을 기타로 선택 시 보여주는 쿼리
+
+  const [ETCdesSearch, setETCdesSearch] = useState('')
+
+  const {
+    data: etcDescriptionInfo,
+    fetchNextPage: etcDescriptionFetchNextPage,
+    hasNextPage: etcDescriptionhasNextPage,
+    isFetching: etcDescriptionFetching,
+    isLoading: etcDescriptionLoading,
+  } = useInfiniteQuery({
+    queryKey: ['etcInfo', ETCdesSearch],
+    queryFn: ({ pageParam }) => GetTypeDesInfoService({ pageParam, keyword: ETCdesSearch }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      const nextPage = sliceInfo.page + 1
+      return sliceInfo.hasNext ? nextPage : undefined
+    },
+  })
+
+  const etcDesOptions = useMemo(() => {
+    const defaultOptions = [{ id: 0, typeDescription: '선택' }]
+
+    const options = (etcDescriptionInfo?.pages || [])
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        typeDescription: user.typeDescription,
+      }))
+
+    return [...defaultOptions, ...options]
+  }, [etcDescriptionInfo])
+
   return {
     createLaborInfo,
     WorkTypeMethodOptions,
@@ -224,5 +262,14 @@ export function useLaborInfo() {
     comPanyNamehasNextPage,
     comPanyNameFetching,
     comPanyNameLoading,
+
+    // 기타의 설명 데이터 값
+
+    etcDesOptions,
+    setETCdesSearch,
+    etcDescriptionFetchNextPage,
+    etcDescriptionhasNextPage,
+    etcDescriptionFetching,
+    etcDescriptionLoading,
   }
 }
