@@ -51,6 +51,31 @@ export async function SitesProcessNameScroll({
   return data
 }
 
+// 관리비 항목 타입 조회
+
+export async function CostNameTypeService() {
+  const resData = await fetch(`${API.COST}/item-types`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+
+// 관리비 등록
 export async function CreateManagementCost() {
   const { newCostData } = useManagementCostFormStore.getState()
   const payload = newCostData()
@@ -106,4 +131,62 @@ export async function ModifyCostManagement(costId: number) {
   }
 
   return await res.status
+}
+
+// 식대 인력 조회
+
+export async function GetPersonCostInfoService({ pageParam = 0, size = 5, keyword = '' }) {
+  const resData = await fetch(
+    `${API.LABOR}/search?page=${pageParam}&size=${size}&keyword=${keyword}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    },
+  )
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+
+//  관리비 수정이력 조회 (페이지네이션 추가)
+export async function CostInfoHistoryService(
+  historyId: number,
+  page: number = 0,
+  size: number = 4,
+  sort: string,
+) {
+  const resData = await fetch(
+    `${API.COST}/${historyId}/change-histories?page=${page}&size=${size}&sort=${sort}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    },
+  )
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
 }

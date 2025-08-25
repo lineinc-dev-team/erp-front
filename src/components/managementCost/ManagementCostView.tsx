@@ -7,47 +7,66 @@ import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { Pagination } from '@mui/material'
 import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
-import {
-  ArrayStatusOptions,
-  CostColumnList,
-  itemTypeOptions,
-  PageCount,
-} from '@/config/erp.confing'
+import { ArrayStatusOptions, CostColumnList, PageCount } from '@/config/erp.confing'
 import { useState } from 'react'
 import ExcelModal from '../common/ExcelModal'
 import { CostExcelFieldMap } from '@/utils/userExcelField'
-import {
-  CostExcelDownload,
-  ManagementCostService,
-} from '@/services/managementCost/managementCostService'
+import { CostExcelDownload } from '@/services/managementCost/managementCostService'
 import { useManagementCost } from '@/hooks/useManagementCost'
 import { useCostSearchStore } from '@/stores/managementCostsStore'
 import { CostList } from '@/types/managementCost'
-import { getTodayDateString } from '@/utils/formatters'
+import { formatNumber, getTodayDateString } from '@/utils/formatters'
+import useOutSourcingContract from '@/hooks/useOutSourcingContract'
+import CommonSelectByName from '../common/CommonSelectByName'
+import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
+import { useTabOpener } from '@/utils/openTab'
 
 export default function ManagementCost() {
-  const { handleNewCostCreate } = ManagementCostService()
-
   const { search } = useCostSearchStore()
+
+  const openTab = useTabOpener()
 
   const {
     CostListQuery,
+
+    CostNameTypeMethodOptions,
+    CostDeleteMutation,
+
+    costDesOptions,
+    setCostItemDesSearch,
+    CostItemDesFetchNextPage,
+    CostItemDeshasNextPage,
+    CostItemDesFetching,
+    CostItemDesLoading,
+  } = useManagementCost()
+
+  console.log('costDesOptionscostDesOptions', costDesOptions)
+
+  const {
     setSitesSearch,
     sitesOptions,
-    setProcessSearch,
-    processOptions,
-
     siteNameFetchNextPage,
     siteNamehasNextPage,
     siteNameFetching,
     siteNameLoading,
 
+    // 공정명
+    setProcessSearch,
+    processOptions,
     processInfoFetchNextPage,
     processInfoHasNextPage,
     processInfoIsFetching,
     processInfoLoading,
-    CostDeleteMutation,
-  } = useManagementCost()
+
+    // 업체명
+
+    setCompanySearch,
+    companyOptions,
+    comPanyNameFetchNextPage,
+    comPanyNamehasNextPage,
+    comPanyNameFetching,
+    comPanyNameLoading,
+  } = useOutSourcingContract()
 
   const CostDataList = CostListQuery.data?.data.content ?? []
 
@@ -55,26 +74,23 @@ export default function ManagementCost() {
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
+  console.log('CostDataListCostDataListCostDataList45', CostDataList)
+
   const updateCostList = CostDataList.map((cost: CostList) => {
-    const supplyPrices = cost.details.map((d) => Number(d.supplyPrice).toLocaleString()).join(', ')
-
-    const vats = cost.details.map((d) => Number(d.vat).toLocaleString()).join(', ')
-
-    const totals = cost.details.map((d) => Number(d.total).toLocaleString()).join(', ')
-
-    const memos = cost.details.map((d) => d.memo).join(', ')
-
-    console.log('vatsvatsvats', vats)
     return {
       ...cost,
       site: cost.site.name,
       process: cost.process.name,
-      hasFile: 'Y',
+      outsourcingCompany: cost.outsourcingCompany?.name,
+      hasFile: cost.hasFile === true ? 'Y' : 'N',
+      businessNumber: cost.outsourcingCompany?.businessNumber ?? '-',
+      ceoName: cost.outsourcingCompany?.ceoName ?? '-',
+      accountNumber: cost.outsourcingCompany?.accountNumber ?? '-',
+      accountHolder: cost.outsourcingCompany?.accountHolder ?? '-',
+      supplyPrice: formatNumber(cost.supplyPrice),
+      vat: formatNumber(cost.vat),
+      total: formatNumber(cost.total),
       paymentDate: getTodayDateString(cost.paymentDate),
-      supplyPrice: supplyPrices,
-      vat: vats,
-      total: totals,
-      memo: memos,
     }
   })
 
@@ -104,15 +120,17 @@ export default function ManagementCost() {
         },
       }
     }
-    if (col.field === 'remark') {
+    if (col.field === 'no') {
       return {
         ...col,
-        sortable: false,
         headerAlign: 'center',
         align: 'center',
-        flex: 1,
+        flex: 0.5,
         renderCell: (params: GridRenderCellParams) => {
-          return <span>{params.value}</span>
+          const sortedRowIds = params.api.getSortedRowIds?.() ?? []
+          const indexInCurrentPage = sortedRowIds.indexOf(params.id)
+          const no = (search.currentPage - 1) * pageCount + indexInCurrentPage + 1
+          return <span>{no}</span>
         },
       }
     }
@@ -133,27 +151,49 @@ export default function ManagementCost() {
   }))
 
   const handleDownloadExcel = async (fields: string[]) => {
-    await CostExcelDownload({ fields })
+    await CostExcelDownload({
+      sort: search.arraySort === '최신순' ? 'id,desc' : 'id,asc',
+      siteName: search.siteName,
+      processName: search.processName,
+      itemType: search.itemType,
+      itemTypeDescription: search.itemTypeDescription,
+      paymentStartDate: getTodayDateString(search.paymentStartDate),
+      paymentEndDate: getTodayDateString(search.paymentEndDate),
+      fields,
+    })
   }
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
         <div className="grid grid-cols-3">
           <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+            <label className="w-[144px] text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelect
-                fullWidth
-                className="text-xl"
-                value={sitesOptions.find((opt) => opt.id === search.name)?.name || '0'} // UI에 보여질 값은 id 기반 (value)
-                onChange={(value) => {
-                  const selected = sitesOptions.find((opt) => opt.name === value)
-                  search.setField('name', selected?.id ?? '') // ← label 값을 상태로 저장
+              <CommonSelectByName
+                value={search.siteName || '선택'}
+                onChange={async (value) => {
+                  const selectedSite = sitesOptions.find((opt) => opt.name === value)
+                  if (!selectedSite) return
+
+                  search.setField('siteId', selectedSite.id)
+                  search.setField('siteName', selectedSite.name)
+
+                  const res = await SitesProcessNameScroll({
+                    pageParam: 0,
+                    siteId: selectedSite.id,
+                    keyword: '',
+                  })
+
+                  const processes = res.data?.content || []
+                  if (processes.length > 0) {
+                    search.setField('processName', processes[0].name)
+                  } else {
+                    search.setField('processName', '')
+                  }
                 }}
                 options={sitesOptions}
-                displayLabel
                 onScrollToBottom={() => {
                   if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
                 }}
@@ -163,20 +203,20 @@ export default function ManagementCost() {
             </div>
           </div>
           <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               공정명
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelect
+              <CommonSelectByName
                 fullWidth
                 className="text-xl"
-                value={processOptions.find((opt) => opt.id === search.processName)?.name || '0'}
+                value={search.processName || '선택'}
                 onChange={(value) => {
-                  const selected = processOptions.find((opt) => opt.name === value)
-                  search.setField('processName', selected?.id ?? '')
+                  const selectedProcess = processOptions.find((opt) => opt.name === value)
+                  if (selectedProcess) {
+                    search.setField('processName', selectedProcess.name)
+                  }
                 }}
-                // value={search.processName}
-                // onChange={(value) => search.setField('processName', value)}
                 options={processOptions}
                 displayLabel
                 onScrollToBottom={() => {
@@ -193,38 +233,65 @@ export default function ManagementCost() {
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-2  justify-center items-center">
               <CommonSelect
-                fullWidth={true}
+                fullWidth
                 className="text-2xl"
-                value={search.itemType}
-                displayLabel
+                value={search.itemType || 'BASE'}
                 onChange={(value) => search.setField('itemType', value)}
-                options={itemTypeOptions}
+                options={CostNameTypeMethodOptions}
               />
-              {/* <CommonInput
-                value={search.itemDescription}
-                onChange={(value) => search.setField('itemDescription', value)}
-                className=" flex-1"
-              /> */}
             </div>
           </div>
+
+          {search.itemType === 'ETC' && (
+            <div className="flex">
+              <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+                구분(설명)
+              </label>
+              <div className="border border-gray-400 p-2 w-full">
+                <CommonSelectByName
+                  fullWidth
+                  value={search.itemTypeDescription || '선택'}
+                  onChange={async (value) => {
+                    const selectedEtcDes = costDesOptions.find(
+                      (opt) => opt.itemTypeDescription === value,
+                    )
+                    if (!selectedEtcDes) return
+                    search.setField('itemTypeDescription', selectedEtcDes.itemTypeDescription)
+                  }}
+                  options={costDesOptions}
+                  displayLabel
+                  onScrollToBottom={() => {
+                    if (CostItemDeshasNextPage && !CostItemDesFetching) {
+                      CostItemDesFetchNextPage()
+                    }
+                  }}
+                  onInputChange={(value) => setCostItemDesSearch(value)}
+                  loading={CostItemDesLoading}
+                />
+              </div>
+            </div>
+          )}
           <div className="flex">
-            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               업체명
             </label>
-            <div className="border border-gray-400 p-2 px-2 w-full flex justify-center items-center">
-              {/* <CommonSelect
-                fullWidth={true}
-                className="text-xl"
-                value={search.type}
-                displayLabel
-                onChange={(value) =>
-                  search.setField(
-                    'type',
-                    value as 'CONSTRUCTION' | 'CIVIL_ENGINEERING' | 'OUTSOURCING' | '선택',
-                  )
-                }
-                options={SiteOptions}
-              /> */}
+            <div className="border border-gray-400 p-2 px-2 w-full">
+              <CommonSelectByName
+                fullWidth
+                value={search.outsourcingCompanyName || '선택'}
+                onChange={async (value) => {
+                  const selectedCompany = companyOptions.find((opt) => opt.name === value)
+                  if (!selectedCompany) return
+
+                  search.setField('outsourcingCompanyName', selectedCompany.name)
+                }}
+                options={companyOptions}
+                onScrollToBottom={() => {
+                  if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
+                }}
+                onInputChange={(value) => setCompanySearch(value)}
+                loading={comPanyNameLoading}
+              />
             </div>
           </div>
           <div className="flex">
@@ -347,7 +414,7 @@ export default function ManagementCost() {
               <CommonButton
                 label="+ 신규등록"
                 variant="secondary"
-                onClick={handleNewCostCreate}
+                onClick={() => openTab('/managementCost/registration', '관리비 관리 - 등록')}
                 className="px-3"
               />
             </div>
@@ -367,7 +434,6 @@ export default function ManagementCost() {
           checkboxSelection
           disableRowSelectionOnClick
           keepNonExistentRowsSelected
-          showToolbar
           disableColumnFilter // 필터 비활성화
           hideFooter
           disableColumnMenu

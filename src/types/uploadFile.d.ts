@@ -13,6 +13,7 @@ type FileUploadProps = {
   acceptedExtensions: string[]
   files: FileUploadInfo[]
   className?: string
+  multiple?: boolean
   onChange: (files: FileUploadInfo[]) => void
   uploadTarget: string
 }

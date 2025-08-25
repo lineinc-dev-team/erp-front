@@ -620,53 +620,9 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
 
                   {/* 합계 */}
                   <TableCell align="right" sx={{ border: '1px solid #9CA3AF' }}>
-                    <TotalInput supplyPrice={m.supplyPrice} />
+                    {/* <TotalInput supplyPrice={m.supplyPrice} /> */}
+                    <TotalInput supplyPrice={m.supplyPrice} vat={Math.floor(m.supplyPrice * 0.1)} />
                   </TableCell>
-
-                  {/* <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      type="number"
-                      inputMode="numeric"
-                      placeholder="숫자 입력"
-                      value={m.supplyPrice || ''}
-                      onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'supplyPrice', Number(e.target.value))
-                      }
-                      variant="outlined"
-                      sx={textFieldStyle}
-                    />
-                  </TableCell>
-
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      type="number"
-                      inputMode="numeric"
-                      placeholder="숫자 입력"
-                      value={m.vat || ''}
-                      onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'vat', Number(e.target.value))
-                      }
-                      variant="outlined"
-                      sx={textFieldStyle}
-                    />
-                  </TableCell>
-
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      type="number"
-                      inputMode="numeric"
-                      placeholder="숫자 입력"
-                      value={m.total || ''}
-                      onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'total', Number(e.target.value))
-                      }
-                      variant="outlined"
-                      sx={textFieldStyle}
-                    />
-                  </TableCell> */}
 
                   {/* 비고 */}
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>

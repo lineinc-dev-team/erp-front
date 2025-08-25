@@ -94,12 +94,13 @@ export const SiteColumnList: GridColDef[] = [
 ]
 
 export const CostColumnList: GridColDef[] = [
-  { field: 'id', headerName: 'No', width: 70 },
+  { field: 'no', headerName: 'No', width: 70 },
+  // { field: 'id', headerName: 'No', width: 70 },
   { field: 'site', headerName: '현장명', width: 130 },
   { field: 'process', headerName: '공정명', width: 130 },
-  { field: 'itemType', headerName: '품목', width: 180 },
+  { field: 'itemType', headerName: '항목', width: 180 },
+  { field: 'outsourcingCompany', headerName: '업체명', width: 120 },
   { field: 'paymentDate', headerName: '일자', width: 100 },
-  // { field: 'period', headerName: '업체명', width: 120 },
   { field: 'businessNumber', headerName: '사업자번호', width: 120 },
   { field: 'ceoName', headerName: '대표자', width: 100 },
   { field: 'accountNumber', headerName: '청구계좌', width: 100 },

@@ -18,31 +18,41 @@ export interface Process {
   name: string
 }
 
+export interface OutsourcingCompany {
+  id: number
+  name: string
+  businessNumber: string
+  ceoName: string
+  bankName: string
+  accountNumber: string
+  accountHolder: string
+}
+
 export interface CostList {
   id: number
   itemType: string
-  itemDescription: string
-  paymentDate: string // ISO 형식 문자열
-  businessNumber: string
-  ceoName: string
-  accountNumber: string
-  accountHolder: string
-  bankName: string
-  hasFile: boolean
+  itemTypeCode: string
+  itemTypeDescription: string | null
+  paymentDate: string // ISO 형식 (예: "2025-08-12T00:00:00+09:00")
+  hasFile: T
   memo: string
-  details: DetailItem[]
+  supplyPrice: number
+  vat: number
+  total: number
   site: Site
   process: Process
+  outsourcingCompany: OutsourcingCompany
 }
 
 export type CostSearchState = {
   searchTrigger: number
-  nameId: number
-  name: string
+  siteId: number
+  siteName: string
   processId: number
   processName: string
+  outsourcingCompanyName: string
   itemType: string
-  itemDescription: string
+  itemTypeDescription: string
   paymentStartDate: Date | null
   paymentEndDate: Date | null
   arraySort: string
@@ -59,56 +69,99 @@ export type CostSearchState = {
   handleSearch: () => void
 }
 
-export type costItem = {
+export type CostItem = {
   id: number
   name: string
   unitPrice: number
-  supplyPrice: string | number
-  vat: string | number
-  total: string | number
+  supplyPrice: number
+  vat: number
+  total: number
+  memo: string
+}
+
+type HistoryItem = {
+  id: number
+  no: number
+  getChanges: string
+  createdAt: string // or Date
+  updatedAt: string
+  content: string // 수정항목
+  updatedBy: string
+  memo: string
+  type: string
+}
+
+export type KeyMoneyDetail = {
+  id: number
+  account: string
+  purpose: string
+  personnelCount: number
+  amount: number
+  memo: string
+}
+
+// 식대 세부항목
+export type MealFeeDetail = {
+  id: number
+  workType: string
+  labor?: string | null
+  laborId: number | null
+  inputType?: string
+  name: string
+  breakfastCount: number
+  lunchCount: number
+  mealCount: number
+  unitPrice: number
+  amount: number
   memo: string
 }
 
 export type AttachedFile = {
   id: number
-  name: string
   memo: string
   fileUrl?: string
   originalFileName?: string
   files: FileUploadInfo[]
 }
 
+// 외주업체 정보
+export type outsourcingCompanyInfo = {
+  name: string
+  businessNumber: string
+  ceoName: string
+  bankName: string
+  accountNumber: string
+  accountHolder: string
+}
+
 export type ManagementCostFormState = {
   // 기존 필드들
   siteId: number
   siteProcessId: number
+  outsourcingCompanyId: number
   itemType: string
-  itemDescription: string
-  paymentDate: Data | null // ISO string
-  businessNumber: string
-  ceoName: string
-  accountNumber: string
-  accountHolder: string
-  bankName: string
+  itemTypeDescription: string
+  paymentDate: Date | null // ISO string
+  outsourcingCompanyInfo: outsourcingCompanyInfo | null
   memo: string
 
   // 담당자 배열
-  details: costItem[]
-
+  details: CostItem[]
   // 선택된 체크박스 id
   checkedCostIds: number[]
+
+  keyMoneyDetails: KeyMoneyDetail[]
+  checkedKeyMoneyIds: number[]
+
+  mealFeeDetails: MealFeeDetail[]
+  checkedMealFeeIds: number[]
 
   // 파일첨부, 수정이력
   attachedFiles: AttachedFile[]
   checkedAttachedFileIds: number[]
 
-  //수정페이지에서 이력 조회 시 사용
-  modificationHistory: {
-    modifiedAt: Date | null
-    modifiedField: string
-    modifiedBy: string
-    note: string
-  }[]
+  editedHistories?: Pick<HistoryItem, 'id' | 'memo'>[]
+  changeHistories: HistoryItem[] // 수정 이력 포함
 }
 
 type CostFormStore = {
@@ -119,23 +172,44 @@ type CostFormStore = {
   // methods
   setField: <K extends keyof Omit<ManagementCostFormState, 'reset' | 'setField'>>(
     field: K,
-    value: ManagementCostFormState[K],
-  ) => void
-
-  addItem: (type: 'costItem' | 'attachedFile') => void
-  updateItemField: (
-    type: 'costItem' | 'attachedFile',
-    id: T,
-    field: keyof CostItem,
     value: T,
   ) => void
 
-  toggleCheckItem: (type: 'costItem' | 'attachedFile', id: number, checked: boolean) => void
-  toggleCheckAllItems: (type: 'costItem' | 'attachedFile', checked: boolean) => void
-  removeCheckedItems: (type: 'costItem' | 'attachedFile') => void
+  addItem: (type: 'costItem' | 'attachedFile' | 'mealListData' | 'keyMoneyList') => void
+  updateItemField: (
+    type: 'costItem' | 'attachedFile' | 'mealListData' | 'keyMoneyList',
+    id: T,
+    field: keyof T,
+    value: T,
+  ) => void
 
-  //관리비 등록하기
+  toggleCheckItem: (
+    type: 'costItem' | 'attachedFile' | 'mealListData' | 'keyMoneyList',
+    id: number,
+    checked: boolean,
+  ) => void
+  toggleCheckAllItems: (
+    type: 'costItem' | 'attachedFile' | 'mealListData' | 'keyMoneyList',
+    checked: boolean,
+  ) => void
+  removeCheckedItems: (type: 'costItem' | 'attachedFile' | 'mealListData' | 'keyMoneyList') => void
 
-  //payload 값
+  // 그외에 계산 함수값
+  getPriceTotal: () => number
+  getSupplyTotal: () => number
+  getVatTotal: () => number
+  getTotalCount: () => number
+
+  // 전도금
+  getPersonTotal: () => number
+  getAmountTotal: () => number
+
+  // 식대에서 계산 값
+  getMealTotal: () => number
+  getMealPriceTotal: () => number
+  getMealTotalCount: () => number
+
+  updateMemo: (id: number, newMemo: string) => void
+
   newCostData: () => void
 }

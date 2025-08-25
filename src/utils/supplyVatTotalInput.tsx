@@ -1,5 +1,6 @@
-import { TextField } from '@mui/material'
+import { Checkbox, FormControlLabel, TextField } from '@mui/material'
 import { formatNumber, unformatNumber } from './formatters'
+import { useState } from 'react'
 
 type SupplyPriceInputProps = {
   value: number
@@ -37,48 +38,75 @@ export function SupplyPriceInput({ value, onChange }: SupplyPriceInputProps) {
 
 type VatInputProps = {
   supplyPrice: number
+  value?: number
+  onChange?: (vat: number) => void
+  enableManual?: boolean //  상세화면에서만 true로 전달
 }
+export function VatInput({ supplyPrice, value, onChange, enableManual = false }: VatInputProps) {
+  const [autoCalc, setAutoCalc] = useState(true)
 
-export function VatInput({ supplyPrice }: VatInputProps) {
-  const vat = Math.floor(supplyPrice * 0.1)
+  const vat = autoCalc ? Math.floor(supplyPrice * 0.1) : value ?? 0
 
   return (
-    <TextField
-      size="small"
-      value={formatNumber(vat)}
-      placeholder="자동 계산"
-      InputProps={{ readOnly: true }}
-      variant="outlined"
-      sx={textFieldStyle}
-      inputProps={{
-        style: {
-          textAlign: 'right',
-        },
-      }}
-    />
+    <div className="flex items-center gap-2">
+      {enableManual && (
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={autoCalc}
+              onChange={(e) => {
+                const checked = e.target.checked
+                setAutoCalc(checked)
+                if (checked && onChange) {
+                  // 자동계산 전환 시 값 업데이트
+                  onChange(Math.floor(supplyPrice * 0.1))
+                }
+              }}
+              size="small"
+            />
+          }
+          label=""
+        />
+      )}
+
+      <TextField
+        size="small"
+        value={formatNumber(vat)}
+        placeholder={autoCalc ? '자동 계산' : '숫자 입력'}
+        onChange={(e) => {
+          if (!autoCalc && onChange) {
+            const numericValue = e.target.value === '' ? 0 : unformatNumber(e.target.value)
+            onChange(numericValue)
+          }
+        }}
+        InputProps={{ readOnly: autoCalc }}
+        variant="outlined"
+        sx={textFieldStyle}
+        inputProps={{
+          style: { textAlign: 'right' },
+        }}
+      />
+    </div>
   )
 }
 
 type TotalInputProps = {
   supplyPrice: number
+  vat: number
 }
 
-export function TotalInput({ supplyPrice }: TotalInputProps) {
-  const vat = Math.floor(supplyPrice * 0.1)
-  const total = supplyPrice + vat
+export function TotalInput({ supplyPrice, vat }: TotalInputProps) {
+  const total = supplyPrice + (vat || 0)
 
   return (
     <TextField
       size="small"
       value={formatNumber(total)}
-      placeholder="자동 계산"
       InputProps={{ readOnly: true }}
       variant="outlined"
       sx={textFieldStyle}
       inputProps={{
-        style: {
-          textAlign: 'right',
-        },
+        style: { textAlign: 'right' },
       }}
     />
   )

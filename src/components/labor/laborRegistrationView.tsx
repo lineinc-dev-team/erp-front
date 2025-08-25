@@ -30,6 +30,7 @@ import { useLaborInfo } from '@/hooks/useLabor'
 import CommonResidentNumberInput from '@/utils/commonResidentNumberInput'
 import AmountInput from '../common/AmountInput'
 import { LaborDetailService } from '@/services/labor/laborRegistrationService'
+import { useSnackbarStore } from '@/stores/useSnackbarStore'
 
 export default function LaborRegistrationView({ isEditMode = false }) {
   const {
@@ -59,6 +60,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
     useLaborHistoryDataQuery,
   } = useLaborInfo()
+
+  const { showSnackbar } = useSnackbarStore()
 
   const attachedFiles = form.files
   const fileCheckIds = form.checkedAttachedFileIds
@@ -626,6 +629,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                           />
                            */}
                       <CommonFileInput
+                        multiple={false}
                         acceptedExtensions={[
                           'pdf',
                           'jpg',
@@ -637,9 +641,14 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                           'ppt',
                         ]}
                         files={m.files} // 각 항목별 files
-                        onChange={
-                          (newFiles) => updateItemField('attachedFile', m.id, 'files', newFiles) //  해당 항목만 업데이트
-                        }
+                        onChange={(newFiles) => {
+                          if (newFiles.length > 1) {
+                            showSnackbar('파일은 1개만 업로드할 수 있습니다.', 'warning')
+                            updateItemField('attachedFile', m.id, 'files', newFiles.slice(0, 1))
+                          } else {
+                            updateItemField('attachedFile', m.id, 'files', newFiles)
+                          }
+                        }}
                         uploadTarget="CLIENT_COMPANY"
                       />
                       {/* <CommonFileInput

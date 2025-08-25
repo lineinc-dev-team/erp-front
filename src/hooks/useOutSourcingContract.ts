@@ -331,6 +331,11 @@ export default function useOutSourcingContract() {
       .map((user) => ({
         id: user.id,
         name: user.name,
+        businessNumber: user.businessNumber,
+        ceoName: user.ceoName,
+        bankName: user.bankName,
+        accountNumber: user.accountNumber,
+        accountHolder: user.accountHolder,
       }))
 
     return [defaultOption, ...options]

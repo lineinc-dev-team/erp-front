@@ -14,18 +14,32 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Typography,
 } from '@mui/material'
-import { bankOptions, itemTypeOptions } from '@/config/erp.confing'
-import { useEffect } from 'react'
+import { bankOptions } from '@/config/erp.confing'
+import { useCallback, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
-import { ItemTypeLabelToValue, useManagementCostFormStore } from '@/stores/managementCostsStore'
+import { useManagementCostFormStore } from '@/stores/managementCostsStore'
 import CommonDatePicker from '../common/DatePicker'
 import { useManagementCost } from '@/hooks/useManagementCost'
 import CommonInputnumber from '@/utils/formatBusinessNumber'
-import { formatNumber, unformatNumber } from '@/utils/formatters'
-import { CostDetailService } from '@/services/managementCost/managementCostRegistrationService'
-import { AttachedFile, DetailItem } from '@/types/managementCost'
+import { formatNumber, getTodayDateString, unformatNumber } from '@/utils/formatters'
+import {
+  CostDetailService,
+  SitesProcessNameScroll,
+} from '@/services/managementCost/managementCostRegistrationService'
+import {
+  AttachedFile,
+  DetailItem,
+  HistoryItem,
+  KeyMoneyDetail,
+  MealFeeDetail,
+} from '@/types/managementCost'
+import useOutSourcingContract from '@/hooks/useOutSourcingContract'
+import { useSnackbarStore } from '@/stores/useSnackbarStore'
+import { SupplyPriceInput, TotalInput, VatInput } from '@/utils/supplyVatTotalInput'
+import CommonSelectByName from '../common/CommonSelectByName'
 
 export default function ManagementCostRegistrationView({ isEditMode = false }) {
   const {
@@ -34,7 +48,19 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     updateItemField,
     removeCheckedItems,
     reset,
+    updateMemo,
     addItem,
+    getPersonTotal,
+    getAmountTotal,
+    getPriceTotal,
+    getSupplyTotal,
+    getVatTotal,
+    getTotalCount,
+
+    getMealTotal,
+    getMealPriceTotal,
+    getMealTotalCount,
+
     toggleCheckItem,
     toggleCheckAllItems,
   } = useManagementCostFormStore()
@@ -42,26 +68,71 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
   const {
     createCostMutation,
     CostModifyMutation,
+
+    CostNameTypeMethodOptions,
+
+    // 업체명
+    setCompanySearch,
+    companyOptions,
+    comPanyNameFetchNextPage,
+    comPanyNamehasNextPage,
+    comPanyNameFetching,
+    comPanyNameLoading,
+
+    // 인력
+
+    setPersonSearch,
+    personDataOptions,
+    PersonSearchFetchNextPage,
+    PersonSearchhasNextPage,
+    PersonSearchFetching,
+    PersonSearchLoading,
+
+    useCostHistoryDataQuery,
+  } = useManagementCost()
+
+  const {
     setSitesSearch,
     sitesOptions,
-    setProcessSearch,
-    processOptions,
-
     siteNameFetchNextPage,
     siteNamehasNextPage,
     siteNameFetching,
     siteNameLoading,
 
+    // 공정명
+    setProcessSearch,
+    processOptions,
     processInfoFetchNextPage,
     processInfoHasNextPage,
     processInfoIsFetching,
     processInfoLoading,
-  } = useManagementCost()
+  } = useOutSourcingContract()
 
+  const { showSnackbar } = useSnackbarStore()
+
+  const textFieldStyle = {
+    '& .MuiOutlinedInput-root': {
+      '& fieldset': { borderColor: 'black' },
+      '&:hover fieldset': { borderColor: 'black' },
+      '&.Mui-focused fieldset': { borderColor: 'black' },
+    },
+  }
   // 체크 박스에 활용
-  const managers = form.details
+  const itemDetails = form.details
   const checkedIds = form.checkedCostIds
-  const isAllChecked = managers.length > 0 && checkedIds.length === managers.length
+  const isAllChecked = itemDetails.length > 0 && checkedIds.length === itemDetails.length
+
+  // 전도금
+  const keyMoneyDetails = form.keyMoneyDetails
+  const checkedKeyMoneyIds = form.checkedKeyMoneyIds
+  const isAllKeyMoneyChecked =
+    keyMoneyDetails.length > 0 && checkedKeyMoneyIds.length === keyMoneyDetails.length
+
+  // 식대
+  const mealFeelDetails = form.mealFeeDetails
+  const checkedMealIds = form.checkedMealFeeIds
+  const isAllMealChecked =
+    mealFeelDetails.length > 0 && checkedMealIds.length === mealFeelDetails.length
 
   const attachedFiles = form.attachedFiles
   const fileCheckIds = form.checkedAttachedFileIds
@@ -78,7 +149,33 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     enabled: isEditMode && !!costDetailId, // 수정 모드일 때만 fetch
   })
 
-  console.log('상세데이터', data)
+  const PROPERTY_NAME_MAP: Record<string, string> = {
+    phoneNumber: '개인 휴대폰',
+    name: '업체명',
+    mainWork: '주 작업',
+    dailyWage: '기준일당',
+    hireDateFormat: '입사일',
+    resignationDateFormat: '퇴사일',
+    workTypeName: '공종',
+    workTypeDescription: '공종 설명',
+    typeName: '구분명',
+    typeDescription: '구분 설명',
+    detailAddress: '상세주소',
+    bankName: '은행명',
+    accountNumber: '계좌번호',
+    accountHolder: '예금주',
+    memo: '메모',
+  }
+
+  const {
+    data: costHistoryList,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useCostHistoryDataQuery(costDetailId, isEditMode)
+
+  const historyList = useManagementCostFormStore((state) => state.form.changeHistories)
 
   useEffect(() => {
     if (data && isEditMode === true) {
@@ -97,14 +194,36 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
         memo: c.memo,
       }))
 
+      const keyMoneyDetails = (client.keyMoneyDetails ?? []).map((item: KeyMoneyDetail) => ({
+        id: item.id,
+        account: item.account,
+        purpose: item.purpose,
+        personnelCount: item.personnelCount,
+        amount: item.amount,
+        memo: item.memo,
+      }))
+
+      const mealDetails = (client.mealFeeDetails ?? []).map((item: MealFeeDetail) => ({
+        id: item.id,
+        laborId: item.laborId,
+        workType: item.workType,
+        breakfastCount: item.breakfastCount,
+        lunchCount: item.lunchCount,
+        unitPrice: item.unitPrice,
+        amount: item.amount,
+        memo: item.memo,
+        name: item.name,
+        inputType: item.labor === null ? 'manual' : 'select',
+      }))
+
       // 첨부 파일 가공
       const formattedFiles = (client.files ?? []).map((item: AttachedFile) => ({
         id: item.id,
-        name: item.name,
         memo: item.memo,
         files: [
           {
-            publicUrl: item.fileUrl,
+            id: item.id,
+            fileUrl: item.fileUrl,
             file: {
               name: item.originalFileName,
             },
@@ -115,29 +234,116 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
       // 각 필드에 값 세팅
       setField('siteId', client.site?.id ?? '') // 현장명
       setField('siteProcessId', client.process?.id ?? '') // 공정명
-      setField('businessNumber', client.businessNumber ?? '')
-      setField('ceoName', client.ceoName ?? '')
+
+      setField('itemType', client.itemTypeCode ?? '') // 공정명
+
+      setField('itemTypeDescription', client.itemDescription || '') // 공정명
       setField('paymentDate', client.paymentDate ? new Date(client.paymentDate) : null)
-      setField('accountHolder', client.accountHolder ?? '')
-      setField('accountNumber', client.accountNumber ?? '')
-      setField('bankName', client.bankName ?? '')
 
-      const mappedItemType = ItemTypeLabelToValue[client.itemType ?? '']
+      setField('outsourcingCompanyId', client.outsourcingCompany.id)
 
-      if (mappedItemType) {
-        setField('itemType', mappedItemType)
-      } else {
-        setField('itemType', '') // 혹은 기본값 처리
-      }
+      setField('outsourcingCompanyInfo', {
+        name: client.outsourcingCompany?.name ?? '',
+        businessNumber: client.outsourcingCompany?.businessNumber ?? '',
+        ceoName: client.outsourcingCompany?.ceoName ?? '',
+        bankName: client.outsourcingCompany?.bankName ?? '',
+        accountNumber: client.outsourcingCompany?.accountNumber ?? '',
+        accountHolder: client.outsourcingCompany?.accountHolder ?? '',
+      })
 
-      setField('itemDescription', client.itemDescription ?? '')
       setField('memo', client.memo ?? '')
+
       setField('details', formattedDetails)
       setField('attachedFiles', formattedFiles)
+
+      setField('keyMoneyDetails', keyMoneyDetails)
+
+      setField('mealFeeDetails', mealDetails)
     } else {
       reset()
     }
   }, [data, isEditMode, reset, setField])
+
+  const formatChangeDetail = (getChanges: string) => {
+    try {
+      const parsed = JSON.parse(getChanges)
+      if (!Array.isArray(parsed)) return '-'
+
+      return parsed.map(
+        (item: { property: string; before: string | null; after: string | null }, idx: number) => {
+          const propertyKo = PROPERTY_NAME_MAP[item.property] || item.property
+
+          const convertValue = (value: string | null) => {
+            if (value === 'true') return '사용'
+            if (value === 'false') return '미사용'
+            if (value === null || value === 'null') return 'null'
+            return value
+          }
+
+          let before = convertValue(item.before)
+          let after = convertValue(item.after)
+
+          // 스타일 결정
+          let style = {}
+          if (before === 'null') {
+            before = '추가'
+            style = { color: '#1976d2' } // 파란색 - 추가
+          } else if (after === 'null') {
+            after = '삭제'
+            style = { color: '#d32f2f' } // 빨간색 - 삭제
+          }
+
+          return (
+            <Typography key={idx} component="div" style={style}>
+              {before === '추가'
+                ? `추가됨 => ${after}`
+                : after === '삭제'
+                ? ` ${before} => 삭제됨`
+                : `${propertyKo} : ${before} => ${after}`}
+            </Typography>
+          )
+        },
+      )
+    } catch (e) {
+      if (e instanceof Error) return '-'
+    }
+  }
+
+  // 수정이력 데이터가 들어옴
+  useEffect(() => {
+    if (costHistoryList?.pages) {
+      const allHistories = costHistoryList.pages.flatMap((page) =>
+        page.data.content.map((item: HistoryItem) => ({
+          id: item.id,
+          type: item.type,
+          content: formatChangeDetail(item.getChanges), // 여기 변경
+          createdAt: getTodayDateString(item.createdAt),
+          updatedAt: getTodayDateString(item.updatedAt),
+          updatedBy: item.updatedBy,
+          memo: item.memo ?? '',
+        })),
+      )
+      setField('changeHistories', allHistories)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [costHistoryList, setField])
+
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  const loadMoreRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (isLoading || isFetchingNextPage) return
+      if (observerRef.current) observerRef.current.disconnect()
+
+      observerRef.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage()
+        }
+      })
+
+      if (node) observerRef.current.observe(node)
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading],
+  )
 
   return (
     <>
@@ -145,17 +351,33 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
         <span className="font-bold border-b-2 mb-4">기본 정보</span>
         <div className="grid grid-cols-2 mt-1 ">
           <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
               <CommonSelect
                 fullWidth
-                className="text-xl"
-                value={form.siteId}
-                onChange={(value) => setField('siteId', value)}
+                value={form.siteId || 0}
+                onChange={async (value) => {
+                  const selectedSite = sitesOptions.find((opt) => opt.id === value)
+                  if (!selectedSite) return
+
+                  setField('siteId', selectedSite.id)
+
+                  const res = await SitesProcessNameScroll({
+                    pageParam: 0,
+                    siteId: selectedSite.id,
+                    keyword: '',
+                  })
+
+                  const processes = res.data?.content || []
+                  if (processes.length > 0) {
+                    setField('siteProcessId', processes[0].id)
+                  } else {
+                    setField('siteProcessId', 0)
+                  }
+                }}
                 options={sitesOptions}
-                displayLabel
                 onScrollToBottom={() => {
                   if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
                 }}
@@ -165,15 +387,20 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
             </div>
           </div>
           <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               공정명
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
               <CommonSelect
                 fullWidth
                 className="text-xl"
-                value={form.siteProcessId}
-                onChange={(value) => setField('siteProcessId', value)}
+                value={form.siteProcessId || 0}
+                onChange={(value) => {
+                  const selectedProcess = processOptions.find((opt) => opt.name === value)
+                  if (selectedProcess) {
+                    setField('siteProcessId', selectedProcess.id)
+                  }
+                }}
                 options={processOptions}
                 displayLabel
                 onScrollToBottom={() => {
@@ -184,24 +411,29 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
               />
             </div>
           </div>
+
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              품목
+              항목
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
                 className="text-2xl"
-                value={form.itemType}
+                value={form.itemType || 'BASE'}
                 displayLabel
-                onChange={(value) => setField('itemType', value)}
-                options={itemTypeOptions}
+                onChange={(value) => {
+                  setField('itemType', value)
+                  setField('itemTypeDescription', '')
+                }}
+                options={CostNameTypeMethodOptions}
               />
 
               <CommonInput
                 placeholder="텍스트 입력"
-                value={form.itemDescription}
-                onChange={(value) => setField('itemDescription', value)}
+                value={form.itemTypeDescription}
+                onChange={(value) => setField('itemTypeDescription', value)}
                 className=" flex-1"
+                disabled={form.itemType !== 'ETC'}
               />
             </div>
           </div>
@@ -220,22 +452,64 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              업체명 추후 넣기
+              업체명
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
-              {/* <CommonSelect
-                className="text-2xl"
-                value={form.paymentMethod}
-                onChange={(value) => setField('paymentMethod', value)}
-                options={PayInfo}
+              <CommonSelect
+                value={form.outsourcingCompanyId ?? -1}
+                onChange={async (value) => {
+                  setField('outsourcingCompanyId', value)
+                  if (value === -2) {
+                    // 직접입력 선택 시, OutsourcingCompanyInfo 초기화
+                    setField('outsourcingCompanyInfo', {
+                      name: '',
+                      businessNumber: '',
+                      ceoName: '',
+                      bankName: '선택',
+                      accountNumber: '',
+                      accountHolder: '',
+                    })
+                  } else {
+                    const companyDetail = companyOptions.find((c) => c.id === value)
+                    if (
+                      companyDetail &&
+                      'businessNumber' in companyDetail &&
+                      'ceoName' in companyDetail &&
+                      'bankName' in companyDetail &&
+                      'accountNumber' in companyDetail &&
+                      'accountHolder' in companyDetail
+                    ) {
+                      setField('outsourcingCompanyInfo', {
+                        name: companyDetail.name ?? '',
+                        businessNumber: companyDetail.businessNumber ?? '',
+                        ceoName: companyDetail.ceoName ?? '',
+                        bankName: companyDetail.bankName ?? '',
+                        accountNumber: companyDetail.accountNumber ?? '',
+                        accountHolder: companyDetail.accountHolder ?? '',
+                      })
+                    }
+                  }
+                }}
+                options={[...companyOptions, { id: -2, name: '직접입력' }]}
+                onScrollToBottom={() => {
+                  if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
+                }}
+                onInputChange={(value) => setCompanySearch(value)}
+                loading={comPanyNameLoading}
               />
 
               <CommonInput
                 placeholder="텍스트 입력"
-                value={form.paymentPeriod}
-                onChange={(value) => setField('paymentPeriod', value)}
-                className=" flex-1"
-              /> */}
+                value={form.outsourcingCompanyInfo?.name ?? ''}
+                onChange={(value) =>
+                  setField('outsourcingCompanyInfo', {
+                    ...form.outsourcingCompanyInfo,
+                    name: value,
+                  })
+                }
+                className="flex-1"
+                disabled={form.outsourcingCompanyId !== -2}
+              />
             </div>
           </div>
 
@@ -246,22 +520,32 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
                 placeholder="'-'없이 숫자만 입력"
-                value={CommonInputnumber(form.businessNumber)}
-                onChange={(value) => setField('businessNumber', value)}
+                value={CommonInputnumber(form.outsourcingCompanyInfo?.businessNumber ?? '')}
+                onChange={(value) =>
+                  setField('outsourcingCompanyInfo', {
+                    ...form.outsourcingCompanyInfo,
+                    businessNumber: value,
+                  })
+                }
                 className="flex-1"
               />
             </div>
           </div>
 
           <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               대표자명
             </label>
-            <div className="border flex  items-center border-gray-400 px-2 w-full">
+            <div className="border flex items-center border-gray-400 px-2 w-full">
               <CommonInput
                 placeholder="텍스트 입력"
-                value={form.ceoName}
-                onChange={(value) => setField('ceoName', value)}
+                value={form.outsourcingCompanyInfo?.ceoName ?? ''}
+                onChange={(value) =>
+                  setField('outsourcingCompanyInfo', {
+                    ...form.outsourcingCompanyInfo,
+                    ceoName: value,
+                  })
+                }
                 className="flex-1"
               />
             </div>
@@ -274,47 +558,41 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
                 className="text-2xl"
-                value={form.bankName}
-                onChange={(value) => setField('bankName', value)}
+                value={form.outsourcingCompanyInfo?.bankName ?? '선택'}
+                onChange={(value) =>
+                  setField('outsourcingCompanyInfo', {
+                    ...form.outsourcingCompanyInfo,
+                    bankName: value,
+                  })
+                }
                 options={bankOptions}
               />
 
               <CommonInput
                 placeholder="텍스트 입력"
-                value={form.accountNumber}
-                onChange={(value) => setField('accountNumber', value)}
-                className=" flex-1"
+                value={form.outsourcingCompanyInfo?.accountNumber ?? ''}
+                onChange={(value) =>
+                  setField('outsourcingCompanyInfo', {
+                    ...form.outsourcingCompanyInfo,
+                    accountNumber: value,
+                  })
+                }
+                className="flex-1"
               />
 
               <CommonInput
                 placeholder="예금주"
-                value={form.accountHolder}
-                onChange={(value) => setField('accountHolder', value)}
-                className=" flex-1"
+                value={form.outsourcingCompanyInfo?.accountHolder ?? ''}
+                onChange={(value) =>
+                  setField('outsourcingCompanyInfo', {
+                    ...form.outsourcingCompanyInfo,
+                    accountHolder: value,
+                  })
+                }
+                className="flex-1"
               />
             </div>
           </div>
-
-          {/* <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              본사 담당자명
-            </label>
-            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelect
-                fullWidth
-                className="text-xl"
-                value={form.userId}
-                onChange={(value) => setField('userId', value)}
-                options={userOptions}
-                displayLabel
-                onScrollToBottom={() => {
-                  if (hasNextPage && !isFetching) fetchNextPage()
-                }}
-                onInputChange={(value) => setUserSearch(value)}
-                loading={isLoading}
-              />
-            </div>
-          </div> */}
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
@@ -325,185 +603,879 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                 value={form.memo}
                 onChange={(value) => setField('memo', value)}
                 className="flex-1"
+                placeholder="텍스트 입력"
               />
             </div>
           </div>
         </div>
       </div>
 
-      {/* 담당자 */}
-      <div>
-        <div className="flex justify-between items-center mt-10 mb-2">
-          <span className="font-bold border-b-2 mb-4">품목상세</span>
-          <div className="flex gap-4">
-            <CommonButton
-              label="삭제"
-              className="px-7"
-              variant="danger"
-              onClick={() => removeCheckedItems('costItem')}
-            />
-            <CommonButton
-              label="추가"
-              className="px-7"
-              variant="secondary"
-              onClick={() => addItem('costItem')}
-            />
+      {form.itemType !== 'MEAL_FEE' && form.itemType !== 'KEY_MONEY' && (
+        <div>
+          <div className="flex justify-between items-center mt-10 mb-2">
+            <span className="font-bold border-b-2 mb-4">품목상세</span>
+            <div className="flex gap-4">
+              <CommonButton
+                label="삭제"
+                className="px-7"
+                variant="danger"
+                onClick={() => removeCheckedItems('costItem')}
+              />
+              <CommonButton
+                label="추가"
+                className="px-7"
+                variant="secondary"
+                onClick={() => addItem('costItem')}
+              />
+            </div>
           </div>
-        </div>
-        <TableContainer component={Paper}>
-          <Table size="small">
-            <TableHead>
-              <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
-                  <Checkbox
-                    checked={isAllChecked}
-                    indeterminate={checkedIds.length > 0 && !isAllChecked}
-                    onChange={(e) => toggleCheckAllItems('costItem', e.target.checked)}
-                    sx={{ color: 'black' }}
-                  />
-                </TableCell>
-                {['품명', '단가', '공급가', '부가세', '합계', '비고'].map((label) => (
+          <TableContainer component={Paper}>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                  <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                    <Checkbox
+                      checked={isAllChecked}
+                      indeterminate={checkedIds.length > 0 && !isAllChecked}
+                      onChange={(e) => toggleCheckAllItems('costItem', e.target.checked)}
+                      sx={{ color: 'black' }}
+                    />
+                  </TableCell>
+                  {['품명', '단가', '공급가', '부가세 (체크 시 자동계산)', '합계', '비고'].map(
+                    (label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        {label}
+                      </TableCell>
+                    ),
+                  )}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {itemDetails.map((m) => (
+                  <TableRow key={m.id}>
+                    <TableCell
+                      padding="checkbox"
+                      align="center"
+                      sx={{ border: '1px solid  #9CA3AF' }}
+                    >
+                      <Checkbox
+                        checked={checkedIds.includes(m.id)}
+                        onChange={(e) => toggleCheckItem('costItem', m.id, e.target.checked)}
+                      />
+                    </TableCell>
+
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        size="small"
+                        placeholder="텍스트 입력"
+                        value={m.name}
+                        onChange={(e) => updateItemField('costItem', m.id, 'name', e.target.value)}
+                        variant="outlined"
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: 'black', // 기본 테두리 색 검은색
+                            },
+                            '&:hover fieldset': {
+                              borderColor: 'black', // 호버 시에도 검은색 유지
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: 'black', // 포커스 시에도 검은색 유지
+                            },
+                          },
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="right" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        size="small"
+                        inputMode="numeric"
+                        placeholder="숫자 입력"
+                        value={formatNumber(m.unitPrice) || 0}
+                        onChange={(e) => {
+                          const numericValue =
+                            e.target.value === '' ? '' : unformatNumber(e.target.value)
+                          updateItemField('costItem', m.id, 'unitPrice', numericValue)
+                        }}
+                        variant="outlined"
+                        sx={textFieldStyle}
+                        inputProps={{
+                          style: {
+                            textAlign: 'right',
+                          },
+                        }}
+                      />
+                    </TableCell>
+                    {/* <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        size="small"
+                        inputMode="numeric"
+                        placeholder="숫자 입력"
+                        value={formatNumber(m.supplyPrice) || 0}
+                        onChange={(e) => {
+                          const numericValue =
+                            e.target.value === '' ? '' : unformatNumber(e.target.value)
+                          updateItemField('costItem', m.id, 'supplyPrice', numericValue)
+                        }}
+                        variant="outlined"
+                        sx={textFieldStyle}
+                        inputProps={{
+                          style: {
+                            textAlign: 'right',
+                          },
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        size="small"
+                        inputMode="numeric"
+                        placeholder="숫자 입력"
+                        value={formatNumber(m.vat) || 0}
+                        onChange={(e) => {
+                          const numericValue =
+                            e.target.value === '' ? '' : unformatNumber(e.target.value)
+                          updateItemField('costItem', m.id, 'vat', numericValue)
+                        }}
+                        variant="outlined"
+                        sx={textFieldStyle}
+                        inputProps={{
+                          style: {
+                            textAlign: 'right',
+                          },
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        size="small"
+                        inputMode="numeric"
+                        placeholder="숫자 입력"
+                        value={formatNumber(m.total) || 0}
+                        onChange={(e) => {
+                          const numericValue =
+                            e.target.value === '' ? '' : unformatNumber(e.target.value)
+                          updateItemField('costItem', m.id, 'total', numericValue)
+                        }}
+                        variant="outlined"
+                        sx={textFieldStyle}
+                        inputProps={{
+                          style: {
+                            textAlign: 'right',
+                          },
+                        }}
+                      />
+                    </TableCell> */}
+
+                    <TableCell align="right" sx={{ border: '1px solid #9CA3AF' }}>
+                      <SupplyPriceInput
+                        value={m.supplyPrice}
+                        onChange={(supply) => {
+                          const vat = Math.floor(supply * 0.1)
+                          const total = supply + vat
+
+                          // MaterialItem 객체 업데이트
+                          updateItemField('costItem', m.id, 'supplyPrice', supply)
+                          updateItemField('costItem', m.id, 'vat', vat)
+                          updateItemField('costItem', m.id, 'total', total)
+                        }}
+                      />
+                    </TableCell>
+
+                    {/* 부가세 */}
+                    <TableCell align="right" sx={{ border: '1px solid #9CA3AF' }}>
+                      <VatInput
+                        supplyPrice={m.supplyPrice}
+                        value={m.vat}
+                        onChange={(vat) => updateItemField('costItem', m.id, 'vat', vat)}
+                        enableManual={true}
+                      />
+                    </TableCell>
+
+                    {/* 합계 */}
+                    <TableCell align="right" sx={{ border: '1px solid #9CA3AF' }}>
+                      <TotalInput supplyPrice={m.supplyPrice} vat={m.vat} />
+                    </TableCell>
+
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        size="small"
+                        placeholder="텍스트 입력"
+                        value={m.memo}
+                        onChange={(e) => updateItemField('costItem', m.id, 'memo', e.target.value)}
+                        variant="outlined"
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: 'black', // 기본 테두리 색 검은색
+                            },
+                            '&:hover fieldset': {
+                              borderColor: 'black', // 호버 시에도 검은색 유지
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: 'black', // 포커스 시에도 검은색 유지
+                            },
+                          },
+                        }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+                <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
                   <TableCell
-                    key={label}
-                    align="center"
+                    colSpan={2}
+                    align="right"
                     sx={{
-                      backgroundColor: '#D1D5DB',
-                      border: '1px solid  #9CA3AF',
-                      color: 'black',
+                      border: '1px solid #9CA3AF',
+                      fontSize: '16px',
+                      textAlign: 'center',
                       fontWeight: 'bold',
                     }}
                   >
-                    {label}
+                    소계
                   </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {managers.map((m) => (
-                <TableRow key={m.id}>
                   <TableCell
-                    padding="checkbox"
                     align="center"
-                    sx={{ border: '1px solid  #9CA3AF' }}
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
                   >
+                    {getPriceTotal().toLocaleString()}
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  >
+                    {getSupplyTotal().toLocaleString()}
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  >
+                    {getVatTotal().toLocaleString()}
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  >
+                    {getTotalCount().toLocaleString()}
+                  </TableCell>
+                  <TableCell sx={{ border: '1px solid #9CA3AF' }} />
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </div>
+      )}
+
+      {form.itemType === 'MEAL_FEE' && (
+        <div>
+          <div className="flex justify-between items-center mt-10 mb-2">
+            <span className="font-bold border-b-2 mb-4">식대상세</span>
+            <div className="flex gap-4">
+              <CommonButton
+                label="삭제"
+                className="px-7"
+                variant="danger"
+                onClick={() => removeCheckedItems('mealListData')}
+              />
+              <CommonButton
+                label="추가"
+                className="px-7"
+                variant="secondary"
+                onClick={() => addItem('mealListData')}
+              />
+            </div>
+          </div>
+          <TableContainer component={Paper}>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                  <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
                     <Checkbox
-                      checked={checkedIds.includes(m.id)}
-                      onChange={(e) => toggleCheckItem('costItem', m.id, e.target.checked)}
+                      checked={isAllMealChecked}
+                      indeterminate={checkedMealIds.length > 0 && !isAllMealChecked}
+                      onChange={(e) => toggleCheckAllItems('mealListData', e.target.checked)}
+                      sx={{ color: 'black' }}
                     />
+                  </TableCell>
+                  {['직종', '성명', '구분', '계', '단가', '금액', '비고'].map((label) => (
+                    <TableCell
+                      key={label}
+                      align="center"
+                      sx={{
+                        backgroundColor: '#D1D5DB',
+                        border: '1px solid  #9CA3AF',
+                        color: 'black',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {label}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {mealFeelDetails.map((m) => (
+                  <TableRow key={m.id}>
+                    <TableCell
+                      padding="checkbox"
+                      align="center"
+                      sx={{ border: '1px solid  #9CA3AF' }}
+                    >
+                      <Checkbox
+                        checked={checkedMealIds.includes(m.id)}
+                        onChange={(e) => toggleCheckItem('mealListData', m.id, e.target.checked)}
+                      />
+                    </TableCell>
+
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        size="small"
+                        placeholder="텍스트 입력"
+                        value={m.workType}
+                        onChange={(e) =>
+                          updateItemField('mealListData', m.id, 'workType', e.target.value)
+                        }
+                        variant="outlined"
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: 'black', // 기본 테두리 색 검은색
+                            },
+                            '&:hover fieldset': {
+                              borderColor: 'black', // 호버 시에도 검은색 유지
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: 'black', // 포커스 시에도 검은색 유지
+                            },
+                          },
+                        }}
+                      />
+                    </TableCell>
+
+                    <TableCell sx={{ border: '1px solid  #9CA3AF' }}>
+                      <div className="flex gap-4">
+                        <CommonSelectByName
+                          value={m.inputType === 'manual' ? '직접입력' : m.name || '선택'}
+                          onChange={async (value) => {
+                            if (value === '직접입력') {
+                              updateItemField('mealListData', m.id, 'inputType', 'manual')
+                              updateItemField('mealListData', m.id, 'name', '') // 직접입력 모드 전환 시 빈 값
+                              {
+                                if (isEditMode === true) {
+                                  updateItemField('mealListData', m.id, 'laborId', '')
+                                }
+                                updateItemField('mealListData', m.id, 'laborId', null)
+                              }
+                              return
+                            }
+
+                            const selectedProduct = personDataOptions.find(
+                              (opt) => opt.name === value,
+                            )
+                            if (!selectedProduct) return
+                            updateItemField('mealListData', m.id, 'inputType', 'select')
+                            updateItemField('mealListData', m.id, 'name', selectedProduct.name)
+                            updateItemField('mealListData', m.id, 'laborId', selectedProduct.id)
+                          }}
+                          options={[...personDataOptions, { id: -1, name: '직접입력' }]}
+                          onScrollToBottom={() => {
+                            if (PersonSearchhasNextPage && !PersonSearchFetching)
+                              PersonSearchFetchNextPage()
+                          }}
+                          onInputChange={(value) => setPersonSearch(value)}
+                          loading={PersonSearchLoading}
+                        />
+
+                        <TextField
+                          size="small"
+                          placeholder="텍스트 입력"
+                          value={m.inputType === 'manual' ? m.name : ''} // manual 모드일 때만 값 표시
+                          onChange={(e) =>
+                            updateItemField('mealListData', m.id, 'name', e.target.value)
+                          }
+                          variant="outlined"
+                          sx={textFieldStyle}
+                          disabled={m.inputType !== 'manual'} // manual 모드일 때만 활성화
+                        />
+                      </div>
+                    </TableCell>
+
+                    <TableRow key={m.id}>
+                      <TableCell
+                        sx={{
+                          fontSize: '16px',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        조식
+                      </TableCell>
+                      <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="텍스트 입력"
+                          value={Number(m.breakfastCount)}
+                          onChange={(e) =>
+                            updateItemField('mealListData', m.id, 'breakfastCount', e.target.value)
+                          }
+                          variant="outlined"
+                          InputProps={{
+                            sx: {
+                              textAlign: 'center', // 가운데 정렬
+                              input: {
+                                textAlign: 'center', // 실제 입력 텍스트도 가운데 정렬
+                              },
+                            },
+                          }}
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': {
+                                borderColor: 'black',
+                              },
+                              '&:hover fieldset': {
+                                borderColor: 'black',
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: 'black',
+                              },
+                            },
+                          }}
+                        />
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell
+                        sx={{
+                          fontSize: '16px',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        중식
+                      </TableCell>
+                      <TableCell align="right" sx={{ borderLeft: '1px solid #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="텍스트 입력"
+                          value={Number(m.lunchCount)}
+                          onChange={(e) =>
+                            updateItemField('mealListData', m.id, 'lunchCount', e.target.value)
+                          }
+                          variant="outlined"
+                          InputProps={{
+                            sx: {
+                              textAlign: 'center', // 가운데 정렬
+                              input: {
+                                textAlign: 'center', // 실제 입력 텍스트도 가운데 정렬
+                              },
+                            },
+                          }}
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': {
+                                borderColor: 'black', // 기본 테두리 색 검은색
+                              },
+                              '&:hover fieldset': {
+                                borderColor: 'black', // 호버 시에도 검은색 유지
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: 'black', // 포커스 시에도 검은색 유지
+                              },
+                            },
+                          }}
+                        />
+                      </TableCell>
+                    </TableRow>
+
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        size="small"
+                        placeholder="텍스트 입력"
+                        value={Number(m.breakfastCount) + Number(m.lunchCount)}
+                        variant="outlined"
+                        InputProps={{
+                          readOnly: true,
+                          sx: {
+                            textAlign: 'center', // 가운데 정렬
+                            input: {
+                              textAlign: 'center', // 실제 입력 텍스트도 가운데 정렬
+                            },
+                          },
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: 'black', // 기본 테두리 색 검은색
+                            },
+                            '&:hover fieldset': {
+                              borderColor: 'black',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: 'black',
+                            },
+                          },
+                        }}
+                      />
+                    </TableCell>
+
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        size="small"
+                        placeholder="텍스트 입력"
+                        value={formatNumber(m.unitPrice)}
+                        onChange={(e) => {
+                          const numericValue =
+                            e.target.value === '' ? '' : unformatNumber(e.target.value)
+                          updateItemField('mealListData', m.id, 'unitPrice', numericValue)
+                        }}
+                        variant="outlined"
+                        InputProps={{
+                          sx: {
+                            textAlign: 'center', // 가운데 정렬
+                            input: {
+                              textAlign: 'center', // 실제 입력 텍스트도 가운데 정렬
+                            },
+                          },
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: 'black', // 기본 테두리 색 검은색
+                            },
+                            '&:hover fieldset': {
+                              borderColor: 'black', // 호버 시에도 검은색 유지
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: 'black', // 포커스 시에도 검은색 유지
+                            },
+                          },
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        size="small"
+                        placeholder="텍스트 입력"
+                        value={formatNumber(m.amount) || 0}
+                        onChange={(e) => {
+                          const numericValue =
+                            e.target.value === '' ? '' : unformatNumber(e.target.value)
+                          updateItemField('mealListData', m.id, 'amount', numericValue)
+                        }}
+                        variant="outlined"
+                        InputProps={{
+                          sx: {
+                            textAlign: 'center', // 가운데 정렬
+                            input: {
+                              textAlign: 'center', // 실제 입력 텍스트도 가운데 정렬
+                            },
+                          },
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: 'black', // 기본 테두리 색 검은색
+                            },
+                            '&:hover fieldset': {
+                              borderColor: 'black', // 호버 시에도 검은색 유지
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: 'black', // 포커스 시에도 검은색 유지
+                            },
+                          },
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        size="small"
+                        placeholder="텍스트 입력"
+                        value={m.memo}
+                        onChange={(e) =>
+                          updateItemField('mealListData', m.id, 'memo', e.target.value)
+                        }
+                        variant="outlined"
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: 'black', // 기본 테두리 색 검은색
+                            },
+                            '&:hover fieldset': {
+                              borderColor: 'black', // 호버 시에도 검은색 유지
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: 'black', // 포커스 시에도 검은색 유지
+                            },
+                          },
+                        }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+                <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
+                  <TableCell
+                    colSpan={3}
+                    align="right"
+                    sx={{
+                      border: '1px solid #9CA3AF',
+                      fontSize: '16px',
+                      textAlign: 'center',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    소계
                   </TableCell>
 
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      placeholder="텍스트 입력"
-                      value={m.name}
-                      onChange={(e) => updateItemField('costItem', m.id, 'name', e.target.value)}
-                      variant="outlined"
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          '& fieldset': {
-                            borderColor: 'black', // 기본 테두리 색 검은색
-                          },
-                          '&:hover fieldset': {
-                            borderColor: 'black', // 호버 시에도 검은색 유지
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: 'black', // 포커스 시에도 검은색 유지
-                          },
-                        },
-                      }}
-                    />
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  ></TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  >
+                    {getMealTotal().toLocaleString()}
                   </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <CommonInput
-                      className="flex-1 "
-                      value={formatNumber(m.unitPrice)}
-                      onChange={(value) => {
-                        const numericValue = unformatNumber(value)
-                        updateItemField('costItem', m.id, 'unitPrice', numericValue)
-                      }}
-                    />
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  >
+                    {getMealPriceTotal().toLocaleString()}
                   </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <CommonInput
-                      className="flex-1 "
-                      value={formatNumber(m.supplyPrice)}
-                      onChange={(value) => {
-                        const numericValue = unformatNumber(value)
-                        updateItemField('costItem', m.id, 'supplyPrice', numericValue)
-                      }}
-                    />
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  >
+                    {getMealTotalCount().toLocaleString()}
                   </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      value={m.vat}
-                      InputProps={{ readOnly: true }}
-                      variant="outlined"
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          '& fieldset': {
-                            borderColor: 'black', // 기본 테두리 색 검은색
-                          },
-                          '&:hover fieldset': {
-                            borderColor: 'black', // 호버 시에도 검은색 유지
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: 'black', // 포커스 시에도 검은색 유지
-                          },
-                        },
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      value={m.total}
-                      InputProps={{ readOnly: true }}
-                      variant="outlined"
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          '& fieldset': {
-                            borderColor: 'black', // 기본 테두리 색 검은색
-                          },
-                          '&:hover fieldset': {
-                            borderColor: 'black', // 호버 시에도 검은색 유지
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: 'black', // 포커스 시에도 검은색 유지
-                          },
-                        },
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      placeholder="텍스트 입력"
-                      value={m.memo}
-                      onChange={(e) => updateItemField('costItem', m.id, 'memo', e.target.value)}
-                      variant="outlined"
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          '& fieldset': {
-                            borderColor: 'black', // 기본 테두리 색 검은색
-                          },
-                          '&:hover fieldset': {
-                            borderColor: 'black', // 호버 시에도 검은색 유지
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: 'black', // 포커스 시에도 검은색 유지
-                          },
-                        },
-                      }}
-                    />
-                  </TableCell>
+                  <TableCell sx={{ border: '1px solid #9CA3AF' }} />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </div>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </div>
+      )}
+
+      {form.itemType === 'KEY_MONEY' && (
+        <div>
+          <div className="flex justify-between items-center mt-10 mb-2">
+            <span className="font-bold border-b-2 mb-4">전도금 상세</span>
+            <div className="flex gap-4">
+              <CommonButton
+                label="삭제"
+                className="px-7"
+                variant="danger"
+                onClick={() => removeCheckedItems('keyMoneyList')}
+              />
+              <CommonButton
+                label="추가"
+                className="px-7"
+                variant="secondary"
+                onClick={() => addItem('keyMoneyList')}
+              />
+            </div>
+          </div>
+          <TableContainer component={Paper}>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                  <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                    <Checkbox
+                      checked={isAllKeyMoneyChecked}
+                      indeterminate={checkedIds.length > 0 && !isAllKeyMoneyChecked}
+                      onChange={(e) => toggleCheckAllItems('keyMoneyList', e.target.checked)}
+                      sx={{ color: 'black' }}
+                    />
+                  </TableCell>
+                  {['계정', '사용목적', '인원수', '금액', '비고'].map((label) => (
+                    <TableCell
+                      key={label}
+                      align="center"
+                      sx={{
+                        backgroundColor: '#D1D5DB',
+                        border: '1px solid  #9CA3AF',
+                        color: 'black',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {label}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {keyMoneyDetails.map((m) => (
+                  <TableRow key={m.id}>
+                    <TableCell
+                      padding="checkbox"
+                      align="center"
+                      sx={{ border: '1px solid  #9CA3AF' }}
+                    >
+                      <Checkbox
+                        checked={checkedIds.includes(m.id)}
+                        onChange={(e) => toggleCheckItem('keyMoneyList', m.id, e.target.checked)}
+                      />
+                    </TableCell>
+
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        size="small"
+                        placeholder="텍스트 입력"
+                        value={m.account}
+                        onChange={(e) =>
+                          updateItemField('keyMoneyList', m.id, 'account', e.target.value)
+                        }
+                        variant="outlined"
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: 'black', // 기본 테두리 색 검은색
+                            },
+                            '&:hover fieldset': {
+                              borderColor: 'black', // 호버 시에도 검은색 유지
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: 'black', // 포커스 시에도 검은색 유지
+                            },
+                          },
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        size="small"
+                        placeholder="텍스트 입력"
+                        value={m.purpose}
+                        onChange={(e) =>
+                          updateItemField('keyMoneyList', m.id, 'purpose', e.target.value)
+                        }
+                        variant="outlined"
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: 'black', // 기본 테두리 색 검은색
+                            },
+                            '&:hover fieldset': {
+                              borderColor: 'black', // 호버 시에도 검은색 유지
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: 'black', // 포커스 시에도 검은색 유지
+                            },
+                          },
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        size="small"
+                        inputMode="numeric"
+                        placeholder="숫자 입력"
+                        value={m.personnelCount || 0}
+                        onChange={(e) => {
+                          const numericValue =
+                            e.target.value === '' ? '' : unformatNumber(e.target.value)
+                          updateItemField('keyMoneyList', m.id, 'personnelCount', numericValue)
+                        }}
+                        variant="outlined"
+                        sx={textFieldStyle}
+                        inputProps={{
+                          style: {
+                            textAlign: 'right',
+                          },
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        size="small"
+                        inputMode="numeric"
+                        placeholder="숫자 입력"
+                        value={formatNumber(m.amount) || 0}
+                        onChange={(e) => {
+                          const numericValue =
+                            e.target.value === '' ? '' : unformatNumber(e.target.value)
+                          updateItemField('keyMoneyList', m.id, 'amount', numericValue)
+                        }}
+                        variant="outlined"
+                        sx={textFieldStyle}
+                        inputProps={{
+                          style: {
+                            textAlign: 'right',
+                          },
+                        }}
+                      />
+                    </TableCell>
+
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        size="small"
+                        placeholder="텍스트 입력"
+                        value={m.memo}
+                        onChange={(e) =>
+                          updateItemField('keyMoneyList', m.id, 'memo', e.target.value)
+                        }
+                        variant="outlined"
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: 'black', // 기본 테두리 색 검은색
+                            },
+                            '&:hover fieldset': {
+                              borderColor: 'black', // 호버 시에도 검은색 유지
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: 'black', // 포커스 시에도 검은색 유지
+                            },
+                          },
+                        }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+
+                <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
+                  <TableCell
+                    colSpan={3}
+                    align="right"
+                    sx={{
+                      border: '1px solid #9CA3AF',
+                      fontSize: '16px',
+                      textAlign: 'center',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    소계
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  >
+                    {getPersonTotal().toLocaleString()}
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  >
+                    {getAmountTotal().toLocaleString()}
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  ></TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </div>
+      )}
 
       {/* 첨부파일 */}
       <div>
@@ -536,7 +1508,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                     sx={{ color: 'black' }}
                   />
                 </TableCell>
-                {['문서명', '첨부', '비고'].map((label) => (
+                {['첨부', '비고'].map((label) => (
                   <TableCell
                     key={label}
                     align="center"
@@ -565,21 +1537,11 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       onChange={(e) => toggleCheckItem('attachedFile', m.id, e.target.checked)}
                     />
                   </TableCell>
-                  <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
-                    <TextField
-                      size="small"
-                      placeholder="텍스트 입력"
-                      sx={{ width: '100%' }}
-                      value={m.name}
-                      onChange={(e) =>
-                        updateItemField('attachedFile', m.id, 'name', e.target.value)
-                      }
-                    />
-                  </TableCell>
 
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
                       <CommonFileInput
+                        multiple={false}
                         acceptedExtensions={[
                           'pdf',
                           'jpg',
@@ -591,9 +1553,14 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                           'ppt',
                         ]}
                         files={m.files} // 각 항목별 files
-                        onChange={
-                          (newFiles) => updateItemField('attachedFile', m.id, 'files', newFiles) //  해당 항목만 업데이트
-                        }
+                        onChange={(newFiles) => {
+                          if (newFiles.length > 1) {
+                            showSnackbar('파일은 1개만 업로드할 수 있습니다.', 'warning')
+                            updateItemField('attachedFile', m.id, 'files', newFiles.slice(0, 1))
+                          } else {
+                            updateItemField('attachedFile', m.id, 'files', newFiles)
+                          }
+                        }}
                         uploadTarget="CLIENT_COMPANY"
                       />
                     </div>
@@ -615,6 +1582,91 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
           </Table>
         </TableContainer>
       </div>
+
+      {isEditMode && (
+        <div>
+          <div className="flex justify-between items-center mt-10 mb-2">
+            <span className="font-bold border-b-2 mb-4">수정이력</span>
+            <div className="flex gap-4"></div>
+          </div>
+          <TableContainer component={Paper}>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                  {['No', '수정일시', '항목', '수정항목', '수정자', '비고 / 메모'].map((label) => (
+                    <TableCell
+                      key={label}
+                      align="center"
+                      sx={{
+                        backgroundColor: '#D1D5DB',
+                        border: '1px solid  #9CA3AF',
+                        color: 'black',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {label}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {historyList.map((item: HistoryItem, index) => (
+                  <TableRow key={item.id}>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      {index + 1}
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      {item.createdAt} / {item.updatedAt}
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{
+                        border: '1px solid  #9CA3AF',
+                        textAlign: 'center',
+                        whiteSpace: 'pre-line',
+                      }}
+                    >
+                      {item.type}
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'pre-line' }}
+                    >
+                      {item.content}
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'pre-line' }}
+                    >
+                      {item.updatedBy}
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        value={item.memo ?? ''}
+                        placeholder="메모 입력"
+                        onChange={(e) => updateMemo(item.id, e.target.value)}
+                        multiline
+                        inputProps={{ maxLength: 500 }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {hasNextPage && (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center" sx={{ border: 'none' }}>
+                      <div ref={loadMoreRef} className="p-4 text-gray-500 text-sm">
+                        불러오는 중...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </div>
+      )}
 
       <div className="flex justify-center gap-10 mt-10">
         <CommonButton

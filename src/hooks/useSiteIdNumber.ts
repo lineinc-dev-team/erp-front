@@ -1,4 +1,5 @@
 import { useFuelFormStore, useFuelSearchStore } from '@/stores/fuelAggregationStore'
+import { useCostSearchStore, useManagementCostFormStore } from '@/stores/managementCostsStore'
 import { useManagementSteelFormStore, useSteelSearchStore } from '@/stores/managementSteelStore'
 import {
   useManagementMaterialFormStore,
@@ -17,6 +18,11 @@ export const useSiteId = () => {
   // 강재수불부
   const steelForm = useManagementSteelFormStore((state) => state.form)
   const steelSearchForm = useSteelSearchStore((state) => state.search)
+
+  // 관리비 조회
+
+  const costForm = useManagementCostFormStore((state) => state.form)
+  const costSearchForm = useCostSearchStore((state) => state.search)
 
   // 유류집계
 
@@ -39,7 +45,10 @@ export const useSiteId = () => {
     return steelSearchForm?.siteId
   } else if (pathname.startsWith('/fuelAggregation')) {
     return fuelSearchForm?.siteId
+  } else if (pathname.startsWith('/managementCost/registration')) {
+    return costForm?.siteId
+  } else if (pathname.startsWith('/managementCost')) {
+    return costSearchForm?.siteId
   }
-
   return 0
 }

@@ -7,6 +7,7 @@ export default function CommonFileInput({
   acceptedExtensions,
   files,
   className,
+  multiple,
   onChange,
   uploadTarget,
 }: FileUploadProps) {
@@ -78,7 +79,7 @@ export default function CommonFileInput({
         <label className="cursor-pointer whitespace-nowrap bg-gray-300 text-black font-medium border border-black px-4 py-2 rounded">
           <input
             type="file"
-            multiple
+            multiple={multiple}
             accept={acceptedExtensions.map((ext) => `.${ext}`).join(',')}
             className="hidden"
             onChange={handleChange}

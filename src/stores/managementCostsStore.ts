@@ -1,25 +1,23 @@
 import { create } from 'zustand'
-import { costItem, AttachedFile, CostFormStore, CostSearchState } from '@/types/managementCost'
-
-export const ItemTypeLabelToValue: Record<string, string> = {
-  보증금: 'DEPOSIT',
-  월세: 'MONTHLY_RENT',
-  관리비: 'MAINTENANCE',
-  주차비: 'PARKING_FEE',
-  식대: 'MEAL_FEE',
-  전도금: 'KEY_MONEY',
-  기타잡비: 'MISC_EXPENSE',
-}
+import {
+  AttachedFile,
+  CostFormStore,
+  CostItem,
+  CostSearchState,
+  KeyMoneyDetail,
+  MealFeeDetail,
+} from '@/types/managementCost'
 
 export const useCostSearchStore = create<{ search: CostSearchState }>((set) => ({
   search: {
     searchTrigger: 0,
-    nameId: 0,
-    name: '',
+    siteId: 0,
+    siteName: '',
     processId: 0,
     processName: '',
-    itemType: '선택',
-    itemDescription: '',
+    outsourcingCompanyName: '',
+    itemType: '',
+    itemTypeDescription: '',
     paymentStartDate: null,
     paymentEndDate: null,
     arraySort: '최신순',
@@ -43,10 +41,13 @@ export const useCostSearchStore = create<{ search: CostSearchState }>((set) => (
       set((state) => ({
         search: {
           ...state.search,
-          name: '',
+          siteId: 0,
+          siteName: '',
+          processId: 0,
           processName: '',
-          itemType: '선택',
+          itemType: '',
           itemDescription: '',
+          outsourcingCompanyName: '',
           paymentStartDate: null,
           paymentEndDate: null,
           arraySort: '최신순',
@@ -62,20 +63,27 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
   form: {
     siteId: 0,
     siteProcessId: 0,
-    itemType: '선택',
-    itemDescription: '',
+    outsourcingCompanyId: -1,
+    itemType: '',
+    itemTypeDescription: '',
     paymentDate: null,
-    businessNumber: '',
-    ceoName: '',
-    accountNumber: '',
-    accountHolder: '',
-    bankName: '선택',
+    outsourcingCompanyInfo: null,
+
     memo: '',
     details: [],
     checkedCostIds: [],
+
+    keyMoneyDetails: [],
+    checkedKeyMoneyIds: [],
+
+    mealFeeDetails: [],
+    checkedMealFeeIds: [],
+
     attachedFiles: [],
     checkedAttachedFileIds: [],
-    modificationHistory: [],
+
+    editedHistories: [],
+    changeHistories: [],
   },
 
   reset: () =>
@@ -83,20 +91,22 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
       form: {
         siteId: 0,
         siteProcessId: 0,
-        itemType: '선택',
-        itemDescription: '',
+        outsourcingCompanyId: -1,
+        itemType: '',
+        itemTypeDescription: '',
         paymentDate: null,
-        businessNumber: '',
-        ceoName: '',
-        accountNumber: '',
-        accountHolder: '',
-        bankName: '선택',
+        outsourcingCompanyInfo: null,
         memo: '',
         details: [],
         checkedCostIds: [],
+        keyMoneyDetails: [],
+        checkedKeyMoneyIds: [],
+        mealFeeDetails: [],
+        checkedMealFeeIds: [],
         attachedFiles: [],
         checkedAttachedFileIds: [],
-        modificationHistory: [],
+        editedHistories: [],
+        changeHistories: [],
       },
     })),
 
@@ -105,12 +115,29 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
       form: { ...state.form, [field]: value },
     })),
 
+  updateMemo: (id, value) =>
+    set((state) => {
+      const updatedHistories = state.form.changeHistories.map((history) =>
+        history.id === id ? { ...history, memo: value } : history,
+      )
+      const edited = state.form.editedHistories ?? []
+      const updatedEditedHistories = edited.some((h) => h.id === id)
+        ? edited.map((h) => (h.id === id ? { id, memo: value } : h))
+        : [...edited, { id, memo: value }]
+      return {
+        form: {
+          ...state.form,
+          changeHistories: updatedHistories,
+          editedHistories: updatedEditedHistories,
+        },
+      }
+    }),
   addItem: (type) =>
     set((state) => {
       const id = Date.now()
       if (type === 'costItem') {
-        const newItem: costItem = {
-          id,
+        const newItem: CostItem = {
+          id: Date.now(),
           name: '',
           unitPrice: 0,
           supplyPrice: 0,
@@ -119,15 +146,44 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
           memo: '',
         }
         return { form: { ...state.form, details: [...state.form.details, newItem] } }
-      } else {
+      }
+      if (type === 'attachedFile') {
         const newFile: AttachedFile = {
           id,
-          name: '',
           memo: '',
           files: [],
         }
         return { form: { ...state.form, attachedFiles: [...state.form.attachedFiles, newFile] } }
       }
+      if (type === 'mealListData') {
+        const newMeal: MealFeeDetail = {
+          id: Date.now(),
+          workType: '',
+          laborId: null,
+          name: '',
+          breakfastCount: 0,
+          lunchCount: 0,
+          mealCount: 0,
+          unitPrice: 0,
+          amount: 0,
+          memo: '',
+        }
+        return { form: { ...state.form, mealFeeDetails: [...state.form.mealFeeDetails, newMeal] } }
+      }
+      if (type === 'keyMoneyList') {
+        const newKeyMoney: KeyMoneyDetail = {
+          id: Date.now(),
+          account: '',
+          purpose: '',
+          personnelCount: 0,
+          amount: 0,
+          memo: '',
+        }
+        return {
+          form: { ...state.form, keyMoneyDetails: [...state.form.keyMoneyDetails, newKeyMoney] },
+        }
+      }
+      return state
     }),
 
   updateItemField: (type, id, field, value) =>
@@ -137,29 +193,12 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
           form: {
             ...state.form,
             details: state.form.details.map((item) =>
-              item.id === id
-                ? {
-                    ...item,
-                    [field]: value,
-                    ...(field === 'supplyPrice'
-                      ? (() => {
-                          const supply = Number(value) || 0
-                          const vat = Math.floor(supply * 0.1)
-                          const total = supply + vat
-                          return {
-                            vat: vat.toString(),
-                            total: total.toString(),
-                          }
-                        })()
-                      : {}),
-                  }
-                : item,
+              item.id === id ? { ...item, [field]: value } : item,
             ),
           },
         }
-      } else {
+      } else if (type === 'attachedFile') {
         return {
-          ...state,
           form: {
             ...state.form,
             attachedFiles: state.form.attachedFiles.map((item) =>
@@ -167,7 +206,26 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
             ),
           },
         }
+      } else if (type === 'mealListData') {
+        return {
+          form: {
+            ...state.form,
+            mealFeeDetails: state.form.mealFeeDetails.map((item) =>
+              item.id === id ? { ...item, [field]: value } : item,
+            ),
+          },
+        }
+      } else if (type === 'keyMoneyList') {
+        return {
+          form: {
+            ...state.form,
+            keyMoneyDetails: state.form.keyMoneyDetails.map((item) =>
+              item.id === id ? { ...item, [field]: value } : item,
+            ),
+          },
+        }
       }
+      return state
     }),
 
   toggleCheckItem: (type, id, checked) =>
@@ -181,7 +239,8 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
               : state.form.checkedCostIds.filter((cid) => cid !== id),
           },
         }
-      } else {
+      }
+      if (type === 'attachedFile') {
         return {
           form: {
             ...state.form,
@@ -191,6 +250,27 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
           },
         }
       }
+      if (type === 'mealListData') {
+        return {
+          form: {
+            ...state.form,
+            checkedMealFeeIds: checked
+              ? [...state.form.checkedMealFeeIds, id]
+              : state.form.checkedMealFeeIds.filter((cid) => cid !== id),
+          },
+        }
+      }
+      if (type === 'keyMoneyList') {
+        return {
+          form: {
+            ...state.form,
+            checkedKeyMoneyIds: checked
+              ? [...state.form.checkedKeyMoneyIds, id]
+              : state.form.checkedKeyMoneyIds.filter((cid) => cid !== id),
+          },
+        }
+      }
+      return state
     }),
 
   toggleCheckAllItems: (type, checked) =>
@@ -199,18 +279,99 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
         return {
           form: {
             ...state.form,
-            checkedCostIds: checked ? state.form.details.map((item) => item.id) : [],
+            checkedCostIds: checked ? state.form.details.map((_, idx) => idx) : [],
           },
         }
-      } else {
+      } else if (type === 'attachedFile') {
         return {
           form: {
             ...state.form,
             checkedAttachedFileIds: checked ? state.form.attachedFiles.map((f) => f.id) : [],
           },
         }
+      } else if (type === 'mealListData') {
+        return {
+          form: {
+            ...state.form,
+            checkedMealFeeIds: checked ? state.form.mealFeeDetails.map((_, idx) => idx) : [],
+          },
+        }
+      } else if (type === 'keyMoneyList') {
+        return {
+          form: {
+            ...state.form,
+            checkedKeyMoneyIds: checked ? state.form.keyMoneyDetails.map((_, idx) => idx) : [],
+          },
+        }
       }
+      return state
     }),
+
+  getPriceTotal: () => {
+    const { details } = get().form
+    return details.reduce((sum, item) => {
+      const amount = Number(item.unitPrice)
+      return sum + (isNaN(amount) ? 0 : amount)
+    }, 0)
+  },
+
+  getSupplyTotal: () => {
+    const { details } = get().form
+    return details.reduce((sum, item) => {
+      const amount = Number(item.supplyPrice)
+      return sum + (isNaN(amount) ? 0 : amount)
+    }, 0)
+  },
+
+  getVatTotal: () => {
+    const { details } = get().form
+    return details.reduce((sum, item) => sum + (Number(item.vat) || 0), 0)
+  },
+
+  getTotalCount: () => {
+    const { details } = get().form
+    return details.reduce((sum, item) => sum + (Number(item.total) || 0), 0)
+  },
+
+  getPersonTotal: () => {
+    const { keyMoneyDetails } = get().form
+    return keyMoneyDetails.reduce((sum, item) => {
+      const amount = item.personnelCount
+      return sum + (isNaN(amount) ? 0 : amount)
+    }, 0)
+  },
+
+  getAmountTotal: () => {
+    const { keyMoneyDetails } = get().form
+    return keyMoneyDetails.reduce((sum, item) => {
+      const amount = Number(item.amount)
+      return sum + (isNaN(amount) ? 0 : amount)
+    }, 0)
+  },
+
+  getMealTotal: () => {
+    const { mealFeeDetails } = get().form
+    return mealFeeDetails.reduce((sum, item) => {
+      const amount = Number(item.breakfastCount) + Number(item.lunchCount)
+      return sum + (isNaN(amount) ? 0 : amount)
+    }, 0)
+  },
+
+  getMealPriceTotal: () => {
+    const { mealFeeDetails } = get().form
+    return mealFeeDetails.reduce((sum, item) => {
+      const amount = Number(item.unitPrice)
+      return sum + (isNaN(amount) ? 0 : amount)
+    }, 0)
+  },
+
+  getMealTotalCount: () => {
+    const { mealFeeDetails } = get().form
+    return mealFeeDetails.reduce((sum, item) => {
+      const amount = Number(item.amount)
+      return sum + (isNaN(amount) ? 0 : amount)
+    }, 0)
+  },
 
   removeCheckedItems: (type) =>
     set((state) => {
@@ -219,12 +380,12 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
           form: {
             ...state.form,
             details: state.form.details.filter(
-              (item) => !state.form.checkedCostIds.includes(item.id),
+              (_, idx) => !state.form.checkedCostIds.includes(idx),
             ),
             checkedCostIds: [],
           },
         }
-      } else {
+      } else if (type === 'attachedFile') {
         return {
           form: {
             ...state.form,
@@ -234,7 +395,28 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
             checkedAttachedFileIds: [],
           },
         }
+      } else if (type === 'mealListData') {
+        return {
+          form: {
+            ...state.form,
+            mealFeeDetails: state.form.mealFeeDetails.filter(
+              (_, idx) => !state.form.checkedMealFeeIds.includes(idx),
+            ),
+            checkedMealFeeIds: [],
+          },
+        }
+      } else if (type === 'keyMoneyList') {
+        return {
+          form: {
+            ...state.form,
+            keyMoneyDetails: state.form.keyMoneyDetails.filter(
+              (_, idx) => !state.form.checkedKeyMoneyIds.includes(idx),
+            ),
+            checkedKeyMoneyIds: [],
+          },
+        }
       }
+      return state
     }),
 
   newCostData: () => {
@@ -242,31 +424,33 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
     return {
       siteId: form.siteId,
       siteProcessId: form.siteProcessId,
+      outsourcingCompanyId: form.outsourcingCompanyId === -2 ? null : form.outsourcingCompanyId,
       itemType: form.itemType,
-      itemDescription: form.itemDescription,
+      itemTypeDescription: form.itemTypeDescription,
       paymentDate: form.paymentDate,
-      businessNumber: form.businessNumber,
-      ceoName: form.ceoName,
-      accountNumber: form.accountNumber,
-      accountHolder: form.accountHolder,
-      bankName: form.bankName,
+      outsourcingCompanyInfo: form.outsourcingCompanyInfo,
       memo: form.memo,
-      details: form.details.map((item) => ({
-        name: item.name,
-        unitPrice: item.unitPrice,
-        supplyPrice: item.supplyPrice,
-        vat: item.vat,
-        total: item.total,
-        memo: item.memo,
-      })),
+      details: form.details,
+      keyMoneyDetails: form.keyMoneyDetails,
+      mealFeeDetails: form.mealFeeDetails,
       files: form.attachedFiles.flatMap((f) =>
-        f.files.map((fileObj) => ({
-          name: f.name,
-          fileUrl: fileObj.fileUrl,
-          originalFileName: fileObj.file?.name || '',
-          memo: f.memo,
-        })),
+        f.files.length === 0
+          ? [
+              {
+                id: f.id,
+                memo: f.memo,
+                fileUrl: '',
+                originalFileName: '',
+              },
+            ]
+          : f.files.map((fileObj) => ({
+              id: f.id,
+              memo: f.memo,
+              fileUrl: fileObj.fileUrl,
+              originalFileName: fileObj.file?.name || '',
+            })),
       ),
+      changeHistories: form.editedHistories ?? [],
     }
   },
 }))
