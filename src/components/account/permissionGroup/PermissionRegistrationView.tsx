@@ -7,6 +7,7 @@ import { useDebouncedArrayValue } from '@/hooks/useDebouncedEffect'
 import { usePermission } from '@/hooks/usePermission'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import { usePermissionGroupStore } from '@/stores/permissionStore'
+import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { Menu, Permission, PermissionGroupDetail, RoleUser } from '@/types/permssion'
 import { getTodayDateString } from '@/utils/formatters'
 import {
@@ -50,8 +51,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
     handlePermissionCancel,
   } = usePermission()
 
-  // const { useUserInfiniteScroll } = useUserMg()
-  // 현장/공정에 전체 현장 체크
+  const { showSnackbar } = useSnackbarStore()
 
   const params = useParams()
   const permissionDetailId = Number(params?.id)
@@ -320,7 +320,6 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                     fullWidth
                   />
                 </TableCell>
-                {/* 현장/공정 칸, 비고 칸은 비워두거나 필요하면 채우세요 */}
 
                 {form.siteProcesses.map((item, idx) => (
                   <TableCell
@@ -713,6 +712,10 @@ export default function PermissionManagementUI({ isEditMode = false }) {
           className="px-10 font-bold"
           variant="secondary"
           onClick={() => {
+            if (!form.name) {
+              showSnackbar('그룹명을 입력해주세요.', 'warning') // 또는 snackbar로 보여줘도 됨
+              return
+            }
             if (isEditMode) {
               if (window.confirm('수정하시겠습니까?')) {
                 PermissionModifyMutation.mutate(permissionDetailId)
