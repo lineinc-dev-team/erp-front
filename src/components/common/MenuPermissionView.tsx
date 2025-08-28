@@ -1,0 +1,22 @@
+// hooks/useMenuPermission.ts
+import { useMemo } from 'react'
+import { Menu } from '@/types/permssion'
+import { ApiPermission } from '@/types/header'
+import useMenu from '@/hooks/useMenu'
+
+export function useMenuPermission(roleId: number, menuName: string) {
+  const { useHeaderMenuListQuery } = useMenu()
+  const { data: MenuListData } = useHeaderMenuListQuery(roleId)
+
+  const permissions = useMemo(() => {
+    const menu = MenuListData?.data?.find((m: Menu) => m.name === menuName)
+    return menu?.permissions ?? []
+  }, [MenuListData, menuName])
+
+  return {
+    hasDelete: permissions.some((p: ApiPermission) => p.action === '삭제'),
+    hasCreate: permissions.some((p: ApiPermission) => p.action === '등록'),
+    hasModify: permissions.some((p: ApiPermission) => p.action === '수정'),
+    hasView: permissions.some((p: ApiPermission) => p.action === '조회'),
+  }
+}

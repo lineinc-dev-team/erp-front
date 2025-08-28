@@ -580,7 +580,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                     </TableCell>
 
                     {isEditMode && (
-                      <TableCell align="center" sx={{ borderLeft: '1px solid #D1D5DB' }}>
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <TextField
                           variant="outlined"
                           size="small"

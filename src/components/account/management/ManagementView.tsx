@@ -16,7 +16,7 @@ import { useUserMg } from '@/hooks/useUserMg'
 import { useAccountManagementStore, useAccountStore } from '@/stores/accountManagementStore'
 import { getTodayDateString } from '@/utils/formatters'
 import { UserInfoProps } from '@/types/accountManagement'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import InfiniteScrollSelect from '@/components/common/InfiniteScrollSelect'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 import CommonDatePicker from '@/components/common/DatePicker'
@@ -26,6 +26,8 @@ import { userExcelFieldMap } from '@/utils/userExcelField'
 import { useRouter } from 'next/navigation'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { useTabOpener } from '@/utils/openTab'
+import { myInfoProps } from '@/types/user'
+import { useMenuPermission } from '@/components/common/MenuPermissionView'
 
 export default function ManagementView() {
   const { search } = useAccountManagementStore()
@@ -64,13 +66,25 @@ export default function ManagementView() {
         flex: 1,
 
         renderCell: (params: GridRenderCellParams) => {
-          const UserId = params.row.id
+          const userId = params.row.id
+
+          const handleClick = () => {
+            if (hasModify) {
+              router.push(`/account/registration/${userId}`)
+            }
+          }
+
           return (
             <div
-              onClick={() => router.push(`/account/registration/${UserId}`)}
-              className="flex justify-center items-center cursor-pointer"
+              onClick={handleClick}
+              className={`flex justify-center items-center ${
+                hasModify
+                  ? 'cursor-pointer text-orange-500 font-bold'
+                  : 'cursor-not-allowed text-gray-400'
+              }`}
+              style={!hasModify ? { pointerEvents: 'none' } : {}}
             >
-              <span className="text-orange-500 font-bold">{params.value}</span>
+              <span>{params.value}</span>
             </div>
           )
         },
@@ -140,7 +154,22 @@ export default function ManagementView() {
     })
   }
 
-  console.log('search.currentPagesearch.currentPage', search.currentPage)
+  // 권한에 따른 버튼 활성화
+
+  const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
+
+  useEffect(() => {
+    const headerData = sessionStorage.getItem('myInfo')
+    if (headerData) {
+      setMyInfo(JSON.parse(headerData))
+    }
+  }, [])
+
+  const roleId = Number(myInfo?.roles?.[0]?.id)
+
+  // "계정 관리" 메뉴에 대한 권한
+  const { hasDelete, hasCreate, hasModify } = useMenuPermission(roleId, '계정 관리')
+
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
@@ -378,6 +407,7 @@ export default function ManagementView() {
               <CommonButton
                 label="삭제"
                 variant="danger"
+                disabled={!hasDelete} // 권한 없으면 비활성화
                 onClick={() => {
                   if (!selectedIds || !(selectedIds.ids instanceof Set)) {
                     alert('체크박스를 선택해주세요.')
@@ -414,6 +444,7 @@ export default function ManagementView() {
               />
 
               <CommonButton
+                disabled={!hasCreate}
                 label="+ 신규등록"
                 variant="secondary"
                 onClick={() => openTab('/account/registration', '계정관리 - 등록')}
