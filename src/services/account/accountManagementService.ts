@@ -281,8 +281,6 @@ export async function ModifyUserManagement(userId: number) {
   const { newAccountUser } = useAccountFormStore.getState()
   const payload = newAccountUser()
 
-  console.log('수정 시 페이로드 확인', payload)
-
   const res = await fetch(`${API.USER}/${userId}`, {
     method: 'PATCH',
     headers: {

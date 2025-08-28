@@ -203,7 +203,9 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
     }
 
     if (isEditMode) {
-      updateUserMutation.mutate(userDetailId)
+      if (window.confirm('수정하시겠습니까?')) {
+        updateUserMutation.mutate(userDetailId)
+      }
     } else {
       createUserMutation.mutate()
     }

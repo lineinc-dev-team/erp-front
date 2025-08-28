@@ -39,8 +39,6 @@ export default function PermissionManagementUI({ isEditMode = false }) {
     toggleUserCheck,
   } = usePermissionGroupStore()
 
-  const [checkedPermissionIds, setCheckedPermissionIds] = useState<Set<number>>(new Set())
-
   const {
     useUserAccountInfiniteScroll,
     useMenuListQuery,
@@ -51,6 +49,9 @@ export default function PermissionManagementUI({ isEditMode = false }) {
     useSinglepermissionUserListQuery,
     handlePermissionCancel,
   } = usePermission()
+
+  // const { useUserInfiniteScroll } = useUserMg()
+  // 현장/공정에 전체 현장 체크
 
   const params = useParams()
   const permissionDetailId = Number(params?.id)
@@ -70,7 +71,36 @@ export default function PermissionManagementUI({ isEditMode = false }) {
 
   // 메뉴 및 권한 타입
 
+  const permissionTypes = ['조회', '등록', '수정', '삭제', '승인'] as const
+
   const isAllChecked = form.users.length > 0 && form.userIds.length === form.users.length
+
+  const [checkedPermissionIds, setCheckedPermissionIds] = useState<Set<number>>(new Set())
+
+  // 메뉴의 전체 체크 추가
+  const [checkedAllByType, setCheckedAllByType] = useState<Record<string, boolean>>(
+    permissionTypes.reduce((acc, type) => ({ ...acc, [type]: false }), {}),
+  )
+
+  const handleCheckAllByType = (type: string, checked: boolean) => {
+    // 열 전체 체크/해제
+    setCheckedPermissionIds((prev) => {
+      const newSet = new Set(prev)
+
+      sideMenuList?.data.forEach((menu: Menu) => {
+        const permObj = menu.permissions.find((p) => p.action === type)
+        if (permObj) {
+          if (checked) newSet.add(permObj.id)
+          else newSet.delete(permObj.id)
+        }
+      })
+
+      return newSet
+    })
+
+    // 전체 체크 상태 업데이트
+    setCheckedAllByType((prev) => ({ ...prev, [type]: checked }))
+  }
 
   useEffect(() => {
     if (
@@ -81,11 +111,10 @@ export default function PermissionManagementUI({ isEditMode = false }) {
     ) {
       const detail = singlepermission.data
 
-      console.log('해당 권한 그룹에 받아온 값 !!!₩', detail)
-
       setField('name', detail.name)
       setField('memo', detail.memo)
       setField('userCount', detail.userCount)
+      setField('hasGlobalSiteProcessAccess', detail.hasGlobalSiteProcessAccess)
       setField(
         'Date',
         `${getTodayDateString(detail.createdAt)} / ${getTodayDateString(detail.updatedAt)}`,
@@ -144,10 +173,6 @@ export default function PermissionManagementUI({ isEditMode = false }) {
     singleperUsermission?.data,
   ])
 
-  const permissionTypes = ['조회', '등록', '수정', '삭제', '승인'] as const
-
-  const [processOptionsMap, setProcessOptionsMap] = useState<Record<number, []>>({})
-
   const {
     setSitesSearch,
     sitesOptions,
@@ -164,11 +189,17 @@ export default function PermissionManagementUI({ isEditMode = false }) {
     processInfoLoading,
   } = usePermission()
 
+  const [processOptionsMap, setProcessOptionsMap] = useState<Record<number, []>>({})
+
   useEffect(() => {
     if (isEditMode === false && form.siteProcesses.length === 0) {
       addSiteProcess()
     }
   }, [isEditMode, addSiteProcess, form.siteProcesses.length])
+
+  // const { data, fetchNextPage, hasNextPage, isFetching, isLoading } = useUserInfiniteScroll(
+  //   debouncedLoginIds[] ?? '',
+  // )
 
   // 유저 선택 시 처리
 
@@ -181,12 +212,15 @@ export default function PermissionManagementUI({ isEditMode = false }) {
 
   // const debouncedUsername = useDebouncedValue(users.map((u) => u.loginId).join(','), 300)
 
-  const loginIdKeywords = form.users.map((u) => u.loginId ?? '')
-  const debouncedLoginIds = useDebouncedArrayValue(loginIdKeywords, 300)
+  // const loginIdKeywords = form.users.map((u) => u.loginId ?? '')
+  // const debouncedLoginIds = useDebouncedArrayValue(loginIdKeywords, 300)
 
   const [focusedUserId, setFocusedUserId] = useState<number | null>(null)
 
   const { data, fetchNextPage, hasNextPage, isFetching, isLoading } = useUserAccountInfiniteScroll()
+
+  const loginIdKeywords = form.users.map((u) => u.loginId ?? '')
+  const debouncedLoginIds = useDebouncedArrayValue(loginIdKeywords, 300)
 
   // 1. 이미 선택된 userId 목록 추출
   const selectedUserIds = form.users
@@ -206,17 +240,20 @@ export default function PermissionManagementUI({ isEditMode = false }) {
 
   const setPermissionIds = usePermissionGroupStore((state) => state.setPermissionIds)
 
-  const handleCheckboxChange = (id: number, checked: boolean) => {
+  const handleCheckboxChange = (id: number, checked: boolean, type: string) => {
     const updated = new Set(checkedPermissionIds)
+    if (checked) updated.add(id)
+    else updated.delete(id)
 
-    if (checked) {
-      updated.add(id)
-    } else {
-      updated.delete(id)
-    }
+    setCheckedPermissionIds(updated)
+    setPermissionIds(Array.from(updated))
 
-    setCheckedPermissionIds(updated) //로컬 상태
-    setPermissionIds(Array.from(updated)) // zustand store까지 직접 동기화
+    // 해당 type 전체 체크 여부 갱신
+    const allChecked = sideMenuList?.data
+      .map((menu: Menu) => menu.permissions.find((p) => p.action === type))
+      .every((perm: Menu) => perm && updated.has(perm.id))
+
+    setCheckedAllByType((prev) => ({ ...prev, [type]: allChecked }))
   }
 
   useEffect(() => {
@@ -231,6 +268,12 @@ export default function PermissionManagementUI({ isEditMode = false }) {
   useEffect(() => {
     setPermissionIds(Array.from(checkedPermissionIds))
   }, [checkedPermissionIds, setPermissionIds])
+
+  // 현장과 공정 전체 체크!!
+
+  const handleGlobalSiteCheck = (checked: boolean) => {
+    setField('hasGlobalSiteProcessAccess', checked)
+  }
 
   return (
     <div>
@@ -322,6 +365,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                         }}
                         onInputChange={(value) => setSitesSearch(value)}
                         loading={siteNameLoading}
+                        disabled={form.hasGlobalSiteProcessAccess}
                       />
 
                       <CommonSelect
@@ -339,14 +383,27 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                         }}
                         onInputChange={(value) => setProcessSearch(value)}
                         loading={processInfoLoading}
+                        disabled={form.hasGlobalSiteProcessAccess}
                       />
                       {idx === 0 ? (
-                        <CommonButton
-                          label="추가"
-                          variant="primary"
-                          onClick={addSiteProcess}
-                          className="whitespace-nowrap"
-                        />
+                        <div className="flex items-center gap-4">
+                          <CommonButton
+                            label="추가"
+                            variant="primary"
+                            onClick={addSiteProcess}
+                            className="whitespace-nowrap"
+                            disabled={form.hasGlobalSiteProcessAccess}
+                          />
+                          <label className="flex items-center text-[15px] gap-1">
+                            <input
+                              type="checkbox"
+                              className="w-4 h-4" // 24px 크기
+                              checked={form.hasGlobalSiteProcessAccess}
+                              onChange={(e) => handleGlobalSiteCheck(e.target.checked)}
+                            />
+                            전체 현장
+                          </label>
+                        </div>
                       ) : (
                         <CommonButton
                           label="삭제"
@@ -480,9 +537,16 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                       <InfiniteScrollSelect<RoleUser>
                         placeholder="이름을 입력하세요"
                         keyword={user.loginId ?? ''}
-                        onChangeKeyword={(newKeyword) =>
+                        onChangeKeyword={(newKeyword) => {
                           updateUserField(user.userId, 'loginId', newKeyword)
-                        }
+
+                          if (newKeyword === '') {
+                            // 계정을 지우면 username, department 초기화
+                            updateUserField(user.userId, 'username', '')
+                            updateUserField(user.userId, 'department', '')
+                            updateUserField(user.userId, 'userId', 0) // 선택된 userId도 초기화
+                          }
+                        }}
                         items={loginIds}
                         hasNextPage={hasNextPage ?? false}
                         fetchNextPage={fetchNextPage}
@@ -491,8 +555,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                             <div className="text-xs">{item.loginId}</div>
                           </div>
                         )}
-                        // onSelect={handleSelectUser}
-                        shouldShowList={focusedUserId === user.userId} // 여기서 현재 인풋이 포커스 되었는지 비교
+                        shouldShowList={focusedUserId === user.userId}
                         onSelect={(selectedUser) => handleSelectUser(selectedUser, user.userId)}
                         // shouldShowList={focusedUserId === user.userId} // 포커스된 인풋에만 목록 표시
                         isLoading={isLoading || isFetching}
@@ -502,11 +565,17 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                       />
                     </TableCell>
 
-                    <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
+                    <TableCell
+                      sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'nowrap' }}
+                      align="center"
+                    >
                       {user.username ?? '-'}
                     </TableCell>
 
-                    <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
+                    <TableCell
+                      sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'nowrap' }}
+                      align="center"
+                    >
                       {user.department ?? '-'}
                     </TableCell>
 
@@ -583,7 +652,14 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                       key={type}
                       align="center"
                     >
-                      {type}
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <Checkbox
+                          size="small"
+                          checked={checkedAllByType[type]}
+                          onChange={(e) => handleCheckAllByType(type, e.target.checked)}
+                        />
+                        {type}
+                      </div>
                     </TableCell>
                   ))}
                 </TableRow>
@@ -609,7 +685,8 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                           <Checkbox
                             checked={isChecked}
                             onChange={(e) =>
-                              permObj && handleCheckboxChange(permObj.id, e.target.checked)
+                              // permObj && handleCheckboxChange(permObj.id, e.target.checked)
+                              permObj && handleCheckboxChange(permObj.id, e.target.checked, type)
                             }
                           />
                         </TableCell>
@@ -637,7 +714,9 @@ export default function PermissionManagementUI({ isEditMode = false }) {
           variant="secondary"
           onClick={() => {
             if (isEditMode) {
-              PermissionModifyMutation.mutate(permissionDetailId)
+              if (window.confirm('수정하시겠습니까?')) {
+                PermissionModifyMutation.mutate(permissionDetailId)
+              }
             } else {
               createPermissionMutation.mutate()
             }

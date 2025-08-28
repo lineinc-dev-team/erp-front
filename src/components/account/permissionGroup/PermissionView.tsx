@@ -31,9 +31,12 @@ export default function PermissionView() {
   const updatedPermissionList = PermissonInfoList.map((item: PermissionGroupDetail) => ({
     ...item,
     sites:
-      item.sites.map((site) => site.name).join(', ') +
-      ' / ' +
-      item.processes.map((proc) => proc.name).join(', '),
+      item.sites?.length && item.processes?.length
+        ? `${item.sites.map((site) => site.name).join(', ')} / ${item.processes
+            .map((proc) => proc.name)
+            .join(', ')}`
+        : '전체권한',
+
     createdAt: getTodayDateString(item.createdAt) + ' / ' + getTodayDateString(item.updatedAt),
   }))
 
@@ -158,9 +161,11 @@ export default function PermissionView() {
                         return
                       }
 
-                      permissionDeleteMutation.mutate({
-                        roleIds: idsArray,
-                      })
+                      if (window.confirm('정말 삭제하시겠습니까?')) {
+                        permissionDeleteMutation.mutate({
+                          roleIds: idsArray,
+                        })
+                      }
                     }}
                     className="px-3"
                   />

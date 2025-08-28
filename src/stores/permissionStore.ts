@@ -7,7 +7,7 @@ export const usePermissionSearchStore = create<{ search: permissionSearchProps }
     userSearch: '',
     currentPage: 1,
     arraySort: '최신순',
-    pageCount: '10',
+    pageCount: '20',
 
     setField: (field, value) =>
       set((state) => ({
@@ -33,7 +33,7 @@ export const usePermissionSearchStore = create<{ search: permissionSearchProps }
           userSearch: '',
           currentPage: 1,
           arraySort: '최신순',
-          pageCount: '10',
+          pageCount: '20',
         },
       })),
   },
@@ -173,13 +173,13 @@ export const usePermissionGroupStore = create<PermissionFormState>((set, get) =>
       if (field === 'siteId') {
         updated[index] = {
           ...updated[index],
-          siteId: Number(value), // 🔧 여기
-          processId: 0, // 🔧 여기도 number 타입으로
+          siteId: Number(value),
+          processId: 0,
         }
       } else {
         updated[index] = {
           ...updated[index],
-          [field]: Number(value), // 🔧 field가 'processId'인 경우에도 number로 변환 필요
+          [field]: Number(value),
         }
       }
 

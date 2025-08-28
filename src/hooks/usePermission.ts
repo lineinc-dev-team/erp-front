@@ -77,10 +77,8 @@ export function usePermission() {
     mutationFn: ({ roleIds }: { roleIds: number[] }) => PermissionGroupRemove(roleIds),
 
     onSuccess: () => {
-      if (window.confirm('정말 삭제하시겠습니까?')) {
-        showSnackbar('권한 그룹이 삭제되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['permissionInfo'] })
-      }
+      showSnackbar('권한 그룹이 삭제되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['permissionInfo'] })
     },
 
     onError: () => {
@@ -158,12 +156,10 @@ export function usePermission() {
     mutationFn: (permissionModifyId: number) => ModifyPermissionService(permissionModifyId),
 
     onSuccess: () => {
-      if (window.confirm('수정하시겠습니까?')) {
-        showSnackbar('권한 그룹이 수정 되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['permissionInfo'] })
-        reset()
-        router.push('/permissionGroup')
-      }
+      showSnackbar('권한 그룹이 수정 되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['permissionInfo'] })
+      reset()
+      router.push('/permissionGroup')
     },
 
     onError: () => {
