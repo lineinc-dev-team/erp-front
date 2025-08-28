@@ -50,7 +50,7 @@ export function useFuelAggregation() {
   // 업체명 id
   const clientId = useOutSourcingClientId()
 
-  console.log('clientIdclientId2324', clientId)
+  console.log('clientIdclientId', clientId)
 
   const [driverSearch, setDriverSearch] = useState('')
 
@@ -119,6 +119,7 @@ export function useFuelAggregation() {
       id: 0,
       specification: '',
       vehicleNumber: '선택',
+      category: '',
     }
     const options = (fuelEquipment?.pages || [])
       .flatMap((page) => page.data.content)
@@ -126,6 +127,7 @@ export function useFuelAggregation() {
         id: user.id,
         specification: user.specification,
         vehicleNumber: user.vehicleNumber,
+        category: user.category,
       }))
 
     return [defaultOption, ...options]

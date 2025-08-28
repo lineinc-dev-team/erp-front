@@ -74,7 +74,7 @@ export default function CommonSelectByName<T extends string>({
           },
         }}
       >
-        {options.map((opt) => (
+        {options?.map((opt) => (
           <MenuItem
             key={opt.id}
             value={opt.name || opt.vehicleNumber || opt.typeDescription || opt.itemTypeDescription}

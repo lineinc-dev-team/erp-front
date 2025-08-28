@@ -261,7 +261,14 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                   value={form.typeDescription ?? ''}
                   onChange={(value) => setField('typeDescription', value)}
                   className=" flex-1"
-                  placeholder="텍스트 입력"
+                  disabled={
+                    form.type === 'ETC' || form.type === 'DIRECT_REGISTRATION' ? false : true
+                  }
+                  placeholder={
+                    form.type === 'ETC' || form.type === 'DIRECT_REGISTRATION'
+                      ? ' 내용을 입력하세요'
+                      : ''
+                  }
                 />
               </div>
             </div>

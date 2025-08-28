@@ -1,5 +1,5 @@
 'use client'
-
+import React from 'react'
 import CommonInput from '../common/Input'
 import CommonSelect from '../common/Select'
 import CommonButton from '../common/Button'
@@ -641,7 +641,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       sx={{ color: 'black' }}
                     />
                   </TableCell>
-                  {['품명', '단가', '공급가', '부가세 (체크 시 자동계산)', '합계', '비고'].map(
+                  {['품명', '단가', '공급가', '부가세 (체크 시 자동 계산)', '합계', '비고'].map(
                     (label) => (
                       <TableCell
                         key={label}
@@ -715,66 +715,6 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                         }}
                       />
                     </TableCell>
-                    {/* <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      <TextField
-                        size="small"
-                        inputMode="numeric"
-                        placeholder="숫자 입력"
-                        value={formatNumber(m.supplyPrice) || 0}
-                        onChange={(e) => {
-                          const numericValue =
-                            e.target.value === '' ? '' : unformatNumber(e.target.value)
-                          updateItemField('costItem', m.id, 'supplyPrice', numericValue)
-                        }}
-                        variant="outlined"
-                        sx={textFieldStyle}
-                        inputProps={{
-                          style: {
-                            textAlign: 'right',
-                          },
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      <TextField
-                        size="small"
-                        inputMode="numeric"
-                        placeholder="숫자 입력"
-                        value={formatNumber(m.vat) || 0}
-                        onChange={(e) => {
-                          const numericValue =
-                            e.target.value === '' ? '' : unformatNumber(e.target.value)
-                          updateItemField('costItem', m.id, 'vat', numericValue)
-                        }}
-                        variant="outlined"
-                        sx={textFieldStyle}
-                        inputProps={{
-                          style: {
-                            textAlign: 'right',
-                          },
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      <TextField
-                        size="small"
-                        inputMode="numeric"
-                        placeholder="숫자 입력"
-                        value={formatNumber(m.total) || 0}
-                        onChange={(e) => {
-                          const numericValue =
-                            e.target.value === '' ? '' : unformatNumber(e.target.value)
-                          updateItemField('costItem', m.id, 'total', numericValue)
-                        }}
-                        variant="outlined"
-                        sx={textFieldStyle}
-                        inputProps={{
-                          style: {
-                            textAlign: 'right',
-                          },
-                        }}
-                      />
-                    </TableCell> */}
 
                     <TableCell align="right" sx={{ border: '1px solid #9CA3AF' }}>
                       <SupplyPriceInput
@@ -792,11 +732,18 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                     </TableCell>
 
                     {/* 부가세 */}
+                    {/* 부가세 */}
                     <TableCell align="right" sx={{ border: '1px solid #9CA3AF' }}>
                       <VatInput
                         supplyPrice={m.supplyPrice}
                         value={m.vat}
-                        onChange={(vat) => updateItemField('costItem', m.id, 'vat', vat)}
+                        onChange={(vat) => {
+                          // 최신 supplyPrice + 입력된 vat 로 total 계산
+                          const total = (Number(m.supplyPrice) || 0) + (Number(vat) || 0)
+
+                          updateItemField('costItem', m.id, 'vat', vat)
+                          updateItemField('costItem', m.id, 'total', total)
+                        }}
                         enableManual={true}
                       />
                     </TableCell>
@@ -1009,91 +956,98 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       </div>
                     </TableCell>
 
-                    <TableRow key={m.id}>
-                      <TableCell
-                        sx={{
-                          fontSize: '16px',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        조식
-                      </TableCell>
-                      <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
-                        <TextField
-                          size="small"
-                          placeholder="텍스트 입력"
-                          value={Number(m.breakfastCount)}
-                          onChange={(e) =>
-                            updateItemField('mealListData', m.id, 'breakfastCount', e.target.value)
-                          }
-                          variant="outlined"
-                          InputProps={{
-                            sx: {
-                              textAlign: 'center', // 가운데 정렬
-                              input: {
-                                textAlign: 'center', // 실제 입력 텍스트도 가운데 정렬
-                              },
-                            },
-                          }}
+                    <React.Fragment key={m.id}>
+                      <TableCell key={m.id}>
+                        <TableCell
                           sx={{
-                            '& .MuiOutlinedInput-root': {
-                              '& fieldset': {
-                                borderColor: 'black',
-                              },
-                              '&:hover fieldset': {
-                                borderColor: 'black',
-                              },
-                              '&.Mui-focused fieldset': {
-                                borderColor: 'black',
-                              },
-                            },
+                            fontSize: '16px',
+                            whiteSpace: 'nowrap',
                           }}
-                        />
+                        >
+                          조식
+                        </TableCell>
+                        <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
+                          <TextField
+                            size="small"
+                            placeholder="텍스트 입력"
+                            value={Number(m.breakfastCount)}
+                            onChange={(e) =>
+                              updateItemField(
+                                'mealListData',
+                                m.id,
+                                'breakfastCount',
+                                e.target.value,
+                              )
+                            }
+                            variant="outlined"
+                            InputProps={{
+                              sx: {
+                                textAlign: 'center', // 가운데 정렬
+                                input: {
+                                  textAlign: 'center', // 실제 입력 텍스트도 가운데 정렬
+                                },
+                              },
+                            }}
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                '& fieldset': {
+                                  borderColor: 'black',
+                                },
+                                '&:hover fieldset': {
+                                  borderColor: 'black',
+                                },
+                                '&.Mui-focused fieldset': {
+                                  borderColor: 'black',
+                                },
+                              },
+                            }}
+                          />
+                        </TableCell>
                       </TableCell>
-                    </TableRow>
 
-                    <TableRow>
-                      <TableCell
-                        sx={{
-                          fontSize: '16px',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        중식
-                      </TableCell>
-                      <TableCell align="right" sx={{ borderLeft: '1px solid #9CA3AF' }}>
-                        <TextField
-                          size="small"
-                          placeholder="텍스트 입력"
-                          value={Number(m.lunchCount)}
-                          onChange={(e) =>
-                            updateItemField('mealListData', m.id, 'lunchCount', e.target.value)
-                          }
-                          variant="outlined"
-                          InputProps={{
-                            sx: {
-                              textAlign: 'center', // 가운데 정렬
-                              input: {
-                                textAlign: 'center', // 실제 입력 텍스트도 가운데 정렬
-                              },
-                            },
-                          }}
+                      <TableCell>
+                        <TableCell
                           sx={{
-                            '& .MuiOutlinedInput-root': {
-                              '& fieldset': {
-                                borderColor: 'black', // 기본 테두리 색 검은색
-                              },
-                              '&:hover fieldset': {
-                                borderColor: 'black', // 호버 시에도 검은색 유지
-                              },
-                              '&.Mui-focused fieldset': {
-                                borderColor: 'black', // 포커스 시에도 검은색 유지
-                              },
-                            },
+                            fontSize: '16px',
+                            whiteSpace: 'nowrap',
                           }}
-                        />
+                        >
+                          중식
+                        </TableCell>
+                        <TableCell align="right" sx={{ borderLeft: '1px solid #9CA3AF' }}>
+                          <TextField
+                            size="small"
+                            placeholder="텍스트 입력"
+                            value={Number(m.lunchCount)}
+                            onChange={(e) =>
+                              updateItemField('mealListData', m.id, 'lunchCount', e.target.value)
+                            }
+                            variant="outlined"
+                            InputProps={{
+                              sx: {
+                                textAlign: 'center', // 가운데 정렬
+                                input: {
+                                  textAlign: 'center', // 실제 입력 텍스트도 가운데 정렬
+                                },
+                              },
+                            }}
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                '& fieldset': {
+                                  borderColor: 'black', // 기본 테두리 색 검은색
+                                },
+                                '&:hover fieldset': {
+                                  borderColor: 'black', // 호버 시에도 검은색 유지
+                                },
+                                '&.Mui-focused fieldset': {
+                                  borderColor: 'black', // 포커스 시에도 검은색 유지
+                                },
+                              },
+                            }}
+                          />
+                        </TableCell>
                       </TableCell>
-                    </TableRow>
+                    </React.Fragment>
 
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
@@ -1130,70 +1084,61 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       <TextField
                         size="small"
                         placeholder="텍스트 입력"
-                        value={formatNumber(m.unitPrice)}
-                        onChange={(e) => {
-                          const numericValue =
-                            e.target.value === '' ? '' : unformatNumber(e.target.value)
-                          updateItemField('mealListData', m.id, 'unitPrice', numericValue)
-                        }}
+                        value={formatNumber(m.unitPrice || 0)}
                         variant="outlined"
                         InputProps={{
+                          readOnly: true,
                           sx: {
-                            textAlign: 'center', // 가운데 정렬
-                            input: {
-                              textAlign: 'center', // 실제 입력 텍스트도 가운데 정렬
-                            },
+                            textAlign: 'center',
+                            input: { textAlign: 'center' },
                           },
                         }}
                         sx={{
                           '& .MuiOutlinedInput-root': {
-                            '& fieldset': {
-                              borderColor: 'black', // 기본 테두리 색 검은색
-                            },
-                            '&:hover fieldset': {
-                              borderColor: 'black', // 호버 시에도 검은색 유지
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderColor: 'black', // 포커스 시에도 검은색 유지
-                            },
+                            '& fieldset': { borderColor: 'black' },
+                            '&:hover fieldset': { borderColor: 'black' },
+                            '&.Mui-focused fieldset': { borderColor: 'black' },
                           },
                         }}
                       />
                     </TableCell>
+
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
                         size="small"
                         placeholder="텍스트 입력"
-                        value={formatNumber(m.amount) || 0}
+                        value={formatNumber(m.amount || 0)}
                         onChange={(e) => {
                           const numericValue =
-                            e.target.value === '' ? '' : unformatNumber(e.target.value)
+                            e.target.value === '' ? 0 : Number(unformatNumber(e.target.value))
                           updateItemField('mealListData', m.id, 'amount', numericValue)
+
+                          const peopleCount = Number(m.breakfastCount) + Number(m.lunchCount)
+
+                          const calculatedUnitPrice =
+                            peopleCount > 0 ? numericValue / peopleCount : 0
+
+                          console.log('calculatedUnitPrice >>>', calculatedUnitPrice)
+
+                          updateItemField('mealListData', m.id, 'unitPrice', calculatedUnitPrice)
                         }}
                         variant="outlined"
                         InputProps={{
                           sx: {
-                            textAlign: 'center', // 가운데 정렬
-                            input: {
-                              textAlign: 'center', // 실제 입력 텍스트도 가운데 정렬
-                            },
+                            textAlign: 'center',
+                            input: { textAlign: 'center' },
                           },
                         }}
                         sx={{
                           '& .MuiOutlinedInput-root': {
-                            '& fieldset': {
-                              borderColor: 'black', // 기본 테두리 색 검은색
-                            },
-                            '&:hover fieldset': {
-                              borderColor: 'black', // 호버 시에도 검은색 유지
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderColor: 'black', // 포커스 시에도 검은색 유지
-                            },
+                            '& fieldset': { borderColor: 'black' },
+                            '&:hover fieldset': { borderColor: 'black' },
+                            '&.Mui-focused fieldset': { borderColor: 'black' },
                           },
                         }}
                       />
                     </TableCell>
+
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
                         size="small"

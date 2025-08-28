@@ -1,3 +1,4 @@
+import { useDailyFormStore } from '@/stores/dailyReportStore'
 import { useFuelFormStore, useFuelSearchStore } from '@/stores/fuelAggregationStore'
 import { useCostSearchStore, useManagementCostFormStore } from '@/stores/managementCostsStore'
 import { useManagementSteelFormStore, useSteelSearchStore } from '@/stores/managementSteelStore'
@@ -29,6 +30,10 @@ export const useSiteId = () => {
   const fuelForm = useFuelFormStore((state) => state.form)
   const fuelSearchForm = useFuelSearchStore((state) => state.search)
 
+  // 출역일보
+
+  const dailyForm = useDailyFormStore((state) => state.form)
+
   if (pathname.startsWith('/fuelAggregation/registration')) {
     return fuelForm?.siteId
   } else if (pathname.startsWith('/outsourcingContract/registration')) {
@@ -49,6 +54,8 @@ export const useSiteId = () => {
     return costForm?.siteId
   } else if (pathname.startsWith('/managementCost')) {
     return costSearchForm?.siteId
+  } else if (pathname.startsWith('/dailyReport/registration')) {
+    return dailyForm?.siteId
   }
   return 0
 }

@@ -48,32 +48,38 @@ export default function CommonFileInput({
       }
     }
 
-    onChange([...files, ...uploadedFiles])
+    if (files) {
+      onChange([...files, ...uploadedFiles])
+    }
 
     setLoading(false)
   }
 
   const removeFile = (index: number) => {
-    onChange(files.filter((_, i) => i !== index))
+    if (files) {
+      onChange(files.filter((_, i) => i !== index))
+    }
   }
-  console.log('현재 들어온 파일 확인', files)
 
-  const validFiles = files?.filter((f) => f.file?.name) ?? []
+  // const validFiles = files?.filter((f) => f.file?.name) ?? []
+
+  console.log('validFilesvalidFilesvalidFiles34', files)
   return (
     <div className="flex w-full">
       <div className="flex items-center gap-2 justify-between w-full">
         <ul>
-          {validFiles.map(({ file }, index) => (
-            <li key={index} className="flex items-center gap-2 mb-1">
-              <span className={className}>{file?.name}</span>
-              <button
-                onClick={() => removeFile(index)}
-                className="text-red-500 border cursor-pointer border-gray-400 rounded px-2"
-              >
-                X
-              </button>
-            </li>
-          ))}
+          {files &&
+            files.map((file, index) => (
+              <li key={index} className="flex items-center gap-2 mb-1">
+                <span className={className}>{file?.name || file.originalFileName}</span>
+                <button
+                  onClick={() => removeFile(index)}
+                  className="text-red-500 border cursor-pointer border-gray-400 rounded px-2"
+                >
+                  X
+                </button>
+              </li>
+            ))}
         </ul>
 
         <label className="cursor-pointer whitespace-nowrap bg-gray-300 text-black font-medium border border-black px-4 py-2 rounded">

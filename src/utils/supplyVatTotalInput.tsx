@@ -57,9 +57,13 @@ export function VatInput({ supplyPrice, value, onChange, enableManual = false }:
               onChange={(e) => {
                 const checked = e.target.checked
                 setAutoCalc(checked)
+
                 if (checked && onChange) {
-                  // 자동계산 전환 시 값 업데이트
                   onChange(Math.floor(supplyPrice * 0.1))
+                }
+
+                if (!checked && onChange) {
+                  onChange(0)
                 }
               }}
               size="small"
