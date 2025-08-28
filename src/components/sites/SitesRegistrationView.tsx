@@ -293,15 +293,17 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                           .forEach(({ i }) => removeContractFile(idx, i))
 
                         // 새로운 파일 추가
-                        uploaded.forEach(({ fileUrl, file }) =>
+                        uploaded.forEach(({ fileUrl, file }) => {
+                          if (!file) return // file이 없으면 스킵
+
                           addContractFile(idx, {
                             name: file.name,
                             originalFileName: file.name,
-                            fileUrl: fileUrl,
+                            fileUrl: fileUrl ?? '',
                             memo: '',
                             type,
-                          }),
-                        )
+                          })
+                        })
                       }}
                     />
                   </div>
