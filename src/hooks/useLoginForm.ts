@@ -59,7 +59,9 @@ export function useLoginForm() {
         if (!tabStore.tabs.find((t) => t.path === tabPath)) {
           tabStore.addTab({ path: tabPath, label: tabLabel })
         }
-        router.refresh()
+
+        useTabStore.getState().resetTabs() // 스토어에 resetTabs 함수 필요
+        useTabStore.getState().addTab({ label: '대쉬보드 - 관리', path: '/dashboard' })
 
         router.push(tabPath)
       } catch (err) {

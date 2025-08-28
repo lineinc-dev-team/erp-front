@@ -15,6 +15,7 @@ type TabStore = {
   tabs: TabItem[]
   addTab: (tab: TabItem) => void
   removeTab: (path: string) => void
+  resetTabs: () => void
 }
 
 export const useTabStore = create<TabStore>()(
@@ -40,6 +41,7 @@ export const useTabStore = create<TabStore>()(
         const tabs = get().tabs.filter((t) => t.path !== path)
         set({ tabs })
       },
+      resetTabs: () => set({ tabs: [] }),
     }),
     {
       name: 'tab-storage',
