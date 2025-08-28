@@ -273,7 +273,7 @@ export default function Header() {
                       if (nextTab) {
                         router.push(nextTab.path)
                       } else {
-                        router.push('/') // 기본 경로로 fallback
+                        router.push('/dashboard') // 기본 경로로 fallback
                       }
                     }
 
