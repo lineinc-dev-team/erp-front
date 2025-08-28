@@ -22,7 +22,7 @@ export const useAccountManagementStore = create<{ search: accountManagementSearc
       positionId: 0,
       currentPage: 1,
       arraySort: '최신순',
-      pageCount: '10',
+      pageCount: '20',
 
       setField: (field, value) =>
         set((state) => ({
@@ -57,7 +57,7 @@ export const useAccountManagementStore = create<{ search: accountManagementSearc
             positionId: 0,
             currentPage: 1,
             arraySort: '최신순',
-            pageCount: '10',
+            pageCount: '20',
           },
         })),
     },
@@ -75,8 +75,7 @@ export const useAccountFormStore = create<AccountFormStore>((set, get) => ({
     phoneNumber: '',
     landlineNumber: '',
     password: '',
-    checkPassword: '',
-    isActive: '선택',
+    isActive: '0',
     memo: '',
     changeHistories: [],
   },
@@ -93,8 +92,7 @@ export const useAccountFormStore = create<AccountFormStore>((set, get) => ({
         phoneNumber: '',
         landlineNumber: '',
         password: '',
-        checkPassword: '',
-        isActive: '선택',
+        isActive: '0',
         memo: '',
         changeHistories: [],
       },
@@ -132,20 +130,13 @@ export const useAccountFormStore = create<AccountFormStore>((set, get) => ({
   newAccountUser: () => {
     const form = get().form
     return {
-      loginId: form.loginId,
-      username: form.username,
-      departmentId: form.departmentId,
-      positionId: form.positionId,
-      gradeId: form.gradeId,
-      email: form.email,
-      phoneNumber: form.landlineNumber,
-      landlineNumber: form.phoneNumber,
-      ...(form.password && form.password.trim() !== '' ? { password: form.password } : {}),
+      ...form,
+      ...(form.password && form.password.trim() !== '' ? { password: form.password } : undefined),
       isActive: form.isActive === '1' ? true : false,
-      memo: form.memo,
 
       // 수정된 항목만 보내기 (없으면 빈 배열)
-      changeHistories: form.editedHistories ?? [],
+      changeHistories: form.editedHistories ?? undefined,
+      editedHistories: undefined,
 
       // changeHistories: form.changeHistories.map((history) => ({
       //   id: history.id,

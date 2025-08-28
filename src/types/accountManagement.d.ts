@@ -35,7 +35,6 @@ export type FormState = {
   phoneNumber: string
   landlineNumber: string
   password: string
-  checkPassword: string
   isActive: string
   memo: string
   editedHistories?: Pick<HistoryItem, 'id' | 'memo'>[]

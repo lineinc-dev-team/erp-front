@@ -25,6 +25,7 @@ import {
   TextField,
 } from '@mui/material'
 import { getTodayDateString } from '@/utils/formatters'
+import { useSnackbarStore } from '@/stores/useSnackbarStore'
 
 export default function ManagementRegistrationView({ isEditMode = false }) {
   const {
@@ -41,6 +42,8 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
   const { form, reset, updateMemo, setField } = useAccountFormStore()
 
   // 상세페이지 로직
+
+  const { showSnackbar } = useSnackbarStore()
 
   const params = useParams()
   const userDetailId = Number(params?.id)
@@ -77,7 +80,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
     if (data && isEditMode) {
       const client = data.data
 
-      console.log('@@client', client)
+      console.log('clientclient', client)
 
       // 기존 값과 다르면 업데이트 (방어 코드)
       if (client.loginId !== form.loginId) setField('loginId', client.loginId ?? '')
@@ -175,9 +178,17 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
     if (form.positionId === 0) return '직급을 선택하세요.'
     if (form.gradeId === 0) return '직책을 선택하세요.'
     if (!form.email.trim()) return '이메일을 입력하세요.'
-    if (!/\S+@\S+\.\S+/.test(form.email)) return '유효한 이메일을 입력하세요.'
-    if (!form.phoneNumber.trim()) return '개인 휴대폰 번호를 입력하세요.'
-    if (!form.landlineNumber.trim()) return '전화번호를 입력하세요.'
+
+    if (!/^010-\d{4}-\d{4}$/.test(form.phoneNumber)) {
+      return '개인 휴대폰 번호를 010-xxxx-xxxx 형식으로 입력하세요.'
+    }
+
+    if (!/^\d{2,3}-\d{3,4}-\d{4}$/.test(form.landlineNumber)) {
+      return '전화번호를 지역번호-국번호-번호 형식으로 입력하세요. (예: 031-123-4567)'
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      return '유효한 이메일을 입력하세요.'
+    }
     // if (!form.password.trim()) return '비밀번호를 입력하세요.'
     // if (form.password !== form.checkPassword) return '비밀번호가 일치하지 않습니다.'
     if (form.isActive === '선택' || !form.isActive) return '계정 상태를 선택하세요.'
@@ -187,7 +198,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
   const handleSubmit = () => {
     const errorMsg = validateForm(form)
     if (errorMsg) {
-      alert(errorMsg)
+      showSnackbar(errorMsg, 'warning')
       return
     }
 
@@ -423,39 +434,40 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {historyList.map((item: HistoryItem) => (
-                  <TableRow key={item.id}>
-                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {item.id}
-                    </TableCell>
-                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {item.createdAt} / {item.updatedAt}
-                    </TableCell>
-                    <TableCell
-                      align="left"
-                      sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'pre-line' }}
-                    >
-                      {item.content}
-                    </TableCell>
-                    <TableCell
-                      align="left"
-                      sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'pre-line' }}
-                    >
-                      {item.updatedBy}
-                    </TableCell>
-                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        value={item.memo ?? ''}
-                        placeholder="메모 입력"
-                        onChange={(e) => updateMemo(item.id, e.target.value)}
-                        multiline
-                        inputProps={{ maxLength: 500 }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {historyList &&
+                  historyList.map((item: HistoryItem) => (
+                    <TableRow key={item.id}>
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        {item.id}
+                      </TableCell>
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        {item.createdAt} / {item.updatedAt}
+                      </TableCell>
+                      <TableCell
+                        align="left"
+                        sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'pre-line' }}
+                      >
+                        {item.content}
+                      </TableCell>
+                      <TableCell
+                        align="left"
+                        sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'pre-line' }}
+                      >
+                        {item.updatedBy}
+                      </TableCell>
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          value={item.memo ?? ''}
+                          placeholder="메모 입력"
+                          onChange={(e) => updateMemo(item.id, e.target.value)}
+                          multiline
+                          inputProps={{ maxLength: 500 }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 {hasNextPage && (
                   <TableRow>
                     <TableCell colSpan={5} align="center" sx={{ border: 'none' }}>

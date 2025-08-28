@@ -57,14 +57,13 @@ export const ProcessStatusOptions = [
 export const ArrayStatusOptions = [
   { id: '최신순', name: '최신순' },
   { id: '오래된순', name: '오래된순' },
-  // { label: '이름순', name: '이름순' },
+  { id: '이름순', name: '이름순' },
 ]
 
 export const PageCount = [
-  { id: '10', name: '10' },
   { id: '20', name: '20' },
-  { id: '30', name: '30' },
   { id: '50', name: '50' },
+  { id: '100', name: '100' },
 ]
 
 export const EquipmentType = [
@@ -162,7 +161,8 @@ export const FuelColumnList: GridColDef[] = [
 ]
 
 export const UserDataList: GridColDef[] = [
-  { field: 'id', headerName: 'No', width: 70 },
+  { field: 'no', headerName: 'No', width: 70 },
+  // { field: 'backendId', headerName: 'No', width: 70 },
   { field: 'loginId', headerName: '사용자 ID', width: 130 },
   { field: 'username', headerName: '사용자 이름', width: 130 },
   { field: 'department', headerName: '부서', width: 180 },

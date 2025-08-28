@@ -76,15 +76,17 @@ export default function ManagementView() {
         },
       }
     }
-    if (col.field === 'remark') {
+    if (col.field === 'no') {
       return {
         ...col,
-        sortable: false,
         headerAlign: 'center',
         align: 'center',
-        flex: 1,
+        flex: 0.5,
         renderCell: (params: GridRenderCellParams) => {
-          return <span>{params.value}</span>
+          const sortedRowIds = params.api.getSortedRowIds?.() ?? []
+          const indexInCurrentPage = sortedRowIds.indexOf(params.id)
+          const no = (search.currentPage - 1) * pageCount + indexInCurrentPage + 1
+          return <span>{no}</span>
         },
       }
     }
@@ -388,9 +390,11 @@ export default function ManagementView() {
                     return
                   }
 
-                  deleteMutation.mutate({
-                    userIds: idsArray,
-                  })
+                  if (window.confirm('정말 삭제하시겠습니까?')) {
+                    deleteMutation.mutate({
+                      userIds: idsArray,
+                    })
+                  }
                 }}
                 className="px-3"
               />
@@ -432,7 +436,6 @@ export default function ManagementView() {
           checkboxSelection
           disableRowSelectionOnClick
           keepNonExistentRowsSelected
-          showToolbar
           disableColumnFilter // 필터 비활성화
           hideFooter
           disableColumnMenu

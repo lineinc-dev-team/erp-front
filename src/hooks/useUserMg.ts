@@ -60,7 +60,12 @@ export function useUserMg() {
         positionId: search.positionId === 0 ? '' : search.positionId,
         page: search.currentPage - 1,
         size: Number(search.pageCount) || 10,
-        sort: search.arraySort === '최신순' ? 'id,desc' : 'username,asc',
+        sort:
+          search.arraySort === '최신순'
+            ? 'id,desc'
+            : search.arraySort === '오래된순'
+            ? 'id,asc'
+            : 'username,asc',
       }
 
       const filteredParams = Object.fromEntries(
@@ -75,7 +80,6 @@ export function useUserMg() {
 
       return UserInfoService(filteredParams)
     },
-    staleTime: 1000 * 30,
     enabled: pathName === '/account', // 경로 체크
   })
 
@@ -101,11 +105,15 @@ export function useUserMg() {
       showSnackbar('계정이 추가되었습니다.', 'success')
       // 초기화 로직
       reset()
-      queryClient.invalidateQueries({ queryKey: ['userInfo'] })
+      queryClient.invalidateQueries({ queryKey: ['UserInfo'] })
       router.push('/account')
     },
-    onError: () => {
-      showSnackbar('계정 추가에 실패했습니다.', 'error')
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('계정 추가에 실패했습니다.', 'error')
+      }
     },
   })
 
@@ -113,7 +121,7 @@ export function useUserMg() {
     mutationFn: ModifyUserManagement,
     onSuccess: () => {
       showSnackbar('계정이 수정되었습니다.', 'success')
-      queryClient.invalidateQueries({ queryKey: ['userInfo'] })
+      queryClient.invalidateQueries({ queryKey: ['UserInfo'] })
       router.push('/account')
     },
     onError: () => {
@@ -125,10 +133,8 @@ export function useUserMg() {
     mutationFn: ({ userIds }: { userIds: number[] }) => UserRemoveService(userIds),
 
     onSuccess: () => {
-      if (window.confirm('정말 삭제하시겠습니까?')) {
-        showSnackbar('유저 계정이 삭제되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['userInfo'] })
-      }
+      showSnackbar('유저 계정이 삭제되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['userInfo'] })
     },
 
     onError: () => {

@@ -131,6 +131,8 @@ export async function CreateAccount() {
   const { newAccountUser } = useAccountFormStore.getState()
   const payload = newAccountUser()
 
+  // password, changeHistories 제거
+
   const res = await fetch(API.USER, {
     method: 'POST',
     headers: {
@@ -144,9 +146,21 @@ export async function CreateAccount() {
     if (res.status === 401) {
       // 로그인 페이지로 이동
       window.location.href = '/'
-      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+      return
     }
-    throw new Error(`서버 에러: ${res.status}`)
+
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
   }
 
   return await res.status
@@ -266,6 +280,8 @@ export async function UserDetailService(userDetailId: number) {
 export async function ModifyUserManagement(userId: number) {
   const { newAccountUser } = useAccountFormStore.getState()
   const payload = newAccountUser()
+
+  console.log('수정 시 페이로드 확인', payload)
 
   const res = await fetch(`${API.USER}/${userId}`, {
     method: 'PATCH',
