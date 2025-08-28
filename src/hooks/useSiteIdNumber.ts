@@ -7,6 +7,7 @@ import {
   useMaterialSearchStore,
 } from '@/stores/materialManagementStore'
 import { useContractFormStore, useContractSearchStore } from '@/stores/outsourcingContractStore'
+import { useSiteSearchStore } from '@/stores/siteStore'
 import { usePathname } from 'next/navigation'
 
 export const useSiteId = () => {
@@ -15,6 +16,9 @@ export const useSiteId = () => {
   const form = useContractFormStore((state) => state.form)
   const materialForm = useManagementMaterialFormStore((state) => state.form)
   const materialSearchForm = useMaterialSearchStore((state) => state.search)
+
+  // 현장 조회
+  const siteSearchForm = useSiteSearchStore((state) => state.search)
 
   // 강재수불부
   const steelForm = useManagementSteelFormStore((state) => state.form)
@@ -48,6 +52,8 @@ export const useSiteId = () => {
     return steelForm?.siteId
   } else if (pathname.startsWith('/managementSteel')) {
     return steelSearchForm?.siteId
+  } else if (pathname.startsWith('/sites')) {
+    return siteSearchForm.nameId
   } else if (pathname.startsWith('/fuelAggregation')) {
     return fuelSearchForm?.siteId
   } else if (pathname.startsWith('/managementCost/registration')) {

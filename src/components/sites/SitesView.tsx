@@ -24,11 +24,11 @@ import { getTodayDateString } from '@/utils/formatters'
 import { useState } from 'react'
 import ExcelModal from '../common/ExcelModal'
 import { SiteExcelFieldMap } from '@/utils/userExcelField'
-import { useManagementCost } from '@/hooks/useManagementCost'
 import { useTabOpener } from '@/utils/openTab'
 import CommonSelectByName from '../common/CommonSelectByName'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
+import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 
 export default function SitesView() {
   const { search } = useSiteSearchStore()
@@ -50,7 +50,7 @@ export default function SitesView() {
     processInfoHasNextPage,
     processInfoIsFetching,
     processInfoLoading,
-  } = useManagementCost()
+  } = useOutSourcingContract()
 
   const {
     SiteListQuery,
