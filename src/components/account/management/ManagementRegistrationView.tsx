@@ -177,18 +177,19 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
     if (form.departmentId === 0) return '부서를 선택하세요.'
     if (form.positionId === 0) return '직급을 선택하세요.'
     if (form.gradeId === 0) return '직책을 선택하세요.'
-    if (!form.email.trim()) return '이메일을 입력하세요.'
 
-    if (!/^010-\d{4}-\d{4}$/.test(form.phoneNumber)) {
-      return '개인 휴대폰 번호를 010-xxxx-xxxx 형식으로 입력하세요.'
+    if (!/^\d{3}-\d{4}-\d{4}$/.test(form.phoneNumber)) {
+      return '개인 휴대폰 번호를 xxx-xxxx-xxxx 형식으로 입력하세요.'
     }
 
     if (!/^\d{2,3}-\d{3,4}-\d{4}$/.test(form.landlineNumber)) {
       return '전화번호를 지역번호-국번호-번호 형식으로 입력하세요. (예: 031-123-4567)'
     }
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       return '유효한 이메일을 입력하세요.'
     }
+
     // if (!form.password.trim()) return '비밀번호를 입력하세요.'
     // if (form.password !== form.checkPassword) return '비밀번호가 일치하지 않습니다.'
     if (form.isActive === '선택' || !form.isActive) return '계정 상태를 선택하세요.'
@@ -230,6 +231,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
                 value={form.loginId}
                 onChange={(value) => setField('loginId', value)}
                 className=" flex-1"
+                disabled={isEditMode}
               />
             </div>
           </div>
@@ -437,10 +439,10 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
               </TableHead>
               <TableBody>
                 {historyList &&
-                  historyList.map((item: HistoryItem) => (
+                  historyList.map((item: HistoryItem, index) => (
                     <TableRow key={item.id}>
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        {item.id}
+                        {index + 1}
                       </TableCell>
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         {item.createdAt} / {item.updatedAt}
