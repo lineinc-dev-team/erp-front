@@ -331,6 +331,8 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
               id: f.id || Date.now(),
               name: f.name,
               memo: f.memo || '',
+              fileUrl: '',
+              originalFileName: '',
               type: f.type,
             },
           ]
@@ -341,7 +343,7 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
           id: f.id || Date.now(),
           name: f.name,
           fileUrl: fileObj.fileUrl || '',
-          originalFileName: fileObj.originalFileName,
+          originalFileName: fileObj.name || fileObj.originalFileName,
           memo: f.memo || '',
           type: f.type,
         }))

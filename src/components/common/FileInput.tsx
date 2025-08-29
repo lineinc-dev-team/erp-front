@@ -21,19 +21,14 @@ export default function CommonFileInput({
 
     const newFiles = Array.from(e.target.files)
 
-    // 1개만 허용
-    // if (currentFiles.length >= 1) {
-    //   showSnackbar('파일은 1개만 업로드할 수 있습니다.', 'warning')
-    //   return
-    // }
+    const existingFilesCount = files?.filter((f) => f.fileUrl || f.file?.name).length ?? 0
 
-    const totalFiles = (files?.length ?? 0) + newFiles.length
+    const totalFiles = existingFilesCount + newFiles.length
 
     if (totalFiles > 1) {
       showSnackbar('파일은 1개만 업로드할 수 있습니다.', 'warning')
       return
     }
-
     console.log('totalFilestotalFiles', totalFiles)
 
     const validFiles = newFiles.filter((file) => {
@@ -72,9 +67,8 @@ export default function CommonFileInput({
       }
     }
 
-    if (files) {
-      onChange([...files, ...uploadedFiles])
-    }
+    const filteredFiles = files?.filter((f) => f.fileUrl || f.name) ?? []
+    onChange([...filteredFiles, ...uploadedFiles])
 
     setLoading(false)
   }
@@ -112,7 +106,7 @@ export default function CommonFileInput({
         <ul>
           {files?.map((file, index) => {
             // 실제 업로드된 파일이 없으면 건너뜀
-            const fileName = file.name || file.originalFileName || file.file?.name
+            const fileName = file.originalFileName
             if (!fileName || fileName.trim() === '') return null
 
             return (

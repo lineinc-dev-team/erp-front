@@ -50,7 +50,6 @@ export default function OrderingView() {
     return {
       ...user,
       contactName: mainContact?.name || '-',
-
       headquarter: user.user?.username || '-',
       isActive: user.isActive === true ? 'Y' : 'N',
       hasFile: user.hasFile === true ? 'Y' : 'N',
@@ -73,12 +72,16 @@ export default function OrderingView() {
         renderCell: (params: GridRenderCellParams) => {
           const item = params.row as ClientCompany
 
+          if (!item.contacts || item.contacts.length === 0) {
+            return <div className="flex flex-col items-center">-</div>
+          }
+
           return (
             <div className="flex flex-col items-center">
               {item.contacts?.map((contact, index) => (
                 <Fragment key={index}>
-                  <div className="whitespace-pre-wrap">{contact.position}</div>
-                  <div className="whitespace-pre-wrap">{contact.department}</div>
+                  <div className="whitespace-pre-wrap">{contact.position || '-'}</div>
+                  <div className="whitespace-pre-wrap">{contact.department || '-'}</div>
                 </Fragment>
               ))}
             </div>
@@ -97,12 +100,15 @@ export default function OrderingView() {
         renderCell: (params: GridRenderCellParams) => {
           const item = params.row as ClientCompany
 
+          if (!item.contacts || item.contacts.length === 0) {
+            return <div className="flex flex-col items-center">-</div>
+          }
           return (
             <div className="flex flex-col items-center">
               {item.contacts?.map((contact, index) => (
                 <Fragment key={index}>
-                  <div className="whitespace-pre-wrap">{contact.phoneNumber}</div>
-                  <div className="whitespace-pre-wrap">{contact.email}</div>
+                  <div className="whitespace-pre-wrap">{contact.phoneNumber || '-'}</div>
+                  <div className="whitespace-pre-wrap">{contact.email || '-'}</div>
                 </Fragment>
               ))}
             </div>

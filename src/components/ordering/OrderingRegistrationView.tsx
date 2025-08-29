@@ -163,23 +163,28 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
       })
 
       // 첨부파일 데이터 가공
-      const formattedFiles = (client.files ?? []).map((item: AttachedFile) => ({
-        id: item.id,
-        name: item.name,
-        memo: item.memo,
-        type: item.typeCode,
-        files: [
-          {
-            publicUrl: item.fileUrl && item.fileUrl.trim() !== '' ? item.fileUrl : null,
-            file: {
-              name:
+      const formattedFiles = (client.files ?? [])
+        .map((item: AttachedFile) => ({
+          id: item.id,
+          name: item.name,
+          memo: item.memo,
+          type: item.typeCode,
+          files: [
+            {
+              fileUrl: item.fileUrl && item.fileUrl.trim() !== '' ? item.fileUrl : null,
+              originalFileName:
                 item.originalFileName && item.originalFileName.trim() !== ''
                   ? item.originalFileName
                   : null,
             },
-          },
-        ],
-      }))
+          ],
+        }))
+        // BUSINESS_LICENSE를 맨 위로
+        .sort((a: AttachedFile, b: AttachedFile) => {
+          if (a.type === 'BUSINESS_LICENSE') return -1
+          if (b.type === 'BUSINESS_LICENSE') return 1
+          return 0
+        })
 
       if (client.paymentMethod === '어음') {
         setField('paymentMethod', 'BILL')
@@ -834,6 +839,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       onChange={(e) =>
                         updateItemField('attachedFile', m.id, 'name', e.target.value)
                       }
+                      disabled={m.type === 'BUSINESS_LICENSE'}
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
