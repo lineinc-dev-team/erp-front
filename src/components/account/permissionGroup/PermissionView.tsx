@@ -27,6 +27,7 @@ export default function PermissionView() {
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
+  console.log('PermissonInfoListPermissonInfoList', PermissonInfoList)
   // 가공 로직
   const updatedPermissionList = PermissonInfoList.map((item: PermissionGroupDetail) => ({
     ...item,
@@ -35,7 +36,9 @@ export default function PermissionView() {
         ? `${item.sites.map((site) => site.name).join(', ')} / ${item.processes
             .map((proc) => proc.name)
             .join(', ')}`
-        : '전체권한',
+        : item.hasGlobalSiteProcessAccess
+        ? '전체권한'
+        : '-',
 
     createdAt: getTodayDateString(item.createdAt) + ' / ' + getTodayDateString(item.updatedAt),
   }))
@@ -45,6 +48,34 @@ export default function PermissionView() {
   const router = useRouter()
 
   const enhancedColumns = PermissionDataList.map((col): GridColDef => {
+    // if (col.field === 'sites') {
+    //   return {
+    //     ...col,
+    //     sortable: false,
+    //     headerAlign: 'center',
+    //     align: 'center',
+    //     flex: 2,
+    //     renderCell: (params: GridRenderCellParams) => {
+    //       const item = params.row as PermissionGroupDetail
+
+    //       if (item.sites?.length && item.processes?.length) {
+    //         return (
+    //           <div className="flex flex-col items-center">
+    //             {item.sites?.map((site) => (
+    //               <div key={site.id}>{site.name}</div>
+    //             ))}
+    //             {item.processes?.map((proc) => (
+    //               <div key={proc.id}>{proc.name}</div>
+    //             ))}
+    //           </div>
+    //         )
+    //       }
+
+    //       return item.hasGlobalSiteProcessAccess ? '전체권한' : '-'
+    //     },
+    //   }
+    // }
+
     if (col.field === 'name') {
       return {
         ...col,

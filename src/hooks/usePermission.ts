@@ -53,7 +53,12 @@ export function usePermission() {
         userSearch: search.userSearch ? search.userSearch : '',
         page: search.currentPage - 1,
         size: Number(search.pageCount) || 10,
-        sort: search.arraySort === '최신순' ? 'id,desc' : 'username,asc',
+        sort:
+          search.arraySort === '최신순'
+            ? 'createdAt,desc'
+            : search.arraySort === '오래된순'
+            ? 'createdAt,asc'
+            : 'name,asc',
       }
 
       const filteredParams = Object.fromEntries(
@@ -114,8 +119,13 @@ export function usePermission() {
       reset()
       router.push('/permissionGroup')
     },
-    onError: () => {
-      showSnackbar('권한 그룹 등록에 실패했습니다.', 'error')
+
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('권한 그룹 등록에 실패했습니다.', 'error')
+      }
     },
   })
 
@@ -161,9 +171,12 @@ export function usePermission() {
       reset()
       router.push('/permissionGroup')
     },
-
-    onError: () => {
-      showSnackbar(' 권한 그룹 수정에 실패했습니다.', 'error')
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar(' 권한 그룹 수정에 실패했습니다.', 'error')
+      }
     },
   })
 

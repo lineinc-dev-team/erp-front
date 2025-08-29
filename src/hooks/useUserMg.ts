@@ -124,8 +124,12 @@ export function useUserMg() {
       queryClient.invalidateQueries({ queryKey: ['UserInfo'] })
       router.push('/account')
     },
-    onError: () => {
-      showSnackbar('계정 수정에 실패했습니다.', 'error')
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('계정 수정에 실패했습니다.', 'error')
+      }
     },
   })
 

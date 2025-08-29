@@ -129,7 +129,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
           : [{ siteId: 0, processId: 0 }] // 빈 배열일 경우 기본값 1행
       setField('siteProcesses', siteProcesses)
 
-      const permissionIds = singleperMenumission.data.flatMap((menu: Menu) =>
+      const permissionIds = singleperMenumission?.data?.flatMap((menu: Menu) =>
         menu.permissions.map((p: Permission) => p.id),
       )
       setCheckedPermissionIds(new Set(permissionIds))
@@ -256,6 +256,8 @@ export default function PermissionManagementUI({ isEditMode = false }) {
     setCheckedAllByType((prev) => ({ ...prev, [type]: allChecked }))
   }
 
+  console.log('useMenuListQueryuseMenuListQueryuseMenuListQuery', sideMenuList)
+
   useEffect(() => {
     if (!sideMenuList) return
 
@@ -264,6 +266,8 @@ export default function PermissionManagementUI({ isEditMode = false }) {
       setCheckedPermissionIds(new Set())
     }
   }, [sideMenuList, isEditMode])
+
+  console.log('checkedPermissionIdscheckedPermissionIds', checkedPermissionIds)
 
   useEffect(() => {
     setPermissionIds(Array.from(checkedPermissionIds))
