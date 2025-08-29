@@ -31,14 +31,14 @@ export default function PermissionView() {
   // 가공 로직
   const updatedPermissionList = PermissonInfoList.map((item: PermissionGroupDetail) => ({
     ...item,
-    sites:
-      item.sites?.length && item.processes?.length
-        ? `${item.sites.map((site) => site.name).join(', ')} / ${item.processes
-            .map((proc) => proc.name)
-            .join(', ')}`
-        : item.hasGlobalSiteProcessAccess
-        ? '전체권한'
-        : '-',
+    // sites:
+    //   item.sites?.length && item.processes?.length
+    //     ? `${item.sites.map((site) => site.name).join(', ')} / ${item.processes
+    //         .map((proc) => proc.name)
+    //         .join(', ')}`
+    //     : item.hasGlobalSiteProcessAccess
+    //     ? '전체권한'
+    //     : '-',
 
     createdAt: getTodayDateString(item.createdAt) + ' / ' + getTodayDateString(item.updatedAt),
   }))
@@ -48,33 +48,46 @@ export default function PermissionView() {
   const router = useRouter()
 
   const enhancedColumns = PermissionDataList.map((col): GridColDef => {
-    // if (col.field === 'sites') {
-    //   return {
-    //     ...col,
-    //     sortable: false,
-    //     headerAlign: 'center',
-    //     align: 'center',
-    //     flex: 2,
-    //     renderCell: (params: GridRenderCellParams) => {
-    //       const item = params.row as PermissionGroupDetail
+    if (col.field === 'sites') {
+      return {
+        ...col,
+        sortable: false,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 2,
+        renderCell: (params: GridRenderCellParams) => {
+          const item = params.row as PermissionGroupDetail
 
-    //       if (item.sites?.length && item.processes?.length) {
-    //         return (
-    //           <div className="flex flex-col items-center">
-    //             {item.sites?.map((site) => (
-    //               <div key={site.id}>{site.name}</div>
-    //             ))}
-    //             {item.processes?.map((proc) => (
-    //               <div key={proc.id}>{proc.name}</div>
-    //             ))}
-    //           </div>
-    //         )
-    //       }
+          const sites = Array.isArray(item.sites) ? item.sites : []
+          const processes = Array.isArray(item.processes) ? item.processes : []
 
-    //       return item.hasGlobalSiteProcessAccess ? '전체권한' : '-'
-    //     },
-    //   }
-    // }
+          // site.id와 process.id 기준으로 매칭
+          const merged = sites.map((site) => {
+            const matchedProcess = processes.find((proc) => proc.id === site.id)
+            return {
+              siteName: site.name,
+              processName: matchedProcess?.name ?? '-',
+            }
+          })
+
+          console.log('mergedmerged', merged)
+
+          if (merged.length > 0) {
+            return (
+              <div className="flex flex-col items-center">
+                {merged.map((row, idx) => (
+                  <div key={idx} className="whitespace-pre-wrap">
+                    {row.siteName} / {row.processName}
+                  </div>
+                ))}
+              </div>
+            )
+          }
+
+          return item.hasGlobalSiteProcessAccess ? '전체권한' : '-'
+        },
+      }
+    }
 
     if (col.field === 'name') {
       return {
@@ -233,7 +246,18 @@ export default function PermissionView() {
               disableColumnMenu
               hideFooterPagination
               // pageSize={pageSize}
-              rowHeight={60}
+              getRowHeight={() => 'auto'}
+              sx={{
+                '& .MuiDataGrid-cell': {
+                  display: 'flex',
+                  justifyContent: 'center', // 가로 가운데 정렬
+                  alignItems: 'center', // 세로 가운데 정렬
+                  whiteSpace: 'normal', // 줄바꿈 허용
+                  lineHeight: '2.8rem', // 줄 간격
+                  paddingTop: '12px', // 위 여백
+                  paddingBottom: '12px', // 아래 여백
+                },
+              }}
               onRowSelectionModelChange={(newSelection) => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 setSelectedIds(newSelection as any) // 타입 보장된다면 사용 가능
