@@ -114,6 +114,8 @@ export type FormState = {
   isModalOpen: boolean
   email: string
   paymentMethod: string
+  createdAt?: string
+  updatedAt?: string
   paymentPeriod: string
   memo: string
   isActive: string

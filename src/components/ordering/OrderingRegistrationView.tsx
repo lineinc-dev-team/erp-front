@@ -225,6 +225,9 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
 
       setField('userId', client.user?.id ?? '0')
 
+      setField('createdAt', getTodayDateString(client.createdAt))
+      setField('updatedAt', getTodayDateString(client.updatedAt))
+
       setField('memo', client.memo)
       setField('headManagers', formattedContacts)
       setField('attachedFiles', formattedFiles)
@@ -599,6 +602,21 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
               />
             </div>
           </div>
+          {isEditMode && (
+            <div className="flex">
+              <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+                등록일 / 수정일
+              </label>
+              <div className="border border-gray-400 px-2 w-full">
+                <CommonInput
+                  value={`${form.createdAt ?? ''} / ${form.updatedAt ?? ''}`}
+                  onChange={(value) => setField('memo', value)}
+                  disabled={true}
+                  className="flex-1"
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
