@@ -55,13 +55,11 @@ export default function OrderingView() {
         : '-',
 
       headquarter: user.user?.username,
-      isActive: 'Y',
-      hasFile: 'Y',
+      isActive: user.isActive === true ? 'Y' : 'N',
+      hasFile: user.hasFile === true ? 'Y' : 'N',
       createdAt: `${getTodayDateString(user.createdAt)} / ${getTodayDateString(user.updatedAt)}`,
     }
   })
-
-  console.log('ClientCompanyListClientCompanyListClientCompanyList', ClientCompanyList)
 
   const { selectedIds, setSelectedIds } = useAccountStore()
 
@@ -408,7 +406,6 @@ export default function OrderingView() {
           checkboxSelection
           disableRowSelectionOnClick
           keepNonExistentRowsSelected
-          showToolbar
           disableColumnFilter // 필터 비활성화
           hideFooter
           disableColumnMenu

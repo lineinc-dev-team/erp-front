@@ -1,6 +1,7 @@
 'use client'
 
 import { getPresignedUrl, uploadToS3 } from '@/services/ordering/orderingRegistrationService'
+import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { useState } from 'react'
 
 export default function CommonFileInput({
@@ -13,14 +14,37 @@ export default function CommonFileInput({
 }: FileUploadProps) {
   const [loading, setLoading] = useState(false)
 
+  const { showSnackbar } = useSnackbarStore()
+
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return
+
     const newFiles = Array.from(e.target.files)
+
+    // 1개만 허용
+    // if (currentFiles.length >= 1) {
+    //   showSnackbar('파일은 1개만 업로드할 수 있습니다.', 'warning')
+    //   return
+    // }
+
+    const totalFiles = (files?.length ?? 0) + newFiles.length
+
+    if (totalFiles > 1) {
+      showSnackbar('파일은 1개만 업로드할 수 있습니다.', 'warning')
+      return
+    }
+
+    console.log('totalFilestotalFiles', totalFiles)
 
     const validFiles = newFiles.filter((file) => {
       const ext = file.name.split('.').pop()?.toLowerCase() || ''
       return acceptedExtensions.includes(ext)
     })
+
+    if (validFiles.length === 0) {
+      showSnackbar('허용되지 않은 파일 형식입니다.', 'warning')
+      return
+    }
 
     setLoading(true)
 
@@ -57,7 +81,10 @@ export default function CommonFileInput({
 
   const removeFile = (index: number) => {
     if (files) {
-      onChange(files.filter((_, i) => i !== index))
+      const updated = files.filter((_, i) => i !== index)
+      onChange(updated)
+
+      console.log('totalFilestotalFileupdatedupdatedsupdatedupdated', updated)
     }
   }
 
@@ -67,7 +94,7 @@ export default function CommonFileInput({
   return (
     <div className="flex w-full">
       <div className="flex items-center gap-2 justify-between w-full">
-        <ul>
+        {/* <ul>
           {files &&
             files.map((file, index) => (
               <li key={index} className="flex items-center gap-2 mb-1">
@@ -80,6 +107,26 @@ export default function CommonFileInput({
                 </button>
               </li>
             ))}
+        </ul> */}
+
+        <ul>
+          {files?.map((file, index) => {
+            // 실제 업로드된 파일이 없으면 건너뜀
+            const fileName = file.name || file.originalFileName || file.file?.name
+            if (!fileName || fileName.trim() === '') return null
+
+            return (
+              <li key={index} className="flex items-center gap-2 mb-1">
+                <span className={className}>{fileName}</span>
+                <button
+                  onClick={() => removeFile(index)}
+                  className="text-red-500 border cursor-pointer border-gray-400 rounded px-2"
+                >
+                  X
+                </button>
+              </li>
+            )
+          })}
         </ul>
 
         <label className="cursor-pointer whitespace-nowrap bg-gray-300 text-black font-medium border border-black px-4 py-2 rounded">
@@ -89,6 +136,11 @@ export default function CommonFileInput({
             accept={acceptedExtensions.map((ext) => `.${ext}`).join(',')}
             className="hidden"
             onChange={handleChange}
+            ref={(el) => {
+              if (el) {
+                el.value = '' // 매번 change 후 초기화
+              }
+            }}
           />
           {loading ? '업로드 중...' : '첨부'}
         </label>

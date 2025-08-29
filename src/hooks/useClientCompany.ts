@@ -52,16 +52,15 @@ export function useClientCompany() {
         userName: search.userName,
         createdStartDate: getTodayDateString(search.startDate),
         createdEndDate: getTodayDateString(search.endDate),
-        isActive:
-          search.isActive === '사용' ? true : search.isActive === '미사용' ? false : undefined,
+        isActive: search.isActive === '1' ? true : search.isActive === '2' ? false : undefined,
         page: search.currentPage - 1, // 항상 현재 페이지에 맞춤
         size: Number(search.pageCount) || 10,
         sort:
           search.arraySort === '최신순'
             ? 'id,desc'
             : search.arraySort === '오래된순'
-            ? 'id.asc'
-            : 'id.asc',
+            ? 'id,asc'
+            : 'username,asc',
       }
 
       const filteredParams = Object.fromEntries(
@@ -89,8 +88,13 @@ export function useClientCompany() {
       reset()
       router.push('/ordering')
     },
-    onError: () => {
-      showSnackbar('발주처 등록이 실패했습니다.', 'error')
+
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('발주처 등록이 실패했습니다.', 'error')
+      }
     },
   })
 
@@ -117,16 +121,18 @@ export function useClientCompany() {
     mutationFn: (userIds: number) => ModifyClientCompany(userIds),
 
     onSuccess: () => {
-      if (window.confirm('수정하시겠습니까?')) {
-        showSnackbar('발주처가 수정 되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['ClientInfo'] })
-        reset()
-        router.push('/ordering')
-      }
+      showSnackbar('발주처가 수정 되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['ClientInfo'] })
+      reset()
+      router.push('/ordering')
     },
 
-    onError: () => {
-      showSnackbar(' 발주처 수정에 실패했습니다.', 'error')
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar(' 발주처 수정에 실패했습니다.', 'error')
+      }
     },
   })
 

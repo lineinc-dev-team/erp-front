@@ -21,7 +21,7 @@ export const useOrderingSearchStore = create<{ search: OrderingSearchState }>((s
     isActive: '0',
     arraySort: '최신순',
     currentPage: 1,
-    pageCount: '10',
+    pageCount: '20',
 
     setField: (field, value) =>
       set((state) => ({
@@ -52,7 +52,7 @@ export const useOrderingSearchStore = create<{ search: OrderingSearchState }>((s
           startDate: null,
           endDate: null,
           arraySort: '최신순',
-          pageCount: '10',
+          pageCount: '20',
           isActive: '0',
         },
       })),
@@ -82,7 +82,15 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
     userId: 0,
     headManagers: [],
     checkedManagerIds: [],
-    attachedFiles: [],
+    attachedFiles: [
+      {
+        id: Date.now(),
+        name: '사업자등록증',
+        memo: '',
+        files: [],
+        type: 'BUSINESS_LICENSE',
+      },
+    ],
     checkedAttachedFileIds: [],
     modificationHistory: [],
     changeHistories: [],
@@ -107,7 +115,15 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
         isActive: '0',
         headManagers: [],
         checkedManagerIds: [],
-        attachedFiles: [],
+        attachedFiles: [
+          {
+            id: Date.now(),
+            name: '사업자등록증',
+            memo: '',
+            files: [],
+            type: 'BUSINESS_LICENSE',
+          },
+        ],
         checkedAttachedFileIds: [],
         modificationHistory: [],
         changeHistories: [],
@@ -159,12 +175,16 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
         }
         return { form: { ...state.form, headManagers: [...state.form.headManagers, newItem] } }
       } else {
+        // 기존 파일 개수 확인
+
         const newItem: AttachedFile = {
           id: Date.now(),
           name: '',
           memo: '',
           files: [],
+          type: 'BASIC',
         }
+
         return { form: { ...state.form, attachedFiles: [...state.form.attachedFiles, newItem] } }
       }
     }),
@@ -228,7 +248,11 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
         return {
           form: {
             ...state.form,
-            checkedAttachedFileIds: checked ? state.form.attachedFiles.map((f) => f.id) : [],
+            checkedAttachedFileIds: checked
+              ? state.form.attachedFiles
+                  .filter((f) => f.type !== 'BUSINESS_LICENSE') // 제외
+                  .map((f) => f.id) // id만 추출
+              : [],
           },
         }
       }
@@ -284,7 +308,7 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
       paymentMethod: form.paymentMethod,
       paymentPeriod: form.paymentPeriod,
       memo: form.memo,
-      isActive: form.isActive === '사용' ? true : false,
+      isActive: form.isActive === '1' ? true : false,
       userId: form.userId,
       contacts: form.headManagers.map((m) => ({
         id: m.id,
@@ -306,9 +330,8 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
             {
               id: f.id || Date.now(),
               name: f.name,
-              fileUrl: '',
-              originalFileName: '',
               memo: f.memo || '',
+              type: f.type,
             },
           ]
         }
@@ -318,8 +341,9 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
           id: f.id || Date.now(),
           name: f.name,
           fileUrl: fileObj.fileUrl || '',
-          originalFileName: fileObj.file?.name || '',
+          originalFileName: fileObj.originalFileName,
           memo: f.memo || '',
+          type: f.type,
         }))
       }),
       changeHistories: form.editedHistories ?? [],

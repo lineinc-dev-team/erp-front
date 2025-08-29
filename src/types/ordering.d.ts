@@ -15,9 +15,11 @@ export type AttachedFile = {
   id: number
   name: string
   memo: string
-  fileUrl?: string
-  originalFileName?: string
+  fileUrl?: string | null
+  originalFileName?: string | null
   files: FileUploadInfo[]
+  type: string
+  typeCode?: string
 }
 
 // 발주처 조회 리스트 가져오는 타입들

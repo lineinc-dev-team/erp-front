@@ -21,8 +21,6 @@ export async function getPresignedUrl(
   if (!response.ok) throw new Error('Presigned URL 요청 실패')
   const { data } = await response.json()
 
-  console.log('파일 업로드 시 !!@24', data)
-
   const { publicUrl, uploadUrl } = data
   return { publicUrl, uploadUrl }
 }
@@ -42,7 +40,19 @@ export async function uploadToS3(uploadUrl: string, file: File) {
       window.location.href = '/'
       return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
-    throw new Error(`서버 에러: ${res.status}`)
+
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
   }
 }
 // 발주처 생성 엔드포인트
@@ -66,7 +76,18 @@ export async function CreateClientCompany() {
       window.location.href = '/'
       return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
-    throw new Error(`서버 에러: ${res.status}`)
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
   }
 
   return await res.status
@@ -163,7 +184,18 @@ export async function ModifyClientCompany(clientModifyId: number) {
       window.location.href = '/'
       return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
-    throw new Error(`서버 에러: ${res.status}`)
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
   }
 
   return await res.status

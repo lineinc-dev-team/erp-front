@@ -25,11 +25,12 @@ import { useCallback, useEffect, useRef } from 'react'
 import { Typography } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
-import { AttachedFile, HistoryItem, Manager } from '@/types/ordering'
+import { AttachedFile, FormState, HistoryItem, Manager } from '@/types/ordering'
 import { ClientDetailService } from '@/services/ordering/orderingRegistrationService'
 import CommonInputnumber from '@/utils/formatBusinessNumber'
 import { formatPersonNumber, formatPhoneNumber } from '@/utils/formatPhoneNumber'
 import { getTodayDateString } from '@/utils/formatters'
+import { useSnackbarStore } from '@/stores/useSnackbarStore'
 
 export default function OrderingRegistrationView({ isEditMode = false }) {
   const {
@@ -73,6 +74,8 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
   const params = useParams()
   const clientCompanyId = Number(params?.id)
 
+  const { showSnackbar } = useSnackbarStore()
+
   const PROPERTY_NAME_MAP: Record<string, string> = {
     username: '이름',
     address: '본사 주소',
@@ -112,6 +115,8 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
   useEffect(() => {
     if (data && isEditMode === true) {
       const client = data.data
+
+      console.log('23242', client)
 
       function parseLandlineNumber(landline: string) {
         if (!landline) return { managerAreaNumber: '', landlineNumber: '' }
@@ -162,11 +167,15 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
         id: item.id,
         name: item.name,
         memo: item.memo,
+        type: item.typeCode,
         files: [
           {
-            publicUrl: item.fileUrl,
+            publicUrl: item.fileUrl && item.fileUrl.trim() !== '' ? item.fileUrl : null,
             file: {
-              name: item.originalFileName,
+              name:
+                item.originalFileName && item.originalFileName.trim() !== ''
+                  ? item.originalFileName
+                  : null,
             },
           },
         ],
@@ -209,7 +218,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
       setField('paymentPeriod', client.paymentPeriod)
       setField('isActive', client.isActive ? '1' : '2')
 
-      setField('userId', client.user.id)
+      setField('userId', client.user?.id ?? '0')
 
       setField('memo', client.memo)
       setField('headManagers', formattedContacts)
@@ -299,6 +308,75 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
     },
     [clientFetchNextPage, clientHasNextPage, isFetchingNextPage, clientIsLoading],
   )
+
+  function validateClientForm(form: FormState) {
+    if (!form.name?.trim()) return '발주처명을 입력하세요.'
+    if (!form.businessNumber?.trim()) return '사업자등록번호를 입력하세요.'
+    if (!form.address?.trim()) return '본사 주소를 입력하세요.'
+    if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
+    if (!form.ceoName?.trim()) return '대표자명을 입력하세요.'
+    if (!form.landlineNumber?.trim()) return '전화번호를 입력하세요.'
+    if (!form.phoneNumber?.trim()) return '개인 휴대폰을 입력하세요.'
+    if (!form.email?.trim()) return '이메일을 입력하세요.'
+
+    // 필요시 추가 검증
+    if (!/^\d{2,3}-\d{3,4}-\d{4}$/.test(form.phoneNumber)) {
+      return '휴대폰 번호를 010-1234-5678 형식으로 입력하세요.'
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      return '유효한 이메일을 입력하세요.'
+    }
+
+    if (!form.paymentMethod) return '결제 방식을 선택하세요.'
+    if (!form.paymentPeriod?.trim()) return '결제 정보를 입력하세요.'
+    if (!form.userId) return '본사 담당자를 선택하세요.'
+    if (form.isActive === '0') return '사용 여부를 선택하세요.'
+
+    // 담당자 유효성 체크
+    if (managers.length > 0) {
+      for (const item of managers) {
+        if (!item.name?.trim()) return '담당자의 이름을 입력해주세요.'
+        if (!item.position?.trim()) return '담당자의 부서를 입력해주세요.'
+        if (!item.department?.trim()) return '담당자의 직급(직책)을 입력해주세요.'
+        if (!item.landlineNumber?.trim()) return '담당자의 전화번호를 입력해주세요.'
+        if (!item.phoneNumber?.trim()) return '담당자의 휴대폰을 입력해주세요.'
+        if (!item.email?.trim()) return '담당자의 이메일을 입력해주세요.'
+
+        // 필요시 형식 체크
+        if (!/^\d{2,3}-\d{3,4}-\d{4}$/.test(item.phoneNumber)) {
+          return '담당자의 휴대폰 번호를 xxx-xxxx-xxxx 형식으로 입력해주세요.'
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item.email)) {
+          return '담당자의 이메일 형식이 올바르지 않습니다.'
+        }
+      }
+    }
+
+    if (attachedFiles.length > 0) {
+      for (const item of attachedFiles) {
+        if (!item.name?.trim()) return '첨부파일의 이름을 입력해주세요.'
+      }
+    }
+
+    return null
+  }
+
+  const handleClientSubmit = () => {
+    const errorMsg = validateClientForm(form)
+    if (errorMsg) {
+      showSnackbar(errorMsg, 'warning')
+      return
+    }
+
+    if (isEditMode) {
+      if (window.confirm('수정하시겠습니까?')) {
+        ClientModifyMutation.mutate(clientCompanyId)
+      }
+    } else {
+      createClientMutation.mutate()
+    }
+  }
 
   return (
     <>
@@ -743,6 +821,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                   >
                     <Checkbox
                       checked={fileCheckIds.includes(m.id)}
+                      disabled={m.type === 'BUSINESS_LICENSE'}
                       onChange={(e) => toggleCheckItem('attachedFile', m.id, e.target.checked)}
                     />
                   </TableCell>
@@ -759,16 +838,6 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
-                      {/* <CommonFileInput
-                        className=" break-words whitespace-normal"
-                        label="계약서"
-                        acceptedExtensions={['pdf', 'hwp']}
-                        files={form.attachedFiles.find((f) => f.id === m.id)?.files || []}
-                        onChange={(newFiles) =>
-                          form.updateItemField('attachedFile', m.id, 'files', newFiles)
-                        }
-                      />
-                       */}
                       <CommonFileInput
                         acceptedExtensions={[
                           'pdf',
@@ -780,27 +849,14 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                           'jpeg',
                           'ppt',
                         ]}
+                        multiple={false}
                         files={m.files} // 각 항목별 files
-                        onChange={
-                          (newFiles) => updateItemField('attachedFile', m.id, 'files', newFiles) //  해당 항목만 업데이트
-                        }
+                        onChange={(newFiles) => {
+                          updateItemField('attachedFile', m.id, 'files', newFiles.slice(0, 1))
+                          // updateItemField('attachedFile', m.id, 'files', newFiles)
+                        }}
                         uploadTarget="CLIENT_COMPANY"
                       />
-                      {/* <CommonFileInput
-                        acceptedExtensions={[
-                          'pdf',
-                          'jpg',
-                          'png',
-                          'hwp',
-                          'xlsx',
-                          'zip',
-                          'jpeg',
-                          'ppt',
-                        ]}
-                        files={uploadedFiles}
-                        onChange={setUploadedFiles}
-                        uploadTarget={'CLIENT_COMPANY'}
-                      /> */}
                     </div>
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -924,17 +980,12 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
 
       <div className="flex justify-center gap-10 mt-10">
         <CommonButton label="취소" variant="reset" className="px-10" onClick={orderingCancel} />
+
         <CommonButton
           label={isEditMode ? '+ 수정' : '+ 등록'}
           className="px-10 font-bold"
           variant="secondary"
-          onClick={() => {
-            if (isEditMode) {
-              ClientModifyMutation.mutate(clientCompanyId)
-            } else {
-              createClientMutation.mutate()
-            }
-          }}
+          onClick={handleClientSubmit}
         />
       </div>
     </>
