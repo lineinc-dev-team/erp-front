@@ -1,5 +1,6 @@
 'use client'
 
+import { Fragment } from 'react'
 import CommonButton from '../common/Button'
 import CommonInput from '../common/Input'
 import CommonSelect from '../common/Select'
@@ -41,23 +42,18 @@ export default function OrderingView() {
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
+  console.log('ClientCompanyListClientCompanyList', ClientCompanyList)
+
   const updateClientList = ClientCompanyList.map((user: ClientCompany) => {
     const mainContact = user.contacts?.find((contact) => contact.isMain === true)
 
     return {
       ...user,
       contactName: mainContact?.name || '-',
-      contactPositionAndDepartment: mainContact
-        ? `${mainContact.position} <br/> ${mainContact.department}`
-        : '-',
-      contactInfo: mainContact
-        ? `${mainContact.phoneNumber || '-'}<br/>${mainContact.email || '-'}`
-        : '-',
 
-      headquarter: user.user?.username,
+      headquarter: user.user?.username || '-',
       isActive: user.isActive === true ? 'Y' : 'N',
       hasFile: user.hasFile === true ? 'Y' : 'N',
-      createdAt: `${getTodayDateString(user.createdAt)} / ${getTodayDateString(user.updatedAt)}`,
     }
   })
 
@@ -67,6 +63,76 @@ export default function OrderingView() {
 
   // 그리도 라우팅 로직!
   const enhancedColumns = clientCompanyList.map((col): GridColDef => {
+    if (col.field === 'contactPositionAndDepartment') {
+      return {
+        ...col,
+        sortable: false,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 2,
+        renderCell: (params: GridRenderCellParams) => {
+          const item = params.row as ClientCompany
+
+          return (
+            <div className="flex flex-col items-center">
+              {item.contacts?.map((contact, index) => (
+                <Fragment key={index}>
+                  <div className="whitespace-pre-wrap">{contact.position}</div>
+                  <div className="whitespace-pre-wrap">{contact.department}</div>
+                </Fragment>
+              ))}
+            </div>
+          )
+        },
+      }
+    }
+
+    if (col.field === 'contactInfo') {
+      return {
+        ...col,
+        sortable: false,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 2,
+        renderCell: (params: GridRenderCellParams) => {
+          const item = params.row as ClientCompany
+
+          return (
+            <div className="flex flex-col items-center">
+              {item.contacts?.map((contact, index) => (
+                <Fragment key={index}>
+                  <div className="whitespace-pre-wrap">{contact.phoneNumber}</div>
+                  <div className="whitespace-pre-wrap">{contact.email}</div>
+                </Fragment>
+              ))}
+            </div>
+          )
+        },
+      }
+    }
+
+    if (col.field === 'createdAt') {
+      return {
+        ...col,
+        sortable: false,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 2,
+        renderCell: (params: GridRenderCellParams) => {
+          const item = params.row as ClientCompany
+
+          return (
+            <div className="flex flex-col items-center">
+              <Fragment>
+                <div className="whitespace-pre-wrap">{getTodayDateString(item.createdAt)}</div>
+                <div className="whitespace-pre-wrap">{getTodayDateString(item.updatedAt)}</div>
+              </Fragment>
+            </div>
+          )
+        },
+      }
+    }
+
     if (col.field === 'name') {
       return {
         ...col,
@@ -411,7 +477,18 @@ export default function OrderingView() {
           disableColumnMenu
           hideFooterPagination
           // pageSize={pageSize}
-          rowHeight={60}
+          getRowHeight={() => 'auto'}
+          sx={{
+            '& .MuiDataGrid-cell': {
+              display: 'flex',
+              justifyContent: 'center', // 가로 가운데 정렬
+              alignItems: 'center', // 세로 가운데 정렬
+              whiteSpace: 'normal', // 줄바꿈 허용
+              lineHeight: '2.8rem', // 줄 간격
+              paddingTop: '12px', // 위 여백
+              paddingBottom: '12px', // 아래 여백
+            },
+          }}
           onRowSelectionModelChange={(newSelection) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setSelectedIds(newSelection as any) // 타입 보장된다면 사용 가능
