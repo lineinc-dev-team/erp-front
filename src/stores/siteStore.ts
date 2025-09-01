@@ -19,18 +19,6 @@ type SiteFormState = {
   setContracts: (contracts: Contract[]) => void
 }
 
-export const typeLabelToValue: Record<string, string> = {
-  건축: 'CONSTRUCTION',
-  토목: 'CIVIL_ENGINEERING',
-  외주: 'OUTSOURCING',
-}
-
-export const ProgressingLabelToValue: Record<string, string> = {
-  준비중: 'NOT_STARTED',
-  진행중: 'IN_PROGRESS',
-  완료: 'COMPLETED',
-}
-
 export const useSiteSearchStore = create<{ search: SiteSearchState }>((set) => ({
   search: {
     searchTrigger: 0,
@@ -44,13 +32,14 @@ export const useSiteSearchStore = create<{ search: SiteSearchState }>((set) => (
     processStatuses: [],
     clientCompanyName: '',
     createdBy: '',
+    managerName: '',
     startDate: null,
     endDate: null,
     createdStartDate: null,
     createdEndDate: null,
     arraySort: '최신순',
     currentPage: 1,
-    pageCount: '10',
+    pageCount: '20',
 
     setField: (field, value) =>
       set((state) => ({
@@ -69,6 +58,7 @@ export const useSiteSearchStore = create<{ search: SiteSearchState }>((set) => (
       set((state) => ({
         search: {
           ...state.search,
+          searchTrigger: 0,
           name: '',
           type: '',
           processName: '',
@@ -77,13 +67,14 @@ export const useSiteSearchStore = create<{ search: SiteSearchState }>((set) => (
           processStatuses: [],
           clientCompanyName: '',
           createdBy: '',
+          managerName: '',
           startDate: null,
           endDate: null,
           createdStartDate: null,
           createdEndDate: null,
           arraySort: '최신순',
           currentPage: 1,
-          pageCount: '10',
+          pageCount: '20',
         },
       })),
   },
@@ -109,6 +100,7 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
     process: {
       name: '',
       managerId: 0,
+      areaNumber: '지역번호',
       officePhone: '',
       status: '선택',
       memo: '',
@@ -126,21 +118,6 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
     })),
 
   setField: (field, value) => set((state) => ({ form: { ...state.form, [field]: value } })),
-
-  // setField: (key, value) => {
-  //   set((state) => {
-  //     const isDateField = key === 'startedAt' || key === 'endedAt'
-  //     const isEditedKey = `${key}Edited`
-
-  //     return {
-  //       form: {
-  //         ...state.form,
-  //         [key]: value,
-  //         ...(isDateField && { [isEditedKey]: true }),
-  //       },
-  //     }
-  //   })
-  // },
 
   updateMemo: (id, value) =>
     set((state) => {
@@ -241,6 +218,7 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
         process: {
           name: '',
           managerId: 0,
+          areaNumber: '지역번호',
           officePhone: '',
           status: '선택',
           memo: '',
@@ -258,9 +236,15 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
 
     return {
       ...form,
+      process: {
+        ...form.process,
+        officePhone: `${form.process.areaNumber}-${form.process.officePhone}`,
+      },
       startedAt: startedAtStr !== form.initialStartedAt ? startedAtStr : form.initialStartedAt,
       endedAt: endedAtStr !== form.initialEndedAt ? endedAtStr : form.initialEndedAt,
-      changeHistories: form.editedHistories ?? [],
+      changeHistories: form.editedHistories ?? undefined,
+      initialEndedAt: undefined,
+      initialStartedAt: undefined,
     }
   },
 }))

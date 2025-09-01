@@ -40,6 +40,7 @@ export const useOrderingSearchStore = create<{ search: OrderingSearchState }>((s
       set((state) => ({
         search: {
           ...state.search,
+          searchTrigger: 0,
           name: '',
           businessNumber: '',
           currentPage: 1,
@@ -78,7 +79,7 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
     paymentMethod: '',
     paymentPeriod: '',
     memo: '',
-    isActive: '0',
+    isActive: '1',
     userId: 0,
     headManagers: [],
     checkedManagerIds: [],
@@ -112,7 +113,7 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
         paymentMethod: '',
         paymentPeriod: '',
         memo: '',
-        isActive: '0',
+        isActive: '1',
         headManagers: [],
         checkedManagerIds: [],
         attachedFiles: [

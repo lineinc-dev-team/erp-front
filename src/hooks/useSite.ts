@@ -38,7 +38,7 @@ export default function useSite() {
   // useQuery 쪽 수정
   const SiteListQuery = useQuery({
     queryKey: [
-      'SiteInfo',
+      'siteInfo',
       search.searchTrigger,
       search.currentPage,
       search.pageCount,
@@ -47,26 +47,27 @@ export default function useSite() {
     ],
     queryFn: () => {
       const rawParams = {
-        name: search.name,
+        name: search.name || '',
         type: search.type === '선택' ? '' : search.type,
-        processName: search.processName,
-        city: search.city,
-        district: search.district,
+        processName: search.processName || '',
+        city: search.city || '',
+        district: search.district || '',
         processStatuses: search.processStatuses.length > 0 ? search.processStatuses : undefined,
-        clientCompanyName: search.clientCompanyName,
-        createdBy: search.createdBy,
+        clientCompanyName: search.clientCompanyName || '',
+        createdBy: search.createdBy || '',
         startDate: getTodayDateString(search.startDate),
         endDate: getTodayDateString(search.endDate),
         createdStartDate: getTodayDateString(search.createdStartDate),
         createdEndDate: getTodayDateString(search.createdEndDate),
+        managerName: search.managerName || '',
         page: search.currentPage - 1,
         size: Number(search.pageCount) || 10,
         sort:
           search.arraySort === '최신순'
             ? 'id,desc'
-            : search.arraySort === '날짜순'
-            ? 'createdAt.desc'
-            : 'id.asc',
+            : search.arraySort === '오래된순'
+            ? 'id,asc'
+            : 'username,asc',
       }
 
       const filteredParams = Object.fromEntries(
@@ -79,11 +80,9 @@ export default function useSite() {
         ),
       )
 
-      console.log('검색 파라미터', filteredParams)
-
       return SiteInfoService(filteredParams)
     },
-    staleTime: 1000 * 30,
+    enabled: pathName === '/sites', // 경로 체크
   })
 
   // 현장!! 등록
@@ -108,7 +107,7 @@ export default function useSite() {
     onSuccess: () => {
       if (window.confirm('정말 삭제하시겠습니까?')) {
         showSnackbar('현장이 삭제되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['ClientInfo'] })
+        queryClient.invalidateQueries({ queryKey: ['siteInfo'] })
       }
     },
 
@@ -191,7 +190,8 @@ export default function useSite() {
   const useSiteHistoryDataQuery = (historyId: number, enabled: boolean) => {
     return useInfiniteQuery({
       queryKey: ['SiteHistoryList', historyId],
-      queryFn: ({ pageParam = 0 }) => SiteInfoHistoryService(historyId, pageParam, 4),
+      queryFn: ({ pageParam = 0 }) =>
+        SiteInfoHistoryService(historyId, pageParam, 4, 'updatedAt,desc'),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
         const { sliceInfo } = lastPage?.data

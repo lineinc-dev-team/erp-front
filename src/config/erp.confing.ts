@@ -11,7 +11,7 @@ export const SiteProgressing = [
   { id: 0, name: '선택', code: '선택' },
   { id: 1, name: '준비중', code: 'NOT_STARTED' },
   { id: 2, name: '진행중', code: 'IN_PROGRESS' },
-  { id: 3, name: '완료', code: 'COMPLETED' },
+  { id: 3, name: '종료', code: 'COMPLETED' },
 ]
 
 export const FuelStatusesing = [
@@ -200,7 +200,7 @@ export const clientCompanyList: GridColDef[] = [
   { field: 'headquarter', headerName: '본사담당자명', width: 100 },
   { field: 'isActive', headerName: '사용여부', width: 100 },
   { field: 'createdAt', headerName: '등록일/수정일', width: 100 },
-  { field: 'hasFile', headerName: '첨부파일 유부', width: 100 },
+  { field: 'hasFile', headerName: '첨부파일 유무', width: 100 },
   { field: 'memo', headerName: '비고', width: 100 },
 ]
 
@@ -343,15 +343,15 @@ export const bankOptions = [
 
 export const CityOptions = [
   { id: '0', name: '선택' },
-  { id: 'Seoul', name: '서울시' },
-  { id: 'Busan', name: '부산시' },
-  { id: 'Daegu', name: '대구시' },
-  { id: 'Incheon', name: '인천시' },
-  { id: 'Gwangju', name: '광주시' },
-  { id: 'Daejeon', name: '대전시' },
-  { id: 'Ulsan', name: '울산시' },
-  { id: 'Sejong', name: '세종시' },
-  { id: 'Jeju', name: '제주시' },
+  { id: 'Seoul', name: '서울' },
+  { id: 'Busan', name: '부산' },
+  { id: 'Daegu', name: '대구' },
+  { id: 'Incheon', name: '인천' },
+  { id: 'Gwangju', name: '광주' },
+  { id: 'Daejeon', name: '대전' },
+  { id: 'Ulsan', name: '울산' },
+  { id: 'Sejong', name: '세종' },
+  { id: 'Jeju', name: '제주' },
 ]
 
 export const DistrictGuOptions = [

@@ -20,8 +20,8 @@ import {
   SiteProgressing,
 } from '@/config/erp.confing'
 import { processStatuses, SiteListProps } from '@/types/site'
-import { getTodayDateString } from '@/utils/formatters'
-import { useState } from 'react'
+import { formatNumber, getTodayDateString } from '@/utils/formatters'
+import { Fragment, useState } from 'react'
 import ExcelModal from '../common/ExcelModal'
 import { SiteExcelFieldMap } from '@/utils/userExcelField'
 import { useTabOpener } from '@/utils/openTab'
@@ -72,14 +72,17 @@ export default function SitesView() {
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
+  console.log('도급금액', SiteDataList)
+
   const updateSiteList = SiteDataList.map((site: SiteListProps) => ({
     ...site,
     processName: site.process?.name ?? '-', // 공정명
     managerName: site.manager?.username ?? '-', // 공정소장 이름
+    contractAmount: formatNumber(site.contractAmount),
     hasFile: 'Y', // 고정값
     processStatuses: site.process?.status ?? '-', // 진행상태
     clientCompanyName: site.clientCompany?.name ?? '-', // 발주처명
-    period: getTodayDateString(site.startedAt) + ' ~ ' + getTodayDateString(site.endedAt),
+    // period: getTodayDateString(site.startedAt) + ' ~ ' + getTodayDateString(site.endedAt),
     createdAt: getTodayDateString(site.updatedAt),
   }))
 
@@ -89,6 +92,27 @@ export default function SitesView() {
 
   // 그리도 라우팅 로직!
   const enhancedColumns = SiteColumnList.map((col): GridColDef => {
+    if (col.field === 'period') {
+      return {
+        ...col,
+        sortable: false,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 2,
+        renderCell: (params: GridRenderCellParams) => {
+          const item = params.row as SiteListProps
+
+          return (
+            <div className="flex flex-col items-center">
+              <Fragment>
+                <div className="whitespace-pre-wrap">{getTodayDateString(item.startedAt)}</div>
+                <div className="whitespace-pre-wrap">{getTodayDateString(item.endedAt)}</div>
+              </Fragment>
+            </div>
+          )
+        },
+      }
+    }
     if (col.field === 'name') {
       return {
         ...col,
@@ -344,23 +368,15 @@ export default function SitesView() {
           </div>
 
           <div className="flex">
-            <label className="w-36  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               공정소장
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
-              {/* <CommonSelect
-                fullWidth
-                className="text-xl"
-                value={form.process.managerId}
-                onChange={(value) => setProcessField('managerId', value)}
-                options={userOptions}
-                displayLabel
-                onScrollToBottom={() => {
-                  if (hasNextPage && !isFetching) fetchNextPage()
-                }}
-                onInputChange={(value) => setUserSearch(value)}
-                loading={isLoading}
-              /> */}
+              <CommonInput
+                value={search.managerName}
+                onChange={(value) => search.setField('managerName', value)}
+                className=" flex-1"
+              />
             </div>
           </div>
 
@@ -458,13 +474,6 @@ export default function SitesView() {
             onClick={search.reset}
             className="mt-3 px-20"
           />
-
-          {/* <CommonButton
-             label="검색"
-             variant="secondary"
-             onClick={search.handleSearch}
-             className="mt-3 px-20"
-           /> */}
 
           <CommonButton
             label="검색"
@@ -579,7 +588,18 @@ export default function SitesView() {
           disableColumnMenu
           hideFooterPagination
           // pageSize={pageSize}
-          rowHeight={60}
+          getRowHeight={() => 'auto'}
+          sx={{
+            '& .MuiDataGrid-cell': {
+              display: 'flex',
+              justifyContent: 'center', // 가로 가운데 정렬
+              alignItems: 'center', // 세로 가운데 정렬
+              whiteSpace: 'normal', // 줄바꿈 허용
+              lineHeight: '2.8rem', // 줄 간격
+              paddingTop: '12px', // 위 여백
+              paddingBottom: '12px', // 아래 여백
+            },
+          }}
           onRowSelectionModelChange={(newSelection) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setSelectedIds(newSelection as any) // 타입 보장된다면 사용 가능

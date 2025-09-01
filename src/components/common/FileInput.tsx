@@ -84,7 +84,6 @@ export default function CommonFileInput({
 
   // const validFiles = files?.filter((f) => f.file?.name) ?? []
 
-  console.log('validFilesvalidFilesvalidFiles34', files)
   return (
     <div className="flex w-full">
       <div className="flex items-center gap-2 justify-between w-full">

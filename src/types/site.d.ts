@@ -2,6 +2,7 @@ type SiteProcess = {
   id?: number
   name: string
   managerId: number
+  areaNumber: string
   officePhone: string
   status: '선택' | 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED'
   memo: string
@@ -11,10 +12,8 @@ export type ContractFileType = 'CONTRACT' | 'DRAWING' | 'WARRANTY' | 'PERMIT' | 
 
 export type ContractFile = {
   id?: number
-  name: string
   fileUrl: string
   originalFileName: string
-  memo: string
   type: ContractFileType
 }
 
@@ -84,6 +83,7 @@ export type SiteSearchState = {
   processStatuses: processStatuses[] // 공정 상태 (다중 선택)
   clientCompanyName: string // 발주처
   createdBy: string // 등록자 이름
+  managerName: string
   startDate: Date | null // 사업 시작일
   endDate: Date | null // 사업 종료일
   createdStartDate: Date | null // 등록일 시작
@@ -93,6 +93,7 @@ export type SiteSearchState = {
   pageCount: string // 페이지당 항목 수 (예: '10', '30', etc)
 
   reset: () => void // 초기화 함수
+
   setField: <K extends keyof Omit<SiteSearchState, 'reset' | 'setField' | 'handleSearch'>>(
     field: K,
     value: SiteSearchState[K],

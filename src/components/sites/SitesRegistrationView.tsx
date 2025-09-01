@@ -9,14 +9,14 @@ import {
 import CommonDatePicker from '../common/DatePicker'
 import CommonButton from '../common/Button'
 import DaumPostcodeEmbed from 'react-daum-postcode'
-import { ProgressingLabelToValue, typeLabelToValue, useSiteFormStore } from '@/stores/siteStore'
-import { SiteProgressing } from '@/config/erp.confing'
+import { useSiteFormStore } from '@/stores/siteStore'
+import { AreaCode, SiteProgressing } from '@/config/erp.confing'
 import useSite from '@/hooks/useSite'
 import { formatNumber, getTodayDateString, unformatNumber } from '@/utils/formatters'
 import { useClientCompany } from '@/hooks/useClientCompany'
-import { Contract, ContractFile, ContractFileType, HistoryItem } from '@/types/site'
+import { Contract, ContractFile, ContractFileType, HistoryItem, SiteForm } from '@/types/site'
 import CommonFileInput from '../common/FileInput'
-import { formatPhoneNumber } from '@/utils/formatPhoneNumber'
+import { formatPersonNumber } from '@/utils/formatPhoneNumber'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef } from 'react'
@@ -32,6 +32,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
+import { useSnackbarStore } from '@/stores/useSnackbarStore'
 
 export default function SitesRegistrationView({ isEditMode = false }) {
   const FILE_TYPE_LABELS: Record<ContractFileType, string> = {
@@ -76,6 +77,8 @@ export default function SitesRegistrationView({ isEditMode = false }) {
   const params = useParams()
   const siteId = Number(params?.id)
 
+  const { showSnackbar } = useSnackbarStore()
+
   // 수정이력 조회
 
   const PROPERTY_NAME_MAP: Record<string, string> = {
@@ -93,6 +96,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     officePhone: '사무실 연락처',
     amount: '계약금액',
     memo: '메모',
+    originalFileName: '파일 이름',
   }
 
   const {
@@ -121,28 +125,39 @@ export default function SitesRegistrationView({ isEditMode = false }) {
       setField('name', client.name)
       setField('address', client.address)
       setField('detailAddress', client.detailAddress)
-      const mappedType = typeLabelToValue[client.type] || '' // 한글 → 영어
-      setField('type', mappedType)
+      setField('type', client.typeCode)
+      setField('city', client.city)
+      setField('district', client.district)
 
-      setField('clientCompanyId', client.clientCompany.id)
+      setField('clientCompanyId', client.clientCompany?.id ?? '0')
       setField('startedAt', client.startedAt ? new Date(client.startedAt) : null)
       setField('endedAt', client.endedAt ? new Date(client.endedAt) : null)
-      setField('userId', client.user.id)
+      setField('userId', client.user?.id ?? '0')
       setField('contractAmount', client.contractAmount)
       setField('memo', client.memo)
 
       // 공정 정보 설정
-      setProcessField('name', client.process?.name || '')
-      setProcessField('managerId', client.manager?.id || '')
-      setProcessField('officePhone', client.process?.officePhone || '')
-      const filterProgress = ProgressingLabelToValue[client.process.status]
-      if (
-        filterProgress === 'NOT_STARTED' ||
-        filterProgress === 'IN_PROGRESS' ||
-        filterProgress === 'COMPLETED'
-      ) {
-        setProcessField('status', filterProgress)
+
+      const processPhone = client.process.officePhone // "031-124-2444"
+
+      if (processPhone) {
+        const parts = processPhone.split('-')
+        const areaNumber = parts[0] || ''
+        const officePhone = parts.slice(1).join('-') || ''
+
+        console.log('officePhoneofficePhone', officePhone)
+
+        setProcessField('areaNumber', areaNumber)
+        setProcessField('officePhone', officePhone)
+      } else {
+        setProcessField('areaNumber', '')
+        setProcessField('officePhone', '')
       }
+
+      setProcessField('name', client.process?.name || '')
+      setProcessField('managerId', client.manager?.id || '0')
+
+      setProcessField('status', client.process.statusCode)
 
       setProcessField('memo', client.process?.memo || '')
 
@@ -174,8 +189,6 @@ export default function SitesRegistrationView({ isEditMode = false }) {
           memo: contract.memo || '',
           files: (contract.files || []).map((file: ContractFile) => ({
             id: file.id,
-            name: file.name,
-            memo: file.memo,
             fileUrl: file.fileUrl,
             originalFileName: file.originalFileName,
             type: convertFileType(file.type), // 여기에서 한글 -> 영문 enum 매핑
@@ -275,7 +288,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                   <div className="flex-1 border border-gray-400 px-2 py-2 flex flex-col gap-2">
                     <CommonFileInput
                       // label={FILE_TYPE_LABELS[type]}
-                      uploadTarget="CLIENT_COMPANY"
+                      uploadTarget="SITE"
                       acceptedExtensions={type === 'ETC' ? ['zip', 'xlsx', 'doc'] : ['pdf', 'hwp']}
                       files={contract.files
                         .filter((f) => f.type === type)
@@ -283,6 +296,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                           id: f.id || 0,
                           file: new File([], f.originalFileName), // 화면 표시용 File 객체 (빈 파일)
                           fileUrl: f.fileUrl,
+                          originalFileName: f.originalFileName,
                         }))}
                       onChange={(uploaded) => {
                         // 기존 type에 해당하는 파일 제거
@@ -297,10 +311,8 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                           if (!file) return // file이 없으면 스킵
 
                           addContractFile(idx, {
-                            name: file.name,
                             originalFileName: file.name,
                             fileUrl: fileUrl ?? '',
-                            memo: '',
                             type,
                           })
                         })
@@ -411,6 +423,50 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     ],
   )
 
+  function validateSiteForm(form: SiteForm) {
+    if (!form.name?.trim()) return '현장명을 입력하세요.'
+    if (!form.address?.trim()) return '주소를 입력하세요.'
+    if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
+    if (!form.type?.trim()) return '현장 유형을 선택하세요.'
+    if (!form.clientCompanyId) return '발주처를 선택하세요.'
+    if (!form.startedAt) return '사업 시작일을 선택하세요.'
+    if (!form.endedAt) return '사업 종료일을 선택하세요.'
+    if (!form.userId) return '본사 담당자를 선택하세요.'
+    if (!form.contractAmount || form.contractAmount <= 0) return '도급금액을 입력하세요.'
+    if (!form.process?.name?.trim()) return '공정명을 입력하세요.'
+
+    // 날짜 유효성 검사
+    if (form.startedAt && form.endedAt) {
+      const start = new Date(form.startedAt)
+      const end = new Date(form.endedAt)
+      if (start > end) return '종료일은 시작일 이후여야 합니다.'
+    }
+
+    if (form.contracts.length > 0) {
+      for (const item of form.contracts) {
+        if (!item.name?.trim()) return '계약서의 이름을 입력해주세요.'
+      }
+    }
+
+    return null
+  }
+
+  const handleSiteSubmit = () => {
+    const errorMsg = validateSiteForm(form)
+    if (errorMsg) {
+      showSnackbar(errorMsg, 'warning')
+      return
+    }
+
+    if (isEditMode) {
+      if (window.confirm('수정하시겠습니까?')) {
+        ModifySiteMutation.mutate(siteId)
+      }
+    } else {
+      createSiteMutation.mutate()
+    }
+  }
+
   return (
     <>
       <div>
@@ -469,6 +525,8 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                     </div>
                     <DaumPostcodeEmbed
                       onComplete={(data) => {
+                        setField('city', data.sido)
+                        setField('district', data.sigungu)
                         setField('address', data.address)
                         setField('isModalOpen', false)
                       }}
@@ -576,6 +634,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
             </label>
             <div className="border flex  items-center border-gray-400 px-2 w-full">
               <CommonInput
+                placeholder="텍스트 입력"
                 value={form.memo}
                 onChange={(value) => setField('memo', value)}
                 className=" flex-1"
@@ -626,11 +685,19 @@ export default function SitesRegistrationView({ isEditMode = false }) {
             <label className="w-36 text-[14px]  flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               사무실 연락처
             </label>
-            <div className="border flex  items-center border-gray-400 px-2 w-full">
+            <div className="border flex  items-center gap-4 border-gray-400 px-2 w-full">
+              <CommonSelect
+                className="text-2xl"
+                value={form.process.areaNumber}
+                onChange={(value) => setProcessField('areaNumber', value)}
+                options={AreaCode}
+              />
+
               <CommonInput
+                placeholder="'-'없이 숫자만 입력"
                 value={form.process.officePhone}
                 onChange={(value) => {
-                  const formatted = formatPhoneNumber(value)
+                  const formatted = formatPersonNumber(value)
                   setProcessField('officePhone', formatted)
                 }}
                 className=" flex-1"
@@ -774,20 +841,12 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
       <div className="flex justify-center gap-10 mt-10">
         <CommonButton label="취소" variant="reset" className="px-10" onClick={handleCancelData} />
+
         <CommonButton
           label={isEditMode ? '+ 수정' : '+ 등록'}
           className="px-10 font-bold"
           variant="secondary"
-          onClick={() => {
-            if (isEditMode) {
-              const confirmed = window.confirm('수정하시겠습니까?')
-              if (!confirmed) return
-
-              ModifySiteMutation.mutate(siteId)
-            } else {
-              createSiteMutation.mutate()
-            }
-          }}
+          onClick={handleSiteSubmit}
         />
       </div>
     </>
