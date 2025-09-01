@@ -94,6 +94,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
     isActive: '계정 상태',
     memo: '메모',
     isMain: '대표담당자',
+    originalFileName: '파일 이름',
   }
 
   const {

@@ -76,9 +76,16 @@ export default function OrderingView() {
             return <div className="flex flex-col items-center">-</div>
           }
 
+          // 대표 연락처만 필터링
+          const mainContacts = item.contacts.filter((c) => c.isMain)
+
+          if (mainContacts.length === 0) {
+            return <div className="flex flex-col items-center">-</div>
+          }
+
           return (
             <div className="flex flex-col items-center">
-              {item.contacts?.map((contact, index) => (
+              {mainContacts.map((contact, index) => (
                 <Fragment key={index}>
                   <div className="whitespace-pre-wrap">{contact.position || '-'}</div>
                   <div className="whitespace-pre-wrap">{contact.department || '-'}</div>
@@ -103,9 +110,17 @@ export default function OrderingView() {
           if (!item.contacts || item.contacts.length === 0) {
             return <div className="flex flex-col items-center">-</div>
           }
+
+          // isMain === true 인 연락처만 필터링
+          const mainContacts = item.contacts.filter((c) => c.isMain)
+
+          if (mainContacts.length === 0) {
+            return <div className="flex flex-col items-center">-</div>
+          }
+
           return (
             <div className="flex flex-col items-center">
-              {item.contacts?.map((contact, index) => (
+              {mainContacts.map((contact, index) => (
                 <Fragment key={index}>
                   <div className="whitespace-pre-wrap">{contact.phoneNumber || '-'}</div>
                   <div className="whitespace-pre-wrap">{contact.email || '-'}</div>

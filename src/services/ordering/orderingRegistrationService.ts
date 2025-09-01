@@ -207,9 +207,10 @@ export async function CLientCompanyInfoHistoryService(
   historyId: number,
   page: number = 0,
   size: number = 4,
+  sort: string,
 ) {
   const resData = await fetch(
-    `${API.CLIENTCOMPANY}/${historyId}/change-histories?page=${page}&size=${size}`,
+    `${API.CLIENTCOMPANY}/${historyId}/change-histories?page=${page}&size=${size}&sort=${sort}`,
     {
       method: 'GET',
       headers: {

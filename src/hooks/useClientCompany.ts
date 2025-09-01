@@ -197,7 +197,8 @@ export function useClientCompany() {
   const useClientHistoryDataQuery = (historyId: number, enabled: boolean) => {
     return useInfiniteQuery({
       queryKey: ['ClientHistoryList', historyId],
-      queryFn: ({ pageParam = 0 }) => CLientCompanyInfoHistoryService(historyId, pageParam, 4),
+      queryFn: ({ pageParam = 0 }) =>
+        CLientCompanyInfoHistoryService(historyId, pageParam, 4, 'id,desc'),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
         const { sliceInfo } = lastPage?.data
