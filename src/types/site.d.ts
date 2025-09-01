@@ -22,6 +22,8 @@ export type Contract = {
   name: string
   amount: number
   memo: string
+  createdBy?: string
+  createdAt?: string
   files: ContractFile[]
 }
 

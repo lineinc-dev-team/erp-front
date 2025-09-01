@@ -96,7 +96,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     officePhone: '사무실 연락처',
     amount: '계약금액',
     memo: '메모',
-    originalFileName: '파일 이름',
+    originalFileName: '파일 추가',
   }
 
   const {
@@ -187,6 +187,8 @@ export default function SitesRegistrationView({ isEditMode = false }) {
           name: contract.name || '',
           amount: contract.amount || 0,
           memo: contract.memo || '',
+          createdBy: contract.createdBy,
+          createdAt: getTodayDateString(contract.createdAt),
           files: (contract.files || []).map((file: ContractFile) => ({
             id: file.id,
             fileUrl: file.fileUrl,
@@ -322,15 +324,17 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                 </div>
               ),
             )}
-            {/* {renderInputRow(
-              '첨부일자 / 등록자',
-              <CommonInput
-                placeholder="텍스트 입력"
-                value={form.}
-                onChange={(value) => setField('name', value)}
-                className="flex-1"
-              />,
-            )} */}
+            {isEditMode &&
+              renderInputRow(
+                '첨부일자 / 등록자',
+                <CommonInput
+                  placeholder="텍스트 입력"
+                  className="flex-1"
+                  disabled={true}
+                  value={`${contract.createdAt ?? ''} / ${contract.createdBy ?? ''}`}
+                  onChange={(v) => updateContractField(idx, 'memo', v)}
+                />,
+              )}
           </div>
         </div>
       ))}
@@ -361,7 +365,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
           if (before === 'null') {
             before = '추가'
             style = { color: '#1976d2' } // 파란색 - 추가
-          } else if (after === 'null') {
+          } else if (after === 'null' || after === '') {
             after = '삭제'
             style = { color: '#d32f2f' } // 빨간색 - 삭제
           }
