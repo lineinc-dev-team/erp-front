@@ -168,7 +168,7 @@ export const UserDataList: GridColDef[] = [
   { field: 'department', headerName: '부서', width: 180 },
   { field: 'grade', headerName: '직급', width: 180 },
   { field: 'position', headerName: '직책', width: 180 },
-  { field: 'phoneNumber', headerName: '휴대폰', width: 180 },
+  { field: 'phoneNumber', headerName: '개인 휴대폰', width: 180 },
   { field: 'isActive', headerName: '계정상태', width: 100 },
   { field: 'lastLoginAt', headerName: '최종접속일', width: 120 },
   { field: 'createdAt', headerName: '생성일자', width: 100 },

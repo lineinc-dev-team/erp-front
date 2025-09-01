@@ -5,7 +5,7 @@ export const userExcelFieldMap = {
   부서: 'department',
   직급: 'grade',
   직책: 'position',
-  휴대폰: 'phoneNumber',
+  '개인 휴대폰': 'phoneNumber',
   계정상태: 'isActive',
   최종접속일: 'lastLoginAt',
   생성일자: 'createdAt',
