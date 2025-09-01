@@ -21,7 +21,7 @@ import {
 } from '@/config/erp.confing'
 import { processStatuses, SiteListProps } from '@/types/site'
 import { formatNumber, getTodayDateString } from '@/utils/formatters'
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import ExcelModal from '../common/ExcelModal'
 import { SiteExcelFieldMap } from '@/utils/userExcelField'
 import { useTabOpener } from '@/utils/openTab'
@@ -29,6 +29,8 @@ import CommonSelectByName from '../common/CommonSelectByName'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
+import { myInfoProps } from '@/types/user'
+import { useMenuPermission } from '../common/MenuPermissionView'
 
 export default function SitesView() {
   const { search } = useSiteSearchStore()
@@ -121,13 +123,24 @@ export default function SitesView() {
         flex: 1,
 
         renderCell: (params: GridRenderCellParams) => {
-          const clientId = params.row.id
+          const siteId = params.row.id
+          const handleClick = () => {
+            if (hasModify) {
+              router.push(`/sites/registration/${siteId}`)
+            }
+          }
+
           return (
             <div
-              onClick={() => router.push(`/sites/registration/${clientId}`)}
-              className="flex justify-center items-center cursor-pointer"
+              onClick={handleClick}
+              className={`flex justify-center items-center ${
+                hasModify
+                  ? 'cursor-pointer text-orange-500 font-bold'
+                  : 'cursor-not-allowed text-gray-400'
+              }`}
+              style={!hasModify ? { pointerEvents: 'none' } : {}}
             >
-              <span className="text-orange-500 font-bold">{params.value}</span>
+              <span>{params.value}</span>
             </div>
           )
         },
@@ -185,6 +198,23 @@ export default function SitesView() {
       fields,
     })
   }
+
+  // 권한에 따른 버튼 활성화
+
+  const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
+
+  useEffect(() => {
+    const headerData = sessionStorage.getItem('myInfo')
+    if (headerData) {
+      setMyInfo(JSON.parse(headerData))
+    }
+  }, [])
+
+  const roleId = Number(myInfo?.roles?.[0]?.id)
+
+  // "계정 관리" 메뉴에 대한 권한
+  const { hasDelete, hasCreate, hasModify } = useMenuPermission(roleId, '현장 관리')
+
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
@@ -527,6 +557,7 @@ export default function SitesView() {
               <CommonButton
                 label="삭제"
                 variant="danger"
+                disabled={!hasDelete} // 권한 없으면 비활성화
                 onClick={() => {
                   if (!selectedIds || !(selectedIds.ids instanceof Set)) {
                     alert('체크박스를 선택해주세요.')
@@ -562,6 +593,7 @@ export default function SitesView() {
               />
               <CommonButton
                 label="+ 신규등록"
+                disabled={!hasCreate} // 권한 없으면 비활성화
                 variant="secondary"
                 onClick={() => openTab('/sites/registration', '현장관리 - 등록')}
                 className="px-3"

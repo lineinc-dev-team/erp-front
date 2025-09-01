@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment } from 'react'
+import { Fragment, useEffect } from 'react'
 import CommonButton from '../common/Button'
 import CommonInput from '../common/Input'
 import CommonSelect from '../common/Select'
@@ -26,6 +26,8 @@ import { getTodayDateString } from '@/utils/formatters'
 import { useTabOpener } from '@/utils/openTab'
 import { formatAreaNumber } from '@/utils/formatPhoneNumber'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
+import { useMenuPermission } from '../common/MenuPermissionView'
+import { myInfoProps } from '@/types/user'
 
 export default function OrderingView() {
   const openTab = useTabOpener()
@@ -163,12 +165,24 @@ export default function OrderingView() {
 
         renderCell: (params: GridRenderCellParams) => {
           const clientId = params.row.id
+
+          const handleClick = () => {
+            if (hasModify) {
+              router.push(`/ordering/registration/${clientId}`)
+            }
+          }
+
           return (
             <div
-              onClick={() => router.push(`/ordering/registration/${clientId}`)}
-              className="flex justify-center items-center cursor-pointer"
+              onClick={handleClick}
+              className={`flex justify-center items-center ${
+                hasModify
+                  ? 'cursor-pointer text-orange-500 font-bold'
+                  : 'cursor-not-allowed text-gray-400'
+              }`}
+              style={!hasModify ? { pointerEvents: 'none' } : {}}
             >
-              <span className="text-orange-500 font-bold">{params.value}</span>
+              <span>{params.value}</span>
             </div>
           )
         },
@@ -223,6 +237,23 @@ export default function OrderingView() {
       fields, // 필수 필드: ["id", "name", "businessNumber", ...]
     })
   }
+
+  // 권한에 따른 버튼 활성화
+
+  const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
+
+  useEffect(() => {
+    const headerData = sessionStorage.getItem('myInfo')
+    if (headerData) {
+      setMyInfo(JSON.parse(headerData))
+    }
+  }, [])
+
+  const roleId = Number(myInfo?.roles?.[0]?.id)
+
+  // "계정 관리" 메뉴에 대한 권한
+  const { hasDelete, hasCreate, hasModify } = useMenuPermission(roleId, '발주처 관리')
+
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
@@ -438,6 +469,7 @@ export default function OrderingView() {
               <CommonButton
                 label="삭제"
                 variant="danger"
+                disabled={!hasDelete} // 권한 없으면 비활성화
                 onClick={() => {
                   if (!selectedIds || !(selectedIds.ids instanceof Set)) {
                     alert('체크박스를 선택해주세요.')
@@ -471,6 +503,7 @@ export default function OrderingView() {
                 onDownload={handleDownloadExcel}
               />
               <CommonButton
+                disabled={!hasCreate}
                 label="+ 신규등록"
                 variant="secondary"
                 onClick={() => openTab('/ordering/registration', '발주처 관리 - 등록')}

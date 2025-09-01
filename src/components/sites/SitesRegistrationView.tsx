@@ -428,10 +428,10 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     if (!form.address?.trim()) return '주소를 입력하세요.'
     if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
     if (!form.type?.trim()) return '현장 유형을 선택하세요.'
-    if (!form.clientCompanyId) return '발주처를 선택하세요.'
+    if (!form.clientCompanyId || String(form.clientCompanyId) === '0') return '발주처를 선택하세요.'
     if (!form.startedAt) return '사업 시작일을 선택하세요.'
     if (!form.endedAt) return '사업 종료일을 선택하세요.'
-    if (!form.userId) return '본사 담당자를 선택하세요.'
+    if (!form.userId || String(form.userId) === '0') return '본사 담당자를 선택하세요.'
     if (!form.contractAmount || form.contractAmount <= 0) return '도급금액을 입력하세요.'
     if (!form.process?.name?.trim()) return '공정명을 입력하세요.'
 
