@@ -237,7 +237,7 @@ export const outsourcingCompanyList: GridColDef[] = [
   { field: 'contactPositionAndDepartment', headerName: '부서/직급', width: 120 },
   { field: 'contractHistory', headerName: '계약이력', width: 120 },
   { field: 'Deductible', headerName: '공제항목 기본값', width: 100 },
-  { field: 'hasFile', headerName: '첨부파일 유부', width: 100 },
+  { field: 'hasFile', headerName: '첨부파일 유무', width: 100 },
   { field: 'isActive', headerName: '사용여부', width: 100 },
   { field: 'createdAt', headerName: '등록일/수정일', width: 100 },
   { field: 'memo', headerName: '비고', width: 100 },
@@ -330,13 +330,13 @@ export const materialTypeOptions = [
 ]
 
 export const bankOptions = [
-  { id: '선택', name: '선택' },
-  { id: '기업은행', name: '기업은행' },
-  { id: '농협은행', name: '농협은행' },
-  { id: '우리은행', name: '우리은행' },
-  { id: '카카오뱅크', name: '카카오뱅크' },
-  { id: '국민은행', name: '국민은행' },
-  { id: '신한은행', name: '신한은행' },
+  { id: '0', name: '선택' },
+  { id: '1', name: '기업은행' },
+  { id: '2', name: '농협은행' },
+  { id: '3', name: '우리은행' },
+  { id: '4', name: '카카오뱅크' },
+  { id: '5', name: '국민은행' },
+  { id: '6', name: '신한은행' },
 ]
 
 // 시 와  구 를 구분

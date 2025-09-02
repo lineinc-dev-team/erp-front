@@ -33,9 +33,11 @@ import {
   ContractHistoryItem,
   HistoryItem,
   OutsourcingAttachedFile,
+  OutsourcingFormState,
   OutsourcingManager,
 } from '@/types/outsourcingCompany'
 import { getTodayDateString } from '@/utils/formatters'
+import { useSnackbarStore } from '@/stores/useSnackbarStore'
 
 export default function OutsourcingCompanyRegistrationView({ isEditMode = false }) {
   const {
@@ -61,6 +63,8 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
 
     useContractHistoryDataQuery,
   } = useOutSourcingCompany()
+
+  const { showSnackbar } = useSnackbarStore()
 
   const managers = form.headManagers
   const checkedIds = form.checkedManagerIds
@@ -110,6 +114,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     bankName: '은행명',
     accountNumber: '계좌번호',
     accountHolder: '예금주',
+    originalFileName: '파일 추가',
   }
 
   const {
@@ -125,14 +130,12 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
   const ContractHistoryList = useContractHistoryDataQuery.data?.data.content ?? []
 
   const totalList = useContractHistoryDataQuery.data?.data.pageInfo.totalElements ?? 0
-  const pageCount = Number(form.pageCount) || 10
+  const pageCount = 10
   const totalPages = Math.ceil(totalList / pageCount)
 
   useEffect(() => {
     if (outsourcingDetailData && isEditMode === true) {
       const client = outsourcingDetailData.data
-
-      console.log('은행 정보를 보자 ', client)
 
       function parseLandlineNumber(landline: string) {
         if (!landline) return { managerAreaNumber: '', landlineNumber: '' }
@@ -179,34 +182,42 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
       })
 
       // 첨부파일 데이터 가공
-      const formattedFiles = (client.files ?? []).map((item: OutsourcingAttachedFile) => ({
-        id: item.id,
-        name: item.name,
-        memo: item.memo,
-        files: [
-          {
-            fileUrl: item.fileUrl,
-            file: {
-              name: item.originalFileName,
+      const formattedFiles = (client.files ?? [])
+        .map((item: OutsourcingAttachedFile) => ({
+          id: item.id,
+          name: item.name,
+          memo: item.memo,
+          type: item.typeCode,
+          files: [
+            {
+              fileUrl: item.fileUrl && item.fileUrl.trim() !== '' ? item.fileUrl : null,
+              originalFileName:
+                item.originalFileName && item.originalFileName.trim() !== ''
+                  ? item.originalFileName
+                  : null,
             },
-          },
-        ],
-      }))
+          ],
+        }))
+        .sort((a: OutsourcingAttachedFile, b: OutsourcingAttachedFile) => {
+          if (a.type === 'BUSINESS_LICENSE') return -1
+          if (b.type === 'BUSINESS_LICENSE') return 1
+          return 0
+        })
 
       if (client.landlineNumber) {
         const parts = client.landlineNumber.split('-')
         if (parts.length >= 2) {
           const area = parts[0] // 지역번호
           const number = parts.slice(1).join('-') // 나머지 번호
-          setField('landlineNumber', area)
-          setField('landlineLastNumber', number)
+          setField('areaNumber', area)
+          setField('landlineNumber', number)
         } else {
           // fallback (예외 처리)
-          setField('landlineLastNumber', client.landlineLastNumber)
+          setField('landlineNumber', client.landlineNumber)
         }
       } else {
         setField('landlineNumber', '')
-        setField('landlineLastNumber', '')
+        setField('areaNumber', '')
       }
 
       // 각 필드에 set
@@ -288,7 +299,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
           if (before === 'null') {
             before = '추가'
             style = { color: '#1976d2' } // 파란색 - 추가
-          } else if (after === 'null') {
+          } else if (after === 'null' || after === '') {
             after = '삭제'
             style = { color: '#d32f2f' } // 빨간색 - 삭제
           }
@@ -345,6 +356,77 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading],
   )
 
+  function validateClientForm(form: OutsourcingFormState) {
+    if (!form.name?.trim()) return '업체명을 입력하세요.'
+    if (!form.businessNumber?.trim()) return '사업자등록번호를 입력하세요.'
+    if (!form.type?.trim()) return '구분을 입력하세요.'
+    if (!form.ceoName?.trim()) return '대표자명을 입력하세요.'
+    if (!form.address?.trim()) return '본사 주소를 입력하세요.'
+    if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
+    if (!form.landlineNumber?.trim()) return '전화번호를 입력하세요.'
+    if (!form.email?.trim()) return '이메일을 입력하세요.'
+    if (form.isActive === '0') return '사용 여부를 선택하세요.'
+
+    // 기본공제 항목 체크 (선택된 값이 없으면 안내)
+    if (!(form.defaultDeductions?.split(',').filter(Boolean)?.length > 0)) {
+      return '기본공제 항목을 선택해주세요.'
+    }
+
+    // 계좌정보 체크
+    if (!form.bankName?.trim() || form.bankName === '0') return '은행명을 선택하세요.'
+    if (!form.accountNumber?.trim()) return '계좌번호를 입력하세요.'
+    if (!form.accountHolder?.trim()) return '예금주를 입력하세요.'
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      return '유효한 이메일을 입력하세요.'
+    }
+    if (form.isActive === '0') return '사용 여부를 선택하세요.'
+
+    // 담당자 유효성 체크
+    if (managers.length > 0) {
+      for (const item of managers) {
+        if (!item.name?.trim()) return '담당자의 이름을 입력해주세요.'
+        if (!item.position?.trim()) return '담당자의 부서를 입력해주세요.'
+        if (!item.department?.trim()) return '담당자의 직급(직책)을 입력해주세요.'
+        if (!item.landlineNumber?.trim()) return '담당자의 전화번호를 입력해주세요.'
+        if (!item.phoneNumber?.trim()) return '담당자의 개인 휴대폰을 입력해주세요.'
+        if (!item.email?.trim()) return '담당자의 이메일을 입력해주세요.'
+
+        // 필요시 형식 체크
+        if (!/^\d{2,3}-\d{3,4}-\d{4}$/.test(item.phoneNumber)) {
+          return '담당자의 휴대폰 번호를 xxx-xxxx-xxxx 형식으로 입력해주세요.'
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item.email)) {
+          return '담당자의 이메일 형식이 올바르지 않습니다.'
+        }
+      }
+    }
+
+    if (attachedFiles.length > 0) {
+      for (const item of attachedFiles) {
+        if (!item.name?.trim()) return '첨부파일의 이름을 입력해주세요.'
+      }
+    }
+
+    return null
+  }
+
+  const handleOutSourcingCompanySubmit = () => {
+    const errorMsg = validateClientForm(form)
+    if (errorMsg) {
+      showSnackbar(errorMsg, 'warning')
+      return
+    }
+
+    if (isEditMode) {
+      if (window.confirm('수정하시겠습니까?')) {
+        OutsourcingModifyMutation.mutate(outsourcingCompanyId)
+      }
+    } else {
+      createOutSourcingMutation.mutate()
+    }
+  }
+
   return (
     <>
       <div>
@@ -392,9 +474,11 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                 />
 
                 <CommonInput
-                  value={form.typeDescription ?? ''}
+                  value={form.typeDescription}
                   onChange={(value) => setField('typeDescription', value)}
-                  className=" flex-1"
+                  className="flex-1"
+                  disabled={form.type === 'ETC' ? false : true}
+                  placeholder={form.type === 'ETC' ? '기타 내용을 입력하세요' : ''}
                 />
               </div>
             </div>
@@ -470,17 +554,17 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
                 className="text-2xl"
-                value={form.landlineNumber}
-                onChange={(value) => setField('landlineNumber', value)}
+                value={form.areaNumber}
+                onChange={(value) => setField('areaNumber', value)}
                 options={AreaCode}
               />
 
               <CommonInput
                 placeholder="'-'없이 숫자만 입력"
-                value={form.landlineLastNumber ?? ''}
+                value={form.landlineNumber ?? ''}
                 onChange={(value) => {
                   const formatAreaNumber = formatPersonNumber(value)
-                  setField('landlineLastNumber', formatAreaNumber)
+                  setField('landlineNumber', formatAreaNumber)
                 }}
                 className=" flex-1"
               />
@@ -515,7 +599,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
           </div>
 
           <div className="flex">
-            <label className="w-[119] text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-[119px] 2xl:w-[124px] text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
               공제 항목 기본값
             </label>
             <div className="flex border  border-gray-400 flex-wrap px-2 items-center gap-4 flex-1">
@@ -803,6 +887,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                   >
                     <Checkbox
                       checked={fileCheckIds.includes(m.id)}
+                      disabled={m.type === 'BUSINESS_LICENSE'}
                       onChange={(e) => toggleCheckItem('attachedFile', m.id, e.target.checked)}
                     />
                   </TableCell>
@@ -815,6 +900,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                       onChange={(e) =>
                         updateItemField('attachedFile', m.id, 'name', e.target.value)
                       }
+                      disabled={m.type === 'BUSINESS_LICENSE'}
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -830,27 +916,14 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                           'jpeg',
                           'ppt',
                         ]}
+                        multiple={false}
                         files={m.files} // 각 항목별 files
-                        onChange={
-                          (newFiles) => updateItemField('attachedFile', m.id, 'files', newFiles) //  해당 항목만 업데이트
-                        }
-                        uploadTarget="CLIENT_COMPANY"
+                        onChange={(newFiles) => {
+                          updateItemField('attachedFile', m.id, 'files', newFiles.slice(0, 1))
+                          // updateItemField('attachedFile', m.id, 'files', newFiles)
+                        }}
+                        uploadTarget="OUTSOURCING_COMPANY"
                       />
-                      {/* <CommonFileInput
-                        acceptedExtensions={[
-                          'pdf',
-                          'jpg',
-                          'png',
-                          'hwp',
-                          'xlsx',
-                          'zip',
-                          'jpeg',
-                          'ppt',
-                        ]}
-                        files={uploadedFiles}
-                        onChange={setUploadedFiles}
-                        uploadTarget={'CLIENT_COMPANY'}
-                      /> */}
                     </div>
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -907,10 +980,10 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                 </TableRow>
               </TableHead>
               <TableBody>
-                {ContractHistoryList.map((item: ContractHistoryItem) => (
+                {ContractHistoryList.map((item: ContractHistoryItem, index: number) => (
                   <TableRow key={item.contractId}>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {item.contractId}
+                      {(form.currentPage - 1) * pageCount + index + 1}
                     </TableCell>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       {item.siteName}
@@ -919,7 +992,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                       {item.processName}
                     </TableCell>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {item.contractAmount}
+                      {item.contractAmount ? item.contractAmount.toLocaleString() + ' 원' : '-'}
                     </TableCell>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       {item.contactName}
@@ -928,12 +1001,15 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                       {item.defaultDeductions}
                     </TableCell>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {/* {item.files} */}
+                      {item.files?.length ? 'O' : 'X'}
                     </TableCell>
 
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {getTodayDateString(item.contractStartDate)} ~{' '}
-                      {getTodayDateString(item.contractEndDate)}
+                      {item.contractStartDate && item.contractEndDate
+                        ? `${getTodayDateString(item.contractStartDate)} ~ ${getTodayDateString(
+                            item.contractEndDate,
+                          )}`
+                        : '-'}
                     </TableCell>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       {getTodayDateString(item.createdAt)} / {getTodayDateString(item.updatedAt)}
@@ -947,7 +1023,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
             <Pagination
               count={totalPages}
               page={form.currentPage}
-              // onChange={(_, newPage) => form.setField('currentPage', newPage)}
+              onChange={(_, newPage) => setField('currentPage', newPage)}
               shape="rounded"
               color="primary"
             />
@@ -959,20 +1035,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
         <div>
           <div className="flex justify-between items-center mt-10 mb-2">
             <span className="font-bold border-b-2 mb-4">수정이력</span>
-            <div className="flex gap-4">
-              {/* <CommonButton
-                    label="삭제"
-                    className="px-7"
-                    variant="danger"
-                    onClick={() => removeCheckedItems('manager')}
-                  />
-                  <CommonButton
-                    label="추가"
-                    className="px-7"
-                    variant="secondary"
-                    onClick={() => addItem('manager')}
-                  /> */}
-            </div>
+            <div className="flex gap-4"></div>
           </div>
           <TableContainer component={Paper}>
             <Table size="small">
@@ -1059,13 +1122,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
           label={isEditMode ? '+ 수정' : '+ 등록'}
           className="px-10 font-bold"
           variant="secondary"
-          onClick={() => {
-            if (isEditMode) {
-              OutsourcingModifyMutation.mutate(outsourcingCompanyId)
-            } else {
-              createOutSourcingMutation.mutate()
-            }
-          }}
+          onClick={handleOutSourcingCompanySubmit}
         />
       </div>
     </>

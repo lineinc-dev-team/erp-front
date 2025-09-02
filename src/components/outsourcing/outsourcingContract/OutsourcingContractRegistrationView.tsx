@@ -804,7 +804,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
           </div>
 
           <div className="flex">
-            <label className="w-[119] text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-[119px] 2xl:w-[124px] text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
               공제 항목 기본값
             </label>
             <div className="flex border  border-gray-400 flex-wrap px-2 items-center gap-4 flex-1">

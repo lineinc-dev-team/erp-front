@@ -16,6 +16,7 @@ export const idTypeValueToName: Record<string, string> = {
 }
 
 export const bankTypeValueToLabel: Record<string, string> = {
+  '0': '선택',
   '1': '기업은행',
   '2': '농협은행',
   '3': '우리은행',
@@ -37,7 +38,7 @@ export const useOutsourcingSearchStore = create<{ search: OutsourcingSearchState
     isActive: '0',
     arraySort: '최신순',
     currentPage: 1,
-    pageCount: '10',
+    pageCount: '20',
 
     setField: (field, value) =>
       set((state) => ({
@@ -66,7 +67,7 @@ export const useOutsourcingSearchStore = create<{ search: OutsourcingSearchState
           isActive: '0',
           arraySort: '최신순',
           currentPage: 1,
-          pageCount: '10',
+          pageCount: '20',
           searchTrigger: 0,
         },
       })),
@@ -83,8 +84,8 @@ export const useOutsourcingFormStore = create<OutsourcingCompanyFormStore>((set,
     address: '',
     detailAddress: '',
     isModalOpen: false,
-    landlineNumber: '지역번호',
-    landlineLastNumber: '',
+    areaNumber: '지역번호',
+    landlineNumber: '',
     phoneNumber: '',
     email: '',
     defaultDeductions: '',
@@ -93,13 +94,24 @@ export const useOutsourcingFormStore = create<OutsourcingCompanyFormStore>((set,
     accountNumber: '',
     accountHolder: '',
     memo: '',
-    isActive: '0',
+    isActive: '1',
 
+    searchTrigger: 0,
+    arraySort: 'createdAt,desc',
     currentPage: 1,
-    pageCount: '10',
+    pageCount: '20',
+
     headManagers: [],
     checkedManagerIds: [],
-    attachedFiles: [],
+    attachedFiles: [
+      {
+        id: Date.now(),
+        name: '사업자등록증',
+        memo: '',
+        files: [],
+        type: 'BUSINESS_LICENSE',
+      },
+    ],
     checkedAttachedFileIds: [],
     changeHistories: [],
   },
@@ -114,8 +126,8 @@ export const useOutsourcingFormStore = create<OutsourcingCompanyFormStore>((set,
         address: '',
         detailAddress: '',
         isModalOpen: false,
-        landlineNumber: '지역번호',
-        landlineLastNumber: '',
+        areaNumber: '지역번호',
+        landlineNumber: '',
         phoneNumber: '',
         email: '',
         defaultDeductions: '',
@@ -124,12 +136,24 @@ export const useOutsourcingFormStore = create<OutsourcingCompanyFormStore>((set,
         accountNumber: '',
         accountHolder: '',
         memo: '',
-        isActive: '0',
+        isActive: '1',
+
+        searchTrigger: 0,
+        arraySort: 'createdAt,desc',
         currentPage: 1,
-        pageCount: '10',
+        pageCount: '20',
+
         headManagers: [],
         checkedManagerIds: [],
-        attachedFiles: [],
+        attachedFiles: [
+          {
+            id: Date.now(),
+            name: '사업자등록증',
+            memo: '',
+            files: [],
+            type: 'BUSINESS_LICENSE',
+          },
+        ],
         checkedAttachedFileIds: [],
         modificationHistory: [],
         changeHistories: [],
@@ -186,6 +210,7 @@ export const useOutsourcingFormStore = create<OutsourcingCompanyFormStore>((set,
           name: '',
           memo: '',
           files: [],
+          type: 'BASIC',
         }
         return { form: { ...state.form, attachedFiles: [...state.form.attachedFiles, newItem] } }
       }
@@ -250,7 +275,11 @@ export const useOutsourcingFormStore = create<OutsourcingCompanyFormStore>((set,
         return {
           form: {
             ...state.form,
-            checkedAttachedFileIds: checked ? state.form.attachedFiles.map((f) => f.id) : [],
+            checkedAttachedFileIds: checked
+              ? state.form.attachedFiles
+                  .filter((f) => f.type !== 'BUSINESS_LICENSE') // 제외
+                  .map((f) => f.id) // id만 추출
+              : [],
           },
         }
       }
@@ -302,7 +331,7 @@ export const useOutsourcingFormStore = create<OutsourcingCompanyFormStore>((set,
       ceoName: form.ceoName,
       address: form.address,
       detailAddress: form.detailAddress,
-      landlineNumber: `${form.landlineNumber}-${form.landlineLastNumber}`,
+      landlineNumber: `${form.areaNumber}-${form.landlineNumber}`,
       email: form.email,
       defaultDeductions: form.defaultDeductions,
       defaultDeductionsDescription: form.defaultDeductionsDescription,
@@ -332,20 +361,23 @@ export const useOutsourcingFormStore = create<OutsourcingCompanyFormStore>((set,
             {
               id: f.id || Date.now(),
               name: f.name,
+              memo: f.memo || '',
               fileUrl: '',
               originalFileName: '',
-              memo: f.memo || '',
+              type: f.type,
             },
           ]
         }
 
         // 파일이 있을 경우
+        // 파일이 있을 경우
         return f.files.map((fileObj: FileUploadInfo) => ({
           id: f.id || Date.now(),
           name: f.name,
           fileUrl: fileObj.fileUrl || '',
-          originalFileName: fileObj.file?.name || '',
+          originalFileName: fileObj.name || fileObj.originalFileName,
           memo: f.memo || '',
+          type: f.type,
         }))
       }),
       changeHistories: form.editedHistories ?? [],

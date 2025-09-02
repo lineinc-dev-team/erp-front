@@ -27,14 +27,12 @@ export default function useOutSourcingCompany() {
   const router = useRouter()
   const queryClient = useQueryClient()
 
-  // 외주업체 조회
   const search = useOutsourcingSearchStore((state) => state.search)
-
-  const form = useOutsourcingFormStore((state) => state.form)
-
+  const { setField, form } = useOutsourcingFormStore()
   const pathName = usePathname()
 
   const params = useParams()
+
   const outsourcingCompanyId = Number(params?.id)
 
   // 초기 화면에 들어왔을 때 currentPage 1로 세팅 (예: useEffect 등에서)
@@ -61,7 +59,7 @@ export default function useOutSourcingCompany() {
         businessNumber: search.businessNumber,
         ceoName: search.ceoName,
         landlineNumber: search.landlineNumber,
-        type: search.type,
+        type: search.type === 'BASE' ? '' : search.type,
         createdStartDate: getTodayDateString(search.startDate),
         createdEndDate: getTodayDateString(search.endDate),
         isActive: search.isActive === '1' ? true : search.isActive === '2' ? false : undefined,
@@ -71,8 +69,8 @@ export default function useOutSourcingCompany() {
           search.arraySort === '최신순'
             ? 'id,desc'
             : search.arraySort === '오래된순'
-            ? 'id.asc'
-            : 'id.asc',
+            ? 'id,asc'
+            : 'username,asc',
       }
 
       const filteredParams = Object.fromEntries(
@@ -87,7 +85,6 @@ export default function useOutSourcingCompany() {
 
       return OutsourcingCompanyInfoService(filteredParams)
     },
-    staleTime: 1000 * 30,
     enabled: pathName === '/outsourcingCompany', // 경로 체크
   })
 
@@ -96,12 +93,16 @@ export default function useOutSourcingCompany() {
     onSuccess: () => {
       showSnackbar('외주업체가 등록 되었습니다.', 'success')
       // 초기화 로직
-      queryClient.invalidateQueries({ queryKey: ['outsourcingInfo'] })
+      queryClient.invalidateQueries({ queryKey: ['OutsourcingInfo'] })
       reset()
       router.push('/outsourcingCompany')
     },
-    onError: () => {
-      showSnackbar('외주업체 등록이 실패했습니다.', 'error')
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('외주업체 등록이 실패했습니다.', 'error')
+      }
     },
   })
 
@@ -128,16 +129,18 @@ export default function useOutSourcingCompany() {
     mutationFn: (outsourcingIds: number) => ModifyOutsourcingCompany(outsourcingIds),
 
     onSuccess: () => {
-      if (window.confirm('수정하시겠습니까?')) {
-        showSnackbar('외주업체가 수정 되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['outsourcingInfo'] })
-        reset()
-        router.push('/outsourcingCompany')
-      }
+      showSnackbar('외주업체가 수정 되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['OutsourcingInfo'] })
+      reset()
+      router.push('/outsourcingCompany')
     },
 
-    onError: () => {
-      showSnackbar(' 외주업체 수정에 실패했습니다.', 'error')
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar(' 외주업체 수정에 실패했습니다.', 'error')
+      }
     },
   })
 
@@ -153,8 +156,12 @@ export default function useOutSourcingCompany() {
       }
     },
 
-    onError: () => {
-      showSnackbar(' 외주업체 삭제에 실패했습니다.', 'error')
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar(' 외주업체 삭제에 실패했습니다.', 'error')
+      }
     },
   })
 
@@ -176,28 +183,23 @@ export default function useOutSourcingCompany() {
     })
   }
 
-  // 계약이력 조회
+  useEffect(() => {
+    if (form.searchTrigger && form.currentPage !== 0) {
+      setField('currentPage', 1)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.searchTrigger])
 
-  // useEffect(() => {
-  //   if (search.searchTrigger && search.currentPage !== 0) {
-  //     search.setField('currentPage', 1)
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [search.searchTrigger])
-
-  // useQuery 쪽 수정
-  // useQuery 훅
   const useContractHistoryDataQuery = useQuery({
     queryKey: ['OutsourcingContractInfo', outsourcingCompanyId, form.currentPage, form.pageCount],
     queryFn: () => {
       const rawParams = {
-        page: Math.max(0, (form.currentPage ?? 1) - 1), // 0-based index
-        size: Number(form.pageCount) || 10,
-        sort: 'id,desc',
-        outsourcingCompanyId, // 백엔드에서 필터링 가능하도록
+        page: Math.max(0, (form.currentPage ?? 1) - 1),
+        size: 10,
+        sort: 'createdAt,desc',
+        outsourcingCompanyId,
       }
 
-      // null/undefined/빈문자 제거
       const filteredParams = Object.fromEntries(
         Object.entries(rawParams).filter(
           ([, value]) =>
@@ -210,7 +212,7 @@ export default function useOutSourcingCompany() {
 
       return ContractHistoryService(outsourcingCompanyId, filteredParams)
     },
-    staleTime: 1000 * 30,
+    enabled: !!outsourcingCompanyId && !isNaN(outsourcingCompanyId),
   })
 
   return {

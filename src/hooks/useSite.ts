@@ -47,13 +47,13 @@ export default function useSite() {
     ],
     queryFn: () => {
       const rawParams = {
-        name: search.name || '',
+        name: search.name === '선택' ? '' : search.name,
         type: search.type === '선택' ? '' : search.type,
         processName: search.processName || '',
-        city: search.city || '',
-        district: search.district || '',
+        city: search.city === '선택' ? '' : '',
+        district: search.district === '선택' ? '' : '',
         processStatuses: search.processStatuses.length > 0 ? search.processStatuses : undefined,
-        clientCompanyName: search.clientCompanyName || '',
+        clientCompanyName: search.clientCompanyName === '선택' ? '' : search.clientCompanyName,
         createdBy: search.createdBy || '',
         startDate: getTodayDateString(search.startDate),
         endDate: getTodayDateString(search.endDate),

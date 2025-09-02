@@ -55,6 +55,7 @@ export default function OrderingView() {
       headquarter: user.user?.username || '-',
       isActive: user.isActive === true ? 'Y' : 'N',
       hasFile: user.hasFile === true ? 'Y' : 'N',
+      memo: user.memo || '-',
     }
   })
 

@@ -74,18 +74,17 @@ export default function SitesView() {
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
-  console.log('도급금액', SiteDataList)
-
   const updateSiteList = SiteDataList.map((site: SiteListProps) => ({
     ...site,
-    processName: site.process?.name ?? '-', // 공정명
-    managerName: site.manager?.username ?? '-', // 공정소장 이름
-    contractAmount: formatNumber(site.contractAmount),
-    hasFile: 'Y', // 고정값
-    processStatuses: site.process?.status ?? '-', // 진행상태
-    clientCompanyName: site.clientCompany?.name ?? '-', // 발주처명
+    processName: site.process?.name || '-', // 공정명
+    managerName: site.manager?.username || '-', // 공정소장 이름
+    contractAmount: formatNumber(site.contractAmount) || '-',
+    hasFile: site.hasFile === true ? 'Y' : 'N',
+    processStatuses: site.process?.status || '-', // 진행상태
+    clientCompanyName: site.clientCompany?.name || '-', // 발주처명
     // period: getTodayDateString(site.startedAt) + ' ~ ' + getTodayDateString(site.endedAt),
-    createdAt: getTodayDateString(site.updatedAt),
+    createdAt: getTodayDateString(site.createdAt),
+    memo: site.memo || '-',
   }))
 
   const { selectedIds, setSelectedIds } = useAccountStore()

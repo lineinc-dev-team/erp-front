@@ -291,7 +291,11 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                     <CommonFileInput
                       // label={FILE_TYPE_LABELS[type]}
                       uploadTarget="SITE"
-                      acceptedExtensions={type === 'ETC' ? ['zip', 'xlsx', 'doc'] : ['pdf', 'hwp']}
+                      acceptedExtensions={
+                        type === 'ETC'
+                          ? ['zip', 'xlsx', 'doc']
+                          : ['pdf', 'hwp', 'png', 'jpg', 'ppt']
+                      }
                       files={contract.files
                         .filter((f) => f.type === type)
                         .map((f) => ({
@@ -438,6 +442,11 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     if (!form.userId || String(form.userId) === '0') return '본사 담당자를 선택하세요.'
     if (!form.contractAmount || form.contractAmount <= 0) return '도급금액을 입력하세요.'
     if (!form.process?.name?.trim()) return '공정명을 입력하세요.'
+    if (!form.process?.managerId || String(form.process.managerId) === '0')
+      return '공정소장을 입력하세요.'
+    if (!form.process?.officePhone?.trim()) return '사무실 연락처를 입력하세요.'
+    if (!form.process.status || String(form.process.status) === '선택')
+      return '진행상태를 입력하세요.'
 
     // 날짜 유효성 검사
     if (form.startedAt && form.endedAt) {

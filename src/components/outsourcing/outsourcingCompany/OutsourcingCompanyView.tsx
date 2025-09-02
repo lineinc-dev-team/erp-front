@@ -16,15 +16,15 @@ import CommonDatePicker from '@/components/common/DatePicker'
 import useOutSourcingCompany from '@/hooks/useOutSourcingCompany'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { useAccountStore } from '@/stores/accountManagementStore'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { useTabOpener } from '@/utils/openTab'
 import { OutsourcingCompanyList } from '@/types/outsourcingCompany'
 import { getTodayDateString } from '@/utils/formatters'
 import { useRouter } from 'next/navigation'
-import { formatAreaNumber } from '@/utils/formatPhoneNumber'
 import { OutsourcingCompanyExcelDownload } from '@/services/outsourcingCompany/outsourcingCompanyService'
 import ExcelModal from '@/components/common/ExcelModal'
 import { outsourcingCompanyExcelFieldMap } from '@/utils/userExcelField'
+import ContractHistory from '@/components/common/ContractHistory'
 
 export default function OutsourcingCompanyView() {
   const { showSnackbar } = useSnackbarStore()
@@ -37,6 +37,9 @@ export default function OutsourcingCompanyView() {
 
   const OutsourcingCompanyDataList = OutsourcingListQuery.data?.data.content ?? []
 
+  const [contractOpen, setContractOpen] = useState(false)
+  const [viewContractId, setViewContractId] = useState<number | null>(null)
+
   const totalList = OutsourcingListQuery.data?.data.pageInfo.totalElements ?? 0
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
@@ -47,16 +50,10 @@ export default function OutsourcingCompanyView() {
     return {
       ...user,
       contactName: mainContact?.name || '-',
-      contactPositionAndDepartment: mainContact
-        ? `${mainContact.position} <br/> ${mainContact.department}`
-        : '-',
-      contactInfo: mainContact
-        ? `${mainContact.phoneNumber || '-'}<br/>${mainContact.email || '-'}`
-        : '-',
       Deductible: user.defaultDeductions,
-      isActive: 'Y',
-      hasFile: 'Y',
-      createdAt: `${getTodayDateString(user.createdAt)} / ${getTodayDateString(user.updatedAt)}`,
+      isActive: user.isActive === false ? 'N' : 'Y',
+      hasFile: user.hasFile === true ? 'Y' : 'N',
+      memo: user.memo || '-',
     }
   })
 
@@ -66,6 +63,80 @@ export default function OutsourcingCompanyView() {
 
   // 그리도 라우팅 로직!
   const enhancedColumns = outsourcingCompanyList.map((col): GridColDef => {
+    if (col.field === 'contactPositionAndDepartment') {
+      return {
+        ...col,
+        sortable: false,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 2,
+        renderCell: (params: GridRenderCellParams) => {
+          const item = params.row as OutsourcingCompanyList
+
+          if (!item.contacts || item.contacts.length === 0) {
+            return <div className="flex flex-col items-center">-</div>
+          }
+
+          // 대표 연락처만 필터링
+          const mainContacts = item.contacts.filter((c) => c.isMain)
+
+          if (mainContacts.length === 0) {
+            return <div className="flex flex-col items-center">-</div>
+          }
+
+          return (
+            <div className="flex flex-col items-center">
+              {mainContacts.map((contact, index) => (
+                <Fragment key={index}>
+                  <div className="whitespace-pre-wrap">{contact.position}</div>
+                  <div className="whitespace-pre-wrap">{contact.department || '-'}</div>
+                </Fragment>
+              ))}
+            </div>
+          )
+        },
+      }
+    }
+    if (col.field === 'contractHistory') {
+      return {
+        ...col,
+        headerName: '계약 이력',
+        renderCell: (params) => (
+          <button
+            className="px-2 py-1 bg-blue-500 cursor-pointer text-white rounded hover:bg-blue-600"
+            onClick={() => {
+              setViewContractId(params.row.id) // row.id = outsourcingCompanyId 라고 가정
+              setContractOpen(true)
+            }}
+          >
+            조회
+          </button>
+        ),
+      }
+    }
+
+    if (col.field === 'createdAt') {
+      return {
+        ...col,
+        sortable: false,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 2,
+        renderCell: (params: GridRenderCellParams) => {
+          const item = params.row as OutsourcingCompanyList
+
+          return (
+            <div className="flex flex-col items-center">
+              <Fragment>
+                <div className="whitespace-pre-wrap">{getTodayDateString(item.createdAt)}</div>
+                <div className="whitespace-pre-wrap">{getTodayDateString(item.updatedAt)}</div>
+              </Fragment>
+            </div>
+          )
+        },
+      }
+    }
+
     if (col.field === 'name') {
       return {
         ...col,
@@ -118,18 +189,24 @@ export default function OutsourcingCompanyView() {
   }))
 
   const handleDownloadExcel = async (fields: string[]) => {
-    await OutsourcingCompanyExcelDownload({
-      sort: search.arraySort === '최신순' ? 'id,desc' : 'id,asc',
-      name: search.name,
-      businessNumber: search.businessNumber,
-      ceoName: search.ceoName,
-      landlineNumber: search.landlineNumber,
-      type: search.type,
-      createdStartDate: search.startDate ? getTodayDateString(search.startDate) : undefined,
-      createdEndDate: search.endDate ? getTodayDateString(search.endDate) : undefined,
-      isActive: search.isActive !== 'N',
-      fields, // 필수 필드: ["id", "name", "businessNumber", ...]
-    })
+    try {
+      await OutsourcingCompanyExcelDownload({
+        sort: search.arraySort === '최신순' ? 'id,desc' : 'id,asc',
+        name: search.name,
+        businessNumber: search.businessNumber,
+        ceoName: search.ceoName,
+        landlineNumber: search.landlineNumber,
+        type: search.type,
+        createdStartDate: search.startDate ? getTodayDateString(search.startDate) : undefined,
+        createdEndDate: search.endDate ? getTodayDateString(search.endDate) : undefined,
+        isActive: search.isActive !== 'N',
+        fields, // 필수 필드: ["id", "name", "businessNumber", ...]
+      })
+    } catch (error: unknown) {
+      // 사용자 알림
+      showSnackbar('엑셀 다운로드 중 오류가 발생했습니다.', 'error')
+      console.error('엑셀 다운로드 에러:', error)
+    }
   }
 
   return (
@@ -181,11 +258,11 @@ export default function OutsourcingCompanyView() {
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
               <CommonInput
-                placeholder="'-'없이 숫자만 입력"
+                placeholder="'-' 포함 숫자만 입력"
                 value={search.landlineNumber}
                 onChange={(value) => {
-                  const resultAreaNumber = formatAreaNumber(value)
-                  search.setField('landlineNumber', resultAreaNumber)
+                  // const resultAreaNumber = formatAreaNumber(value)
+                  search.setField('landlineNumber', value)
                 }}
                 className=" flex-1"
               />
@@ -381,13 +458,23 @@ export default function OutsourcingCompanyView() {
           checkboxSelection
           disableRowSelectionOnClick
           keepNonExistentRowsSelected
-          showToolbar
           disableColumnFilter // 필터 비활성화
           hideFooter
           disableColumnMenu
           hideFooterPagination
           // pageSize={pageSize}
-          rowHeight={60}
+          getRowHeight={() => 'auto'}
+          sx={{
+            '& .MuiDataGrid-cell': {
+              display: 'flex',
+              justifyContent: 'center', // 가로 가운데 정렬
+              alignItems: 'center', // 세로 가운데 정렬
+              whiteSpace: 'normal', // 줄바꿈 허용
+              lineHeight: '2.8rem', // 줄 간격
+              paddingTop: '12px', // 위 여백
+              paddingBottom: '12px', // 아래 여백
+            },
+          }}
           onRowSelectionModelChange={(newSelection) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setSelectedIds(newSelection as any) // 타입 보장된다면 사용 가능
@@ -403,6 +490,14 @@ export default function OutsourcingCompanyView() {
           />
         </div>
       </div>
+
+      {viewContractId && (
+        <ContractHistory
+          open={contractOpen}
+          onClose={() => setContractOpen(false)}
+          outsourcingCompanyId={viewContractId}
+        />
+      )}
     </>
   )
 }

@@ -18,6 +18,8 @@ export type OutsourcingAttachedFile = {
   fileUrl?: string
   originalFileName?: string
   files: FileUploadInfo[]
+  type: string
+  typeCode?: string
 }
 
 // 발주처 조회 리스트 가져오는 타입들
@@ -56,6 +58,7 @@ export interface OutsourcingCompanyList {
   hasFile: true
   contacts: Contact[]
 }
+// 계약 이력 조회
 
 export type OutsourcingSearchState = {
   searchTrigger: number
@@ -122,8 +125,8 @@ export type OutsourcingFormState = {
   address: string
   detailAddress: string
   isModalOpen: boolean
+  areaNumber: string
   landlineNumber: string
-  landlineLastNumber: string
   phoneNumber: string
   email: string
   defaultDeductions: string
@@ -134,7 +137,9 @@ export type OutsourcingFormState = {
   memo: string
   isActive: string
 
+  searchTrigger: number
   currentPage: number
+  arraySort: string
   pageCount: string
 
   // 담당자 배열

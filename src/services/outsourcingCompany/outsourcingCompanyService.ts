@@ -53,7 +53,19 @@ export async function OutsourcingCompanyRemoveService(outsourcingCompanyIds: num
       window.location.href = '/'
       return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
-    throw new Error(`서버 에러: ${res.status}`)
+
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
   }
 
   return await res.status
@@ -115,14 +127,25 @@ export async function OutsourcingCompanyExcelDownload({
       window.location.href = '/'
       return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
-    throw new Error(`서버 에러: ${res.status}`)
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
   }
 
   const blob = await res.blob()
   const url = window.URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'export23test.xlsx'
+  a.download = '외주업체 목록.xlsx'
   a.click()
   window.URL.revokeObjectURL(url)
 
