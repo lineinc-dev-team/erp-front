@@ -211,8 +211,12 @@ export default function SitesView() {
 
   const roleId = Number(myInfo?.roles?.[0]?.id)
 
+  const rolePermissionStatus = myInfo?.roles?.[0]?.deleted
+
+  const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
+
   // "계정 관리" 메뉴에 대한 권한
-  const { hasDelete, hasCreate, hasModify } = useMenuPermission(roleId, '현장 관리')
+  const { hasDelete, hasCreate, hasModify } = useMenuPermission(roleId, '현장 관리', enabled)
 
   return (
     <>

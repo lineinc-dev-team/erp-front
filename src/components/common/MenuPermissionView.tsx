@@ -4,9 +4,9 @@ import { Menu } from '@/types/permssion'
 import { ApiPermission } from '@/types/header'
 import useMenu from '@/hooks/useMenu'
 
-export function useMenuPermission(roleId: number, menuName: string) {
+export function useMenuPermission(roleId: number, menuName: string, enabled: boolean) {
   const { useHeaderMenuListQuery } = useMenu()
-  const { data: MenuListData } = useHeaderMenuListQuery(roleId)
+  const { data: MenuListData } = useHeaderMenuListQuery(roleId, enabled)
 
   const permissions = useMemo(() => {
     const menu = MenuListData?.data?.find((m: Menu) => m.name === menuName)

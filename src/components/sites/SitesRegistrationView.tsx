@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
 import CommonInput from '../common/Input'
@@ -19,7 +20,7 @@ import CommonFileInput from '../common/FileInput'
 import { formatPersonNumber } from '@/utils/formatPhoneNumber'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import AmountInput from '../common/AmountInput'
 import {
   Paper,
@@ -56,6 +57,9 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     removeContractFile,
     setContracts,
   } = useSiteFormStore()
+
+  const { setUserSearch, userOptions, fetchNextPage, hasNextPage, isFetching, isLoading } =
+    useClientCompany()
 
   const {
     createSiteMutation,
@@ -114,6 +118,83 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     queryFn: () => SiteDetailService(siteId),
     enabled: isEditMode && !!siteId, // 수정 모드일 때만 fetch
   })
+
+  const [updatedUserOptions, setUpdatedUserOptions] = useState(userOptions)
+  const [updatedOrderOptions, setUpdatedOrderOptions] = useState(orderOptions)
+
+  useEffect(() => {
+    if (data && isEditMode) {
+      const client = data.data
+
+      // 기존 userOptions 복사
+      const newUserOptions = [...userOptions]
+
+      if (client.user) {
+        const userName = client.user.username + (client.user.deleted ? ' (삭제됨)' : '')
+
+        // 이미 options에 있는지 체크
+        const exists = newUserOptions.some((u) => u.id === client.user.id)
+        if (!exists) {
+          newUserOptions.push({
+            id: client.user.id,
+            name: userName,
+            deleted: client.user.deleted,
+          })
+        }
+      }
+
+      // 삭제된 유저 분리
+      const deletedUsers = newUserOptions.filter((u) => u.deleted)
+      const normalUsers = newUserOptions.filter((u) => !u.deleted && u.id !== '0')
+
+      setUpdatedUserOptions([
+        newUserOptions.find((u) => u.id === '0')!, // 선택 옵션
+        ...deletedUsers,
+        ...normalUsers,
+      ])
+
+      // 선택된 유저 id 세팅
+      setField('userId', client.user?.id ?? '0')
+    }
+  }, [data, isEditMode, userOptions])
+
+  console.log('orderOptionsorderOptionsorderOptions', orderOptions)
+
+  useEffect(() => {
+    if (data && isEditMode) {
+      const client = data.data
+
+      const newOrderOptions = [...orderOptions]
+
+      if (client.clientCompany) {
+        const clientName =
+          client.clientCompany.name + (client.clientCompany.deleted ? ' (삭제됨)' : '')
+
+        // 이미 options에 있는지 체크
+        const exists = orderOptions.some((u) => u.id === client.clientCompany.id)
+        if (!exists) {
+          newOrderOptions.push({
+            id: client.clientCompany.id,
+            name: clientName,
+            deleted: client.clientCompany.deleted,
+          })
+        }
+
+        // 삭제된 유저 분리
+        const deletedOrders = newOrderOptions.filter((u) => u.deleted)
+        const normalOrders = newOrderOptions.filter((u) => !u.deleted && u.id !== '0')
+
+        setUpdatedOrderOptions([
+          newOrderOptions.find((u) => u.id === '0')!, // 선택 옵션
+          ...deletedOrders,
+          ...normalOrders,
+        ])
+
+        // 선택된 유저 id 세팅
+        setField('clientCompanyId', client.clientCompany?.id ?? '0')
+      }
+    }
+  }, [data, isEditMode, orderOptions])
 
   useEffect(() => {
     if (data && isEditMode) {
@@ -205,9 +286,6 @@ export default function SitesRegistrationView({ isEditMode = false }) {
   }, [data, isEditMode, resetForm, setField, setContracts, setProcessField])
 
   const { handleCancelData } = SiteRegistrationService()
-
-  const { setUserSearch, userOptions, fetchNextPage, hasNextPage, isFetching, isLoading } =
-    useClientCompany()
 
   const renderInputRow = (label: string, children: React.ReactNode) => (
     <div className="flex">
@@ -577,7 +655,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                 className="text-xl"
                 value={form.clientCompanyId}
                 onChange={(value) => setField('clientCompanyId', value)}
-                options={orderOptions}
+                options={updatedOrderOptions}
                 displayLabel
                 onScrollToBottom={() => {
                   if (orderPersonHasNextPage && !orderPersonIsFetching) orderPersonFetchNextPage()
@@ -615,7 +693,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                 className="text-xl"
                 value={form.userId}
                 onChange={(value) => setField('userId', value)}
-                options={userOptions}
+                options={updatedUserOptions}
                 displayLabel
                 onScrollToBottom={() => {
                   if (hasNextPage && !isFetching) fetchNextPage()
@@ -683,7 +761,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                 className="text-xl"
                 value={form.process.managerId}
                 onChange={(value) => setProcessField('managerId', value)}
-                options={userOptions}
+                options={updatedUserOptions}
                 displayLabel
                 onScrollToBottom={() => {
                   if (hasNextPage && !isFetching) fetchNextPage()

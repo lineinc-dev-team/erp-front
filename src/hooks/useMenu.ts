@@ -3,11 +3,11 @@ import { useQuery } from '@tanstack/react-query'
 
 export default function useMenu() {
   // 조회에서 이름 검색 스크롤
-  const useHeaderMenuListQuery = (roleId: number) => {
+  const useHeaderMenuListQuery = (roleId: number, enabled: boolean) => {
     return useQuery({
       queryKey: ['sideMenuInfo', roleId],
       queryFn: () => HeaderMenuService(roleId),
-      enabled: !!roleId && !isNaN(roleId), // <-- 유효할 때만 호출
+      enabled: enabled, // <-- 유효할 때만 호출
     })
   }
 

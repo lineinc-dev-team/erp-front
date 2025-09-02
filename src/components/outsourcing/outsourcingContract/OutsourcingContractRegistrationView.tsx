@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
 import CommonInput from '../../common/Input'
@@ -43,6 +44,7 @@ import {
   CompanyInfo,
   OutsourcingArticleInfoAttachedFile,
   OutsourcingContractAttachedFile,
+  OutsourcingContractFormState,
   OutsourcingContractItem,
   OutsourcingContractManager,
   OutsourcingContractPersonAttachedFile,
@@ -59,6 +61,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     updateItemField,
     removeCheckedItems,
     reset,
+    setForm,
     updateMemo,
     setRepresentativeManager,
     addItem,
@@ -104,7 +107,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     taxMethodOptions,
     outsourcingCancel,
     deduMethodOptions,
-    ContractModifyMutationView,
+    ContractModifyBtn,
     useOutsourcingContractHistoryDataQuery,
     useOutsourcingContractPersonDataQuery,
     statusMethodOptions,
@@ -146,6 +149,27 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
   const isContractAllChecked =
     contractAddAttachedFiles.length > 0 &&
     contractCheckIds.length === contractAddAttachedFiles.length
+
+  useEffect(() => {
+    const files = []
+
+    if (form.type === 'CONSTRUCTION') {
+      files.push(
+        {
+          id: Date.now() + 1,
+          name: '보증서',
+          memo: '',
+          files: [],
+          type: 'GUARANTEE',
+        },
+        { id: Date.now(), name: '계약서', memo: '', files: [], type: 'CONTRACT' },
+      )
+    } else {
+      files.push({ id: Date.now(), name: '계약서', memo: '', files: [], type: 'CONTRACT' })
+    }
+
+    setForm({ attachedFiles: files })
+  }, [form.type])
 
   const params = useParams()
   const outsourcingContractId = Number(params?.id)
@@ -207,6 +231,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     typeDescription: '구분 설명',
     defaultDeductionsName: '기본공제 항목',
     defaultDeductionsDescription: '기본공제 항목 설명',
+    originalFileName: '파일 추가',
   }
 
   const { showSnackbar } = useSnackbarStore()
@@ -281,19 +306,27 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       })
 
       // 첨부파일 데이터 가공
-      const formattedFiles = (client.files ?? []).map((item: OutsourcingContractAttachedFile) => ({
-        id: item.id,
-        name: item.name,
-        memo: item.memo,
-        files: [
-          {
-            publicUrl: item.fileUrl,
-            file: {
-              name: item.originalFileName,
+      const formattedFiles = (client.files ?? [])
+        .map((item: OutsourcingContractAttachedFile) => ({
+          id: item.id,
+          name: item.name,
+          memo: item.memo,
+          type: item.typeCode,
+          files: [
+            {
+              fileUrl: item.fileUrl && item.fileUrl.trim() !== '' ? item.fileUrl : null,
+              originalFileName:
+                item.originalFileName && item.originalFileName.trim() !== ''
+                  ? item.originalFileName
+                  : null,
             },
-          },
-        ],
-      }))
+          ],
+        }))
+        .sort((a: OutsourcingContractAttachedFile, b: OutsourcingContractAttachedFile) => {
+          if (a.type === 'CONTRACT' || a.type === 'GUARANTEE') return -1
+          if (b.type === 'CONTRACT' || b.type === 'GUARANTEE') return 1
+          return 0
+        })
 
       // 각 필드에 set
       setField('siteId', client.site.id)
@@ -497,7 +530,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
           if (before === 'null') {
             before = '추가'
             style = { color: '#1976d2' } // 파란색 - 추가
-          } else if (after === 'null') {
+          } else if (after === 'null' || after === '') {
             after = '삭제'
             style = { color: '#d32f2f' } // 빨간색 - 삭제
           }
@@ -593,6 +626,75 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     // 체크 해제 시 taxDay 값 초기화 (선택 사항)
     if (!e.target.checked) {
       setField('taxInvoiceIssueDayOfMonth', 0)
+    }
+  }
+
+  function validateClientForm(form: OutsourcingContractFormState) {
+    if (!form.siteId) return '현장명을 입력하세요.'
+    if (!form.processId) return '공정명을 선택해주세요.'
+    if (!form.CompanyId) return '업체명을 입력하세요.'
+    if (!form.type?.trim()) return '구분을 입력하세요.'
+    if (form.type === 'ETC' && !form.typeDescription?.trim())
+      return '구분 상세 내용을 입력해주세요.'
+    if (!form.contractStartDate) return '계약 시작일을 입력해주세요.'
+    if (!form.contractEndDate) return '계약 종료일을 입력해주세요.'
+    if (
+      form.contractStartDate &&
+      form.contractEndDate &&
+      new Date(form.contractEndDate) < new Date(form.contractStartDate)
+    )
+      return '계약 종료일은 시작일 이후여야 합니다.'
+    if (!form.contractAmount) return '계약금액을 입력해주세요.'
+
+    if (!(form.defaultDeductions?.split(',').filter(Boolean)?.length > 0)) {
+      return '기본공제 항목을 선택해주세요.'
+    }
+
+    if (!form.taxCalculat?.trim()) return '세금계산서 발행조건을 입력하세요.'
+
+    if (isChecked && (!form.taxInvoiceIssueDayOfMonth || form.taxInvoiceIssueDayOfMonth <= 0)) {
+      return '세금계산서 발행일을 입력해주세요.'
+    }
+
+    if (form.type === 'EQUIPMENT' && !form.category?.trim()) {
+      return '유형을 선택해주세요.'
+    }
+
+    if (!form.status) return '상태를 입력해주세요.'
+
+    if (managers.length > 0) {
+      for (const item of managers) {
+        if (!item.name?.trim()) return '담당자의 이름을 입력해주세요.'
+        if (!item.position?.trim()) return '담당자의 부서를 입력해주세요.'
+        if (!item.department?.trim()) return '담당자의 직급(직책)을 입력해주세요.'
+        if (!item.landlineNumber?.trim()) return '담당자의 전화번호를 입력해주세요.'
+        if (!item.phoneNumber?.trim()) return '담당자의 개인 휴대폰을 입력해주세요.'
+        if (!item.email?.trim()) return '담당자의 이메일을 입력해주세요.'
+      }
+    }
+
+    if (attachedFiles.length > 0) {
+      for (const item of attachedFiles) {
+        if (!item.name?.trim()) return '첨부파일의 이름을 입력해주세요.'
+      }
+    }
+
+    return null
+  }
+
+  const handleOutSourcingContractSubmit = () => {
+    const errorMsg = validateClientForm(form)
+    if (errorMsg) {
+      showSnackbar(errorMsg, 'warning')
+      return
+    }
+
+    if (isEditMode) {
+      if (window.confirm('수정하시겠습니까?')) {
+        ContractModifyBtn.mutate(outsourcingContractId)
+      }
+    } else {
+      createOutSourcingContractMutation.mutate()
     }
   }
 
@@ -736,13 +838,14 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                   value={form.type || 'BASE'}
                   onChange={(value) => setField('type', value)}
                   options={typeMethodOptions}
+                  disabled={isEditMode}
                 />
 
                 <CommonInput
                   value={form.typeDescription}
                   onChange={(value) => setField('typeDescription', value)}
                   className="flex-1"
-                  disabled={form.type === 'ETC' ? false : true}
+                  disabled={isEditMode || form.type !== 'ETC'}
                   placeholder={form.type === 'ETC' ? '기타 내용을 입력하세요' : ''}
                 />
               </div>
@@ -1129,6 +1232,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                   >
                     <Checkbox
                       checked={fileCheckIds.includes(m.id)}
+                      disabled={m.type === 'CONTRACT' || m.type === 'GUARANTEE'}
                       onChange={(e) => toggleCheckItem('attachedFile', m.id, e.target.checked)}
                     />
                   </TableCell>
@@ -1141,12 +1245,12 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       onChange={(e) =>
                         updateItemField('attachedFile', m.id, 'name', e.target.value)
                       }
+                      disabled={m.type === 'CONTRACT' || m.type === 'GUARANTEE'}
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
                       <CommonFileInput
-                        className="text-left"
                         acceptedExtensions={[
                           'pdf',
                           'jpg',
@@ -1157,18 +1261,13 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                           'jpeg',
                           'ppt',
                         ]}
-                        files={(m.files ?? []).filter((f) => f.file?.name)}
+                        multiple={false}
+                        files={m.files} // 각 항목별 files
                         onChange={(newFiles) => {
-                          // 0개 또는 1개만 가능
-                          if (newFiles.length <= 1) {
-                            updateItemField('attachedFile', m.id, 'files', newFiles)
-                          } else {
-                            // 1개 초과 시 첫 번째 파일만 유지
-                            showSnackbar('1개 이상의 파일은 업로드 할 수 없습니다.', 'error')
-                            updateItemField('attachedFile', m.id, 'files', [newFiles[0]])
-                          }
+                          updateItemField('attachedFile', m.id, 'files', newFiles.slice(0, 1))
+                          // updateItemField('attachedFile', m.id, 'files', newFiles)
                         }}
-                        uploadTarget="CLIENT_COMPANY"
+                        uploadTarget="OUTSOURCING_COMPANY_CONTRACT"
                       />
                     </div>
                   </TableCell>
@@ -1736,7 +1835,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                         <TextField
                           size="small"
                           placeholder="텍스트 입력"
-                          sx={{ width: '100%' }}
+                          sx={{ flex: 1 }} // flex:1으로 너비 균등
                           value={m.category}
                           onChange={(e) =>
                             updateItemField('equipment', m.id, 'category', e.target.value)
@@ -1779,6 +1878,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                                   updateSubEquipmentField(m.id, item.id, 'memo', e.target.value)
                                 }
                               />
+
                               <CommonButton
                                 label="삭제"
                                 variant="danger"
@@ -2090,13 +2190,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
           label={isEditMode ? '+ 수정' : '+ 등록'}
           className="px-10 font-bold"
           variant="secondary"
-          onClick={() => {
-            if (isEditMode) {
-              ContractModifyMutationView(outsourcingContractId)
-            } else {
-              createOutSourcingContractMutation.mutate()
-            }
-          }}
+          onClick={handleOutSourcingContractSubmit}
         />
       </div>
     </>

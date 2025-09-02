@@ -89,7 +89,6 @@ export default function useOutSourcingContract() {
 
       return OutsourcingContractInfoService(filteredParams)
     },
-    staleTime: 1000 * 30,
     enabled: pathName === '/outsourcingContract', // 경로 체크
   })
 
@@ -102,8 +101,13 @@ export default function useOutSourcingContract() {
       reset()
       router.push('/outsourcingContract')
     },
-    onError: () => {
-      showSnackbar('외주계약 등록에 실패했습니다.', 'error')
+
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('외주계약 등록에 실패했습니다.', 'error')
+      }
     },
   })
 
@@ -112,27 +116,23 @@ export default function useOutSourcingContract() {
     router.push('/outsourcingContract')
   }
 
-  // 외주 업체 수정
-  const ContractModifyMutationView = (outsourcingContractId: number) => {
-    // 사용자가 확인해야만 mutation 실행
-    if (window.confirm('수정하시겠습니까?')) {
-      ContractModifyBtn.mutate(outsourcingContractId)
-    }
-  }
-
   // mutation 정의
   const ContractModifyBtn = useMutation({
     mutationFn: (outsourcingContractId: number) => ContractModifyMutation(outsourcingContractId),
 
     onSuccess: async () => {
       showSnackbar('외주업체 계약이 수정 되었습니다.', 'success')
-      await queryClient.invalidateQueries({ queryKey: ['modifyContractInfo'] })
+      queryClient.invalidateQueries({ queryKey: ['modifyContractInfo'] })
       reset()
       router.push('/outsourcingContract')
     },
 
-    onError: () => {
-      showSnackbar('외주업체 계약 수정에 실패했습니다.', 'error')
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('외주업체 계약 수정에 실패했습니다.', 'error')
+      }
     },
   })
 
@@ -148,8 +148,12 @@ export default function useOutSourcingContract() {
       }
     },
 
-    onError: () => {
-      showSnackbar(' 외주업체 계약 삭제에 실패했습니다.', 'error')
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar(' 외주업체 계약 삭제에 실패했습니다.', 'error')
+      }
     },
   })
 
@@ -352,7 +356,7 @@ export default function useOutSourcingContract() {
     categoryMethodOptions,
 
     outsourcingCancel,
-    ContractModifyMutationView,
+    ContractModifyBtn,
     OutsourcingContractDeleteMutation,
     useOutsourcingContractHistoryDataQuery,
 

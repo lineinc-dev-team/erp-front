@@ -18,6 +18,8 @@ export type OutsourcingContractAttachedFile = {
   fileUrl?: string
   originalFileName?: string
   files?: FileUploadInfo[]
+  type: string
+  typeCode?: string
 }
 
 //외주공사 항목 타입
@@ -229,6 +231,8 @@ type OutsourcingContractFormStore = {
     field: K,
     value: OutsourcingContractFormState[K],
   ) => void
+
+  setForm: (newForm) => void
 
   addItem: (
     type:

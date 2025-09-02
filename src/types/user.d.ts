@@ -8,4 +8,5 @@ export interface myInfoProps {
 type roleInfo = {
   id: number
   name: string
+  deleted: boolean
 }

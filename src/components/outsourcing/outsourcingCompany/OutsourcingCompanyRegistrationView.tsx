@@ -471,13 +471,14 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                   value={form.type || 'BASE'}
                   onChange={(value) => setField('type', value)}
                   options={typeMethodOptions}
+                  disabled={isEditMode}
                 />
 
                 <CommonInput
                   value={form.typeDescription}
                   onChange={(value) => setField('typeDescription', value)}
                   className="flex-1"
-                  disabled={form.type === 'ETC' ? false : true}
+                  disabled={isEditMode || form.type !== 'ETC'}
                   placeholder={form.type === 'ETC' ? '기타 내용을 입력하세요' : ''}
                 />
               </div>

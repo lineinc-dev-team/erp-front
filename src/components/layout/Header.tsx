@@ -131,7 +131,11 @@ export default function Header() {
 
   const roleId = Number(myInfo?.roles?.[0]?.id)
 
-  const { data, isLoading, isError } = useHeaderMenuListQuery(roleId)
+  const rolePermissionStatus = myInfo?.roles?.[0]?.deleted
+
+  const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
+
+  const { data, isLoading, isError } = useHeaderMenuListQuery(roleId, enabled)
 
   // (3) data가 있으면 변환해서 메뉴 생성
   const menuItemsFromApi = data ? convertApiMenusToMenuItems(data.data) : []
@@ -291,10 +295,14 @@ export default function Header() {
 
       <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
         <List sx={{ width: 240 }}>
-          {!isLoading && !isError && renderMenu(menuItemsFromApi)}
+          {!isLoading && !isError && menuItemsFromApi.length > 0 && renderMenu(menuItemsFromApi)}
 
-          {isLoading && <div>메뉴를 불러오는 중 </div>}
-          {isError && <div>에러 발생했습니다.</div>}
+          {!isLoading && !isError && menuItemsFromApi.length === 0 && (
+            <div className="text-xl px-4 py-2 text-green-700">설정된 권한이 없습니다.</div>
+          )}
+
+          {isLoading && <div className="px-4 py-2">메뉴를 불러오는 중...</div>}
+          {isError && <div className="px-4 py-2 text-red-500">에러가 발생했습니다.</div>}
         </List>
       </Drawer>
     </>

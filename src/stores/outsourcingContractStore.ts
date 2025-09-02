@@ -12,6 +12,11 @@ import {
 } from '@/types/outsourcingContract'
 import { getTodayDateString } from '@/utils/formatters'
 
+// const defaultAttachedFiles = [
+//   { id: Date.now(), name: '계약서', memo: '', files: [], type: 'CONTRACT' },
+//   { id: Date.now() + 1, name: '보증서', memo: '', files: [], type: 'GUARANTEE' },
+// ]
+
 export const useContractSearchStore = create<{ search: OutsourcingContractSearchState }>((set) => ({
   search: {
     searchTrigger: 0,
@@ -28,7 +33,7 @@ export const useContractSearchStore = create<{ search: OutsourcingContractSearch
     contactName: '',
     arraySort: '최신순',
     currentPage: 1,
-    pageCount: '10',
+    pageCount: '20',
 
     setField: (field, value) =>
       set((state) => ({
@@ -59,7 +64,7 @@ export const useContractSearchStore = create<{ search: OutsourcingContractSearch
           contractEndDate: null,
           contactName: '',
           arraySort: '최신순',
-          pageCount: '10',
+          pageCount: '20',
           currentPage: 1,
         },
       })),
@@ -145,6 +150,11 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
       form: { ...state.form, [field]: value },
     })),
 
+  setForm: (newForm) =>
+    set((state) => ({
+      form: { ...state.form, ...newForm },
+    })),
+
   updateMemo: (id, value) =>
     set((state) => {
       // 기존 changeHistories 업데이트
@@ -173,7 +183,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
     set((state) => {
       if (type === 'manager') {
         const newItem: OutsourcingContractManager = {
-          id: 0,
+          id: Date.now(),
           name: '',
           position: '',
           department: '',
@@ -186,7 +196,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         return { form: { ...state.form, headManagers: [...state.form.headManagers, newItem] } }
       } else if (type === 'personAttachedFile') {
         const personNewItems: OutsourcingContractPersonAttachedFile = {
-          id: 0,
+          id: Date.now(),
           name: '',
           category: '',
           taskDescription: '',
@@ -201,7 +211,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         }
       } else if (type === 'workSize') {
         const contractNewItems: OutsourcingContractItem = {
-          id: 0,
+          id: Date.now(),
           item: '',
           specification: '',
           unit: '',
@@ -220,7 +230,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         }
       } else if (type === 'equipment') {
         const equipmentNewItems: OutsourcingEquipmentInfoAttachedFile = {
-          id: 0,
+          id: Date.now(),
           specification: '',
           vehicleNumber: '',
           category: '',
@@ -237,7 +247,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         }
       } else if (type === 'articleInfo') {
         const articleNewItems: OutsourcingArticleInfoAttachedFile = {
-          id: 0,
+          id: Date.now(),
           name: '',
           memo: '',
           driverLicense: [],
@@ -252,10 +262,11 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         }
       } else {
         const newItem: OutsourcingContractAttachedFile = {
-          id: 0,
+          id: Date.now(),
           name: '',
           memo: '',
           files: [],
+          type: 'BASIC',
         }
         return { form: { ...state.form, attachedFiles: [...state.form.attachedFiles, newItem] } }
       }
@@ -653,22 +664,24 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
           // 파일이 없을 경우에도 name, memo는 전송
           return [
             {
-              id: f.id || 0,
+              id: f.id || Date.now(),
               name: f.name,
+              memo: f.memo || '',
               fileUrl: '',
               originalFileName: '',
-              memo: f.memo || '',
-            } as OutsourcingContractAttachedFile,
+              type: f.type,
+            },
           ]
         }
 
         // 파일이 있을 경우
         return f.files.map((fileObj: FileUploadInfo) => ({
-          id: f.id || 0,
+          id: f.id || Date.now(),
           name: f.name,
           fileUrl: fileObj.fileUrl || '',
-          originalFileName: fileObj.file?.name || '',
+          originalFileName: fileObj.name || fileObj.originalFileName,
           memo: f.memo || '',
+          type: f.type,
         }))
       }),
 

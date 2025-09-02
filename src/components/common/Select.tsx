@@ -1,19 +1,20 @@
 // components/common/CommonSelect.tsx
 import { FormControl, MenuItem, Select } from '@mui/material'
 
-type OptionType<T extends string | number> = {
+type OptionType = {
   label?: string
   id?: string | number
   code?: string | number
-  name?: T
+  name?: string
   specification?: string
   vehicleNumber?: string
+  deleted?: boolean
 }
 
 type CommonSelectProps<T extends string | number> = {
   value: T
   onChange: (value: T) => void
-  options: OptionType<T>[]
+  options: OptionType[]
   fullWidth?: boolean
   required?: boolean
   disabled?: boolean
@@ -63,7 +64,14 @@ export default function CommonSelect<T extends string | number>({
             key={opt.code || opt.id} // key는 유니크하게
             value={opt.code || opt.id} // value는 항상 옵션 code로
           >
-            {opt.name || opt.label || opt.vehicleNumber || opt.specification || '선택'}
+            {opt.deleted ? (
+              <>
+                {opt.name?.replace(' (삭제됨)', '')}
+                <span style={{ color: 'red' }}> (삭제됨)</span>
+              </>
+            ) : (
+              opt.name || opt.label || opt.vehicleNumber || opt.specification || '선택'
+            )}
           </MenuItem>
         ))}
       </Select>
