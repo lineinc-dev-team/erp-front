@@ -59,7 +59,7 @@ type AccountFormStore = {
 export type accountManagementSearchProps = {
   searchTrigger: number
   username: string
-  roleId: string
+  roleId: number
   isActive: T
   createdStartDate: Date | null
   createdEndDate: Date | null

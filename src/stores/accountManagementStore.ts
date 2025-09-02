@@ -11,7 +11,7 @@ export const useAccountManagementStore = create<{ search: accountManagementSearc
     search: {
       searchTrigger: 0,
       username: '',
-      roleId: '0',
+      roleId: 0,
       isActive: '0',
       createdStartDate: null,
       createdEndDate: null,
@@ -46,7 +46,7 @@ export const useAccountManagementStore = create<{ search: accountManagementSearc
             ...state.search,
             searchTrigger: 0,
             username: '',
-            roleId: '0',
+            roleId: 0,
             isActive: '0',
             createdStartDate: null,
             createdEndDate: null,

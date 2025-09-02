@@ -126,6 +126,30 @@ export async function PositionIdInfoService() {
   return data
 }
 
+// 권한 그룹
+
+export async function RoleIdInfoService() {
+  const resData = await fetch(`${API.SINGLEROLE}/search`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+
 // 유저 생성 엔드포인트
 export async function CreateAccount() {
   const { newAccountUser } = useAccountFormStore.getState()

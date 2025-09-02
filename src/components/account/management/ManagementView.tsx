@@ -1,13 +1,7 @@
 'use client'
 
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-import {
-  UserDataList,
-  UseORnotOptions,
-  ArrayStatusOptions,
-  PageCount,
-  UseStateOptions,
-} from '@/config/erp.confing'
+import { UserDataList, ArrayStatusOptions, PageCount, UseStateOptions } from '@/config/erp.confing'
 import { Pagination } from '@mui/material'
 
 import CommonSelect from '@/components/common/Select'
@@ -32,8 +26,14 @@ import { useMenuPermission } from '@/components/common/MenuPermissionView'
 export default function ManagementView() {
   const { search } = useAccountManagementStore()
 
-  const { userQuery, deleteMutation, departmentOptions, positionOptions, gradeOptions } =
-    useUserMg()
+  const {
+    userQuery,
+    deleteMutation,
+    departmentOptions,
+    positionOptions,
+    gradeOptions,
+    roleOptions,
+  } = useUserMg()
 
   const openTab = useTabOpener()
 
@@ -144,7 +144,7 @@ export default function ManagementView() {
     await UserDataExcelDownload({
       sort: search.arraySort === '최신순' ? 'username,desc' : 'username,asc',
       username: search.username,
-      roleId: search.roleId === '0' ? undefined : Number(search.roleId),
+      roleId: search.roleId === 0 ? undefined : Number(search.roleId),
       isActive: search.isActive === '0' ? undefined : search.isActive,
       createdStartDate: getTodayDateString(search.createdStartDate),
       createdEndDate: getTodayDateString(search.createdEndDate),
@@ -254,7 +254,7 @@ export default function ManagementView() {
                 fullWidth={true}
                 value={search.roleId}
                 onChange={(value) => search.setField('roleId', value)}
-                options={UseORnotOptions}
+                options={roleOptions}
               />
             </div>
           </div>

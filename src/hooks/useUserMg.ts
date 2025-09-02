@@ -9,6 +9,7 @@ import {
   ModifyUserManagement,
   ModifyUserPasswordManagement,
   PositionIdInfoService,
+  RoleIdInfoService,
   UserInfoHistoryService,
   UserInfoNameScroll,
   UserInfoService,
@@ -49,7 +50,7 @@ export function useUserMg() {
     queryFn: () => {
       const rawParams = {
         username: search.username ? search.username : '',
-        roleId: search.roleId === '0' ? '' : search.roleId,
+        roleId: search.roleId === 0 ? undefined : search.roleId,
         isActive: search.isActive === '0' ? undefined : search.isActive === '1' ? true : false,
         createdStartDate: getTodayDateString(search.createdStartDate),
         createdEndDate: getTodayDateString(search.createdEndDate),
@@ -182,6 +183,15 @@ export function useUserMg() {
 
   const gradeOptions = [{ id: 0, name: '선택' }, ...(gradeId?.data ?? [])]
 
+  // 권한그룹
+
+  const { data: roleId } = useQuery({
+    queryKey: ['roleInfo'],
+    queryFn: RoleIdInfoService,
+  })
+
+  const roleOptions = [{ id: 0, name: '선택', deleted: false }, ...(roleId?.data.content ?? [])]
+
   const useHistoryDataQuery = (historyId: number, enabled: boolean) => {
     return useInfiniteQuery({
       queryKey: ['historyList', historyId],
@@ -207,6 +217,7 @@ export function useUserMg() {
     departmentOptions,
     positionOptions,
     gradeOptions,
+    roleOptions,
     useHistoryDataQuery,
 
     handleAccountCancel,
