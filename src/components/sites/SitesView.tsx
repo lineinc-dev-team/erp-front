@@ -154,7 +154,7 @@ export default function SitesView() {
         renderCell: (params: GridRenderCellParams) => {
           const sortedRowIds = params.api.getSortedRowIds?.() ?? []
           const indexInCurrentPage = sortedRowIds.indexOf(params.id)
-          const no = (search.currentPage - 1) * pageCount + indexInCurrentPage + 1
+          const no = totalList - ((search.currentPage - 1) * pageCount + indexInCurrentPage)
           return <span>{no}</span>
         },
       }

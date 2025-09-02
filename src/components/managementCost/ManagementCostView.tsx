@@ -129,7 +129,8 @@ export default function ManagementCost() {
         renderCell: (params: GridRenderCellParams) => {
           const sortedRowIds = params.api.getSortedRowIds?.() ?? []
           const indexInCurrentPage = sortedRowIds.indexOf(params.id)
-          const no = (search.currentPage - 1) * pageCount + indexInCurrentPage + 1
+          const no = totalList - ((search.currentPage - 1) * pageCount + indexInCurrentPage)
+          // const no = (search.currentPage - 1) * pageCount + indexInCurrentPage + 1
           return <span>{no}</span>
         },
       }
