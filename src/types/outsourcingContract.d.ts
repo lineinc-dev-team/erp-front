@@ -1,3 +1,9 @@
+export type selectType = {
+  id: number
+  name: string
+  deleted: boolean
+}
+
 export type OutsourcingContractManager = {
   id: number
   name: string

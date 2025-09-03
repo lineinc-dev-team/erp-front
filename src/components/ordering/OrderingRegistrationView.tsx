@@ -119,14 +119,11 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
   useEffect(() => {
     if (data && isEditMode) {
       const client = data.data
-
-      // 기존 userOptions 복사
       const newUserOptions = [...userOptions]
 
       if (client.user) {
         const userName = client.user.username + (client.user.deleted ? ' (삭제됨)' : '')
 
-        // 이미 options에 있는지 체크
         const exists = newUserOptions.some((u) => u.id === client.user.id)
         if (!exists) {
           newUserOptions.push({
@@ -137,20 +134,24 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
         }
       }
 
-      // 삭제된 유저 분리
       const deletedUsers = newUserOptions.filter((u) => u.deleted)
       const normalUsers = newUserOptions.filter((u) => !u.deleted && u.id !== '0')
 
       setUpdatedUserOptions([
-        newUserOptions.find((u) => u.id === '0')!, // 선택 옵션
+        newUserOptions.find((u) => u.id === '0')!,
         ...deletedUsers,
         ...normalUsers,
       ])
 
-      // 선택된 유저 id 세팅
       setField('userId', client.user?.id ?? '0')
+    } else if (!isEditMode) {
+      // 등록 모드일 경우
+      setUpdatedUserOptions(userOptions)
+      setField('userId', 0) // "선택" 기본값
     }
   }, [data, isEditMode, userOptions])
+
+  console.log('userOptionsuserOptions', updatedUserOptions)
 
   useEffect(() => {
     if (data && isEditMode === true) {

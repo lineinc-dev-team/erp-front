@@ -18,7 +18,7 @@ import { getTodayDateString } from '@/utils/formatters'
 import CommonSelectByName from '@/components/common/CommonSelectByName'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import ExcelModal from '@/components/common/ExcelModal'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { OutsourcingContractExcelDownload } from '@/services/outsourcingContract/outsourcingContractService'
 import { outsourcingContractExcelFieldMap } from '@/utils/userExcelField'
 
@@ -69,15 +69,40 @@ export default function OutsourcingContractView() {
       ...user,
       type: user.contractType,
       contactName: mainContact?.name || '-',
-      hasFile: 'Y',
-      contractStartDate: `${getTodayDateString(user.contractStartDate)} / ${getTodayDateString(
-        user.contractEndDate,
-      )}`,
+      hasFile: user.hasFile === false ? 'N' : 'Y',
+      memo: user.memo || '-',
+      createdAt: getTodayDateString(user.createdAt),
     }
   })
 
   // 그리도 라우팅 로직!
   const enhancedColumns = outsourcingContractListData.map((col): GridColDef => {
+    if (col.field === 'contractStartDate') {
+      return {
+        ...col,
+        sortable: false,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 2,
+        renderCell: (params: GridRenderCellParams) => {
+          const item = params.row as OutsourcingContractList
+
+          return (
+            <div className="flex flex-col items-center">
+              <Fragment>
+                <div className="whitespace-pre-wrap">
+                  {getTodayDateString(item.contractStartDate)}
+                </div>
+                <div className="whitespace-pre-wrap">
+                  {getTodayDateString(item.contractEndDate)}
+                </div>
+              </Fragment>
+            </div>
+          )
+        },
+      }
+    }
+
     if (col.field === 'companyName') {
       return {
         ...col,
@@ -446,7 +471,18 @@ export default function OutsourcingContractView() {
           disableColumnMenu
           hideFooterPagination
           // pageSize={pageSize}
-          rowHeight={60}
+          getRowHeight={() => 'auto'}
+          sx={{
+            '& .MuiDataGrid-cell': {
+              display: 'flex',
+              justifyContent: 'center', // 가로 가운데 정렬
+              alignItems: 'center', // 세로 가운데 정렬
+              whiteSpace: 'normal', // 줄바꿈 허용
+              lineHeight: '2.8rem', // 줄 간격
+              paddingTop: '12px', // 위 여백
+              paddingBottom: '12px', // 아래 여백
+            },
+          }}
           onRowSelectionModelChange={(newSelection) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setSelectedIds(newSelection as any) // 타입 보장된다면 사용 가능

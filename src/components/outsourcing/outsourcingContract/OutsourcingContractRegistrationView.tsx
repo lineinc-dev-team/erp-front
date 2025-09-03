@@ -53,6 +53,7 @@ import {
 import CommonDatePicker from '@/components/common/DatePicker'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { useQuery } from '@tanstack/react-query'
+import CommonMultiFileInput from '@/components/common/CommonMultiFileInput'
 
 export default function OutsourcingContractRegistrationView({ isEditMode = false }) {
   const {
@@ -232,6 +233,11 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     defaultDeductionsName: '기본공제 항목',
     defaultDeductionsDescription: '기본공제 항목 설명',
     originalFileName: '파일 추가',
+    outsourcingCompanyName: '업체명',
+    unitPrice: '단가',
+    subtotal: '소계',
+    taskDescription: '작업내용',
+    category: '구분',
   }
 
   const { showSnackbar } = useSnackbarStore()
@@ -254,6 +260,216 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
   } = useOutsourcingContractPersonDataQuery(outsourcingContractId, isEditMode)
 
   const historyList = useContractFormStore((state) => state.form.changeHistories)
+
+  // 현장명이 지워졌을떄 보이는 로직
+
+  const [updatedSiteOptions, setUpdatedSiteOptions] = useState(sitesOptions)
+  const [updatedProcessOptions, setUpdatedProcessOptions] = useState(processOptions)
+
+  useEffect(() => {
+    if (contractDetailData && isEditMode) {
+      const client = contractDetailData.data
+
+      // 기존 siteOptions 복사
+      const newSiteOptions = [...sitesOptions]
+
+      if (client.site) {
+        const siteName = client.site.name + (client.site.deleted ? ' (삭제됨)' : '')
+
+        // 이미 options에 있는지 체크
+        const exists = newSiteOptions.some((s) => s.id === client.site.id)
+        if (!exists) {
+          newSiteOptions.push({
+            id: client.site.id,
+            name: siteName,
+            deleted: client.site.deleted,
+          })
+        }
+      }
+
+      // 삭제된 현장 / 일반 현장 분리
+      const deletedSites = newSiteOptions.filter((s) => s.deleted)
+      const normalSites = newSiteOptions.filter((s) => !s.deleted && s.id !== 0)
+
+      // 최종 옵션 배열 세팅
+      setUpdatedSiteOptions([
+        newSiteOptions.find((s) => s.id === 0) ?? { id: 0, name: '선택', deleted: false },
+        ...deletedSites,
+        ...normalSites,
+      ])
+
+      // 선택된 현장 id 세팅
+      setField('siteId', client.site?.id ?? 0)
+    } else if (!isEditMode) {
+      // 등록 모드
+      setUpdatedSiteOptions(sitesOptions)
+      setField('siteId', 0)
+    }
+  }, [contractDetailData, isEditMode, sitesOptions])
+
+  // useEffect(() => {
+  //   if (isEditMode && contractDetailData) {
+  //     const client = contractDetailData.data
+  //     const newProcessOptions = [...processOptions]
+
+  //     if (client.siteProcess) {
+  //       // site 또는 process 삭제 여부 반영
+  //       const isDeleted = (client.siteProcess.deleted || client.site?.deleted) ?? false
+
+  //       console.log('existsexists isDeleted', isDeleted)
+
+  //       const processName = client.siteProcess.name + (isDeleted ? ' (삭제됨)' : '')
+
+  //       // 이미 옵션에 있는지 체크
+  //       const exists = newProcessOptions.some((p) => p.id === client.siteProcess.id)
+  //       if (!exists) {
+  //         newProcessOptions.push({
+  //           id: client.siteProcess.id,
+  //           name: processName,
+  //           deleted: isDeleted,
+  //         })
+  //       }
+
+  //       console.log('existsexists 공정명', exists)
+  //       console.log('newProcessOptions24', newProcessOptions)
+
+  //       // 선택값 세팅
+  //       setField('processId', client.siteProcess.id)
+  //       setField('processName', processName)
+  //     }
+
+  //     // 삭제된 공정 / 일반 공정 분리
+  //     const deletedProcesses = newProcessOptions.filter((p) => p.deleted)
+  //     const normalProcesses = newProcessOptions.filter((p) => !p.deleted && p.id !== 0)
+
+  //     // 최종 옵션 배열 세팅
+  //     setUpdatedProcessOptions([
+  //       newProcessOptions.find((s) => s.id === 0) ?? { id: 0, name: '선택', deleted: false },
+  //       ...deletedProcesses,
+  //       ...normalProcesses,
+  //     ])
+  //     // 선택된 유저 id 세팅
+  //     setField('processId', client.siteProcess?.id ?? 0)
+  //   } else {
+  //     // 등록 모드
+  //     setUpdatedProcessOptions([
+  //       { id: 0, name: '선택', deleted: false },
+  //       ...processOptions.filter((p) => p.id !== 0),
+  //     ])
+  //     setField('processId', 0)
+  //   }
+  // }, [contractDetailData, isEditMode, processOptions])
+
+  useEffect(() => {
+    if (isEditMode && contractDetailData) {
+      const client = contractDetailData.data
+
+      // 이전 상태 기반으로 새 배열 생성
+
+      const newProcessOptions = [...updatedProcessOptions, ...processOptions]
+        .filter((p, index, self) => index === self.findIndex((el) => el.id === p.id)) // id 중복 제거
+        .filter((p) => p.id === 0 || p.deleted || (!p.deleted && p.id !== 0)) // 조건 필터링
+
+      console.log('매번 불러오는 공정명', newProcessOptions)
+
+      console.log('매번 불러오는 processOptions', processOptions)
+
+      if (client.siteProcess) {
+        const isDeleted = client.siteProcess.deleted || client.site?.deleted
+        const processName = client.siteProcess.name + (isDeleted ? ' (삭제됨)' : '')
+
+        if (!newProcessOptions.some((p) => p.id === client.siteProcess.id)) {
+          newProcessOptions.push({
+            id: client.siteProcess.id,
+            name: processName,
+            deleted: isDeleted,
+          })
+        }
+
+        setField('processId', client.siteProcess.id)
+        setField('processName', processName)
+      }
+
+      // 삭제된 공정 / 일반 공정 분리
+      const deletedProcesses = newProcessOptions.filter((p) => p.deleted)
+      const normalProcesses = newProcessOptions.filter((p) => !p.deleted && p.id !== 0)
+
+      setUpdatedProcessOptions([
+        newProcessOptions.find((s) => s.id === 0) ?? { id: 0, name: '선택', deleted: false },
+        ...deletedProcesses,
+        ...normalProcesses,
+      ])
+    } else {
+      // 등록 모드
+      setUpdatedProcessOptions([
+        { id: 0, name: '선택', deleted: false },
+        ...processOptions.filter((p) => p.id !== 0),
+      ])
+      console.log('setUpdatedProcessOptions', updatedProcessOptions)
+      setField('processId', 0)
+    }
+  }, [contractDetailData, isEditMode, processOptions])
+
+  // 업체명이 지워졌을때 보이는 로직
+
+  // console.log('updatedSiteOptionsupdatedSiteOptionsupdatedSiteOptions445', updatedSiteOptions)
+  // console.log(
+  //   'updatedProcessOptionsupdatedProcessOptionsupdatedProcessOptions',
+  //   updatedProcessOptions,
+  // )
+
+  const [updatedCompanyOptions, setUpdatedCompanyOptions] = useState(companyOptions)
+
+  useEffect(() => {
+    if (contractDetailData && isEditMode) {
+      const client = contractDetailData.data
+
+      const newCompanyOptions = [...companyOptions]
+
+      if (client.outsourcingCompany) {
+        const companyName =
+          client.outsourcingCompany.name + (client.outsourcingCompany.deleted ? ' (삭제됨)' : '')
+
+        // 이미 options에 있는지 체크
+        const exists = newCompanyOptions.some((c) => c.id === client.outsourcingCompany.id)
+        if (!exists) {
+          newCompanyOptions.push({
+            id: client.outsourcingCompany.id,
+            name: companyName,
+            businessNumber: client.outsourcingCompany.businessNumber ?? '',
+            ceoName: client.outsourcingCompany.ceoName ?? '',
+            bankName: client.outsourcingCompany.bankName ?? '',
+            accountNumber: client.outsourcingCompany.accountNumber ?? '',
+            accountHolder: client.outsourcingCompany.accountHolder ?? '',
+            deleted: client.outsourcingCompany.deleted,
+          })
+        }
+      }
+
+      const deletedCompanies = newCompanyOptions.filter((c) => c.deleted)
+      const normalCompanies = newCompanyOptions.filter((c) => !c.deleted && c.id !== 0)
+
+      setUpdatedCompanyOptions([
+        newCompanyOptions.find((c) => c.id === 0) ?? {
+          id: 0,
+          name: '선택',
+          businessNumber: '',
+          ceoName: '',
+          bankName: '',
+          accountNumber: '',
+          accountHolder: '',
+          deleted: false,
+        },
+        ...deletedCompanies,
+        ...normalCompanies,
+      ])
+
+      setField('CompanyId', client.outsourcingCompany?.id ?? 0)
+    } else if (!isEditMode) {
+      setUpdatedCompanyOptions(companyOptions)
+      setField('CompanyId', 0) // "선택" 기본값
+    }
+  }, [contractDetailData, isEditMode, companyOptions])
 
   useEffect(() => {
     if (contractDetailData && isEditMode === true) {
@@ -385,9 +601,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
             files: (item.files ?? []).map((file) => ({
               id: file.id,
               fileUrl: file.fileUrl,
-              file: {
-                name: file.originalFileName,
-              },
+              originalFileName: file.originalFileName,
             })),
           }))
         })
@@ -467,18 +681,27 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                 // 각 문서 타입 배열 그대로 넣기
                 driverLicense: driverLicenseFiles.map((f) => ({
                   id: f.id,
-                  fileUrl: f.fileUrl,
-                  file: { name: f.originalFileName },
+                  fileUrl: f.fileUrl && f.fileUrl.trim() !== '' ? f.fileUrl : null,
+                  originalFileName:
+                    f.originalFileName && f.originalFileName.trim() !== ''
+                      ? f.originalFileName
+                      : null,
                 })),
                 safeEducation: safetyEducationFiles.map((f) => ({
                   id: f.id,
-                  fileUrl: f.fileUrl,
-                  file: { name: f.originalFileName },
+                  fileUrl: f.fileUrl && f.fileUrl.trim() !== '' ? f.fileUrl : null,
+                  originalFileName:
+                    f.originalFileName && f.originalFileName.trim() !== ''
+                      ? f.originalFileName
+                      : null,
                 })),
                 ETCfiles: etcFiles.map((f) => ({
                   id: f.id,
-                  fileUrl: f.fileUrl,
-                  file: { name: f.originalFileName },
+                  fileUrl: f.fileUrl && f.fileUrl.trim() !== '' ? f.fileUrl : null,
+                  originalFileName:
+                    f.originalFileName && f.originalFileName.trim() !== ''
+                      ? f.originalFileName
+                      : null,
                 })),
               }
             },
@@ -494,7 +717,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     } else {
       reset()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     contractDetailData,
     outsourcingPersonList,
@@ -673,6 +895,43 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       }
     }
 
+    if (personAddAttachedFiles.length > 0) {
+      for (const item of personAddAttachedFiles) {
+        if (!item.name?.trim()) return '인력의 이름을 입력해주세요.'
+        if (!item.category?.trim()) return '인력의 구분을 입력해주세요.'
+        if (!item.taskDescription?.trim()) return '인력의 작업내용을 입력해주세요.'
+      }
+    }
+
+    if (equipmentAddAttachedFiles.length > 0) {
+      for (const item of equipmentAddAttachedFiles) {
+        if (!item.specification?.trim()) return '장비의 규격을 입력해주세요.'
+        if (!item.vehicleNumber?.trim()) return '장비의 차량번호를 입력해주세요.'
+        if (!item.category?.trim()) return '장비의 구분을 입력해주세요.'
+        if (!item.unitPrice) return '장비의 단가를 입력해주세요.'
+        if (!item.subtotal) return '장비의 소계를 입력해주세요.'
+      }
+    }
+
+    if (articleAddAttachedFiles.length > 0) {
+      for (const item of articleAddAttachedFiles) {
+        if (!item.name?.trim()) return '기사의 이름을 입력해주세요.'
+      }
+    }
+
+    if (contractAddAttachedFiles.length > 0) {
+      for (const item of contractAddAttachedFiles) {
+        if (!item.item?.trim()) return '공사의 항목을 입력해주세요.'
+        if (!item.specification?.trim()) return '공사의 규격을 입력해주세요.'
+        if (!item.unit?.trim()) return '공사의 단가를 입력해주세요.'
+        if (!item.unitPrice) return '공사의 도급단가를 입력해주세요.'
+        if (!item.contractQuantity) return '공사의 도급금액의 수량을 입력해주세요.'
+        if (!item.contractPrice) return '공사의 도급금액의 금액을 입력해주세요.'
+        if (!item.outsourcingContractQuantity) return '공사의 외주계약금액의 수량을 입력해주세요.'
+        if (!item.outsourcingContractPrice) return '공사의 외주계약금액의 금액을 입력해주세요.'
+      }
+    }
+
     if (attachedFiles.length > 0) {
       for (const item of attachedFiles) {
         if (!item.name?.trim()) return '첨부파일의 이름을 입력해주세요.'
@@ -708,15 +967,22 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
               현장명
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelect
+              {/* <CommonSelect
                 fullWidth
                 value={form.siteId || 0}
                 onChange={async (value) => {
-                  const selectedSite = sitesOptions.find((opt) => opt.id === value)
+                  const selectedSite = updatedSiteOptions.find((opt) => opt.id === value)
                   if (!selectedSite) return
 
                   setField('siteId', selectedSite.id)
                   setField('siteName', selectedSite.name)
+
+                  // 🔹 삭제된 업체를 선택한 경우 - 기존 정보 바로 사용
+                  if (selectedSite.deleted) {
+                    setField('processId', selectedSite.id || '')
+                    setField('processName', selectedSite.name)
+                    return
+                  }
 
                   const res = await SitesProcessNameScroll({
                     pageParam: 0,
@@ -725,6 +991,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                   })
 
                   const processes = res.data?.content || []
+
                   if (processes.length > 0) {
                     setField('processId', processes[0].id)
                     setField('processName', processes[0].name)
@@ -733,7 +1000,66 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     setField('processName', '')
                   }
                 }}
-                options={sitesOptions}
+                options={updatedSiteOptions}
+                onScrollToBottom={() => {
+                  if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
+                }}
+                onInputChange={(value) => setSitesSearch(value)}
+                loading={siteNameLoading}
+              /> */}
+
+              <CommonSelect
+                fullWidth
+                value={form.siteId || 0}
+                onChange={async (value) => {
+                  const selectedSite = updatedSiteOptions.find((opt) => opt.id === value)
+                  if (!selectedSite) return
+
+                  // 현장 선택값 세팅
+                  setField('siteId', selectedSite.id)
+                  setField(
+                    'siteName',
+                    selectedSite.name + (selectedSite.deleted ? ' (삭제됨)' : ''),
+                  )
+
+                  console.log('현재 현장명!', selectedSite)
+
+                  if (selectedSite.deleted) {
+                    const deletedProcess = updatedProcessOptions.find(
+                      (p) => p.id === contractDetailData?.data.siteProcess?.id,
+                    )
+                    if (deletedProcess) {
+                      setField('processId', deletedProcess.id)
+                      setField(
+                        'processName',
+                        deletedProcess.name + (deletedProcess.deleted ? ' (삭제됨)' : ''),
+                      )
+                    } else {
+                      setField('processId', 0)
+                      setField('processName', '')
+                    }
+                    return
+                  } else if (selectedSite.deleted === false) {
+                    // 일반 현장은 API로 공정 목록 가져오기
+                    const res = await SitesProcessNameScroll({
+                      pageParam: 0,
+                      siteId: selectedSite.id,
+                      keyword: '',
+                    })
+                    const processes = res.data?.content || []
+
+                    console.log('현재 processesprocesses!', processes)
+
+                    if (processes.length > 0) {
+                      setField('processId', processes[0].id)
+                      setField('processName', processes[0].name)
+                    } else {
+                      setField('processId', 0)
+                      setField('processName', '')
+                    }
+                  }
+                }}
+                options={updatedSiteOptions}
                 onScrollToBottom={() => {
                   if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
                 }}
@@ -752,13 +1078,13 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                 className="text-xl"
                 value={form.processId || 0}
                 onChange={(value) => {
-                  const selectedProcess = processOptions.find((opt) => opt.name === value)
+                  const selectedProcess = updatedProcessOptions.find((opt) => opt.name === value)
                   if (selectedProcess) {
                     setField('processId', selectedProcess.id)
                     setField('processName', selectedProcess.name)
                   }
                 }}
-                options={processOptions}
+                options={updatedProcessOptions}
                 displayLabel
                 onScrollToBottom={() => {
                   if (processInfoHasNextPage && !processInfoIsFetching) processInfoFetchNextPage()
@@ -773,11 +1099,11 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
               업체명
             </label>
             <div className="border border-gray-400 p-2 px-2 w-full">
-              <CommonSelect
+              {/* <CommonSelect
                 fullWidth
                 value={form.CompanyId || 0}
                 onChange={async (value) => {
-                  const selectedCompany = companyOptions.find((opt) => opt.id === value)
+                  const selectedCompany = updatedCompanyOptions.find((opt) => opt.id === value)
                   if (!selectedCompany) return
 
                   setField('CompanyId', selectedCompany.id)
@@ -802,7 +1128,50 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     setField('businessNumber', '')
                   }
                 }}
-                options={companyOptions}
+                options={updatedCompanyOptions}
+                onScrollToBottom={() => {
+                  if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
+                }}
+                onInputChange={(value) => setCompanySearch(value)}
+                loading={comPanyNameLoading}
+              /> */}
+
+              <CommonSelect
+                fullWidth
+                value={form.CompanyId || 0}
+                onChange={async (value) => {
+                  const selectedCompany = updatedCompanyOptions.find((opt) => opt.id === value)
+                  if (!selectedCompany) return
+
+                  setField('CompanyId', selectedCompany.id)
+                  setField('CompanyName', selectedCompany.name)
+
+                  // 🔹 삭제된 업체를 선택한 경우 - 기존 정보 바로 사용
+                  if (selectedCompany.deleted) {
+                    setField('businessNumber', selectedCompany.businessNumber || '')
+
+                    return
+                  }
+
+                  // 🔹 정상 업체는 API 호출
+                  const res = await GetCompanyNameInfoService({
+                    pageParam: 0,
+                    keyword: '',
+                  })
+
+                  const companyList = res.data?.content || []
+
+                  const matched = companyList.find(
+                    (company: CompanyInfo) => company.id === selectedCompany.id,
+                  )
+
+                  if (matched) {
+                    setField('businessNumber', matched.businessNumber)
+                  } else {
+                    setField('businessNumber', '')
+                  }
+                }}
+                options={updatedCompanyOptions}
                 onScrollToBottom={() => {
                   if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
                 }}
@@ -1392,7 +1761,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     </TableCell>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
-                        <CommonFileInput
+                        <CommonMultiFileInput
                           className="text-left"
                           acceptedExtensions={[
                             'pdf',
@@ -1409,7 +1778,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                             (newFiles) =>
                               updateItemField('personAttachedFile', m.id, 'files', newFiles) //  해당 항목만 업데이트
                           }
-                          uploadTarget="CLIENT_COMPANY"
+                          uploadTarget="OUTSOURCING_COMPANY_CONTRACT"
                         />
                       </div>
                     </TableCell>
@@ -1607,12 +1976,17 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
                       <TextField
                         size="small"
-                        placeholder="10자"
-                        value={m.unitPrice || ''}
-                        onChange={(e) =>
-                          updateItemField('workSize', m.id, 'unitPrice', e.target.value)
-                        }
-                        inputProps={{ maxLength: 10 }}
+                        placeholder="숫자만"
+                        value={formatNumber(m.unitPrice)}
+                        onChange={(e) => {
+                          const numericValue = unformatNumber(e.target.value)
+                          updateItemField('workSize', m.id, 'unitPrice', numericValue)
+                        }}
+                        inputProps={{
+                          inputMode: 'numeric',
+                          pattern: '[0-9]*',
+                          style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                        }}
                         fullWidth
                       />
                     </TableCell>
@@ -1622,11 +1996,16 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       <TextField
                         size="small"
                         placeholder="숫자만"
-                        value={m.contractQuantity || ''}
-                        onChange={(e) =>
-                          updateItemField('workSize', m.id, 'contractQuantity', e.target.value)
-                        }
-                        inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                        value={formatNumber(m.contractQuantity)}
+                        onChange={(e) => {
+                          const numericValue = unformatNumber(e.target.value)
+                          updateItemField('workSize', m.id, 'contractQuantity', numericValue)
+                        }}
+                        inputProps={{
+                          inputMode: 'numeric',
+                          pattern: '[0-9]*',
+                          style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                        }}
                         fullWidth
                       />
                     </TableCell>
@@ -1636,11 +2015,16 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       <TextField
                         size="small"
                         placeholder="숫자만"
-                        value={m.contractPrice || ''}
-                        onChange={(e) =>
-                          updateItemField('workSize', m.id, 'contractPrice', e.target.value)
-                        }
-                        inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                        value={formatNumber(m.contractPrice)}
+                        onChange={(e) => {
+                          const numericValue = unformatNumber(e.target.value)
+                          updateItemField('workSize', m.id, 'contractPrice', numericValue)
+                        }}
+                        inputProps={{
+                          inputMode: 'numeric',
+                          pattern: '[0-9]*',
+                          style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                        }}
                         fullWidth
                       />
                     </TableCell>
@@ -1650,16 +2034,21 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       <TextField
                         size="small"
                         placeholder="숫자만"
-                        value={m.outsourcingContractQuantity || ''}
-                        onChange={(e) =>
+                        value={formatNumber(m.outsourcingContractQuantity)}
+                        onChange={(e) => {
+                          const numericValue = unformatNumber(e.target.value)
                           updateItemField(
                             'workSize',
                             m.id,
                             'outsourcingContractQuantity',
-                            e.target.value,
+                            numericValue,
                           )
-                        }
-                        inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                        }}
+                        inputProps={{
+                          inputMode: 'numeric',
+                          pattern: '[0-9]*',
+                          style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                        }}
                         fullWidth
                       />
                     </TableCell>
@@ -1669,16 +2058,21 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       <TextField
                         size="small"
                         placeholder="숫자만"
-                        value={m.outsourcingContractPrice || ''}
-                        onChange={(e) =>
+                        value={formatNumber(m.outsourcingContractPrice)}
+                        onChange={(e) => {
+                          const numericValue = unformatNumber(e.target.value)
                           updateItemField(
                             'workSize',
                             m.id,
                             'outsourcingContractPrice',
-                            e.target.value,
+                            numericValue,
                           )
-                        }
-                        inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                        }}
+                        inputProps={{
+                          inputMode: 'numeric',
+                          pattern: '[0-9]*',
+                          style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                        }}
                         fullWidth
                       />
                     </TableCell>
@@ -1893,23 +2287,35 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
                       <TextField
                         size="small"
-                        type="number"
-                        sx={{ width: '100%' }}
-                        value={m.unitPrice}
-                        onChange={(e) =>
-                          updateItemField('equipment', m.id, 'unitPrice', Number(e.target.value))
-                        }
+                        placeholder="숫자만"
+                        value={formatNumber(m.unitPrice)}
+                        onChange={(e) => {
+                          const numericValue = unformatNumber(e.target.value)
+                          updateItemField('equipment', m.id, 'unitPrice', numericValue)
+                        }}
+                        inputProps={{
+                          inputMode: 'numeric',
+                          pattern: '[0-9]*',
+                          style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                        }}
+                        fullWidth
                       />
                     </TableCell>
                     <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
                       <TextField
                         size="small"
-                        type="number"
-                        sx={{ width: '100%' }}
-                        value={m.subtotal}
-                        onChange={(e) =>
-                          updateItemField('equipment', m.id, 'subtotal', Number(e.target.value))
-                        }
+                        placeholder="숫자만"
+                        value={formatNumber(m.subtotal)}
+                        onChange={(e) => {
+                          const numericValue = unformatNumber(e.target.value)
+                          updateItemField('equipment', m.id, 'subtotal', numericValue)
+                        }}
+                        inputProps={{
+                          inputMode: 'numeric',
+                          pattern: '[0-9]*',
+                          style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                        }}
+                        fullWidth
                       />
                     </TableCell>
                     <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
@@ -2014,7 +2420,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     </TableCell>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
-                        <CommonFileInput
+                        <CommonMultiFileInput
                           className="text-left"
                           acceptedExtensions={[
                             'pdf',
@@ -2031,13 +2437,13 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                             (newFiles) =>
                               updateItemField('articleInfo', m.id, 'driverLicense', newFiles) //  해당 항목만 업데이트
                           }
-                          uploadTarget="CLIENT_COMPANY"
+                          uploadTarget="OUTSOURCING_COMPANY_CONTRACT"
                         />
                       </div>
                     </TableCell>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
-                        <CommonFileInput
+                        <CommonMultiFileInput
                           className="text-left"
                           acceptedExtensions={[
                             'pdf',
@@ -2054,13 +2460,13 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                             (newFiles) =>
                               updateItemField('articleInfo', m.id, 'safeEducation', newFiles) //  해당 항목만 업데이트
                           }
-                          uploadTarget="CLIENT_COMPANY"
+                          uploadTarget="OUTSOURCING_COMPANY_CONTRACT"
                         />
                       </div>
                     </TableCell>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
-                        <CommonFileInput
+                        <CommonMultiFileInput
                           className="text-left"
                           acceptedExtensions={[
                             'pdf',
@@ -2076,7 +2482,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                           onChange={
                             (newFiles) => updateItemField('articleInfo', m.id, 'ETCfiles', newFiles) //  해당 항목만 업데이트
                           }
-                          uploadTarget="CLIENT_COMPANY"
+                          uploadTarget="OUTSOURCING_COMPANY_CONTRACT"
                         />
                       </div>
                     </TableCell>

@@ -136,22 +136,6 @@ export function useClientCompany() {
     },
   })
 
-  // 발주처에서 사용하는 유저 정보데이터
-  // 조회에서 이름 검색 스크롤
-  const useUserOrderingInfiniteScroll = (keyword: string) => {
-    return useInfiniteQuery({
-      queryKey: ['userInfo', keyword],
-      queryFn: ({ pageParam }) => OrderingInfoNameScroll({ pageParam, keyword }),
-      initialPageParam: 0,
-      getNextPageParam: (lastPage) => {
-        const { sliceInfo } = lastPage.data
-        const nextPage = sliceInfo.page + 1
-
-        return sliceInfo.hasNext ? nextPage : undefined
-      },
-    })
-  }
-
   const [userSearch, setUserSearch] = useState('')
 
   const {
@@ -169,6 +153,7 @@ export function useClientCompany() {
       const nextPage = sliceInfo.page + 1
       return sliceInfo.hasNext ? nextPage : undefined
     },
+    staleTime: 0,
   })
 
   const userOptions = useMemo(() => {
@@ -217,7 +202,6 @@ export function useClientCompany() {
     createClientMutation,
     ClientDeleteMutation,
     ClientModifyMutation,
-    useUserOrderingInfiniteScroll,
     // 결제수단
     payMethodOptions,
 

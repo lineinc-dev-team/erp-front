@@ -120,6 +120,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
   })
 
   const [updatedUserOptions, setUpdatedUserOptions] = useState(userOptions)
+
   const [updatedOrderOptions, setUpdatedOrderOptions] = useState(orderOptions)
 
   useEffect(() => {
@@ -155,10 +156,12 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
       // 선택된 유저 id 세팅
       setField('userId', client.user?.id ?? '0')
+    } else if (!isEditMode) {
+      // 등록 모드일 경우
+      setUpdatedUserOptions(userOptions)
+      setField('userId', 0) // "선택" 기본값
     }
   }, [data, isEditMode, userOptions])
-
-  console.log('orderOptionsorderOptionsorderOptions', orderOptions)
 
   useEffect(() => {
     if (data && isEditMode) {
@@ -193,6 +196,10 @@ export default function SitesRegistrationView({ isEditMode = false }) {
         // 선택된 유저 id 세팅
         setField('clientCompanyId', client.clientCompany?.id ?? '0')
       }
+    } else if (!isEditMode) {
+      // 등록 모드일 경우
+      setUpdatedOrderOptions(orderOptions)
+      setField('clientCompanyId', 0) // "선택" 기본값
     }
   }, [data, isEditMode, orderOptions])
 

@@ -216,12 +216,13 @@ export default function useOutSourcingContract() {
   })
 
   const sitesOptions = useMemo(() => {
-    const defaultOption = { id: 0, name: '선택' }
+    const defaultOption = { id: 0, name: '선택', deleted: false }
     const options = (siteNameInfo?.pages || [])
       .flatMap((page) => page.data.content)
       .map((user) => ({
         id: user.id,
         name: user.name,
+        deleted: false,
       }))
 
     return [defaultOption, ...options]
@@ -258,12 +259,13 @@ export default function useOutSourcingContract() {
   })
 
   const processOptions = useMemo(() => {
-    const defaultOption = { id: 0, name: '선택' }
+    const defaultOption = { id: 0, name: '선택', deleted: false }
     const options = (processInfo?.pages || [])
       .flatMap((page) => page.data.content)
       .map((user) => ({
         id: user.id,
         name: user.name,
+        deleted: false,
       }))
 
     return [defaultOption, ...options]
@@ -329,7 +331,7 @@ export default function useOutSourcingContract() {
   })
 
   const companyOptions = useMemo(() => {
-    const defaultOption = { id: 0, name: '선택' }
+    const defaultOption = { id: 0, name: '선택', businessNumber: '', deleted: false }
     const options = (comPanyNameInfo?.pages || [])
       .flatMap((page) => page.data.content)
       .map((user) => ({
@@ -340,6 +342,7 @@ export default function useOutSourcingContract() {
         bankName: user.bankName,
         accountNumber: user.accountNumber,
         accountHolder: user.accountHolder,
+        deleted: false,
       }))
 
     return [defaultOption, ...options]

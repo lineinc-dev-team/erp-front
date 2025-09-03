@@ -10,11 +10,11 @@ import {
   SinglepermissionMenuService,
   SinglepermissionService,
   SinglepermissionUserService,
+  UserInfoFromPermissionService,
 } from '@/services/permission/permissonService'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { usePathname, useRouter } from 'next/navigation'
 import { usePermissionGroupStore, usePermissionSearchStore } from '@/stores/permissionStore'
-import { UserInfoService } from '@/services/account/accountManagementService'
 import {
   SitesPersonScroll,
   SitesProcessNameScroll,
@@ -96,9 +96,10 @@ export function usePermission() {
     return useInfiniteQuery({
       queryKey: ['userInfo', false], // 키워드가 바뀔 때 쿼리 리패치 되도록
       queryFn: ({ pageParam = 0 }) =>
-        UserInfoService({
+        UserInfoFromPermissionService({
           hasRole: false,
           page: pageParam,
+          size: 10,
         }),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {

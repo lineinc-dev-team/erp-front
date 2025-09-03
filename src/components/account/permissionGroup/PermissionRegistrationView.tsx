@@ -345,7 +345,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
 
                           const res = await SitesProcessNameScroll({
                             pageParam: 0,
-                            siteId: selectedId,
+                            siteId: Number(selectedId),
                             keyword: '',
                           })
 

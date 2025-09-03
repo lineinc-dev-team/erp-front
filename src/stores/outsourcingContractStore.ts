@@ -694,7 +694,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         files: (item.files ?? []).map((fileObj) => ({
           id: fileObj.id || 0,
           fileUrl: fileObj.fileUrl,
-          originalFileName: fileObj.file?.name ?? 'testFile_2024.pdf',
+          originalFileName: fileObj.originalFileName,
         })),
       })),
 
@@ -722,6 +722,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         memo: item.memo,
         subEquipments:
           item.subEquipments?.map((sub) => ({
+            id: sub.id ?? 0,
             type: sub.typeCode,
             memo: sub.memo,
           })) || [],
@@ -742,7 +743,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
               id: fileObj.id || 0,
               documentType: 'DRIVER_LICENSE',
               fileUrl: fileObj.fileUrl || '',
-              originalFileName: fileObj.file?.name || '',
+              originalFileName: fileObj.originalFileName || '',
             })
           }
         })
@@ -753,7 +754,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
               id: fileObj.id || 0,
               documentType: 'SAFETY_EDUCATION',
               fileUrl: fileObj.fileUrl || '',
-              originalFileName: fileObj.file?.name || '',
+              originalFileName: fileObj.originalFileName || '',
             })
           }
         })
@@ -764,7 +765,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
               id: fileObj.id || 0,
               documentType: 'ETC_DOCUMENT',
               fileUrl: fileObj.fileUrl || '',
-              originalFileName: fileObj.file?.name || '',
+              originalFileName: fileObj.originalFileName || '',
             })
           }
         })
