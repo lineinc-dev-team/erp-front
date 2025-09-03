@@ -647,7 +647,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
       status: form.status,
       memo: form.memo,
       contacts: form.headManagers.map((m) => ({
-        id: m.id || 0,
+        id: m.id || Date.now(),
         name: m.name,
         position: m.position,
         department: m.department,
@@ -686,20 +686,20 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
       }),
 
       workers: form.personManagers.map((item) => ({
-        id: item.id || 0,
+        id: item.id || Date.now(),
         name: item.name,
         category: item.category,
         taskDescription: item.taskDescription,
         memo: item.memo,
         files: (item.files ?? []).map((fileObj) => ({
-          id: fileObj.id || 0,
+          id: fileObj.id || Date.now(),
           fileUrl: fileObj.fileUrl,
           originalFileName: fileObj.originalFileName,
         })),
       })),
 
       constructions: form.contractManagers.map((m) => ({
-        id: m.id || 0,
+        id: m.id || Date.now(),
         item: m.item,
         specification: m.specification,
         unit: m.unit,
@@ -712,7 +712,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
       })),
 
       equipments: form.equipmentManagers.map((item) => ({
-        id: item.id ?? 0,
+        id: item.id || Date.now(),
         specification: item.specification,
         vehicleNumber: item.vehicleNumber,
         category: item.category,
@@ -722,7 +722,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         memo: item.memo,
         subEquipments:
           item.subEquipments?.map((sub) => ({
-            id: sub.id ?? 0,
+            id: sub.id || Date.now(),
             type: sub.typeCode,
             memo: sub.memo,
           })) || [],
@@ -740,7 +740,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         driverLicenseFiles.forEach((fileObj) => {
           if (fileObj.file || fileObj.fileUrl) {
             files.push({
-              id: fileObj.id || 0,
+              id: fileObj.id || Date.now(),
               documentType: 'DRIVER_LICENSE',
               fileUrl: fileObj.fileUrl || '',
               originalFileName: fileObj.originalFileName || '',
@@ -751,7 +751,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         safeEducationFiles.forEach((fileObj) => {
           if (fileObj.file || fileObj.fileUrl) {
             files.push({
-              id: fileObj.id || 0,
+              id: fileObj.id || Date.now(),
               documentType: 'SAFETY_EDUCATION',
               fileUrl: fileObj.fileUrl || '',
               originalFileName: fileObj.originalFileName || '',
@@ -762,7 +762,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         etcDocumentFiles.forEach((fileObj) => {
           if (fileObj.file || fileObj.fileUrl) {
             files.push({
-              id: fileObj.id || 0,
+              id: fileObj.id || Date.now(),
               documentType: 'ETC_DOCUMENT',
               fileUrl: fileObj.fileUrl || '',
               originalFileName: fileObj.originalFileName || '',
@@ -771,7 +771,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         })
 
         return {
-          id: item.id || 0,
+          id: item.id || Date.now(),
           name: item.name,
           memo: item.memo,
           files,

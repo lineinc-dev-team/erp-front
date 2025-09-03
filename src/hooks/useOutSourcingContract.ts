@@ -4,7 +4,6 @@ import {
 } from '@/services/managementCost/managementCostRegistrationService'
 import {
   ContractModifyMutation,
-  ContractPersonDetailService,
   CreateOutsourcingContract,
   GetCompanyNameInfoService,
   OutsourcingContractCategoryTypeInfoService,
@@ -175,24 +174,24 @@ export default function useOutSourcingContract() {
   }
 
   // 인력 정보 조회 무한 스크롤
-  const useOutsourcingContractPersonDataQuery = (
-    outsourcingContractId: number,
-    enabled: boolean,
-  ) => {
-    return useInfiniteQuery({
-      queryKey: ['PersonList', outsourcingContractId],
-      queryFn: ({ pageParam = 0 }) =>
-        ContractPersonDetailService(outsourcingContractId, pageParam, 4, 'id,desc'),
-      initialPageParam: 0,
-      getNextPageParam: (lastPage) => {
-        const { sliceInfo } = lastPage?.data
-        const nextPage = sliceInfo?.page + 1
+  // const useOutsourcingContractPersonDataQuery = (
+  //   outsourcingContractId: number,
+  //   enabled: boolean,
+  // ) => {
+  //   return useInfiniteQuery({
+  //     queryKey: ['PersonList', outsourcingContractId],
+  //     queryFn: ({ pageParam = 0 }) =>
+  //       ContractPersonDetailService(outsourcingContractId, pageParam, 4, 'id,desc'),
+  //     initialPageParam: 0,
+  //     getNextPageParam: (lastPage) => {
+  //       const { sliceInfo } = lastPage?.data
+  //       const nextPage = sliceInfo?.page + 1
 
-        return sliceInfo?.hasNext ? nextPage : undefined
-      },
-      enabled: enabled && !!outsourcingContractId && !isNaN(outsourcingContractId),
-    })
-  }
+  //       return sliceInfo?.hasNext ? nextPage : undefined
+  //     },
+  //     enabled: enabled && !!outsourcingContractId && !isNaN(outsourcingContractId),
+  //   })
+  // }
 
   // 현장명, 공정명 무한 스크롤 기능
 
@@ -362,8 +361,6 @@ export default function useOutSourcingContract() {
     ContractModifyBtn,
     OutsourcingContractDeleteMutation,
     useOutsourcingContractHistoryDataQuery,
-
-    useOutsourcingContractPersonDataQuery,
 
     // 업체명
     setCompanySearch,

@@ -206,22 +206,14 @@ export async function ContractDetailService(outsourcingContractId: number) {
 }
 
 // 외주업체 계약 상세(인력 정보)
-export async function ContractPersonDetailService(
-  outsourcingContractId: number,
-  page: number = 0,
-  size: number,
-  sort: string,
-) {
-  const res = await fetch(
-    `${API.OUTSOURCINGCONTRACT}/${outsourcingContractId}/workers?page=${page}&size=${size}&sort=${sort}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
+export async function ContractPersonDetailService(outsourcingContractId: number) {
+  const res = await fetch(`${API.OUTSOURCINGCONTRACT}/${outsourcingContractId}/workers`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
     },
-  )
+    credentials: 'include',
+  })
   if (!res.ok) {
     if (res.status === 401) {
       // 로그인 페이지로 이동

@@ -36,6 +36,7 @@ import AmountInput from '@/components/common/AmountInput'
 import {
   ContractDetailService,
   ContractEquipmentDetailService,
+  ContractPersonDetailService,
   GetCompanyNameInfoService,
   OutsourcingConstructionDetailService,
   OutsourcingDriverDetailService,
@@ -110,7 +111,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     deduMethodOptions,
     ContractModifyBtn,
     useOutsourcingContractHistoryDataQuery,
-    useOutsourcingContractPersonDataQuery,
     statusMethodOptions,
     categoryMethodOptions,
   } = useOutSourcingContract()
@@ -194,6 +194,13 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     enabled: isEditMode && !!outsourcingContractId, // 수정 모드일 때만 fetch
   })
 
+  // 인력
+  const { data: outsourcingPersonList } = useQuery({
+    queryKey: ['OutsourcingPersonDetailInfo'],
+    queryFn: () => ContractPersonDetailService(outsourcingContractId),
+    enabled: isEditMode && !!outsourcingContractId && contractDetailData?.data?.type === '용역', // 타입이 장비일 때만
+  })
+
   // 공사데이터
   const { data: contractConstructionDetailData } = useQuery({
     queryKey: ['OutsourcingConstructionDetailInfo'],
@@ -249,15 +256,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     isFetchingNextPage,
     isLoading,
   } = useOutsourcingContractHistoryDataQuery(outsourcingContractId, isEditMode)
-
-  // 무한스크롤을 위한 인력 정보
-  const {
-    data: outsourcingPersonList,
-    fetchNextPage: outsourcingPersonFetchNextPage,
-    hasNextPage: outsourcingPersonHasNextPage,
-    isFetchingNextPage: outsourcingPersonIsFetchingNextPage,
-    isLoading: outsourcingPersonIsLoading,
-  } = useOutsourcingContractPersonDataQuery(outsourcingContractId, isEditMode)
 
   const historyList = useContractFormStore((state) => state.form.changeHistories)
 
@@ -410,14 +408,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     }
   }, [contractDetailData, isEditMode, processOptions])
 
-  // 업체명이 지워졌을때 보이는 로직
-
-  // console.log('updatedSiteOptionsupdatedSiteOptionsupdatedSiteOptions445', updatedSiteOptions)
-  // console.log(
-  //   'updatedProcessOptionsupdatedProcessOptionsupdatedProcessOptions',
-  //   updatedProcessOptions,
-  // )
-
   const [updatedCompanyOptions, setUpdatedCompanyOptions] = useState(companyOptions)
 
   useEffect(() => {
@@ -475,7 +465,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     if (contractDetailData && isEditMode === true) {
       const client = contractDetailData.data
 
-      console.log('은행 정보를 보자 ', client)
+      console.log('cleint@@', client)
 
       function parseLandlineNumber(landline: string) {
         if (!landline) return { managerAreaNumber: '', landlineNumber: '' }
@@ -521,7 +511,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
         }
       })
 
-      // 첨부파일 데이터 가공
       const formattedFiles = (client.files ?? [])
         .map((item: OutsourcingContractAttachedFile) => ({
           id: item.id,
@@ -530,27 +519,25 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
           type: item.typeCode,
           files: [
             {
-              fileUrl: item.fileUrl && item.fileUrl.trim() !== '' ? item.fileUrl : null,
-              originalFileName:
-                item.originalFileName && item.originalFileName.trim() !== ''
-                  ? item.originalFileName
-                  : null,
+              fileUrl: item.fileUrl || '', // null 대신 안전하게 빈 문자열
+              originalFileName: item.originalFileName || '',
             },
           ],
         }))
         .sort((a: OutsourcingContractAttachedFile, b: OutsourcingContractAttachedFile) => {
-          if (a.type === 'CONTRACT' || a.type === 'GUARANTEE') return -1
-          if (b.type === 'CONTRACT' || b.type === 'GUARANTEE') return 1
-          return 0
+          const priority = ['CONTRACT', 'GUARANTEE'] // 우선순위 정의
+          const aPriority = priority.includes(a.type) ? 0 : 1
+          const bPriority = priority.includes(b.type) ? 0 : 1
+          return aPriority - bPriority
         })
 
       // 각 필드에 set
-      setField('siteId', client.site.id)
-      setField('processId', client.siteProcess.id)
-      setField('CompanyId', client.outsourcingCompany.id)
-      setField('businessNumber', client.outsourcingCompany.businessNumber)
-      setField('type', client.typeCode)
-      setField('typeDescription', client.typeDescription)
+      setField('siteId', client.site?.id)
+      setField('processId', client.siteProcess?.id)
+      setField('CompanyId', client.outsourcingCompany?.id)
+      setField('businessNumber', client.outsourcingCompany?.businessNumber)
+      setField('type', client?.typeCode)
+      setField('typeDescription', client?.typeDescription)
 
       // 계약 기간
       setField('contractStartDate', new Date(client.contractStartDate) || null)
@@ -584,29 +571,23 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       setField('attachedFiles', formattedFiles)
 
       if (client.type === '용역') {
-        // 모든 페이지 데이터를 합치기
-        const allPersonPages = outsourcingPersonList?.pages ?? []
-        console.log(
-          'outsourcingPersonListoutsourcingPersonListoutsourcingPersonListoutsourcingPersonList',
-          outsourcingPersonList,
-        )
-        const getPersonData = allPersonPages.flatMap((page) => {
-          const content = page.data.content ?? []
-          return content.map((item: OutsourcingContractPersonAttachedFile) => ({
-            id: item.id,
-            name: item.name,
-            memo: item.memo,
-            category: item.category,
-            taskDescription: item.taskDescription,
-            files: (item.files ?? []).map((file) => ({
-              id: file.id,
-              fileUrl: file.fileUrl,
-              originalFileName: file.originalFileName,
-            })),
-          }))
-        })
+        const getContractItems =
+          outsourcingPersonList?.data?.content?.map(
+            (item: OutsourcingContractPersonAttachedFile) => ({
+              id: item.id,
+              name: item.name,
+              memo: item.memo,
+              category: item.category,
+              taskDescription: item.taskDescription,
+              files: (item.files ?? []).map((file) => ({
+                id: file.id,
+                fileUrl: file.fileUrl,
+                originalFileName: file.originalFileName,
+              })),
+            }),
+          ) ?? []
 
-        setField('personManagers', getPersonData)
+        setField('personManagers', getContractItems)
       } else if (client.type === '공사') {
         const contractData = contractConstructionDetailData?.data
 
@@ -670,10 +651,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                   f.documentTypeCode !== 'SAFETY_EDUCATION',
               )
 
-              console.log('driverLicenseFilesdriverLicenseFiles', driverLicenseFiles)
-              console.log('safetyEducationFiles', safetyEducationFiles)
-              console.log('etcFiles', etcFiles)
-
               return {
                 id: item.id,
                 name: item.name,
@@ -713,6 +690,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
           )
           setField('articleManagers', getArticleItems)
         }
+      } else if (client.type === '기타') {
       }
     } else {
       reset()
@@ -726,6 +704,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     isEditMode,
     reset,
     setField,
+    companyOptions,
   ])
 
   const formatChangeDetail = (getChanges: string) => {
@@ -816,29 +795,29 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
   // 인력 쪽 무한 스크롤 콜백함수구현
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
-  const loadMorePersonRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (!node || outsourcingPersonIsLoading || outsourcingPersonIsFetchingNextPage) return
+  // const loadMorePersonRef = useCallback(
+  //   (node: HTMLDivElement | null) => {
+  //     if (!node || outsourcingPersonIsLoading || outsourcingPersonIsFetchingNextPage) return
 
-      const observer = new IntersectionObserver(
-        (entries) => {
-          if (entries[0].isIntersecting && outsourcingPersonHasNextPage) {
-            outsourcingPersonFetchNextPage()
-          }
-        },
-        { root: scrollContainerRef.current, threshold: 0.5 },
-      )
+  //     const observer = new IntersectionObserver(
+  //       (entries) => {
+  //         if (entries[0].isIntersecting && outsourcingPersonHasNextPage) {
+  //           outsourcingPersonFetchNextPage()
+  //         }
+  //       },
+  //       { root: scrollContainerRef.current, threshold: 0.5 },
+  //     )
 
-      observer.observe(node)
-      return () => observer.unobserve(node)
-    },
-    [
-      outsourcingPersonFetchNextPage,
-      outsourcingPersonIsFetchingNextPage,
-      outsourcingPersonIsLoading,
-      outsourcingPersonHasNextPage,
-    ],
-  )
+  //     observer.observe(node)
+  //     return () => observer.unobserve(node)
+  //   },
+  //   [
+  //     outsourcingPersonFetchNextPage,
+  //     outsourcingPersonIsFetchingNextPage,
+  //     outsourcingPersonIsLoading,
+  //     outsourcingPersonHasNextPage,
+  //   ],
+  // )
 
   const [isChecked, setIsChecked] = useState(false)
 
@@ -1795,13 +1774,13 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     </TableCell>
                   </TableRow>
                 ))}
-                {outsourcingPersonHasNextPage && (
+                {/* {outsourcingPersonHasNextPage && (
                   <TableRow>
                     <TableCell colSpan={6} align="center">
                       <div ref={loadMorePersonRef}>불러오는 중...</div>
                     </TableCell>
                   </TableRow>
-                )}
+                )} */}
               </TableBody>
             </Table>
           </TableContainer>
