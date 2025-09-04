@@ -151,8 +151,6 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
     }
   }, [data, isEditMode, userOptions])
 
-  console.log('userOptionsuserOptions', updatedUserOptions)
-
   useEffect(() => {
     if (data && isEditMode === true) {
       const client = data.data

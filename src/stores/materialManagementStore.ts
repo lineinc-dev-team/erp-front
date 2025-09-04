@@ -32,7 +32,7 @@ export const useMaterialSearchStore = create<{ search: MaterialSearchState }>((s
     deliveryEndDate: null,
     arraySort: '최신순',
     currentPage: 1,
-    pageCount: '10',
+    pageCount: '20',
 
     setField: (field, value) =>
       set((state) => ({
@@ -61,7 +61,7 @@ export const useMaterialSearchStore = create<{ search: MaterialSearchState }>((s
           deliveryEndDate: null,
           arraySort: '최신순',
           currentPage: 1,
-          pageCount: '10',
+          pageCount: '20',
           searchTrigger: 0,
         },
       })),
@@ -318,7 +318,7 @@ export const useManagementMaterialFormStore = create<MaterialFormStore>((set, ge
           // 파일이 없을 경우에도 name, memo는 전송
           return [
             {
-              id: f.id || 0,
+              id: f.id || Date.now(),
               fileUrl: '',
               originalFileName: '',
               memo: f.memo || '',
@@ -328,12 +328,16 @@ export const useManagementMaterialFormStore = create<MaterialFormStore>((set, ge
 
         // 파일이 있을 경우
         return f.files.map((fileObj: FileUploadInfo) => ({
-          id: f.id || 0,
+          id: f.id || Date.now(),
           fileUrl: fileObj.fileUrl || '',
-          originalFileName: fileObj.file?.name || '',
+          originalFileName: fileObj.name || fileObj.originalFileName,
           memo: f.memo || '',
         }))
       }),
+      initialDeliveryDateAt: undefined,
+      checkedAttachedFileIds: undefined,
+      checkedMaterialItemIds: undefined,
+      modificationHistory: undefined,
       changeHistories: form.editedHistories ?? [],
     }
   },

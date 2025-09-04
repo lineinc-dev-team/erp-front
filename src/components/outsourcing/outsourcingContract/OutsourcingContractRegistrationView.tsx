@@ -305,59 +305,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     }
   }, [contractDetailData, isEditMode, sitesOptions])
 
-  // useEffect(() => {
-  //   if (isEditMode && contractDetailData) {
-  //     const client = contractDetailData.data
-  //     const newProcessOptions = [...processOptions]
-
-  //     if (client.siteProcess) {
-  //       // site 또는 process 삭제 여부 반영
-  //       const isDeleted = (client.siteProcess.deleted || client.site?.deleted) ?? false
-
-  //       console.log('existsexists isDeleted', isDeleted)
-
-  //       const processName = client.siteProcess.name + (isDeleted ? ' (삭제됨)' : '')
-
-  //       // 이미 옵션에 있는지 체크
-  //       const exists = newProcessOptions.some((p) => p.id === client.siteProcess.id)
-  //       if (!exists) {
-  //         newProcessOptions.push({
-  //           id: client.siteProcess.id,
-  //           name: processName,
-  //           deleted: isDeleted,
-  //         })
-  //       }
-
-  //       console.log('existsexists 공정명', exists)
-  //       console.log('newProcessOptions24', newProcessOptions)
-
-  //       // 선택값 세팅
-  //       setField('processId', client.siteProcess.id)
-  //       setField('processName', processName)
-  //     }
-
-  //     // 삭제된 공정 / 일반 공정 분리
-  //     const deletedProcesses = newProcessOptions.filter((p) => p.deleted)
-  //     const normalProcesses = newProcessOptions.filter((p) => !p.deleted && p.id !== 0)
-
-  //     // 최종 옵션 배열 세팅
-  //     setUpdatedProcessOptions([
-  //       newProcessOptions.find((s) => s.id === 0) ?? { id: 0, name: '선택', deleted: false },
-  //       ...deletedProcesses,
-  //       ...normalProcesses,
-  //     ])
-  //     // 선택된 유저 id 세팅
-  //     setField('processId', client.siteProcess?.id ?? 0)
-  //   } else {
-  //     // 등록 모드
-  //     setUpdatedProcessOptions([
-  //       { id: 0, name: '선택', deleted: false },
-  //       ...processOptions.filter((p) => p.id !== 0),
-  //     ])
-  //     setField('processId', 0)
-  //   }
-  // }, [contractDetailData, isEditMode, processOptions])
-
   useEffect(() => {
     if (isEditMode && contractDetailData) {
       const client = contractDetailData.data
@@ -367,10 +314,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       const newProcessOptions = [...updatedProcessOptions, ...processOptions]
         .filter((p, index, self) => index === self.findIndex((el) => el.id === p.id)) // id 중복 제거
         .filter((p) => p.id === 0 || p.deleted || (!p.deleted && p.id !== 0)) // 조건 필터링
-
-      console.log('매번 불러오는 공정명', newProcessOptions)
-
-      console.log('매번 불러오는 processOptions', processOptions)
 
       if (client.siteProcess) {
         const isDeleted = client.siteProcess.deleted || client.site?.deleted
@@ -397,16 +340,11 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
         ...deletedProcesses,
         ...normalProcesses,
       ])
-    } else {
+    } else if (!isEditMode) {
       // 등록 모드
-      setUpdatedProcessOptions([
-        { id: 0, name: '선택', deleted: false },
-        ...processOptions.filter((p) => p.id !== 0),
-      ])
-      console.log('setUpdatedProcessOptions', updatedProcessOptions)
-      setField('processId', 0)
+      setUpdatedProcessOptions(processOptions)
     }
-  }, [contractDetailData, isEditMode, processOptions])
+  }, [contractDetailData, isEditMode, processOptions, setField])
 
   const [updatedCompanyOptions, setUpdatedCompanyOptions] = useState(companyOptions)
 
@@ -1001,8 +939,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     selectedSite.name + (selectedSite.deleted ? ' (삭제됨)' : ''),
                   )
 
-                  console.log('현재 현장명!', selectedSite)
-
                   if (selectedSite.deleted) {
                     const deletedProcess = updatedProcessOptions.find(
                       (p) => p.id === contractDetailData?.data.siteProcess?.id,
@@ -1132,7 +1068,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     return
                   }
 
-                  // 🔹 정상 업체는 API 호출
                   const res = await GetCompanyNameInfoService({
                     pageParam: 0,
                     keyword: '',

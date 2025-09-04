@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
 import CommonInput from '../common/Input'
@@ -26,8 +27,13 @@ import {
 import { MaterialDetailService } from '@/services/materialManagement/materialManagementRegistrationService'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { useCallback, useEffect, useRef } from 'react'
-import { AttachedFile, DetailItem, HistoryItem } from '@/types/materialManagement'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  AttachedFile,
+  DetailItem,
+  HistoryItem,
+  ManagementMaterialFormState,
+} from '@/types/materialManagement'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import { SupplyPriceInput, TotalInput, VatInput } from '@/utils/supplyVatTotalInput'
@@ -142,6 +148,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     quantity: '수량',
     supplyPrice: '공급가',
     usage: '사용용도',
+    originalFileName: '파일 추가',
   }
 
   const {
@@ -153,6 +160,144 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
   } = useMaterialHistoryDataQuery(materialDetailId, isEditMode)
 
   const historyList = useManagementMaterialFormStore((state) => state.form.changeHistories)
+
+  // 현장명이 없는 경우 삭제됨
+
+  const [updatedSiteOptions, setUpdatedSiteOptions] = useState(sitesOptions)
+  const [updatedProcessOptions, setUpdatedProcessOptions] = useState(processOptions)
+
+  useEffect(() => {
+    if (data && isEditMode) {
+      const client = data.data
+
+      // 기존 siteOptions 복사
+      const newSiteOptions = [...sitesOptions]
+
+      if (client.site) {
+        const siteName = client.site.name + (client.site.deleted ? ' (삭제됨)' : '')
+
+        // 이미 options에 있는지 체크
+        const exists = newSiteOptions.some((s) => s.id === client.site.id)
+        if (!exists) {
+          newSiteOptions.push({
+            id: client.site.id,
+            name: siteName,
+            deleted: client.site.deleted,
+          })
+        }
+      }
+
+      // 삭제된 현장 / 일반 현장 분리
+      const deletedSites = newSiteOptions.filter((s) => s.deleted)
+      const normalSites = newSiteOptions.filter((s) => !s.deleted && s.id !== 0)
+
+      // 최종 옵션 배열 세팅
+      setUpdatedSiteOptions([
+        newSiteOptions.find((s) => s.id === 0) ?? { id: 0, name: '선택', deleted: false },
+        ...deletedSites,
+        ...normalSites,
+      ])
+
+      // 선택된 현장 id 세팅
+      setField('siteId', client.site?.id ?? 0)
+      setField('siteProcessId', client.site?.id ?? 0)
+    } else if (!isEditMode) {
+      // 등록 모드
+      setUpdatedSiteOptions(sitesOptions)
+      setField('siteId', 0)
+    }
+  }, [data, isEditMode, sitesOptions, setField])
+
+  useEffect(() => {
+    if (isEditMode && data) {
+      const client = data.data
+
+      // 이전 상태 기반으로 새 배열 생성
+
+      let newProcessOptions = [...processOptions]
+
+      if (client.process) {
+        const isDeleted = client.process.deleted
+        const processName = client.process.name + (isDeleted ? ' (삭제됨)' : '')
+
+        // options에 없으면 추가
+        if (!newProcessOptions.some((p) => p.id === client.process.id)) {
+          newProcessOptions.push({
+            id: client.process.id,
+            name: processName,
+            deleted: isDeleted,
+          })
+        } else {
+          // 이미 있으면 이름 갱신
+          newProcessOptions = newProcessOptions.map((p) =>
+            p.id === client.process.id ? { ...p, name: processName, deleted: isDeleted } : p,
+          )
+        }
+
+        setField('siteProcessId', client.process.id)
+        setField('siteProcessName', processName)
+      }
+
+      console.log('newProcessOptions24', newProcessOptions)
+
+      setUpdatedProcessOptions([...newProcessOptions])
+    } else if (!isEditMode) {
+      // 등록 모드
+      setUpdatedProcessOptions(processOptions)
+    }
+  }, [data, isEditMode, processOptions, setField])
+
+  const [updatedCompanyOptions, setUpdatedCompanyOptions] = useState(companyOptions)
+
+  useEffect(() => {
+    if (data && isEditMode) {
+      const client = data.data
+
+      const newCompanyOptions = [...companyOptions]
+
+      if (client.company) {
+        const companyName = client.company.name + (client.company.deleted ? ' (삭제됨)' : '')
+
+        // 이미 options에 있는지 체크
+        const exists = newCompanyOptions.some((c) => c.id === client.company.id)
+        if (!exists) {
+          newCompanyOptions.push({
+            id: client.company.id,
+            name: companyName,
+            businessNumber: client.company.businessNumber ?? '',
+            ceoName: client.company.ceoName ?? '',
+            bankName: client.company.bankName ?? '',
+            accountNumber: client.company.accountNumber ?? '',
+            accountHolder: client.company.accountHolder ?? '',
+            deleted: client.company.deleted,
+          })
+        }
+      }
+
+      const deletedCompanies = newCompanyOptions.filter((c) => c.deleted)
+      const normalCompanies = newCompanyOptions.filter((c) => !c.deleted && c.id !== 0)
+
+      setUpdatedCompanyOptions([
+        newCompanyOptions.find((c) => c.id === 0) ?? {
+          id: 0,
+          name: '선택',
+          businessNumber: '',
+          ceoName: '',
+          bankName: '',
+          accountNumber: '',
+          accountHolder: '',
+          deleted: false,
+        },
+        ...deletedCompanies,
+        ...normalCompanies,
+      ])
+
+      setField('outsourcingCompanyId', client.company?.id ?? 0)
+    } else if (!isEditMode) {
+      setUpdatedCompanyOptions(companyOptions)
+      setField('outsourcingCompanyId', 0) // "선택" 기본값
+    }
+  }, [data, isEditMode, companyOptions])
 
   useEffect(() => {
     if (data && isEditMode === true) {
@@ -181,10 +326,8 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
         memo: item.memo,
         files: [
           {
-            publicUrl: item.fileUrl,
-            file: {
-              name: item.originalFileName,
-            },
+            fileUrl: item.fileUrl || '', // null 대신 안전하게 빈 문자열
+            originalFileName: item.originalFileName || '',
           },
         ],
       }))
@@ -231,7 +374,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
           if (before === 'null') {
             before = '추가'
             style = { color: '#1976d2' } // 파란색 - 추가
-          } else if (after === 'null') {
+          } else if (after === 'null' || after === '') {
             after = '삭제'
             style = { color: '#d32f2f' } // 빨간색 - 삭제
           }
@@ -288,6 +431,50 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading],
   )
 
+  function validateMaterialForm(form: ManagementMaterialFormState) {
+    if (!form.siteId) return '현장을 선택해주세요.'
+    if (!form.siteProcessId) return '공정을 선택해주세요.'
+    if (!form.inputType?.trim()) return '투입구분을 선택해주세요.'
+    if (!form.inputTypeDescription?.trim()) return '투입구분 설명을 입력해주세요.'
+    if (!form.deliveryDate) return '납품일자를 선택해주세요.'
+    if (!form.outsourcingCompanyId) return '자재업체를 선택해주세요.'
+
+    // 자재 유효성 체크
+    if (managers.length > 0) {
+      for (const item of managers) {
+        if (!item.name?.trim()) return '자재의 품명을 입력해주세요.'
+        if (!item.standard?.trim()) return '자재의 규격을 입력해주세요.'
+        if (!item.usage?.trim()) return '자재의 사용용도를 입력해주세요.'
+        if (!item.quantity) return '자재의 수량을 입력해주세요.'
+        if (!item.unitPrice) return '자재의 단가를 입력해주세요.'
+        if (!item.supplyPrice) return '자재의 공급가를 입력해주세요.'
+      }
+    }
+
+    return null
+  }
+
+  const handleMaterialSubmit = () => {
+    const errorMsg = validateMaterialForm(form)
+    if (errorMsg) {
+      showSnackbar(errorMsg, 'warning')
+      return
+    }
+
+    if (!form.details || form.details.length === 0) {
+      showSnackbar('자재 항목을 1개 이상 입력해주세요.', 'warning')
+      return
+    }
+
+    if (isEditMode) {
+      if (window.confirm('수정하시겠습니까?')) {
+        MaterialModifyMutation.mutate(materialDetailId)
+      }
+    } else {
+      createMaterialMutation.mutate()
+    }
+  }
+
   return (
     <>
       <div>
@@ -302,11 +489,17 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                 fullWidth
                 value={form.siteId || 0}
                 onChange={async (value) => {
-                  const selectedSite = sitesOptions.find((opt) => opt.id === value)
+                  const selectedSite = updatedSiteOptions.find((opt) => opt.id === value)
                   if (!selectedSite) return
 
                   setField('siteId', selectedSite.id)
                   setField('siteName', selectedSite.name)
+
+                  if (selectedSite.deleted) {
+                    setField('siteProcessId', selectedSite.id || '')
+
+                    return
+                  }
 
                   const res = await SitesProcessNameScroll({
                     pageParam: 0,
@@ -315,6 +508,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                   })
 
                   const processes = res.data?.content || []
+                  console.log('받아온 공정명', processes)
                   if (processes.length > 0) {
                     setField('siteProcessId', processes[0].id)
                     setField('siteProcessName', processes[0].name)
@@ -323,7 +517,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                     setField('siteProcessName', '')
                   }
                 }}
-                options={sitesOptions}
+                options={updatedSiteOptions}
                 onScrollToBottom={() => {
                   if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
                 }}
@@ -342,13 +536,13 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                 className="text-xl"
                 value={form.siteProcessId || 0}
                 onChange={(value) => {
-                  const selectedProcess = processOptions.find((opt) => opt.name === value)
+                  const selectedProcess = updatedProcessOptions.find((opt) => opt.name === value)
                   if (selectedProcess) {
                     setField('siteProcessId', selectedProcess.id)
                     setField('siteProcessName', selectedProcess.name)
                   }
                 }}
-                options={processOptions}
+                options={updatedProcessOptions}
                 displayLabel
                 onScrollToBottom={() => {
                   if (processInfoHasNextPage && !processInfoIsFetching) processInfoFetchNextPage()
@@ -401,12 +595,12 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                 fullWidth
                 value={form.outsourcingCompanyId || 0}
                 onChange={async (value) => {
-                  const selectedCompany = companyOptions.find((opt) => opt.id === value)
+                  const selectedCompany = updatedCompanyOptions.find((opt) => opt.id === value)
                   if (!selectedCompany) return
 
                   setField('outsourcingCompanyId', selectedCompany.id)
                 }}
-                options={companyOptions}
+                options={updatedCompanyOptions}
                 onScrollToBottom={() => {
                   if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
                 }}
@@ -775,17 +969,6 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                       onChange={(e) => toggleCheckItem('attachedFile', m.id, e.target.checked)}
                     />
                   </TableCell>
-                  {/* <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
-                    <TextField
-                      size="small"
-                      placeholder="텍스트 입력"
-                      sx={{ width: '100%' }}
-                      value={m.name}
-                      onChange={(e) =>
-                        updateItemField('attachedFile', m.id, 'name', e.target.value)
-                      }
-                    />
-                  </TableCell> */}
 
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
@@ -800,11 +983,13 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                           'jpeg',
                           'ppt',
                         ]}
-                        files={(m.files ?? []).filter((f) => f.file?.name)}
-                        onChange={
-                          (newFiles) => updateItemField('attachedFile', m.id, 'files', newFiles) //  해당 항목만 업데이트
-                        }
-                        uploadTarget="CLIENT_COMPANY"
+                        multiple={false}
+                        files={m.files} // 각 항목별 files
+                        onChange={(newFiles) => {
+                          updateItemField('attachedFile', m.id, 'files', newFiles.slice(0, 1))
+                          // updateItemField('attachedFile', m.id, 'files', newFiles)
+                        }}
+                        uploadTarget="MATERIAL_MANAGEMENT"
                       />
                     </div>
                   </TableCell>
@@ -923,23 +1108,12 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
 
       <div className="flex justify-center gap-10 mt-10">
         <CommonButton label="취소" variant="reset" className="px-10" onClick={materialCancel} />
+
         <CommonButton
           label={isEditMode ? '+ 수정' : '+ 등록'}
           className="px-10 font-bold"
           variant="secondary"
-          onClick={() => {
-            if (!form.details || form.details.length === 0) {
-              showSnackbar('자재 항목을 1개 이상 입력해주세요.', 'warning')
-              return
-            }
-            if (isEditMode) {
-              if (window.confirm('수정하시겠습니까?')) {
-                MaterialModifyMutation.mutate(materialDetailId)
-              }
-            } else {
-              createMaterialMutation.mutate()
-            }
-          }}
+          onClick={handleMaterialSubmit}
         />
       </div>
     </>

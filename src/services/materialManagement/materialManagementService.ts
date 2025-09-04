@@ -13,7 +13,7 @@ export function ManagementMaterialService() {
   }
 }
 
-// 강재데이터 조회
+// 자재 조회
 export async function ManagementMaterialInfoService(params = {}) {
   const query = new URLSearchParams(params).toString()
 
@@ -38,7 +38,7 @@ export async function ManagementMaterialInfoService(params = {}) {
   return data
 }
 
-// 강재데이터 삭제
+// 자재 삭제
 export async function MaterialRemoveService(materialManagementIds: number[]) {
   const res = await fetch(API.MATERIAL, {
     method: 'DELETE',
@@ -48,19 +48,32 @@ export async function MaterialRemoveService(materialManagementIds: number[]) {
     body: JSON.stringify({ materialManagementIds }),
     credentials: 'include',
   })
+
   if (!res.ok) {
     if (res.status === 401) {
       // 로그인 페이지로 이동
       window.location.href = '/'
       return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
-    throw new Error(`서버 에러: ${res.status}`)
+
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
   }
 
   return await res.status
 }
 
-// 강재수불부 엑셀 다운로드
+// 자재 엑셀 다운로드
 export async function MaterialExcelDownload({
   sort = '',
   username = '',
@@ -109,14 +122,26 @@ export async function MaterialExcelDownload({
       window.location.href = '/'
       return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
     }
-    throw new Error(`서버 에러: ${res.status}`)
+
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
   }
 
   const blob = await res.blob()
   const url = window.URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'export23test.xlsx'
+  a.download = '자재 목록.xlsx'
   a.click()
   window.URL.revokeObjectURL(url)
 
