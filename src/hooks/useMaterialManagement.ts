@@ -198,18 +198,24 @@ export function useManagementMaterial() {
       return sliceInfo.hasNext ? nextPage : undefined
     },
   })
-
   const productOptions = useMemo(() => {
     const defaultOption = { id: 0, name: '선택' }
-    const options = (productNameInfo?.pages || [])
+
+    const allItems = (productNameInfo?.pages || [])
       .flatMap((page) => page.data.content)
-      .map((user) => ({
-        id: user.id,
-        name: user.name,
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
       }))
 
-    return [defaultOption, ...options]
+    // 중복 제거
+    const uniqueItems = allItems.filter(
+      (item, index, self) => index === self.findIndex((i) => i.name === item.name),
+    )
+
+    return [defaultOption, ...uniqueItems]
   }, [productNameInfo])
+
   return {
     createMaterialMutation,
     MaterialModifyMutation,

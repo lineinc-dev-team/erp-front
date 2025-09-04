@@ -116,13 +116,13 @@ export default function MaterialManagementView() {
         backendId: material.id, // 백엔드 수정용
         detailId: detail.id, // 백엔드 수정용
 
-        outsourcingCompanyName: material.outsourcingCompany?.name ?? '-',
-        site: material.site?.name ?? '-',
-        process: material.process?.name ?? '-',
-        deliveryDate: getTodayDateString(material.deliveryDate) ?? '-',
-        memo: material.memo ?? '-',
-        inputType: material.inputType ?? '-',
-        inputTypeDescription: material.inputTypeDescription ?? '-',
+        outsourcingCompanyName: material.outsourcingCompany?.name || '-',
+        site: material.site?.name || '-',
+        process: material.process?.name || '-',
+        deliveryDate: getTodayDateString(material.deliveryDate) || '-',
+        memo: material.memo || '-',
+        inputType: material.inputType || '-',
+        inputTypeDescription: material.inputTypeDescription || '-',
         hasFile: material.hasFile ? 'Y' : 'N',
 
         // detail 정보
