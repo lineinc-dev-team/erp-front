@@ -12,6 +12,7 @@ type CommonDatePickerProps = {
   required?: boolean
   error?: boolean
   helperText?: string
+  disabled?: boolean
 }
 
 export default function CommonDatePicker({
@@ -20,11 +21,13 @@ export default function CommonDatePicker({
   required = false,
   error = false,
   helperText = '',
+  disabled = false,
 }: CommonDatePickerProps) {
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ko}>
       <MUIDatePicker
         value={value}
+        disabled={disabled}
         onChange={(date) => {
           if (!date) return onChange(null)
 

@@ -20,6 +20,10 @@ export interface LaborDataList {
   createdAt: string
   updatedAt: string
   hasFile: boolean
+  isSeverancePayEligible: boolean
+  hasBankbook: boolean
+  hasIdCard: boolean
+  hasSignatureImage: boolean
 }
 
 export interface OutsourcingCompany {
@@ -96,7 +100,8 @@ export type LaborFormState = {
   accountHolder: string
   hireDate: Date | null
   resignationDate: Date | null
-
+  tenureDays: string
+  isSeverancePayEligible: string
   initialHireDateAt: string
   initialResignationDateAt: string
 

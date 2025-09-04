@@ -52,6 +52,7 @@ export const useContractSearchStore = create<{ search: OutsourcingContractSearch
       set((state) => ({
         search: {
           ...state.search,
+          searchTrigger: 0,
           siteId: 0,
           siteName: '',
           processId: 0,

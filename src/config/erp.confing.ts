@@ -218,9 +218,12 @@ export const LaborColumnList: GridColDef[] = [
   { field: 'accountNumber', headerName: '계좌번호', width: 100 },
   { field: 'hireDate', headerName: '입사일', width: 100 },
   { field: 'resignationDate', headerName: '퇴사일', width: 100 },
-  // { field: 'hasFile', headerName: '근속일수', width: 100 },
-  // { field: 'hasFile', headerName: '퇴직금 발생', width: 100 },
-  { field: 'hasFile', headerName: '첨부파일', width: 100 },
+  { field: 'tenureDays', headerName: '근속일수', width: 100 },
+  { field: 'isSeverancePayEligible', headerName: '퇴직금 발생', width: 100 },
+  { field: 'hasBankbook', headerName: '통장 사본', width: 100 },
+  { field: 'hasIdCard', headerName: '신분증 사본', width: 100 },
+  { field: 'hasSignatureImage', headerName: '서명 이미지', width: 100 },
+  { field: 'hasFile', headerName: '기타첨부', width: 100 },
 ]
 
 export const outsourcingCompanyList: GridColDef[] = [

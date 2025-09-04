@@ -9,7 +9,7 @@ import { Pagination } from '@mui/material'
 import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
 import ExcelModal from '../common/ExcelModal'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { laborExcelFieldMap } from '@/utils/userExcelField'
 import { useTabOpener } from '@/utils/openTab'
 import { useLaborSearchStore } from '@/stores/laborStore'
@@ -48,7 +48,7 @@ export default function LaborView() {
 
   const laborList = LaborListQuery.data?.data.content ?? []
 
-  console.log('laborList@@', etcDesOptions)
+  console.log('laborList@@', laborList)
 
   const totalList = LaborListQuery.data?.data.pageInfo.totalElements ?? 0
   const pageCount = Number(search.pageCount) || 10
@@ -61,9 +61,13 @@ export default function LaborView() {
       residentNumber: item.residentNumber,
       dailyWage: formatNumber(item.dailyWage),
       hasFile: item.hasFile ? 'Y' : 'N',
-      accountNumber: `${item.bankName} - ${item.accountNumber}`,
-      hireDate: `${getTodayDateString(item.hireDate)}`,
-      resignationDate: `${getTodayDateString(item.resignationDate)}`,
+      isSeverancePayEligible: item.isSeverancePayEligible ? 'Y' : 'N',
+      hasBankbook: item.hasBankbook ? 'Y' : 'N',
+      hasIdCard: item.hasIdCard ? 'Y' : 'N',
+      hasSignatureImage: item.hasSignatureImage ? 'Y' : 'N',
+
+      hireDate: `${getTodayDateString(item.hireDate)}` || '-',
+      resignationDate: item.resignationDate ? getTodayDateString(item.resignationDate) : '-',
     }
   })
 
@@ -73,6 +77,28 @@ export default function LaborView() {
 
   // 그리도 라우팅 로직!
   const enhancedColumns = LaborColumnList.map((col): GridColDef => {
+    if (col.field === 'accountNumber') {
+      return {
+        ...col,
+        sortable: false,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 2,
+        renderCell: (params: GridRenderCellParams) => {
+          const item = params.row as LaborDataList
+
+          return (
+            <div className="flex flex-col items-center">
+              <Fragment>
+                <div className="whitespace-pre-wrap">{item.bankName}</div>
+                <div className="whitespace-pre-wrap">{item.accountNumber}</div>
+              </Fragment>
+            </div>
+          )
+        },
+      }
+    }
+
     if (col.field === 'type') {
       return {
         ...col,
@@ -380,7 +406,18 @@ export default function LaborView() {
           disableColumnMenu
           hideFooterPagination
           // pageSize={pageSize}
-          rowHeight={60}
+          getRowHeight={() => 'auto'}
+          sx={{
+            '& .MuiDataGrid-cell': {
+              display: 'flex',
+              justifyContent: 'center', // 가로 가운데 정렬
+              alignItems: 'center', // 세로 가운데 정렬
+              whiteSpace: 'normal', // 줄바꿈 허용
+              lineHeight: '2.8rem', // 줄 간격
+              paddingTop: '12px', // 위 여백
+              paddingBottom: '12px', // 아래 여백
+            },
+          }}
           onRowSelectionModelChange={(newSelection) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setSelectedIds(newSelection as any) // 타입 보장된다면 사용 가능

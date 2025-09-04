@@ -81,6 +81,8 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
     accountHolder: '',
     hireDate: null,
     resignationDate: null,
+    tenureDays: '',
+    isSeverancePayEligible: '',
     initialHireDateAt: '',
     initialResignationDateAt: '',
     files: [
@@ -133,6 +135,8 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
         accountHolder: '',
         hireDate: null,
         resignationDate: null,
+        tenureDays: '',
+        isSeverancePayEligible: '',
         initialHireDateAt: '',
         initialResignationDateAt: '',
         files: [
@@ -299,7 +303,7 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
           id: f.id || Date.now(),
           name: f.name,
           fileUrl: fileObj.fileUrl || '',
-          originalFileName: fileObj.file?.name || '',
+          originalFileName: fileObj.name || fileObj.originalFileName,
           memo: f.memo || '',
           type: f.type,
         }))

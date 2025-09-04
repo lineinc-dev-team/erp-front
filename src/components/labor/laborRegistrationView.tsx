@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
 import DaumPostcodeEmbed from 'react-daum-postcode'
@@ -18,7 +19,7 @@ import { formatPhoneNumber } from '@/utils/formatPhoneNumber'
 import CommonFileInput from '@/components/common/FileInput'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { HistoryItem, OutsourcingAttachedFile } from '@/types/outsourcingCompany'
 import { formatDateTime, formatNumber, unformatNumber } from '@/utils/formatters'
 import CommonInput from '../common/Input'
@@ -94,6 +95,19 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     accountNumber: '계좌번호',
     accountHolder: '예금주',
     memo: '메모',
+    originalFileName: '파일 추가',
+  }
+
+  const [isChecked, setIsChecked] = useState(false)
+
+  const handleTaxCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked
+    setIsChecked(checked)
+
+    if (checked) {
+      // 체크하면 퇴사일 초기화
+      setField('resignationDate', null)
+    }
   }
 
   const {
@@ -105,44 +119,6 @@ export default function LaborRegistrationView({ isEditMode = false }) {
   } = useLaborHistoryDataQuery(laborDataId, isEditMode)
 
   const historyList = useLaborFormStore((state) => state.form.changeHistories)
-
-  // const [updatedOutSourcingCompanyOptions, setUpdatedOutSourcingCompanyOptions] =
-  //   useState(userOptions)
-
-  // useEffect(() => {
-  //   if (data && isEditMode) {
-  //     const client = data.data
-  //     const newUserOptions = [...userOptions]
-
-  //     if (client.user) {
-  //       const userName = client.user.username + (client.user.deleted ? ' (삭제됨)' : '')
-
-  //       const exists = newUserOptions.some((u) => u.id === client.user.id)
-  //       if (!exists) {
-  //         newUserOptions.push({
-  //           id: client.user.id,
-  //           name: userName,
-  //           deleted: client.user.deleted,
-  //         })
-  //       }
-  //     }
-
-  //     const deletedUsers = newUserOptions.filter((u) => u.deleted)
-  //     const normalUsers = newUserOptions.filter((u) => !u.deleted && u.id !== '0')
-
-  //     setUpdatedUserOptions([
-  //       newUserOptions.find((u) => u.id === '0')!,
-  //       ...deletedUsers,
-  //       ...normalUsers,
-  //     ])
-
-  //     setField('userId', client.user?.id ?? '0')
-  //   } else if (!isEditMode) {
-  //     // 등록 모드일 경우
-  //     setUpdatedUserOptions(userOptions)
-  //     setField('userId', 0) // "선택" 기본값
-  //   }
-  // }, [data, isEditMode, userOptions])
 
   useEffect(() => {
     if (laborDetailData && isEditMode === true) {
@@ -167,9 +143,9 @@ export default function LaborRegistrationView({ isEditMode = false }) {
         .sort((a: OutsourcingAttachedFile, b: OutsourcingAttachedFile) => {
           const order = {
             ID_CARD: 1,
-            BANKBOOK: 3,
-            SIGNATURE_IMAGE: 4,
-            DEFAULT: 2,
+            BANKBOOK: 2,
+            SIGNATURE_IMAGE: 3,
+            DEFAULT: 4,
           }
 
           const aOrder = order[a.type as keyof typeof order] ?? order.DEFAULT
@@ -211,11 +187,65 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
       setField('memo', client.memo)
       setField('files', formattedFiles)
+
+      setField('tenureDays', client.tenureDays === null ? '-' : client.tenureDays + '일')
+
+      // isSeverancePayEligible 설정
+      setField('isSeverancePayEligible', client.isSeverancePayEligible ? 'Y' : 'N')
+
+      // resignationDate 연동
+      if (client.resignationDate === null) {
+        // 퇴직금 발생하면 퇴사일 초기화
+        setIsChecked(true)
+        setField('resignationDate', null)
+      } else {
+        // 퇴직금 미발생이면 퇴사일 값이 있어야 함
+        setIsChecked(false)
+        setField('resignationDate', new Date(client.resignationDate))
+      }
     } else {
       reset()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [laborDetailData, isEditMode, reset, setField])
+
+  const [updatedOutSourcingCompanyOptions, setUpdatedOutSourcingCompanyOptions] =
+    useState(companyOptions)
+
+  useEffect(() => {
+    if (laborDetailData && isEditMode) {
+      const client = laborDetailData.data
+      const newLaborOptions = [...companyOptions]
+
+      if (client.outsourcingCompany) {
+        const laborName =
+          client.outsourcingCompany.name + (client.outsourcingCompany.deleted ? ' (삭제됨)' : '')
+
+        const exists = newLaborOptions.some((u) => u.id === client.outsourcingCompany.id)
+        if (!exists) {
+          newLaborOptions.push({
+            id: client.outsourcingCompany.id,
+            name: laborName,
+            deleted: client.outsourcingCompany.deleted,
+          })
+        }
+      }
+
+      const deletedUsers = newLaborOptions.filter((u) => u.deleted)
+      const normalUsers = newLaborOptions.filter((u) => !u.deleted && u.id !== -1)
+
+      setUpdatedOutSourcingCompanyOptions([
+        newLaborOptions.find((u) => u.id === -1)!,
+        ...deletedUsers,
+        ...normalUsers,
+      ])
+
+      setField('outsourcingCompanyId', client.outsourcingCompany?.id ?? -1)
+    } else if (!isEditMode) {
+      // 등록 모드일 경우
+      setUpdatedOutSourcingCompanyOptions(companyOptions)
+      setField('outsourcingCompanyId', -1) // "선택" 기본값
+    }
+  }, [laborDetailData, isEditMode, companyOptions])
 
   const formatChangeDetail = (getChanges: string) => {
     try {
@@ -241,7 +271,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
           if (before === 'null') {
             before = '추가'
             style = { color: '#1976d2' } // 파란색 - 추가
-          } else if (after === 'null') {
+          } else if (after === 'null' || after === '') {
             after = '삭제'
             style = { color: '#d32f2f' } // 빨간색 - 삭제
           }
@@ -411,13 +441,15 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                   fullWidth
                   value={form.outsourcingCompanyId ?? -1}
                   onChange={async (value) => {
-                    const selectedCompany = companyOptions.find((opt) => opt.id === value)
+                    const selectedCompany = updatedOutSourcingCompanyOptions.find(
+                      (opt) => opt.id === value,
+                    )
                     if (!selectedCompany) return
 
                     setField('outsourcingCompanyId', selectedCompany.id)
                     setField('outsourcingCompanyName', selectedCompany.name)
                   }}
-                  options={companyOptions}
+                  options={updatedOutSourcingCompanyOptions}
                   onScrollToBottom={() => {
                     if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
                   }}
@@ -646,34 +678,45 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                 onChange={(value) => {
                   setField('resignationDate', value)
                 }}
+                disabled={isChecked}
               />
+              <label className="flex items-center gap-1 text-sm">
+                <input type="checkbox" checked={isChecked} onChange={handleTaxCheckboxChange} />
+                미지정
+              </label>
             </div>
           </div>
-          {/* <div className="flex">
-            <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              근속일수
-            </label>
-            <div className="border border-gray-400 flex items-center px-2 w-full">
-              <CommonInput
-                value={form.dailyWage ?? ''}
-                onChange={(value) => setField('dailyWage', value)}
-                className=" flex-1"
-              />
-            </div>
-          </div>
+          {isEditMode && (
+            <>
+              <div className="flex">
+                <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+                  근속일수
+                </label>
+                <div className="border border-gray-400 flex items-center px-2 w-full">
+                  <CommonInput
+                    value={form.tenureDays ?? ''}
+                    onChange={(value) => setField('tenureDays', value)}
+                    className=" flex-1"
+                    disabled
+                  />
+                </div>
+              </div>
 
-          <div className="flex">
-            <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              퇴직금 발생 여부
-            </label>
-            <div className="border border-gray-400 flex items-center px-2 w-full">
-              <CommonInput
-                value={form.dailyWage ?? ''}
-                onChange={(value) => setField('dailyWage', value)}
-                className=" flex-1"
-              />
-            </div>
-          </div> */}
+              <div className="flex">
+                <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+                  퇴직금 발생 여부
+                </label>
+                <div className="border border-gray-400 flex items-center px-2 w-full">
+                  <CommonInput
+                    value={form.isSeverancePayEligible ? 'Y' : 'N'}
+                    onChange={(value) => setField('isSeverancePayEligible', value)}
+                    className="flex-1"
+                    disabled
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -808,7 +851,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
             <Table size="small">
               <TableHead>
                 <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                  {['No', '수정일시', '항목', '수정항목', '수정자', '비고 / 메모'].map((label) => (
+                  {['수정일시', '항목', '수정항목', '수정자', '비고 / 메모'].map((label) => (
                     <TableCell
                       key={label}
                       align="center"

@@ -208,8 +208,8 @@ export function useLaborInfo() {
 
   const companyOptions = useMemo(() => {
     const defaultOptions = [
-      { id: -1, name: '선택' },
-      { id: 0, name: '라인공영' },
+      { id: -1, name: '선택', deleted: false },
+      { id: 0, name: '라인공영', deleted: false },
     ]
 
     const options = (comPanyNameInfo?.pages || [])
@@ -217,6 +217,7 @@ export function useLaborInfo() {
       .map((user) => ({
         id: user.id,
         name: user.name,
+        deleted: false,
       }))
 
     return [...defaultOptions, ...options]
