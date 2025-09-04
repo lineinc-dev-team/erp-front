@@ -310,7 +310,7 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
           // 파일이 없을 경우에도 name, memo는 전송
           return [
             {
-              id: f.id || 0,
+              id: f.id || Date.now(),
               name: f.name,
               fileUrl: '',
               originalFileName: '',
@@ -321,10 +321,10 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
 
         // 파일이 있을 경우
         return f.files.map((fileObj: FileUploadInfo) => ({
-          id: f.id || 0,
+          id: f.id || Date.now(),
           name: f.name,
           fileUrl: fileObj.fileUrl || '',
-          originalFileName: fileObj.file?.name || '',
+          originalFileName: fileObj.name || fileObj.originalFileName,
           memo: f.memo || '',
         }))
       }),

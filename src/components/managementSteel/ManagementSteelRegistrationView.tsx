@@ -23,13 +23,18 @@ import { useManagementSteelFormStore } from '@/stores/managementSteelStore'
 import { useManagementSteel } from '@/hooks/useManagementSteel'
 import { useCallback, useEffect, useRef } from 'react'
 import { SteelDetailService } from '@/services/managementSteel/managementSteelRegistrationService'
-import { AttachedFile, DetailItem, HistoryItem } from '@/types/managementSteel'
+import {
+  AttachedFile,
+  DetailItem,
+  HistoryItem,
+  ManagementSteelFormState,
+} from '@/types/managementSteel'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import { GetCompanyNameInfoService } from '@/services/outsourcingContract/outsourcingContractRegistrationService'
 import { CompanyInfo } from '@/types/outsourcingContract'
-import { formatDateTime, getTodayDateString } from '@/utils/formatters'
+import { formatDateTime, getTodayDateString, unformatNumber } from '@/utils/formatters'
 
 export default function ManagementSteelRegistrationView({ isEditMode = false }) {
   const { showSnackbar } = useSnackbarStore()
@@ -85,8 +90,6 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     SteelApproveMutation,
     SteelReleaseMutation,
   } = useManagementSteel()
-
-  console.log('SteelTypeMethodOptionsSteelTypeMethodOptions', SteelTypeMethodOptions)
 
   // 체크 박스에 활용
   const contractAddAttachedFiles = form.details
@@ -174,10 +177,11 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         memo: item.memo,
         files: [
           {
-            publicUrl: item.fileUrl,
-            file: {
-              name: item.originalFileName,
-            },
+            fileUrl: item.fileUrl && item.fileUrl.trim() !== '' ? item.fileUrl : null,
+            originalFileName:
+              item.originalFileName && item.originalFileName.trim() !== ''
+                ? item.originalFileName
+                : null,
           },
         ],
       }))
@@ -281,6 +285,65 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     },
     [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading],
   )
+
+  function validateSteelForm(form: ManagementSteelFormState) {
+    // 기본 정보
+    if (!form.siteId) return '현장명을 선택하세요.'
+    if (!form.siteProcessId) return '공정명을 선택하세요.'
+    if (form.type === 'BASE') return '구분을 선택하세요.'
+
+    if (!form.usage?.trim()) return '용도를 입력하세요.'
+    if (!form.startDate) return '시작일을 선택하세요.'
+    if (!form.endDate) return '종료일을 선택하세요.'
+    if (form.startDate && form.endDate && new Date(form.startDate) > new Date(form.endDate))
+      return '종료일은 시작일 이후여야 합니다.'
+
+    // type이 PURCHASE 또는 LEASE일 경우 거래선 필수
+    if (['PURCHASE', 'LEASE'].includes(form.type)) {
+      if (!form.outsourcingCompanyId) return '업체명을 선택하세요.'
+      if (!form.businessNumber?.trim()) return '사업자등록번호를 입력하세요.'
+    }
+
+    if (contractAddAttachedFiles.length > 0) {
+      for (const item of contractAddAttachedFiles) {
+        if (!item.standard?.trim()) return '규격을 입력해주세요.'
+        if (!item.name?.trim()) return '품명을 입력해주세요.'
+        if (!item.unit?.trim()) return '단위를 입력해주세요.'
+        if (!item.count) return '본 수량을 입력해주세요.'
+        if (!item.length) return '길이를 입력해주세요.'
+        if (!item.totalLength) return '총 길이를 입력해주세요.'
+        if (!item.unitWeight) return '단위중량을 입력해주세요.'
+        if (!item.quantity) return '수량을 입력해주세요.'
+        if (!item.unitPrice) return '단가를 입력해주세요.'
+        if (!item.supplyPrice) return '공급가를 입력해주세요.'
+      }
+    }
+
+    // 첨부파일 이름 체크
+    if (attachedFiles.length > 0) {
+      for (const file of attachedFiles) {
+        if (!file.name?.trim()) return '첨부파일의 이름을 입력해주세요.'
+      }
+    }
+
+    return null
+  }
+
+  const handleSteelSubmit = () => {
+    const errorMsg = validateSteelForm(form)
+    if (errorMsg) {
+      showSnackbar(errorMsg, 'warning')
+      return
+    }
+
+    if (isEditMode) {
+      if (window.confirm('수정하시겠습니까?')) {
+        SteelModifyMutation.mutate(steelDetailId)
+      }
+    } else {
+      createSteelMutation.mutate()
+    }
+  }
 
   return (
     <>
@@ -759,17 +822,18 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
 
                   {/* 외주계약금액 금액 */}
                   <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                    {' '}
                     <TextField
                       size="small"
-                      placeholder="숫자만"
-                      value={m.quantity || ''}
-                      onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'quantity', e.target.value)
-                      }
-                      inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
-                      fullWidth
-                    />{' '}
+                      placeholder="'-'없이 숫자만 입력"
+                      value={m.quantity}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        updateItemField('MaterialItem', m.id, 'quantity', formatted)
+                      }}
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                    />
                   </TableCell>
 
                   <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
@@ -783,7 +847,12 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
 
                         updateItemField('MaterialItem', m.id, 'unitPrice', isNaN(num) ? 0 : num)
                       }}
-                      inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                      inputProps={{
+                        sx: { textAlign: 'right' },
+
+                        inputMode: 'numeric',
+                        pattern: '[0-9]*',
+                      }}
                       fullWidth
                     />
                   </TableCell>
@@ -799,7 +868,11 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
 
                         updateItemField('MaterialItem', m.id, 'supplyPrice', isNaN(num) ? 0 : num)
                       }}
-                      inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                      inputProps={{
+                        sx: { textAlign: 'right' },
+                        inputMode: 'numeric',
+                        pattern: '[0-9]*',
+                      }}
                       fullWidth
                     />
                   </TableCell>
@@ -943,10 +1016,12 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           'jpeg',
                           'ppt',
                         ]}
+                        multiple={false}
                         files={m.files} // 각 항목별 files
-                        onChange={
-                          (newFiles) => updateItemField('attachedFile', m.id, 'files', newFiles) //  해당 항목만 업데이트
-                        }
+                        onChange={(newFiles) => {
+                          updateItemField('attachedFile', m.id, 'files', newFiles.slice(0, 1))
+                          // updateItemField('attachedFile', m.id, 'files', newFiles)
+                        }}
                         uploadTarget="CLIENT_COMPANY"
                       />
                     </div>
@@ -1071,17 +1146,12 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
           className="px-10"
           onClick={() => console.log('취소')}
         />
+
         <CommonButton
           label={isEditMode ? '+ 수정' : '+ 등록'}
           className="px-10 font-bold"
           variant="secondary"
-          onClick={() => {
-            if (isEditMode) {
-              SteelModifyMutation.mutate(steelDetailId)
-            } else {
-              createSteelMutation.mutate()
-            }
-          }}
+          onClick={handleSteelSubmit}
         />
 
         {/* 승인 버튼 */}

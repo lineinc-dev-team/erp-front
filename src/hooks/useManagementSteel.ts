@@ -34,8 +34,13 @@ export function useManagementSteel() {
       reset()
       router.push('/managementSteel')
     },
-    onError: () => {
-      showSnackbar('강재관리 등록에 실패했습니다.', 'error')
+
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('강재관리 등록에 실패했습니다.', 'error')
+      }
     },
   })
 
@@ -108,8 +113,12 @@ export function useManagementSteel() {
       queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
     },
 
-    onError: () => {
-      showSnackbar('강재 관리 삭제에 실패했습니다.', 'error')
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('강재 관리 삭제에 실패했습니다.', 'error')
+      }
     },
   })
 
@@ -161,8 +170,12 @@ export function useManagementSteel() {
       }
     },
 
-    onError: () => {
-      showSnackbar('강재수불부 수정에 실패했습니다.', 'error')
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('강재수불부 수정에 실패했습니다.', 'error')
+      }
     },
   })
 
