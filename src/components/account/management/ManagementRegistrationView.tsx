@@ -24,7 +24,7 @@ import {
   TableRow,
   TextField,
 } from '@mui/material'
-import { getTodayDateString } from '@/utils/formatters'
+import { formatDateTime } from '@/utils/formatters'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 
 export default function ManagementRegistrationView({ isEditMode = false }) {
@@ -75,6 +75,8 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
   } = useHistoryDataQuery(userDetailId, isEditMode)
 
   const historyList = useAccountFormStore((state) => state.form.changeHistories)
+
+  console.log('historyList', historyList)
 
   useEffect(() => {
     if (data && isEditMode) {
@@ -143,8 +145,8 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
         page.data.content.map((item: HistoryItem) => ({
           id: item.id,
           content: formatChangeDetail(item.getChanges), // 여기 변경
-          createdAt: getTodayDateString(item.createdAt),
-          updatedAt: getTodayDateString(item.updatedAt),
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
           updatedBy: item.updatedBy,
           memo: item.memo ?? '',
         })),
@@ -421,7 +423,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
             <Table size="small">
               <TableHead>
                 <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                  {['No', '수정일시', '수정항목', '수정자', '비고 / 메모'].map((label) => (
+                  {['수정일시', '수정항목', '수정자', '비고 / 메모'].map((label) => (
                     <TableCell
                       key={label}
                       align="center"
@@ -439,13 +441,10 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
               </TableHead>
               <TableBody>
                 {historyList &&
-                  historyList.map((item: HistoryItem, index) => (
+                  historyList.map((item: HistoryItem) => (
                     <TableRow key={item.id}>
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        {index + 1}
-                      </TableCell>
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        {item.createdAt} / {item.updatedAt}
+                        {formatDateTime(item.createdAt)} / {formatDateTime(item.updatedAt)}
                       </TableCell>
                       <TableCell
                         align="left"

@@ -36,7 +36,7 @@ import {
   OutsourcingFormState,
   OutsourcingManager,
 } from '@/types/outsourcingCompany'
-import { getTodayDateString } from '@/utils/formatters'
+import { formatDateTime, getTodayDateString } from '@/utils/formatters'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 
 export default function OutsourcingCompanyRegistrationView({ isEditMode = false }) {
@@ -328,8 +328,8 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
           id: item.id,
           type: item.type,
           content: formatChangeDetail(item.getChanges), // 여기 변경
-          createdAt: getTodayDateString(item.createdAt),
-          updatedAt: getTodayDateString(item.updatedAt),
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
           updatedBy: item.updatedBy,
           memo: item.memo ?? '',
         })),
@@ -1059,13 +1059,10 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                 </TableRow>
               </TableHead>
               <TableBody>
-                {historyList.map((item: HistoryItem, index) => (
+                {historyList.map((item: HistoryItem) => (
                   <TableRow key={item.id}>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {index + 1}
-                    </TableCell>
-                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {item.createdAt} / {item.updatedAt}
+                      {formatDateTime(item.createdAt)} / {formatDateTime(item.updatedAt)}
                     </TableCell>
                     <TableCell
                       align="left"

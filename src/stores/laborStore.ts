@@ -2,6 +2,16 @@ import { AttachedFile, LaborInfoFormStore, LaborSearchState } from '@/types/labo
 import { getTodayDateString } from '@/utils/formatters'
 import { create } from 'zustand'
 
+export const bankTypeValueToLabel: Record<string, string> = {
+  '0': '선택',
+  '1': '기업은행',
+  '2': '농협은행',
+  '3': '우리은행',
+  '4': '카카오뱅크',
+  '5': '국민은행',
+  '6': '신한은행',
+}
+
 export const useLaborSearchStore = create<{ search: LaborSearchState }>((set) => ({
   search: {
     searchTrigger: 0,
@@ -14,7 +24,7 @@ export const useLaborSearchStore = create<{ search: LaborSearchState }>((set) =>
     isHeadOffice: null,
     arraySort: '최신순',
     currentPage: 1,
-    pageCount: '10',
+    pageCount: '20',
 
     setField: (field, value) =>
       set((state) => ({
@@ -43,7 +53,7 @@ export const useLaborSearchStore = create<{ search: LaborSearchState }>((set) =>
           isHeadOffice: null,
           arraySort: '최신순',
           currentPage: 1,
-          pageCount: '10',
+          pageCount: '20',
         },
       })),
   },
@@ -66,14 +76,36 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
     workTypeDescription: '',
     mainWork: '',
     dailyWage: 0,
-    bankName: '선택',
+    bankName: '0',
     accountNumber: '',
     accountHolder: '',
     hireDate: null,
     resignationDate: null,
     initialHireDateAt: '',
     initialResignationDateAt: '',
-    files: [],
+    files: [
+      {
+        id: Date.now(),
+        name: '신분증 사본',
+        memo: '',
+        files: [],
+        type: 'ID_CARD',
+      },
+      {
+        id: Date.now() + 1,
+        name: '통장 사본',
+        memo: '',
+        files: [],
+        type: 'BANKBOOK',
+      },
+      {
+        id: Date.now() + 2,
+        name: '서명이미지',
+        memo: '',
+        files: [],
+        type: 'SIGNATURE_IMAGE',
+      },
+    ],
     checkedAttachedFileIds: [],
     changeHistories: [],
     editedHistories: [],
@@ -96,14 +128,36 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
         workTypeDescription: '',
         mainWork: '',
         dailyWage: 0,
-        bankName: '선택',
+        bankName: '0',
         accountNumber: '',
         accountHolder: '',
         hireDate: null,
         resignationDate: null,
         initialHireDateAt: '',
         initialResignationDateAt: '',
-        files: [],
+        files: [
+          {
+            id: Date.now(),
+            name: '신분증 사본',
+            memo: '',
+            files: [],
+            type: 'ID_CARD',
+          },
+          {
+            id: Date.now() + 1,
+            name: '통장 사본',
+            memo: '',
+            files: [],
+            type: 'BANKBOOK',
+          },
+          {
+            id: Date.now() + 2,
+            name: '서명이미지',
+            memo: '',
+            files: [],
+            type: 'SIGNATURE_IMAGE',
+          },
+        ],
         checkedAttachedFileIds: [],
         changeHistories: [],
         editedHistories: [],
@@ -135,13 +189,13 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
     }),
   addItem: (typeName) =>
     set((state) => {
-      const id = Date.now()
       if (typeName === 'attachedFile') {
         const newFile: AttachedFile = {
-          id,
+          id: Date.now(),
           name: '',
           memo: '',
           files: [],
+          type: 'BASIC',
         }
         return {
           form: {
@@ -215,6 +269,7 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
     return {
       ...form,
 
+      bankName: bankTypeValueToLabel[form.bankName] || '',
       hireDate: hireDateStr !== form.initialHireDateAt ? hireDateStr : form.initialHireDateAt,
       resignationDate:
         resignationDateStr !== form.initialResignationDateAt
@@ -234,6 +289,7 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
               fileUrl: '',
               originalFileName: '',
               memo: f.memo || '',
+              type: f.type,
             },
           ]
         }
@@ -245,6 +301,7 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
           fileUrl: fileObj.fileUrl || '',
           originalFileName: fileObj.file?.name || '',
           memo: f.memo || '',
+          type: f.type,
         }))
       }),
       changeHistories: form.editedHistories ?? [],

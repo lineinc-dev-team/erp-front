@@ -36,6 +36,7 @@ import {
 } from '@/services/dailyReport/dailyReportRegistrationService'
 import CommonSelectByName from '../common/CommonSelectByName'
 import CommonFileInput from '../common/FileInput'
+import { formatDateTime } from '@/utils/formatters'
 
 export default function DailyReportRegistrationView({ isEditMode = false }) {
   const {
@@ -1740,13 +1741,10 @@ export default function DailyReportRegistrationView({ isEditMode = false }) {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {historyList.map((item: HistoryItem, index) => (
+                {historyList.map((item: HistoryItem) => (
                   <TableRow key={item.id}>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {index + 1}
-                    </TableCell>
-                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {item.createdAt} / {item.updatedAt}
+                      {formatDateTime(item.createdAt)} / {formatDateTime(item.updatedAt)}
                     </TableCell>
                     <TableCell
                       align="left"

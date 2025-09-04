@@ -1,3 +1,10 @@
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
+
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
 export const getTodayDateString = (
   dateInput: Date | string | null | undefined,
 ): string | undefined => {
@@ -25,4 +32,8 @@ export // 입력받은 문자열에서 숫자만 남기기
 function unformatNumber(value: string): number {
   const numericString = value.replace(/[^0-9]/g, '')
   return Number(numericString)
+}
+
+export const formatDateTime = (dateStr: string) => {
+  return dayjs.utc(dateStr).tz('Asia/Seoul').format('YYYY-MM-DD HH:mm:ss')
 }

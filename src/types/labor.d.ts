@@ -71,6 +71,8 @@ export type AttachedFile = {
   fileUrl?: string
   originalFileName?: string
   files: FileUploadInfo[]
+  type: string
+  typeCode?: string
 }
 
 export type LaborFormState = {

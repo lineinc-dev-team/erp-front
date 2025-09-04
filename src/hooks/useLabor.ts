@@ -52,8 +52,13 @@ export function useLaborInfo() {
       reset()
       router.push('/labors')
     },
-    onError: () => {
-      showSnackbar('인력정보 등록에 실패했습니다.', 'error')
+
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('인력정보 등록에 실패했습니다.', 'error')
+      }
     },
   })
 
@@ -100,10 +105,10 @@ export function useLaborInfo() {
         size: Number(search.pageCount) || 10,
         sort:
           search.arraySort === '최신순'
-            ? 'createdAt,desc'
+            ? 'id,desc'
             : search.arraySort === '오래된순'
-            ? 'createdAt,asc'
-            : 'id,asc',
+            ? 'id,asc'
+            : 'username,asc',
       }
 
       const filteredParams = Object.fromEntries(
@@ -132,8 +137,12 @@ export function useLaborInfo() {
       }
     },
 
-    onError: () => {
-      showSnackbar('인력정보 삭제에 실패했습니다.', 'error')
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('인력정보 삭제에 실패했습니다.', 'error')
+      }
     },
   })
 
@@ -149,8 +158,12 @@ export function useLaborInfo() {
       router.push('/labors')
     },
 
-    onError: () => {
-      showSnackbar('인력정보 수정에 실패했습니다.', 'error')
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('인력정보 수정에 실패했습니다.', 'error')
+      }
     },
   })
 

@@ -13,7 +13,12 @@ import DaumPostcodeEmbed from 'react-daum-postcode'
 import { useSiteFormStore } from '@/stores/siteStore'
 import { AreaCode, SiteProgressing } from '@/config/erp.confing'
 import useSite from '@/hooks/useSite'
-import { formatNumber, getTodayDateString, unformatNumber } from '@/utils/formatters'
+import {
+  formatDateTime,
+  formatNumber,
+  getTodayDateString,
+  unformatNumber,
+} from '@/utils/formatters'
 import { useClientCompany } from '@/hooks/useClientCompany'
 import { Contract, ContractFile, ContractFileType, HistoryItem, SiteForm } from '@/types/site'
 import CommonFileInput from '../common/FileInput'
@@ -483,8 +488,8 @@ export default function SitesRegistrationView({ isEditMode = false }) {
           id: item.id,
           type: item.type,
           content: formatChangeDetail(item.getChanges), // 여기 변경
-          createdAt: getTodayDateString(item.createdAt),
-          updatedAt: getTodayDateString(item.updatedAt),
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
           updatedBy: item.updatedBy,
           memo: item.memo ?? '',
         })),
@@ -859,7 +864,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
             <Table size="small">
               <TableHead>
                 <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                  {['No', '수정일시', '항목', '수정항목', '수정자', '비고 / 메모'].map((label) => (
+                  {['수정일시', '항목', '수정항목', '수정자', '비고 / 메모'].map((label) => (
                     <TableCell
                       key={label}
                       align="center"
@@ -876,13 +881,10 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {historyList.map((item: HistoryItem, index) => (
+                {historyList.map((item: HistoryItem) => (
                   <TableRow key={item.id}>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {index + 1}
-                    </TableCell>
-                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {item.createdAt} / {item.updatedAt}
+                      {formatDateTime(item.createdAt)} / {formatDateTime(item.updatedAt)}
                     </TableCell>
                     <TableCell
                       align="left"

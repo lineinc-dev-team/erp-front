@@ -20,7 +20,7 @@ import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef } from 'react'
 import { HistoryItem, OutsourcingAttachedFile } from '@/types/outsourcingCompany'
-import { formatNumber, getTodayDateString, unformatNumber } from '@/utils/formatters'
+import { formatDateTime, formatNumber, unformatNumber } from '@/utils/formatters'
 import CommonInput from '../common/Input'
 import CommonSelect from '../common/Select'
 import { useLaborFormStore } from '@/stores/laborStore'
@@ -31,6 +31,8 @@ import CommonResidentNumberInput from '@/utils/commonResidentNumberInput'
 import AmountInput from '../common/AmountInput'
 import { LaborDetailService } from '@/services/labor/laborRegistrationService'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
+import { LaborFormState } from '@/types/labor'
+import { idTypeValueToName } from '@/stores/outsourcingCompanyStore'
 
 export default function LaborRegistrationView({ isEditMode = false }) {
   const {
@@ -44,6 +46,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     toggleCheckItem,
     toggleCheckAllItems,
   } = useLaborFormStore()
+
+  const { showSnackbar } = useSnackbarStore()
 
   const {
     createLaborInfo,
@@ -60,8 +64,6 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
     useLaborHistoryDataQuery,
   } = useLaborInfo()
-
-  const { showSnackbar } = useSnackbarStore()
 
   const attachedFiles = form.files
   const fileCheckIds = form.checkedAttachedFileIds
@@ -104,6 +106,44 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
   const historyList = useLaborFormStore((state) => state.form.changeHistories)
 
+  // const [updatedOutSourcingCompanyOptions, setUpdatedOutSourcingCompanyOptions] =
+  //   useState(userOptions)
+
+  // useEffect(() => {
+  //   if (data && isEditMode) {
+  //     const client = data.data
+  //     const newUserOptions = [...userOptions]
+
+  //     if (client.user) {
+  //       const userName = client.user.username + (client.user.deleted ? ' (삭제됨)' : '')
+
+  //       const exists = newUserOptions.some((u) => u.id === client.user.id)
+  //       if (!exists) {
+  //         newUserOptions.push({
+  //           id: client.user.id,
+  //           name: userName,
+  //           deleted: client.user.deleted,
+  //         })
+  //       }
+  //     }
+
+  //     const deletedUsers = newUserOptions.filter((u) => u.deleted)
+  //     const normalUsers = newUserOptions.filter((u) => !u.deleted && u.id !== '0')
+
+  //     setUpdatedUserOptions([
+  //       newUserOptions.find((u) => u.id === '0')!,
+  //       ...deletedUsers,
+  //       ...normalUsers,
+  //     ])
+
+  //     setField('userId', client.user?.id ?? '0')
+  //   } else if (!isEditMode) {
+  //     // 등록 모드일 경우
+  //     setUpdatedUserOptions(userOptions)
+  //     setField('userId', 0) // "선택" 기본값
+  //   }
+  // }, [data, isEditMode, userOptions])
+
   useEffect(() => {
     if (laborDetailData && isEditMode === true) {
       const client = laborDetailData.data
@@ -111,19 +151,32 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       console.log('clientclientclient', client)
 
       // 첨부파일 데이터 가공
-      const formattedFiles = (client.files ?? []).map((item: OutsourcingAttachedFile) => ({
-        id: item.id,
-        name: item.name,
-        memo: item.memo,
-        files: [
-          {
-            fileUrl: item.fileUrl,
-            file: {
-              name: item.originalFileName,
+      const formattedFiles = (client.files ?? [])
+        .map((item: OutsourcingAttachedFile) => ({
+          id: item.id,
+          name: item.name,
+          memo: item.memo,
+          type: item.typeCode,
+          files: [
+            {
+              fileUrl: item.fileUrl || '', // null 대신 안전하게 빈 문자열
+              originalFileName: item.originalFileName || '',
             },
-          },
-        ],
-      }))
+          ],
+        }))
+        .sort((a: OutsourcingAttachedFile, b: OutsourcingAttachedFile) => {
+          const order = {
+            ID_CARD: 1,
+            BANKBOOK: 3,
+            SIGNATURE_IMAGE: 4,
+            DEFAULT: 2,
+          }
+
+          const aOrder = order[a.type as keyof typeof order] ?? order.DEFAULT
+          const bOrder = order[b.type as keyof typeof order] ?? order.DEFAULT
+
+          return aOrder - bOrder
+        })
 
       // 각 필드에 set
       setField('name', client.name)
@@ -143,7 +196,13 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       setField('mainWork', client.mainWork)
       setField('dailyWage', client.dailyWage)
 
-      setField('bankName', client.bankName)
+      const mappedItemType = idTypeValueToName[client.bankName ?? '']
+
+      if (mappedItemType) {
+        setField('bankName', mappedItemType)
+      } else {
+        setField('bankName', '') // 혹은 기본값 처리
+      }
       setField('accountNumber', client.accountNumber)
       setField('accountHolder', client.accountHolder)
 
@@ -211,8 +270,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
           id: item.id,
           type: item.type,
           content: formatChangeDetail(item.getChanges), // 여기 변경
-          createdAt: getTodayDateString(item.createdAt),
-          updatedAt: getTodayDateString(item.updatedAt),
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
           updatedBy: item.updatedBy,
           memo: item.memo ?? '',
         })),
@@ -238,6 +297,74 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     },
     [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading],
   )
+
+  function validateClientForm(form: LaborFormState) {
+    if (!form.type?.trim()) return '구분을 선택하세요.'
+    if (
+      (form.type === 'ETC' || form.type === 'DIRECT_REGISTRATION') &&
+      !form.typeDescription?.trim()
+    ) {
+      return '구분 내용을 입력하세요.'
+    }
+
+    if (!form.outsourcingCompanyId || form.outsourcingCompanyId <= 0) {
+      return '소속업체를 선택하세요.'
+    }
+
+    if (!form.name?.trim()) return '이름을 입력하세요.'
+
+    if (!form.residentNumber?.trim()) return '주민등록번호를 입력하세요.'
+
+    if (!form.address?.trim()) return '주소를 입력하세요.'
+    if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
+
+    if (!form.phoneNumber?.trim()) return '개인 휴대폰 번호를 입력하세요.'
+
+    if (!/^\d{2,3}-\d{3,4}-\d{4}$/.test(form.phoneNumber)) {
+      return '휴대폰 번호를 010-1234-5678 형식으로 입력하세요.'
+    }
+
+    if (!form.workType?.trim()) return '공종을 선택하세요.'
+    if (!form.mainWork?.trim()) return '주 작업을 입력하세요.'
+
+    if (!form.dailyWage || form.dailyWage <= 0) {
+      return '기준일당을 입력하세요.'
+    }
+
+    if (!form.bankName?.trim()) return '은행을 선택하세요.'
+    if (!form.accountNumber?.trim()) return '계좌번호를 입력하세요.'
+    if (!form.accountHolder?.trim()) return '예금주를 입력하세요.'
+
+    if (!form.hireDate) return '입사일을 선택하세요.'
+    // 퇴사일은 선택 optional → 선택되면 입사일보다 이후인지 확인
+    if (form.resignationDate && form.hireDate && form.resignationDate < form.hireDate) {
+      return '퇴사일은 입사일 이후여야 합니다.'
+    }
+
+    if (attachedFiles.length > 0) {
+      for (const item of attachedFiles) {
+        if (!item.name?.trim()) return '첨부파일의 이름을 입력해주세요.'
+      }
+    }
+
+    return null
+  }
+
+  const handleLaborSubmit = () => {
+    const errorMsg = validateClientForm(form)
+    if (errorMsg) {
+      showSnackbar(errorMsg, 'warning')
+      return
+    }
+
+    if (isEditMode) {
+      if (window.confirm('수정하시겠습니까?')) {
+        LaborModifyMutation.mutate(laborDataId)
+      }
+    } else {
+      createLaborInfo.mutate()
+    }
+  }
 
   return (
     <>
@@ -286,8 +413,6 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                   onChange={async (value) => {
                     const selectedCompany = companyOptions.find((opt) => opt.id === value)
                     if (!selectedCompany) return
-
-                    console.log('라인 고영ㅇ 찾기', selectedCompany)
 
                     setField('outsourcingCompanyId', selectedCompany.id)
                     setField('outsourcingCompanyName', selectedCompany.name)
@@ -609,6 +734,11 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                   >
                     <Checkbox
                       checked={fileCheckIds.includes(m.id)}
+                      disabled={
+                        m.type === 'ID_CARD' ||
+                        m.type === 'BANKBOOK' ||
+                        m.type === 'SIGNATURE_IMAGE'
+                      }
                       onChange={(e) => toggleCheckItem('attachedFile', m.id, e.target.checked)}
                     />
                   </TableCell>
@@ -621,22 +751,16 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                       onChange={(e) =>
                         updateItemField('attachedFile', m.id, 'name', e.target.value)
                       }
+                      disabled={
+                        m.type === 'ID_CARD' ||
+                        m.type === 'BANKBOOK' ||
+                        m.type === 'SIGNATURE_IMAGE'
+                      }
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
-                      {/* <CommonFileInput
-                            className=" break-words whitespace-normal"
-                            label="계약서"
-                            acceptedExtensions={['pdf', 'hwp']}
-                            files={form.attachedFiles.find((f) => f.id === m.id)?.files || []}
-                            onChange={(newFiles) =>
-                              form.updateItemField('attachedFile', m.id, 'files', newFiles)
-                            }
-                          />
-                           */}
                       <CommonFileInput
-                        multiple={false}
                         acceptedExtensions={[
                           'pdf',
                           'jpg',
@@ -647,32 +771,13 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                           'jpeg',
                           'ppt',
                         ]}
+                        multiple={false}
                         files={m.files} // 각 항목별 files
                         onChange={(newFiles) => {
-                          if (newFiles.length > 1) {
-                            showSnackbar('파일은 1개만 업로드할 수 있습니다.', 'warning')
-                            updateItemField('attachedFile', m.id, 'files', newFiles.slice(0, 1))
-                          } else {
-                            updateItemField('attachedFile', m.id, 'files', newFiles)
-                          }
+                          updateItemField('attachedFile', m.id, 'files', newFiles.slice(0, 1))
                         }}
-                        uploadTarget="CLIENT_COMPANY"
+                        uploadTarget="LABOR_MANAGEMENT"
                       />
-                      {/* <CommonFileInput
-                            acceptedExtensions={[
-                              'pdf',
-                              'jpg',
-                              'png',
-                              'hwp',
-                              'xlsx',
-                              'zip',
-                              'jpeg',
-                              'ppt',
-                            ]}
-                            files={uploadedFiles}
-                            onChange={setUploadedFiles}
-                            uploadTarget={'CLIENT_COMPANY'}
-                          /> */}
                     </div>
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -720,13 +825,10 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {historyList.map((item: HistoryItem, index) => (
+                {historyList.map((item: HistoryItem) => (
                   <TableRow key={item.id}>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {index + 1}
-                    </TableCell>
-                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {item.createdAt} / {item.updatedAt}
+                      {formatDateTime(item.createdAt)} / {formatDateTime(item.updatedAt)}
                     </TableCell>
                     <TableCell
                       align="left"
@@ -784,15 +886,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
           label={isEditMode ? '+ 수정' : '+ 등록'}
           className="px-10 font-bold"
           variant="secondary"
-          onClick={() => {
-            if (isEditMode) {
-              if (window.confirm('수정하시겠습니까?')) {
-                LaborModifyMutation.mutate(laborDataId)
-              }
-            } else {
-              createLaborInfo.mutate()
-            }
-          }}
+          onClick={handleLaborSubmit}
         />
       </div>
     </>
