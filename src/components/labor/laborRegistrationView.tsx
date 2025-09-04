@@ -20,8 +20,13 @@ import CommonFileInput from '@/components/common/FileInput'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { HistoryItem, OutsourcingAttachedFile } from '@/types/outsourcingCompany'
-import { formatDateTime, formatNumber, unformatNumber } from '@/utils/formatters'
+import { HistoryItem } from '@/types/outsourcingCompany'
+import {
+  formatDateTime,
+  formatNumber,
+  getTodayDateString,
+  unformatNumber,
+} from '@/utils/formatters'
 import CommonInput from '../common/Input'
 import CommonSelect from '../common/Select'
 import { useLaborFormStore } from '@/stores/laborStore'
@@ -32,7 +37,7 @@ import CommonResidentNumberInput from '@/utils/commonResidentNumberInput'
 import AmountInput from '../common/AmountInput'
 import { LaborDetailService } from '@/services/labor/laborRegistrationService'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
-import { LaborFormState } from '@/types/labor'
+import { AttachedFile, LaborFormState } from '@/types/labor'
 import { idTypeValueToName } from '@/stores/outsourcingCompanyStore'
 
 export default function LaborRegistrationView({ isEditMode = false }) {
@@ -128,11 +133,13 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
       // 첨부파일 데이터 가공
       const formattedFiles = (client.files ?? [])
-        .map((item: OutsourcingAttachedFile) => ({
+        .map((item: AttachedFile) => ({
           id: item.id,
           name: item.name,
           memo: item.memo,
           type: item.typeCode,
+          createdAt: getTodayDateString(item.createdAt),
+          updatedAt: getTodayDateString(item.updatedAt),
           files: [
             {
               fileUrl: item.fileUrl || '', // null 대신 안전하게 빈 문자열
@@ -140,7 +147,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
             },
           ],
         }))
-        .sort((a: OutsourcingAttachedFile, b: OutsourcingAttachedFile) => {
+        .sort((a: AttachedFile, b: AttachedFile) => {
           const order = {
             ID_CARD: 1,
             BANKBOOK: 2,
@@ -751,7 +758,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                     sx={{ color: 'black' }}
                   />
                 </TableCell>
-                {['문서명', '첨부', '비고'].map((label) => (
+                {['문서명', '첨부', '등록/수정일', '비고'].map((label) => (
                   <TableCell
                     key={label}
                     align="center"
@@ -823,6 +830,12 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                       />
                     </div>
                   </TableCell>
+                  {isEditMode && (
+                    <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                      {m.createdAt} / {m.updatedAt}
+                    </TableCell>
+                  )}
+
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"

@@ -15,7 +15,7 @@ import {
   Typography,
 } from '@mui/material'
 import CommonDatePicker from '../common/DatePicker'
-import { formatDateTime, getTodayDateString } from '@/utils/formatters'
+import { formatDateTime, getTodayDateString, unformatNumber } from '@/utils/formatters'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef } from 'react'
@@ -26,7 +26,7 @@ import { useFuelAggregation } from '@/hooks/useFuelAggregation'
 import { useFuelFormStore } from '@/stores/fuelAggregationStore'
 import CommonInput from '../common/Input'
 import { FuelDetailService } from '@/services/fuelAggregation/fuelAggregationRegistrationService'
-import { FuelListInfoData, HistoryItem } from '@/types/fuelAggregation'
+import { FuelInfo, FuelListInfoData, HistoryItem } from '@/types/fuelAggregation'
 // import { useEffect } from 'react'
 // import { AttachedFile, DetailItem } from '@/types/managementSteel'
 
@@ -258,6 +258,48 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     },
     [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading],
   )
+
+  function validateFuelForm(form: FuelInfo) {
+    if (!form.siteId) return '현장명을 선택하세요.'
+    if (!form.siteProcessId) return '공정명을 선택하세요.'
+    if (!form.date) return '일자를 입력하세요.'
+    if (form.weather === 'BASE') return '날씨를 선택하세요.'
+
+    // 담당자 유효성 체크
+    if (fuelInfo.length > 0) {
+      for (const item of fuelInfo) {
+        if (!item.outsourcingCompanyId) return '업체명을 선택하세요.'
+        if (!item.driverId) return '기사명을 선택하세요.'
+        if (!item.equipmentId) return '차량번호를 선택하세요.'
+        if (!item.specificationName?.trim()) return '규격이 올바르지 않습니다.'
+        if (!item.fuelType?.trim()) return '유종을 선택하세요.'
+        if (!item.fuelAmount) return '주유량을 입력하세요.'
+      }
+    }
+
+    return null
+  }
+
+  const handleFuelSubmit = () => {
+    const errorMsg = validateFuelForm(form)
+    if (errorMsg) {
+      showSnackbar(errorMsg, 'warning')
+      return
+    }
+
+    if (!form.fuelInfos || form.fuelInfos.length === 0) {
+      showSnackbar('유류정보 항목을 1개 이상 입력해주세요.', 'warning')
+      return
+    }
+
+    if (isEditMode) {
+      if (window.confirm('수정하시겠습니까?')) {
+        FuelModifyMutation.mutate(fuelDetailId)
+      }
+    } else {
+      createFuelMutation.mutate()
+    }
+  }
 
   return (
     <>
@@ -522,13 +564,12 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                   <TableCell align="center" sx={{ border: '1px solid #9CA3AF', width: '120px' }}>
                     <TextField
                       size="small"
-                      placeholder="입력"
-                      value={m.fuelAmount || ''}
-                      onChange={(e) =>
-                        updateItemField('FuelInfo', m.id, 'fuelAmount', e.target.value)
-                      }
-                      inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
-                      fullWidth
+                      placeholder="'-'없이 숫자만 입력"
+                      value={m.fuelAmount}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        updateItemField('FuelInfo', m.id, 'fuelAmount', formatted)
+                      }}
                     />
                   </TableCell>
                   {/* 비고 */}
@@ -657,23 +698,12 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
 
       <div className="flex justify-center gap-10 mt-10">
         <CommonButton label="취소" variant="reset" className="px-10" onClick={FuelCancel} />
+
         <CommonButton
           label={isEditMode ? '+ 수정' : '+ 등록'}
           className="px-10 font-bold"
           variant="secondary"
-          onClick={() => {
-            if (!form.fuelInfos || form.fuelInfos.length === 0) {
-              showSnackbar('유류정보 항목을 1개 이상 입력해주세요.', 'warning')
-              return
-            }
-            if (isEditMode) {
-              if (window.confirm('수정하시겠습니까?')) {
-                FuelModifyMutation.mutate(fuelDetailId)
-              }
-            } else {
-              createFuelMutation.mutate()
-            }
-          }}
+          onClick={handleFuelSubmit}
         />
       </div>
     </>

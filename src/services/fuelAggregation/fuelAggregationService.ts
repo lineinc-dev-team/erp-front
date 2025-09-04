@@ -133,7 +133,7 @@ export async function FuelExcelDownload({
   const url = window.URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'export23test.xlsx'
+  a.download = '유류집계 목록.xlsx'
   a.click()
   window.URL.revokeObjectURL(url)
 

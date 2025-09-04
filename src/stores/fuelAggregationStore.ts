@@ -16,7 +16,7 @@ export const useFuelSearchStore = create<{ search: FuelSearchState }>((set) => (
     dateEndDate: null,
     arraySort: '최신순',
     currentPage: 1,
-    pageCount: '10',
+    pageCount: '20',
 
     setField: (field, value) =>
       set((state) => ({
@@ -46,7 +46,7 @@ export const useFuelSearchStore = create<{ search: FuelSearchState }>((set) => (
           dateEndDate: null,
           arraySort: '최신순',
           currentPage: 1,
-          pageCount: '10',
+          pageCount: '20',
           searchTrigger: 0,
         },
       })),

@@ -50,8 +50,6 @@ export function useFuelAggregation() {
   // 업체명 id
   const clientId = useOutSourcingClientId()
 
-  console.log('clientIdclientId', clientId)
-
   const [driverSearch, setDriverSearch] = useState('')
 
   const {
@@ -143,8 +141,12 @@ export function useFuelAggregation() {
       reset()
       router.push('/fuelAggregation')
     },
-    onError: () => {
-      showSnackbar('유류집계 등록에 실패했습니다.', 'error')
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('유류집계 등록에 실패했습니다.', 'error')
+      }
     },
   })
 
@@ -185,10 +187,10 @@ export function useFuelAggregation() {
         size: Number(search.pageCount) || 10,
         sort:
           search.arraySort === '최신순'
-            ? 'createdAt,desc'
+            ? 'id,desc'
             : search.arraySort === '오래된순'
-            ? 'createdAt,asc'
-            : 'id,asc',
+            ? 'id,asc'
+            : 'username,asc',
       }
 
       const filteredParams = Object.fromEntries(
@@ -235,8 +237,12 @@ export function useFuelAggregation() {
       router.push('/fuelAggregation')
     },
 
-    onError: () => {
-      showSnackbar('유류집계 수정에 실패했습니다.', 'error')
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('유류집계 수정에 실패했습니다.', 'error')
+      }
     },
   })
 
@@ -290,6 +296,7 @@ export function useFuelAggregation() {
       specification: '',
       vehicleNumber: '선택',
     }
+
     const options = (carNumberSearchData?.pages || [])
       .flatMap((page) => page.data.content)
       .map((user) => ({
@@ -298,7 +305,13 @@ export function useFuelAggregation() {
         vehicleNumber: user.vehicleNumber,
       }))
 
-    return [defaultOption, ...options]
+    // vehicleNumber 기준 중복 제거
+    const uniqueOptions = options.filter(
+      (item, index, self) =>
+        index === self.findIndex((v) => v.vehicleNumber === item.vehicleNumber),
+    )
+
+    return [defaultOption, ...uniqueOptions]
   }, [carNumberSearchData])
 
   return {
