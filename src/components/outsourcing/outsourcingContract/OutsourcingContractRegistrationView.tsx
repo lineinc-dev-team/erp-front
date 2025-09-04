@@ -2494,7 +2494,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
             <Table size="small">
               <TableHead>
                 <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                  {['No', '수정일시', '항목', '수정항목', '수정자', '비고 / 메모'].map((label) => (
+                  {['수정일시', '항목', '수정항목', '수정자', '비고 / 메모'].map((label) => (
                     <TableCell
                       key={label}
                       align="center"

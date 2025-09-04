@@ -99,6 +99,37 @@ export default function LaborView() {
       }
     }
 
+    if (col.field === 'tenureDays') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 1,
+        renderCell: (params: GridRenderCellParams) => {
+          const value = params.value as number | string
+
+          // 문자열이면 '일' 제거 후 숫자로 변환
+          const numericValue = typeof value === 'string' ? Number(value.replace('일', '')) : value
+
+          const isOver180 = numericValue >= 180
+
+          return (
+            <div
+              className={`w-full h-full flex items-center justify-center`}
+              style={{
+                backgroundColor: isOver180 ? '#ff0000' : 'transparent', // 빨간색 / 기본
+                color: isOver180 ? '#fff' : 'inherit', // 글자색
+                width: '100%',
+                height: '100%',
+              }}
+            >
+              {params.value}
+            </div>
+          )
+        },
+      }
+    }
+
     if (col.field === 'type') {
       return {
         ...col,
