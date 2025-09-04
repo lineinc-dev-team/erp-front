@@ -22,7 +22,7 @@ export const useCostSearchStore = create<{ search: CostSearchState }>((set) => (
     paymentEndDate: null,
     arraySort: '최신순',
     currentPage: 1,
-    pageCount: '10',
+    pageCount: '20',
 
     setField: (field, value) =>
       set((state) => ({
@@ -52,7 +52,7 @@ export const useCostSearchStore = create<{ search: CostSearchState }>((set) => (
           paymentEndDate: null,
           arraySort: '최신순',
           currentPage: 1,
-          pageCount: '10',
+          pageCount: '20',
           searchTrigger: 0,
         },
       })),
@@ -437,17 +437,17 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
         f.files.length === 0
           ? [
               {
-                id: f.id,
+                id: f.id || Date.now(),
                 memo: f.memo,
                 fileUrl: '',
                 originalFileName: '',
               },
             ]
           : f.files.map((fileObj) => ({
-              id: f.id,
+              id: f.id || Date.now(),
               memo: f.memo,
               fileUrl: fileObj.fileUrl,
-              originalFileName: fileObj.file?.name || '',
+              originalFileName: fileObj.name || fileObj.originalFileName,
             })),
       ),
       changeHistories: form.editedHistories ?? [],

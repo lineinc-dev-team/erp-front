@@ -342,6 +342,16 @@ export const bankOptions = [
   { id: '6', name: '신한은행' },
 ]
 
+export const bankCostOptions = [
+  { id: '선택', name: '선택' },
+  { id: '기업은행', name: '기업은행' },
+  { id: '농협은행', name: '농협은행' },
+  { id: '우리은행', name: '우리은행' },
+  { id: '카카오뱅크', name: '카카오뱅크' },
+  { id: '국민은행', name: '국민은행' },
+  { id: '신한은행', name: '신한은행' },
+]
+
 // 시 와  구 를 구분
 
 export const CityOptions = [

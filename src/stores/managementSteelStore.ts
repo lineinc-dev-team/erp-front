@@ -20,7 +20,7 @@ export const useSteelSearchStore = create<{ search: SteelSearchState }>((set) =>
     endDate: null,
     arraySort: '최신순',
     currentPage: 1,
-    pageCount: '10',
+    pageCount: '20',
 
     setField: (field, value) =>
       set((state) => ({
@@ -49,7 +49,7 @@ export const useSteelSearchStore = create<{ search: SteelSearchState }>((set) =>
           endDate: null,
           arraySort: '최신순',
           currentPage: 1,
-          pageCount: '10',
+          pageCount: '20',
           searchTrigger: 0,
         },
       })),

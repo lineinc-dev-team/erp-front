@@ -16,7 +16,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { bankOptions } from '@/config/erp.confing'
+import { bankCostOptions } from '@/config/erp.confing'
 import { useCallback, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
@@ -37,7 +37,6 @@ import {
   MealFeeDetail,
 } from '@/types/managementCost'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
-import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { SupplyPriceInput, TotalInput, VatInput } from '@/utils/supplyVatTotalInput'
 import CommonSelectByName from '../common/CommonSelectByName'
 
@@ -108,8 +107,6 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     processInfoLoading,
   } = useOutSourcingContract()
 
-  const { showSnackbar } = useSnackbarStore()
-
   const textFieldStyle = {
     '& .MuiOutlinedInput-root': {
       '& fieldset': { borderColor: 'black' },
@@ -165,6 +162,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     accountNumber: '계좌번호',
     accountHolder: '예금주',
     memo: '메모',
+    originalFileName: '파일 추가',
   }
 
   const {
@@ -222,11 +220,8 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
         memo: item.memo,
         files: [
           {
-            id: item.id,
-            fileUrl: item.fileUrl,
-            file: {
-              name: item.originalFileName,
-            },
+            fileUrl: item.fileUrl || '', // null 대신 안전하게 빈 문자열
+            originalFileName: item.originalFileName || '',
           },
         ],
       }))
@@ -288,7 +283,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
           if (before === 'null') {
             before = '추가'
             style = { color: '#1976d2' } // 파란색 - 추가
-          } else if (after === 'null') {
+          } else if (after === 'null' || after === '') {
             after = '삭제'
             style = { color: '#d32f2f' } // 빨간색 - 삭제
           }
@@ -565,7 +560,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                     bankName: value,
                   })
                 }
-                options={bankOptions}
+                options={bankCostOptions}
               />
 
               <CommonInput
@@ -956,7 +951,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       </div>
                     </TableCell>
 
-                    <React.Fragment key={m.id}>
+                    <TableRow>
                       <TableCell key={m.id}>
                         <TableCell
                           sx={{
@@ -1047,7 +1042,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                           />
                         </TableCell>
                       </TableCell>
-                    </React.Fragment>
+                    </TableRow>
 
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
@@ -1486,7 +1481,6 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
                       <CommonFileInput
-                        multiple={false}
                         acceptedExtensions={[
                           'pdf',
                           'jpg',
@@ -1497,16 +1491,12 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                           'jpeg',
                           'ppt',
                         ]}
+                        multiple={false}
                         files={m.files} // 각 항목별 files
                         onChange={(newFiles) => {
-                          if (newFiles.length > 1) {
-                            showSnackbar('파일은 1개만 업로드할 수 있습니다.', 'warning')
-                            updateItemField('attachedFile', m.id, 'files', newFiles.slice(0, 1))
-                          } else {
-                            updateItemField('attachedFile', m.id, 'files', newFiles)
-                          }
+                          updateItemField('attachedFile', m.id, 'files', newFiles.slice(0, 1))
                         }}
-                        uploadTarget="CLIENT_COMPANY"
+                        uploadTarget="MANAGEMENT_COST"
                       />
                     </div>
                   </TableCell>

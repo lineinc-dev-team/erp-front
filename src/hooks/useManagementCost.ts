@@ -92,9 +92,9 @@ export function useManagementCost() {
         sort:
           search.arraySort === '최신순'
             ? 'id,desc'
-            : search.arraySort === '날짜순'
-            ? 'paymentDate.desc'
-            : 'id.asc',
+            : search.arraySort === '오래된순'
+            ? 'id,asc'
+            : 'username,asc',
       }
 
       const filteredParams = Object.fromEntries(

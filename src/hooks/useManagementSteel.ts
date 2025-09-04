@@ -65,11 +65,12 @@ export function useManagementSteel() {
     ],
     queryFn: () => {
       const rawParams = {
-        siteName: search.siteName,
+        siteName: search.siteName === '선택' ? undefined : search.siteName,
         processName: search.processName,
         itemName: search.itemName,
-        type: search.type === '선택' ? '' : search.type,
-        outsourcingCompanyName: search.outsourcingCompanyName,
+        type: search.type === 'BASE' ? '' : search.type,
+        outsourcingCompanyName:
+          search.outsourcingCompanyName === '선택' ? undefined : search.outsourcingCompanyName,
         startDate: getTodayDateString(search.startDate),
         endDate: getTodayDateString(search.endDate),
         page: search.currentPage - 1,
@@ -77,9 +78,9 @@ export function useManagementSteel() {
         sort:
           search.arraySort === '최신순'
             ? 'id,desc'
-            : search.arraySort === '날짜순'
-            ? 'paymentDate.desc'
-            : 'id.asc',
+            : search.arraySort === '오래된순'
+            ? 'id,asc'
+            : 'username,asc',
       }
 
       const filteredParams = Object.fromEntries(

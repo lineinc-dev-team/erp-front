@@ -158,7 +158,7 @@ export async function SteelExcelDownload({
   const url = window.URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'export23test.xlsx'
+  a.download = '강재수불부 조회 목록.xlsx'
   a.click()
   window.URL.revokeObjectURL(url)
 

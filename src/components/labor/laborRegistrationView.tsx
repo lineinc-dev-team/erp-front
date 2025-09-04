@@ -142,6 +142,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
           updatedAt: getTodayDateString(item.updatedAt),
           files: [
             {
+              id: item.id,
               fileUrl: item.fileUrl || '', // null 대신 안전하게 빈 문자열
               originalFileName: item.originalFileName || '',
             },
