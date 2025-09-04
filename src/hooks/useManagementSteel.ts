@@ -162,12 +162,10 @@ export function useManagementSteel() {
     mutationFn: (SteelId: number) => ModifySteelManagement(SteelId),
 
     onSuccess: () => {
-      if (window.confirm('수정하시겠습니까?')) {
-        showSnackbar('강재수불부가 수정 되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
-        reset()
-        router.push('/managementSteel')
-      }
+      showSnackbar('강재수불부가 수정 되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
+      reset()
+      router.push('/managementSteel')
     },
 
     onError: (error: unknown) => {

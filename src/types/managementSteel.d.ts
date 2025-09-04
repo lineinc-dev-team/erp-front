@@ -114,9 +114,6 @@ export type ManagementSteelFormState = {
   usage: string // 구분
   type: string // 용도
   typeCode: string
-  approvalDate: string
-  orderDate: string
-  releaseDate: string
 
   startDate: Date | null // 일자 (YYYY-MM-DD)
   endDate: Date | null // 일자 (YYYY-MM-DD)
@@ -141,7 +138,7 @@ export type ManagementSteelFormState = {
 
 export type SteelPayload = Omit<
   ManagementSteelFormState,
-  'checkedMaterialItemIds' | 'checkedAttachedFileIds' | 'modificationHistory'
+  'checkedMaterialItemIds' | 'checkedAttachedFileIds'
 > & {
   files: {
     name: string

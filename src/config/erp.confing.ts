@@ -445,3 +445,19 @@ export const DistrictGuOptions = [
   { id: 'Ulsan-Buk-gu', name: '북구' },
   { id: 'Ulsan-Ulsan-myeon', name: '울주군' },
 ]
+
+export const WithoutApprovalAndRemovalOptions = [
+  { code: 'BASE', name: '선택' },
+  {
+    code: 'ORDER',
+    name: '발주',
+  },
+  {
+    code: 'PURCHASE',
+    name: '매입',
+  },
+  {
+    code: 'LEASE',
+    name: '임대',
+  },
+]

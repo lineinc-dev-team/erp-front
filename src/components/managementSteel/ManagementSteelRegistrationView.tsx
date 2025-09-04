@@ -34,7 +34,8 @@ import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import { GetCompanyNameInfoService } from '@/services/outsourcingContract/outsourcingContractRegistrationService'
 import { CompanyInfo } from '@/types/outsourcingContract'
-import { formatDateTime, getTodayDateString, unformatNumber } from '@/utils/formatters'
+import { formatDateTime, unformatNumber } from '@/utils/formatters'
+import { WithoutApprovalAndRemovalOptions } from '@/config/erp.confing'
 
 export default function ManagementSteelRegistrationView({ isEditMode = false }) {
   const { showSnackbar } = useSnackbarStore()
@@ -86,7 +87,6 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     createSteelMutation,
     useSteelHistoryDataQuery,
     SteelModifyMutation,
-    SteelTypeMethodOptions,
     SteelApproveMutation,
     SteelReleaseMutation,
   } = useManagementSteel()
@@ -192,14 +192,16 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
       setField('siteProcessId', client.process?.id ?? '')
       setField('startDate', client.startDate ? new Date(client.startDate) : null)
       setField('endDate', client.endDate ? new Date(client.endDate) : null)
-      setField('type', client.typeCode ?? '') // 예: '승인' 같은 필드
+
+      if (client.previousType === '발주') {
+        setField('type', client.type ?? '') // 예: '승인' 같은 필드
+      } else {
+        setField('type', `${client.type ?? ''}(${client.previousType ?? ''})`)
+      }
+
       setField('usage', client.usage ?? '')
 
       setField('memo', client.memo ?? '')
-
-      setField('orderDate', client.orderDate ?? null)
-      setField('approvalDate', client.approvalDate ?? null)
-      setField('releaseDate', client.releaseDate ?? null)
     } else {
       reset()
     }
@@ -416,15 +418,26 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
               구분
             </label>
             <div className="border flex items-center p-2 gap-4 border-gray-400 px-2 w-full">
-              <CommonSelect
-                fullWidth={true}
-                className="text-2xl"
-                value={form.type || 'BASE'}
-                displayLabel
-                onChange={(value) => setField('type', value)}
-                options={SteelTypeMethodOptions}
-                disabled={isEditMode} // ← 수정 시 선택 불가
-              />
+              {isEditMode === false && (
+                <CommonSelect
+                  fullWidth={true}
+                  className="text-2xl"
+                  value={form.type || 'BASE'}
+                  displayLabel
+                  onChange={(value) => setField('type', value)}
+                  options={WithoutApprovalAndRemovalOptions}
+                  disabled={isEditMode} // ← 수정 시 선택 불가
+                />
+              )}
+              {isEditMode && (
+                <CommonInput
+                  placeholder="텍스트 입력"
+                  value={form.type}
+                  onChange={(value) => setField('usage', value)}
+                  className="flex-1"
+                  disabled
+                />
+              )}
             </div>
           </div>
 
@@ -559,7 +572,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         </div>
       )}
 
-      {isEditMode && (
+      {/* {isEditMode && (
         <div>
           <div className="flex justify-between items-center mt-10 mb-2">
             <span className="font-bold border-b-2 mb-4">구분</span>
@@ -607,7 +620,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
             </Table>
           </TableContainer>
         </div>
-      )}
+      )} */}
 
       <div>
         <div className="flex justify-between items-center mt-10 mb-2">

@@ -64,9 +64,6 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
     usage: '',
     type: 'BASE',
     typeCode: '',
-    approvalDate: '',
-    orderDate: '',
-    releaseDate: '',
     startDate: null,
     endDate: null,
     initialStartDateAt: '',
@@ -79,7 +76,6 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
     attachedFiles: [],
     checkedAttachedFileIds: [],
 
-    modificationHistory: [],
     changeHistories: [],
   },
 
@@ -92,9 +88,6 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
         usage: '',
         type: 'BASE',
         typeCode: '',
-        approvalDate: '',
-        orderDate: '',
-        releaseDate: '',
         startDate: null,
         endDate: null,
         initialStartDateAt: '',
@@ -106,7 +99,6 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
         attachedFiles: [],
         checkedAttachedFileIds: [],
 
-        modificationHistory: [],
         changeHistories: [],
       },
     })),
@@ -328,6 +320,13 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
           memo: f.memo || '',
         }))
       }),
+      checkedMaterialItemIds: undefined,
+      checkedAttachedFileIds: undefined,
+      attachedFiles: undefined,
+      typeCode: undefined,
+      initialStartDateAt: undefined,
+      initialEndDateAt: undefined,
+
       changeHistories: form.editedHistories ?? [],
     }
   },
