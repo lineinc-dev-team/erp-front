@@ -99,13 +99,14 @@ export function usePermission() {
         UserInfoFromPermissionService({
           hasRole: false,
           page: pageParam,
-          size: 10,
+          size: 5,
         }),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
-        const { pageInfo } = lastPage?.data
-        const nextPage = pageInfo?.page + 1
-        return nextPage < pageInfo?.totalPages ? nextPage : undefined
+        const { sliceInfo } = lastPage?.data
+        const nextPage = sliceInfo?.page + 1
+
+        return sliceInfo?.hasNext ? nextPage : undefined
       },
     })
   }

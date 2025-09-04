@@ -217,26 +217,48 @@ export default function PermissionManagementUI({ isEditMode = false }) {
 
   const [focusedUserId, setFocusedUserId] = useState<number | null>(null)
 
+  // const { data, fetchNextPage, hasNextPage, isFetching, isLoading } = useUserAccountInfiniteScroll()
+
+  // const loginIdKeywords = form.users.map((u) => u.loginId ?? '')
+  // const debouncedLoginIds = useDebouncedArrayValue(loginIdKeywords, 300)
+
+  // // 1. 이미 선택된 userId 목록 추출
+  // const selectedUserIds = form.users
+  //   .map((u) => u.userId)
+  //   .filter((id): id is number => typeof id === 'number')
+
+  // const rawList = data?.pages[0].data.content ?? []
+
+  // const loginIds = rawList
+  //   .map((user: RoleUser) => ({
+  //     userId: user.id,
+  //     loginId: user.loginId,
+  //     username: user.username,
+  //     department: user.department,
+  //   }))
+  //   .filter((user: RoleUser) => !selectedUserIds.includes(user.userId))
+
   const { data, fetchNextPage, hasNextPage, isFetching, isLoading } = useUserAccountInfiniteScroll()
 
   const loginIdKeywords = form.users.map((u) => u.loginId ?? '')
   const debouncedLoginIds = useDebouncedArrayValue(loginIdKeywords, 300)
 
-  // 1. 이미 선택된 userId 목록 추출
   const selectedUserIds = form.users
     .map((u) => u.userId)
     .filter((id): id is number => typeof id === 'number')
 
-  const rawList = data?.pages[0].data.content ?? []
+  const rawList = data?.pages.flatMap((page) => page.data.content) ?? []
 
   const loginIds = rawList
     .map((user: RoleUser) => ({
+      id: user.id,
       userId: user.id,
       loginId: user.loginId,
       username: user.username,
       department: user.department,
+      memo: user.memo,
     }))
-    .filter((user: RoleUser) => !selectedUserIds.includes(user.userId))
+    .filter((user) => !selectedUserIds.includes(user.userId))
 
   const setPermissionIds = usePermissionGroupStore((state) => state.setPermissionIds)
 
