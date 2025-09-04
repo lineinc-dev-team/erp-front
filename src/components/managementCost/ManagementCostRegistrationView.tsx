@@ -34,11 +34,13 @@ import {
   DetailItem,
   HistoryItem,
   KeyMoneyDetail,
+  ManagementCostFormState,
   MealFeeDetail,
 } from '@/types/managementCost'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { SupplyPriceInput, TotalInput, VatInput } from '@/utils/supplyVatTotalInput'
 import CommonSelectByName from '../common/CommonSelectByName'
+import { useSnackbarStore } from '@/stores/useSnackbarStore'
 
 export default function ManagementCostRegistrationView({ isEditMode = false }) {
   const {
@@ -63,6 +65,8 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     toggleCheckItem,
     toggleCheckAllItems,
   } = useManagementCostFormStore()
+
+  const { showSnackbar } = useSnackbarStore()
 
   const {
     createCostMutation,
@@ -163,6 +167,11 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     accountHolder: '예금주',
     memo: '메모',
     originalFileName: '파일 추가',
+    paymentDateFormat: '일자',
+    lunchCount: '중식 갯수',
+    breakfastCount: '조식 갯수',
+    unitPrice: '단가',
+    amount: '금액',
   }
 
   const {
@@ -203,7 +212,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
       const mealDetails = (client.mealFeeDetails ?? []).map((item: MealFeeDetail) => ({
         id: item.id,
-        laborId: item.laborId,
+        laborId: item?.labor?.id ?? null,
         workType: item.workType,
         breakfastCount: item.breakfastCount,
         lunchCount: item.lunchCount,
@@ -339,6 +348,65 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     },
     [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading],
   )
+
+  function validateCostForm(form: ManagementCostFormState) {
+    if (!form.siteId) return '현장명을 입력하세요.'
+    if (!form.siteProcessId) return '공정명을 선택하세요.'
+    if (!form.outsourcingCompanyId) return '업체명을 선택하세요.'
+    if (!form.itemType) return '항목을 선택하세요.'
+    if (form.itemType === 'ETC' && !form.itemTypeDescription) {
+      return '상세 항목을 입력하세요.'
+    }
+    if (!form.paymentDate) return '일자를 선택하세요.'
+    if (!form.outsourcingCompanyInfo) return '업체 정보를 입력하세요.'
+
+    if (itemDetails.length > 0) {
+      for (const item of itemDetails) {
+        if (!item.name?.trim()) return '품목명을 입력해주세요.'
+        if (!item.unitPrice && item.unitPrice !== 0) return '단가를 입력해주세요.'
+        if (!item.supplyPrice && item.supplyPrice !== 0) return '공급가를 입력해주세요.'
+      }
+    }
+
+    if (keyMoneyDetails.length > 0) {
+      for (const item of keyMoneyDetails) {
+        if (!item.account?.trim()) return '계정을 입력해주세요.'
+        if (!item.purpose?.trim()) return '사용목적을 입력해주세요.'
+        if (!item.personnelCount && item.personnelCount !== 0) return '인원수를 입력해주세요.'
+        if (!item.amount && item.amount !== 0) return '금액을 입력해주세요.'
+      }
+    }
+
+    if (mealFeelDetails.length > 0) {
+      for (const item of mealFeelDetails) {
+        if (!item.workType?.trim()) return '직종을 입력해주세요.'
+        if (item.inputType !== 'manual' && !item.laborId) return '담당자를 선택해주세요.'
+        if (!item.inputType?.trim()) return '구분을 선택해주세요.'
+        if (!item.name?.trim()) return '성명을 입력해주세요.'
+        const mealTotal = (item.breakfastCount ?? 0) + (item.lunchCount ?? 0)
+        if (mealTotal === 0) return '조식 또는 중식을 입력해주세요.'
+        if (!item.amount && item.amount !== 0) return '금액을 입력해주세요.'
+      }
+    }
+
+    return null
+  }
+
+  const handleCostSubmit = () => {
+    const errorMsg = validateCostForm(form)
+    if (errorMsg) {
+      showSnackbar(errorMsg, 'warning')
+      return
+    }
+
+    if (isEditMode) {
+      if (window.confirm('수정하시겠습니까?')) {
+        CostModifyMutation.mutate(costDetailId)
+      }
+    } else {
+      createCostMutation.mutate()
+    }
+  }
 
   return (
     <>
@@ -951,16 +1019,10 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       </div>
                     </TableCell>
 
-                    <TableRow>
-                      <TableCell key={m.id}>
-                        <TableCell
-                          sx={{
-                            fontSize: '16px',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          조식
-                        </TableCell>
+                    <TableCell sx={{ border: '1px solid #9CA3AF' }}>
+                      {/* 조식 */}
+                      <TableRow>
+                        <TableCell sx={{ fontSize: '16px', whiteSpace: 'nowrap' }}>조식</TableCell>
                         <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
                           <TextField
                             size="small"
@@ -975,41 +1037,19 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                               )
                             }
                             variant="outlined"
-                            InputProps={{
-                              sx: {
-                                textAlign: 'center', // 가운데 정렬
-                                input: {
-                                  textAlign: 'center', // 실제 입력 텍스트도 가운데 정렬
-                                },
-                              },
-                            }}
                             sx={{
                               '& .MuiOutlinedInput-root': {
-                                '& fieldset': {
-                                  borderColor: 'black',
-                                },
-                                '&:hover fieldset': {
-                                  borderColor: 'black',
-                                },
-                                '&.Mui-focused fieldset': {
-                                  borderColor: 'black',
-                                },
+                                '& fieldset': { borderColor: 'black' },
                               },
                             }}
                           />
                         </TableCell>
-                      </TableCell>
+                      </TableRow>
 
-                      <TableCell>
-                        <TableCell
-                          sx={{
-                            fontSize: '16px',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          중식
-                        </TableCell>
-                        <TableCell align="right" sx={{ borderLeft: '1px solid #9CA3AF' }}>
+                      {/* 중식 */}
+                      <TableRow>
+                        <TableCell sx={{ fontSize: '16px', whiteSpace: 'nowrap' }}>중식</TableCell>
+                        <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
                           <TextField
                             size="small"
                             placeholder="텍스트 입력"
@@ -1018,31 +1058,15 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                               updateItemField('mealListData', m.id, 'lunchCount', e.target.value)
                             }
                             variant="outlined"
-                            InputProps={{
-                              sx: {
-                                textAlign: 'center', // 가운데 정렬
-                                input: {
-                                  textAlign: 'center', // 실제 입력 텍스트도 가운데 정렬
-                                },
-                              },
-                            }}
                             sx={{
                               '& .MuiOutlinedInput-root': {
-                                '& fieldset': {
-                                  borderColor: 'black', // 기본 테두리 색 검은색
-                                },
-                                '&:hover fieldset': {
-                                  borderColor: 'black', // 호버 시에도 검은색 유지
-                                },
-                                '&.Mui-focused fieldset': {
-                                  borderColor: 'black', // 포커스 시에도 검은색 유지
-                                },
+                                '& fieldset': { borderColor: 'black' },
                               },
                             }}
                           />
                         </TableCell>
-                      </TableCell>
-                    </TableRow>
+                      </TableRow>
+                    </TableCell>
 
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
@@ -1110,10 +1134,8 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
                           const peopleCount = Number(m.breakfastCount) + Number(m.lunchCount)
 
-                          const calculatedUnitPrice =
-                            peopleCount > 0 ? numericValue / peopleCount : 0
-
-                          console.log('calculatedUnitPrice >>>', calculatedUnitPrice)
+                          let calculatedUnitPrice = peopleCount > 0 ? numericValue / peopleCount : 0
+                          calculatedUnitPrice = Math.floor(calculatedUnitPrice) // 소수점 버림
 
                           updateItemField('mealListData', m.id, 'unitPrice', calculatedUnitPrice)
                         }}
@@ -1230,7 +1252,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                   <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
                     <Checkbox
                       checked={isAllKeyMoneyChecked}
-                      indeterminate={checkedIds.length > 0 && !isAllKeyMoneyChecked}
+                      indeterminate={checkedKeyMoneyIds.length > 0 && !isAllKeyMoneyChecked}
                       onChange={(e) => toggleCheckAllItems('keyMoneyList', e.target.checked)}
                       sx={{ color: 'black' }}
                     />
@@ -1260,7 +1282,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       sx={{ border: '1px solid  #9CA3AF' }}
                     >
                       <Checkbox
-                        checked={checkedIds.includes(m.id)}
+                        checked={checkedKeyMoneyIds.includes(m.id)}
                         onChange={(e) => toggleCheckItem('keyMoneyList', m.id, e.target.checked)}
                       />
                     </TableCell>
@@ -1607,17 +1629,12 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
           className="px-10"
           onClick={() => console.log('취소')}
         />
+
         <CommonButton
           label={isEditMode ? '+ 수정' : '+ 등록'}
           className="px-10 font-bold"
           variant="secondary"
-          onClick={() => {
-            if (isEditMode) {
-              CostModifyMutation.mutate(costDetailId)
-            } else {
-              createCostMutation.mutate()
-            }
-          }}
+          onClick={handleCostSubmit}
         />
       </div>
     </>

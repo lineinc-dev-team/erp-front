@@ -105,10 +105,8 @@ export default function useSite() {
     mutationFn: ({ siteIds }: { siteIds: number[] }) => SiteRemoveService(siteIds),
 
     onSuccess: () => {
-      if (window.confirm('정말 삭제하시겠습니까?')) {
-        showSnackbar('현장이 삭제되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['siteInfo'] })
-      }
+      showSnackbar('현장이 삭제되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['siteInfo'] })
     },
 
     onError: () => {

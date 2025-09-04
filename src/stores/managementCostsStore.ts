@@ -7,6 +7,7 @@ import {
   KeyMoneyDetail,
   MealFeeDetail,
 } from '@/types/managementCost'
+import { getTodayDateString } from '@/utils/formatters'
 
 export const useCostSearchStore = create<{ search: CostSearchState }>((set) => ({
   search: {
@@ -67,6 +68,7 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
     itemType: '',
     itemTypeDescription: '',
     paymentDate: null,
+    initialDeliveryDateAt: '',
     outsourcingCompanyInfo: null,
 
     memo: '',
@@ -95,6 +97,7 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
         itemType: '',
         itemTypeDescription: '',
         paymentDate: null,
+        initialDeliveryDateAt: '',
         outsourcingCompanyInfo: null,
         memo: '',
         details: [],
@@ -279,7 +282,7 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
         return {
           form: {
             ...state.form,
-            checkedCostIds: checked ? state.form.details.map((_, idx) => idx) : [],
+            checkedCostIds: checked ? state.form.details.map((m) => m.id) : [],
           },
         }
       } else if (type === 'attachedFile') {
@@ -293,14 +296,14 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
         return {
           form: {
             ...state.form,
-            checkedMealFeeIds: checked ? state.form.mealFeeDetails.map((_, idx) => idx) : [],
+            checkedMealFeeIds: checked ? state.form.mealFeeDetails.map((m) => m.id) : [],
           },
         }
       } else if (type === 'keyMoneyList') {
         return {
           form: {
             ...state.form,
-            checkedKeyMoneyIds: checked ? state.form.keyMoneyDetails.map((_, idx) => idx) : [],
+            checkedKeyMoneyIds: checked ? state.form.keyMoneyDetails.map((m) => m.id) : [],
           },
         }
       }
@@ -359,12 +362,13 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
 
   getMealPriceTotal: () => {
     const { mealFeeDetails } = get().form
-    return mealFeeDetails.reduce((sum, item) => {
+    const total = mealFeeDetails.reduce((sum, item) => {
       const amount = Number(item.unitPrice)
       return sum + (isNaN(amount) ? 0 : amount)
     }, 0)
-  },
 
+    return Math.floor(total) // 소수점 버림
+  },
   getMealTotalCount: () => {
     const { mealFeeDetails } = get().form
     return mealFeeDetails.reduce((sum, item) => {
@@ -379,9 +383,7 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
         return {
           form: {
             ...state.form,
-            details: state.form.details.filter(
-              (_, idx) => !state.form.checkedCostIds.includes(idx),
-            ),
+            details: state.form.details.filter((m) => !state.form.checkedCostIds.includes(m.id)),
             checkedCostIds: [],
           },
         }
@@ -400,7 +402,7 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
           form: {
             ...state.form,
             mealFeeDetails: state.form.mealFeeDetails.filter(
-              (_, idx) => !state.form.checkedMealFeeIds.includes(idx),
+              (m) => !state.form.checkedMealFeeIds.includes(m.id),
             ),
             checkedMealFeeIds: [],
           },
@@ -410,7 +412,7 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
           form: {
             ...state.form,
             keyMoneyDetails: state.form.keyMoneyDetails.filter(
-              (_, idx) => !state.form.checkedKeyMoneyIds.includes(idx),
+              (m) => !state.form.checkedKeyMoneyIds.includes(m.id),
             ),
             checkedKeyMoneyIds: [],
           },
@@ -421,13 +423,17 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
 
   newCostData: () => {
     const form = get().form
+
+    const paymentDateStr = getTodayDateString(form.paymentDate)
+
     return {
       siteId: form.siteId,
       siteProcessId: form.siteProcessId,
       outsourcingCompanyId: form.outsourcingCompanyId === -2 ? null : form.outsourcingCompanyId,
       itemType: form.itemType,
       itemTypeDescription: form.itemTypeDescription,
-      paymentDate: form.paymentDate,
+      paymentDate:
+        paymentDateStr !== form.initialDeliveryDateAt ? paymentDateStr : form.initialDeliveryDateAt,
       outsourcingCompanyInfo: form.outsourcingCompanyInfo,
       memo: form.memo,
       details: form.details,
@@ -451,6 +457,7 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
             })),
       ),
       changeHistories: form.editedHistories ?? [],
+      initialDeliveryDateAt: undefined,
     }
   },
 }))

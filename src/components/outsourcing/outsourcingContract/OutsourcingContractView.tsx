@@ -423,9 +423,11 @@ export default function OutsourcingContractView() {
                     return
                   }
 
-                  OutsourcingContractDeleteMutation.mutate({
-                    contractIds: idsArray,
-                  })
+                  if (window.confirm('정말 삭제하시겠습니까?')) {
+                    OutsourcingContractDeleteMutation.mutate({
+                      contractIds: idsArray,
+                    })
+                  }
                 }}
                 className="px-3"
               />

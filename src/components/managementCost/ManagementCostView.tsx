@@ -391,9 +391,11 @@ export default function ManagementCost() {
                     return
                   }
 
-                  CostDeleteMutation.mutate({
-                    managementCostIds: idsArray,
-                  })
+                  if (window.confirm('정말 삭제하시겠습니까?')) {
+                    CostDeleteMutation.mutate({
+                      managementCostIds: idsArray,
+                    })
+                  }
                 }}
                 className="px-3"
               />

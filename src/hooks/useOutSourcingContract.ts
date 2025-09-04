@@ -141,10 +141,8 @@ export default function useOutSourcingContract() {
       OutsourcingContractRemoveService(contractIds),
 
     onSuccess: () => {
-      if (window.confirm('정말 삭제하시겠습니까?')) {
-        showSnackbar('외주업체 계약이 삭제되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['OutsourcingContractInfo'] })
-      }
+      showSnackbar('외주업체 계약이 삭제되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['OutsourcingContractInfo'] })
     },
 
     onError: (error: unknown) => {

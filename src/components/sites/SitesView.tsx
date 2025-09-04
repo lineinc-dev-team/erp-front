@@ -572,10 +572,11 @@ export default function SitesView() {
                     alert('체크박스를 선택해주세요.')
                     return
                   }
-
-                  SiteDeleteMutation.mutate({
-                    siteIds: idsArray,
-                  })
+                  if (window.confirm('정말 삭제하시겠습니까?')) {
+                    SiteDeleteMutation.mutate({
+                      siteIds: idsArray,
+                    })
+                  }
                 }}
                 className="px-3"
               />

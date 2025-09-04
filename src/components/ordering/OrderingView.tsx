@@ -487,9 +487,11 @@ export default function OrderingView() {
                     return
                   }
 
-                  ClientDeleteMutation.mutate({
-                    userIds: idsArray,
-                  })
+                  if (window.confirm('정말 삭제하시겠습니까?')) {
+                    ClientDeleteMutation.mutate({
+                      userIds: idsArray,
+                    })
+                  }
                 }}
                 className="px-3"
               />

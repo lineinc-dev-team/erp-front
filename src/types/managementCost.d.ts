@@ -100,11 +100,17 @@ export type KeyMoneyDetail = {
   memo: string
 }
 
+export type inLabor = {
+  deleted: boolean
+  id: number
+  name: string
+}
+
 // 식대 세부항목
 export type MealFeeDetail = {
   id: number
   workType: string
-  labor?: string | null
+  labor?: inLabor
   laborId: number | null
   inputType?: string
   name: string
@@ -142,6 +148,7 @@ export type ManagementCostFormState = {
   itemType: string
   itemTypeDescription: string
   paymentDate: Date | null // ISO string
+  initialDeliveryDateAt: string
   outsourcingCompanyInfo: outsourcingCompanyInfo | null
   memo: string
 

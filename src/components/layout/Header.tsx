@@ -15,17 +15,20 @@ import {
 import CloseIcon from '@mui/icons-material/Close'
 import {
   Menu as MenuIcon,
-  Business,
+  AccountCircle,
   ManageAccounts,
-  ExpandLess,
-  ExpandMore,
-  Groups,
-  Inventory,
-  Description,
+  Business,
   Apartment,
   Assignment,
-  // PeopleAlt,
-  AccountCircle,
+  Inventory,
+  LocalGasStation,
+  ReceiptLong,
+  Groups,
+  Description,
+  WorkHistory,
+  Today,
+  ExpandLess,
+  ExpandMore,
 } from '@mui/icons-material'
 import { usePathname, useRouter } from 'next/navigation'
 import CommonButton from '../common/Button'
@@ -61,19 +64,19 @@ const menuNameToBasePath: Record<string, string> = {
 }
 
 const menuNameToIcon: Record<string, React.ReactNode> = {
-  '계정 관리': <AccountCircle />,
-  '권한 관리': <ManageAccounts />,
-  '발주처 관리': <Business />,
-  '현장 관리': <Apartment />,
-  '관리비 관리': <Assignment />,
-  '강재 관리': <Inventory />,
-  '자재 관리': <Inventory />,
-  '유류집계 관리': <Inventory />,
-  '강재수불부 관리': <Inventory />,
-  '외주업체 관리': <Groups />,
-  '외주업체 계약 관리': <Description />,
-  '노무 관리': <Description />,
-  출역일보: <Description />,
+  '계정 관리': <AccountCircle />, // 사용자 계정 → 프로필 아이콘
+  '권한 관리': <ManageAccounts />, // 권한 설정 → 계정 관리 아이콘
+  '발주처 관리': <Business />, // 회사/거래처 → 건물 아이콘
+  '현장 관리': <Apartment />, // 현장/프로젝트 → 아파트 아이콘
+  '관리비 관리': <Assignment />, // 비용/리포트 → 과제/문서 아이콘
+  '강재 관리': <Inventory />, // 자재/강재 → 재고 아이콘
+  '자재 관리': <Inventory />, // 자재 관리도 재고 아이콘
+  '유류집계 관리': <LocalGasStation />, // 유류 → 주유소 아이콘
+  '강재수불부 관리': <ReceiptLong />, // 수불부(장부 개념) → 장부/리포트 아이콘
+  '외주업체 관리': <Groups />, // 협력사/외주업체 → 그룹 아이콘
+  '외주업체 계약 관리': <Description />, // 계약 문서 → 문서 아이콘
+  '노무 관리': <WorkHistory />, // 근무/노무 → 출퇴근 기록 아이콘
+  출역일보: <Today />,
 }
 
 function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {

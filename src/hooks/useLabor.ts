@@ -131,10 +131,8 @@ export function useLaborInfo() {
     mutationFn: ({ laborIds }: { laborIds: number[] }) => LaborListRemoveService(laborIds),
 
     onSuccess: () => {
-      if (window.confirm('정말 삭제하시겠습니까?')) {
-        showSnackbar('인력정보가 삭제되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['LaborInfo'] })
-      }
+      showSnackbar('인력정보가 삭제되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['LaborInfo'] })
     },
 
     onError: (error: unknown) => {

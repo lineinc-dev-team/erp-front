@@ -104,10 +104,8 @@ export function useClientCompany() {
     mutationFn: ({ userIds }: { userIds: number[] }) => ClientRemoveService(userIds),
 
     onSuccess: () => {
-      if (window.confirm('정말 삭제하시겠습니까?')) {
-        showSnackbar('발주처가 삭제되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['ClientInfo'] })
-      }
+      showSnackbar('발주처가 삭제되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['ClientInfo'] })
     },
 
     onError: () => {

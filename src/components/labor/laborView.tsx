@@ -58,7 +58,7 @@ export default function LaborView() {
     return {
       ...item,
       outsourcingCompanyName: item.outsourcingCompany?.name ?? '라인공영',
-      residentNumber: item.residentNumber,
+      residentNumber: item.residentNumber || '-',
       dailyWage: formatNumber(item.dailyWage),
       hasFile: item.hasFile ? 'Y' : 'N',
       isSeverancePayEligible: item.isSeverancePayEligible ? 'Y' : 'N',
@@ -66,7 +66,7 @@ export default function LaborView() {
       hasIdCard: item.hasIdCard ? 'Y' : 'N',
       hasSignatureImage: item.hasSignatureImage ? 'Y' : 'N',
 
-      hireDate: `${getTodayDateString(item.hireDate)}` || '-',
+      hireDate: item.hireDate ? `${getTodayDateString(item.hireDate)}` : '-',
       resignationDate: item.resignationDate ? getTodayDateString(item.resignationDate) : '-',
     }
   })
@@ -389,9 +389,11 @@ export default function LaborView() {
                     return
                   }
 
-                  LaborDeleteMutation.mutate({
-                    laborIds: idsArray,
-                  })
+                  if (window.confirm('정말 삭제하시겠습니까?')) {
+                    LaborDeleteMutation.mutate({
+                      laborIds: idsArray,
+                    })
+                  }
                 }}
                 className="px-3"
               />

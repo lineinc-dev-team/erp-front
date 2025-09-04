@@ -120,10 +120,8 @@ export function useManagementCost() {
       CostRemoveService(managementCostIds),
 
     onSuccess: () => {
-      if (window.confirm('정말 삭제하시겠습니까?')) {
-        showSnackbar('관리비가 삭제되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['CostInfo'] })
-      }
+      showSnackbar('관리비가 삭제되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['CostInfo'] })
     },
 
     onError: () => {
@@ -137,12 +135,10 @@ export function useManagementCost() {
     mutationFn: (costId: number) => ModifyCostManagement(costId),
 
     onSuccess: () => {
-      if (window.confirm('수정하시겠습니까?')) {
-        showSnackbar('관리비가 수정 되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['CostInfo'] })
-        reset()
-        router.push('/managementCost')
-      }
+      showSnackbar('관리비가 수정 되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['CostInfo'] })
+      reset()
+      router.push('/managementCost')
     },
 
     onError: () => {
