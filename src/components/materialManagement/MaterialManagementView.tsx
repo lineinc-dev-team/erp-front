@@ -57,7 +57,6 @@ export default function MaterialManagementView() {
 
     // 업체명
 
-    setCompanySearch,
     companyOptions,
     comPanyNameFetchNextPage,
     comPanyNamehasNextPage,
@@ -309,7 +308,7 @@ export default function MaterialManagementView() {
                 onScrollToBottom={() => {
                   if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
                 }}
-                onInputChange={(value) => setCompanySearch(value)}
+                // onInputChange={(value) => setCompanySearch(value)}
                 loading={comPanyNameLoading}
               />
             </div>
