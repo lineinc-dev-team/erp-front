@@ -96,7 +96,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
     // 업체명
 
-    setCompanySearch,
     companyOptions,
     comPanyNameFetchNextPage,
     comPanyNamehasNextPage,
@@ -1089,7 +1088,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                 onScrollToBottom={() => {
                   if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
                 }}
-                onInputChange={(value) => setCompanySearch(value)}
+                // onInputChange={(value) => setCompanySearch(value)}
                 loading={comPanyNameLoading}
               />
             </div>

@@ -308,8 +308,6 @@ export default function useOutSourcingContract() {
 
   // 업체명 리스트 + 사업자등록 번호
 
-  const [CompanySearch, setCompanySearch] = useState('')
-
   const {
     data: comPanyNameInfo,
     fetchNextPage: comPanyNameFetchNextPage,
@@ -317,8 +315,8 @@ export default function useOutSourcingContract() {
     isFetching: comPanyNameFetching,
     isLoading: comPanyNameLoading,
   } = useInfiniteQuery({
-    queryKey: ['compnayInfo', CompanySearch],
-    queryFn: ({ pageParam }) => GetCompanyNameInfoService({ pageParam, keyword: CompanySearch }),
+    queryKey: ['compnayInfo'],
+    queryFn: ({ pageParam = 0 }) => GetCompanyNameInfoService({ pageParam, size: 6 }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
       const { sliceInfo } = lastPage.data
@@ -361,7 +359,6 @@ export default function useOutSourcingContract() {
     useOutsourcingContractHistoryDataQuery,
 
     // 업체명
-    setCompanySearch,
     companyOptions,
     comPanyNameFetchNextPage,
     comPanyNamehasNextPage,

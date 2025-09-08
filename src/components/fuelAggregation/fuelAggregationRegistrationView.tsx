@@ -62,7 +62,6 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
 
     // 업체명
 
-    setCompanySearch,
     companyOptions,
     comPanyNameFetchNextPage,
     comPanyNamehasNextPage,
@@ -480,7 +479,6 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                         if (comPanyNamehasNextPage && !comPanyNameFetching)
                           comPanyNameFetchNextPage()
                       }}
-                      onInputChange={(value) => setCompanySearch(value)}
                       loading={comPanyNameLoading}
                     />
                   </TableCell>
