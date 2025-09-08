@@ -83,7 +83,21 @@ export type EmployeesItem = {
   workContent: string
   workQuantity: number
   memo: string
+  modifyDate?: string
 }
+
+// export type directContractsItem = {
+//   id: number
+//   outsourcingCompanyId: T
+//   laborId: T
+//   position: string
+//   workContent: string
+//   unitPrice: number
+//   workQuantity: 1
+//   memo: string
+//   isTemporary: boolean
+//   temporaryLaborName: string
+// }
 
 export type OutsourcingsItem = {
   id: number
@@ -93,6 +107,7 @@ export type OutsourcingsItem = {
   workContent: string
   workQuantity: number
   memo: string
+  modifyDate?: string
 }
 
 export type EquipmentsItem = {
@@ -106,17 +121,19 @@ export type EquipmentsItem = {
   unitPrice: number
   workHours: number
   memo: string
+  modifyDate?: string
 }
 
 export type FuelsItem = {
   id: number
-  outsourcingCompanyContractId: number
+  outsourcingCompanyId: number
   outsourcingCompanyContractDriverId: number
   outsourcingCompanyContractEquipmentId: number
   specificationName?: string
   fuelType: string
   fuelAmount: number
   memo: string
+  modifyDate?: string
 }
 
 export type DailyFormState = {
@@ -130,6 +147,9 @@ export type DailyFormState = {
   employees: EmployeesItem[]
   // 선택된 체크박스 id
   checkedManagerIds: number[]
+
+  // directContracts: directContractsItem[]
+  // checkeddirectContractsIds: number[]
 
   outsourcings: OutsourcingsItem[]
   checkedOutsourcingIds: number[]
@@ -149,6 +169,11 @@ type DailyReportFormStore = {
   form: DailyFormState
 
   reset: () => void
+  resetEmployees: () => void
+  resetOutsourcing: () => void
+  resetEquipment: () => void
+  resetFuel: () => void
+  resetFile: () => void
 
   setField: <K extends keyof Omit<DailyFormState, 'reset' | 'setField'>>(
     field: K,
@@ -156,27 +181,39 @@ type DailyReportFormStore = {
   ) => void
 
   addItem: (
-    type: 'Employees' | 'outsourcings' | 'equipment' | 'fuel' | 'ContractWorker' | 'attachedFile',
+    type:
+      | 'Employees'
+      | 'contractWorkers'
+      | 'outsourcings'
+      | 'equipment'
+      | 'fuel'
+      | 'ContractWorker'
+      | 'attachedFile',
   ) => void
   updateItemField: (
-    type: 'Employees' | 'outsourcings' | 'equipment' | 'fuel' | 'attachedFile',
+    type: 'Employees' | 'contractWorkers' | 'outsourcings' | 'equipment' | 'fuel' | 'attachedFile',
     id: number,
     field: string,
     value: T,
   ) => void
   toggleCheckItem: (
-    type: 'Employees' | 'outsourcings' | 'equipment' | 'fuel' | 'attachedFile',
+    type: 'Employees' | 'contractWorkers' | 'outsourcings' | 'equipment' | 'fuel' | 'attachedFile',
     id: number,
     checked: boolean,
   ) => void
   toggleCheckAllItems: (
-    type: 'Employees' | 'outsourcings' | 'equipment' | 'fuel' | 'attachedFile',
+    type: 'Employees' | 'contractWorkers' | 'outsourcings' | 'equipment' | 'fuel' | 'attachedFile',
     checked: boolean,
   ) => void
   removeCheckedItems: (
-    type: 'Employees' | 'equipment' | 'outsourcings' | 'fuel' | 'attachedFile',
+    type: 'Employees' | 'contractWorkers' | 'equipment' | 'outsourcings' | 'fuel' | 'attachedFile',
   ) => void
 
   //payload 값
   newDailyReportData: () => void
+  modifyEmployees: () => void
+  modifyOutsourcing: () => void
+  modifyEquipment: () => void
+  modifyFuel: () => void
+  modifyFile: () => void
 }

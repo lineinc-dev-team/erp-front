@@ -16,7 +16,7 @@ export const useOutSourcingClientId = () => {
     } else if (dailyForm.outsourcingEquipments.length > 0) {
       return dailyForm.outsourcingEquipments[0].outsourcingCompanyId
     } else if (dailyForm.fuels.length > 0) {
-      return dailyForm.fuels[0].outsourcingCompanyContractId
+      return dailyForm.fuels[0].outsourcingCompanyId
     }
     return 0
   }

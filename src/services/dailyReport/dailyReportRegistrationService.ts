@@ -1,6 +1,7 @@
 import { API } from '@/api/config/env'
 import { useDailyFormStore } from '@/stores/dailyReportStore'
 
+// 출역일보 등록
 export async function CreatedailyReport() {
   const { newDailyReportData } = useDailyFormStore.getState()
   const payload = newDailyReportData()
@@ -15,7 +16,72 @@ export async function CreatedailyReport() {
   })
 
   if (!res.ok) {
-    throw new Error(`서버 오류: ${res.status}`)
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
+  }
+
+  return await res.status
+}
+
+// // 출역일보(직원) 수정
+
+export async function ModifyEmployeesReport({
+  siteId,
+  siteProcessId,
+  reportDate,
+}: {
+  siteId: number
+  siteProcessId: number
+  reportDate: string
+}) {
+  const { modifyEmployees } = useDailyFormStore.getState()
+  const payload = modifyEmployees()
+
+  const res = await fetch(
+    `${API.DAILYREPORT}/employees?siteId=${siteId}&siteProcessId=${siteProcessId}&reportDate=${reportDate}`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      credentials: 'include',
+    },
+  )
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
   }
 
   return await res.status
@@ -24,12 +90,12 @@ export async function CreatedailyReport() {
 // 노무쪽 인력 데이터 조회
 export async function GetEmployeeInfoService({
   pageParam = 0,
-  size = 5,
+  size = 6,
   keyword = '',
-  type = 'REGULAR_EMPLOYEE',
+  types = 'REGULAR_EMPLOYEE',
 }) {
   const resData = await fetch(
-    `${API.LABOR}/search?page=${pageParam}&size=${size}&keyword=${keyword}&type=${type}`,
+    `${API.LABOR}/search?page=${pageParam}&size=${size}&keyword=${keyword}&types=${types}`,
     {
       method: 'GET',
       headers: {
@@ -55,7 +121,7 @@ export async function GetEmployeeInfoService({
 // 직원 데이터 조회
 export async function GetEmployeesByFilterService({
   pageParam = 0,
-  size = 5,
+  size = 10,
   sort = 'id,asc',
   siteId = 0,
   siteProcessId = 0,
@@ -130,6 +196,54 @@ export async function GetOutsoucingByFilterService({
   return data
 }
 
+// 외주  수정
+export async function ModifyOutsourcingReport({
+  siteId,
+  siteProcessId,
+  reportDate,
+}: {
+  siteId: number
+  siteProcessId: number
+  reportDate: string
+}) {
+  const { modifyOutsourcing } = useDailyFormStore.getState()
+  const payload = modifyOutsourcing()
+
+  const res = await fetch(
+    `${API.DAILYREPORT}/outsourcings?siteId=${siteId}&siteProcessId=${siteProcessId}&reportDate=${reportDate}`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      credentials: 'include',
+    },
+  )
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
+  }
+
+  return await res.status
+}
+
 // 장비 데이터 조회
 export async function GetEquipmentByFilterService({
   pageParam = 0,
@@ -167,6 +281,77 @@ export async function GetEquipmentByFilterService({
 
   const data = await res.json()
   return data
+}
+
+// 장비를 가지고 있는 업체만 조회
+
+export async function GetWithEquipmentService({ pageParam = 0, size = 6, sort = '' }) {
+  const resData = await fetch(
+    `${API.OUTSOURCINGCOMPANY}/with-equipment?page=${pageParam}&size=${size}&sort=${sort}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    },
+  )
+
+  if (!resData.ok) {
+    if (resData.status === 401) throw new Error('권한이 없습니다.')
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+
+// 장비 데이터 수정
+export async function ModifyEquipmentReport({
+  siteId,
+  siteProcessId,
+  reportDate,
+}: {
+  siteId: number
+  siteProcessId: number
+  reportDate: string
+}) {
+  const { modifyEquipment } = useDailyFormStore.getState()
+  const payload = modifyEquipment()
+
+  const res = await fetch(
+    `${API.DAILYREPORT}/equipments?siteId=${siteId}&siteProcessId=${siteProcessId}&reportDate=${reportDate}`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      credentials: 'include',
+    },
+  )
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
+  }
+
+  return await res.status
 }
 
 // 유류 데이터 조회
@@ -208,6 +393,54 @@ export async function GetFuelByFilterService({
   return data
 }
 
+// 유류 데이터 수정
+export async function ModifyFuelReport({
+  siteId,
+  siteProcessId,
+  reportDate,
+}: {
+  siteId: number
+  siteProcessId: number
+  reportDate: string
+}) {
+  const { modifyFuel } = useDailyFormStore.getState()
+  const payload = modifyFuel()
+
+  const res = await fetch(
+    `${API.DAILYREPORT}/fuels?siteId=${siteId}&siteProcessId=${siteProcessId}&reportDate=${reportDate}`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      credentials: 'include',
+    },
+  )
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
+  }
+
+  return await res.status
+}
+
 // 현장 사진 등록 데이터 조회
 export async function GetAttachedFileByFilterService({
   pageParam = 0,
@@ -226,6 +459,7 @@ export async function GetAttachedFileByFilterService({
     reportDate,
   })
 
+  // 출역일보 파일 조회
   const res = await fetch(`${API.DAILYREPORT}/files?${query.toString()}`, {
     method: 'GET',
     headers: {
@@ -247,11 +481,58 @@ export async function GetAttachedFileByFilterService({
   return data
 }
 
+export async function ModifyFileReport({
+  siteId,
+  siteProcessId,
+  reportDate,
+}: {
+  siteId: number
+  siteProcessId: number
+  reportDate: string
+}) {
+  const { modifyFile } = useDailyFormStore.getState()
+  const payload = modifyFile()
+
+  const res = await fetch(
+    `${API.DAILYREPORT}/files?siteId=${siteId}&siteProcessId=${siteProcessId}&reportDate=${reportDate}`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      credentials: 'include',
+    },
+  )
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
+  }
+
+  return await res.status
+}
+
 // 노무쪽 인력 데이터 조회
 
 export async function OutsourcingWorkerNameScroll({
   pageParam = 0,
-  size = 5,
+  size = 6,
   keyword = '',
   id = 0,
   sort = '',
@@ -274,4 +555,49 @@ export async function OutsourcingWorkerNameScroll({
 
   const data = await resData.json()
   return data
+}
+
+// 출역일보 상세 조회
+
+export async function DetaileReport({
+  siteId,
+  siteProcessId,
+  reportDate,
+}: {
+  siteId: number
+  siteProcessId: number
+  reportDate: string
+}) {
+  const res = await fetch(
+    `${API.DAILYREPORT}/detail?siteId=${siteId}&siteProcessId=${siteProcessId}&reportDate=${reportDate}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    },
+  )
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
+  }
+
+  return await res.json()
 }

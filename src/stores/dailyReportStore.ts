@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import type { OrderingSearchState } from '@/types/ordering'
 import {
   DailyAttachedFile,
   DailyReportFormStore,
@@ -8,63 +7,6 @@ import {
   FuelsItem,
   OutsourcingsItem,
 } from '@/types/dailyReport'
-
-export const useOrderingSearchStore = create<{ search: OrderingSearchState }>((set) => ({
-  search: {
-    searchTrigger: 0,
-    name: '',
-    businessNumber: '',
-    ceoName: '',
-    userName: '',
-    landlineNumber: '',
-    contactName: '',
-    email: '',
-    startDate: null,
-    endDate: null,
-    isActive: '0',
-    arraySort: '최신순',
-    currentPage: 1,
-    pageCount: '10',
-
-    setField: (field, value) =>
-      set((state) => ({
-        search: { ...state.search, [field]: value },
-      })),
-
-    handleSearch: () =>
-      set((state) => ({
-        search: {
-          ...state.search,
-          searchTrigger: state.search.searchTrigger + 1,
-        },
-      })),
-
-    reset: () =>
-      set((state) => ({
-        search: {
-          ...state.search,
-          name: '',
-          businessNumber: '',
-          currentPage: 1,
-          ceoName: '',
-          userName: '',
-          areaNumber: '',
-          landlineNumber: '',
-          contactName: '',
-          email: '',
-          startDate: null,
-          endDate: null,
-          arraySort: '최신순',
-          pageCount: '10',
-          isActive: '0',
-        },
-      })),
-
-    handleOrderingListRemove: () => {
-      alert('리스트에 대한 삭제가 됩니다.')
-    },
-  },
-}))
 
 export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
   form: {
@@ -101,6 +43,46 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         checkedFuelsIds: [],
         files: [],
         checkedAttachedFileIds: [],
+      },
+    })),
+
+  resetEmployees: () =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        employees: [],
+      },
+    })),
+
+  resetOutsourcing: () =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        outsourcings: [],
+      },
+    })),
+
+  resetEquipment: () =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        outsourcingEquipments: [],
+      },
+    })),
+
+  resetFile: () =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        DailyAttachedFile: [],
+      },
+    })),
+
+  resetFuel: () =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        FuelsItem: [],
       },
     })),
 
@@ -153,7 +135,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       } else if (type === 'fuel') {
         const newItem: FuelsItem = {
           id: Date.now(),
-          outsourcingCompanyContractId: 0,
+          outsourcingCompanyId: 0,
           outsourcingCompanyContractDriverId: 0,
           outsourcingCompanyContractEquipmentId: 0,
           specificationName: '',
@@ -287,23 +269,21 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         return {
           form: {
             ...state.form,
-            checkedOutsourcingIds: checked ? state.form.outsourcings.map((_, idx) => idx) : [],
+            checkedOutsourcingIds: checked ? state.form.outsourcings.map((m) => m.id) : [],
           },
         }
       } else if (type === 'equipment') {
         return {
           form: {
             ...state.form,
-            checkedEquipmentIds: checked
-              ? state.form.outsourcingEquipments.map((_, idx) => idx)
-              : [],
+            checkedEquipmentIds: checked ? state.form.outsourcingEquipments.map((m) => m.id) : [],
           },
         }
       } else if (type === 'fuel') {
         return {
           form: {
             ...state.form,
-            checkedFuelsIds: checked ? state.form.fuels.map((_, idx) => idx) : [],
+            checkedFuelsIds: checked ? state.form.fuels.map((m) => m.id) : [],
           },
         }
       } else {
@@ -333,7 +313,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           form: {
             ...state.form,
             outsourcings: state.form.outsourcings.filter(
-              (_, idx) => !state.form.checkedOutsourcingIds.includes(idx),
+              (m) => !state.form.checkedOutsourcingIds.includes(m.id),
             ),
             checkedOutsourcingIds: [],
           },
@@ -343,7 +323,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           form: {
             ...state.form,
             outsourcingEquipments: state.form.outsourcingEquipments.filter(
-              (_, idx) => !state.form.checkedEquipmentIds.includes(idx),
+              (m) => !state.form.checkedEquipmentIds.includes(m.id),
             ),
             checkedEquipmentIds: [],
           },
@@ -352,7 +332,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         return {
           form: {
             ...state.form,
-            fuels: state.form.fuels.filter((_, idx) => !state.form.checkedFuelsIds.includes(idx)),
+            fuels: state.form.fuels.filter((m) => !state.form.checkedFuelsIds.includes(m.id)),
             checkedFuelsIds: [],
           },
         }
@@ -390,7 +370,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         return f.files.map((fileObj: FileUploadInfo) => ({
           id: f.id || Date.now(),
           fileUrl: fileObj.fileUrl || '',
-          originalFileName: fileObj.file?.name || '',
+          originalFileName: fileObj.name || fileObj.originalFileName,
           memo: f.memo || '',
           description: f.description || '',
         }))
@@ -398,11 +378,108 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       siteId: form.siteId,
       siteProcessId: form.siteProcessId,
       reportDate: form.reportDate,
-      weather: form.weather,
+      weather: form.weather === 'BASE' || form.weather === '' ? undefined : form.weather,
       employees: form.employees,
       outsourcings: form.outsourcings,
       outsourcingEquipments: form.outsourcingEquipments,
       fuels: form.fuels,
+    }
+  },
+
+  modifyEmployees: () => {
+    const form = get().form
+    return {
+      files: undefined,
+      siteId: undefined,
+      siteProcessId: undefined,
+      reportDate: undefined,
+      weather: undefined,
+      employees: form.employees,
+      outsourcings: undefined,
+      outsourcingEquipments: undefined,
+      fuels: undefined,
+    }
+  },
+
+  modifyOutsourcing: () => {
+    const form = get().form
+    return {
+      files: undefined,
+      siteId: undefined,
+      siteProcessId: undefined,
+      reportDate: undefined,
+      weather: undefined,
+      employees: undefined,
+      outsourcings: form.outsourcings,
+      outsourcingEquipments: undefined,
+      fuels: undefined,
+    }
+  },
+
+  modifyEquipment: () => {
+    const form = get().form
+    return {
+      files: undefined,
+      siteId: undefined,
+      siteProcessId: undefined,
+      reportDate: undefined,
+      weather: undefined,
+      employees: undefined,
+      outsourcings: undefined,
+      outsourcingEquipments: form.outsourcingEquipments,
+      fuels: undefined,
+    }
+  },
+
+  modifyFuel: () => {
+    const form = get().form
+    return {
+      files: undefined,
+      siteId: undefined,
+      siteProcessId: undefined,
+      reportDate: undefined,
+      weather: undefined,
+      employees: undefined,
+      outsourcings: undefined,
+      outsourcingEquipments: undefined,
+      fuels: form.fuels,
+    }
+  },
+
+  modifyFile: () => {
+    const form = get().form
+    return {
+      files: form.files.flatMap((f) => {
+        if (!f.files || f.files.length === 0) {
+          // 파일이 없을 경우에도 name, memo는 전송
+          return [
+            {
+              id: f.id || Date.now(),
+              fileUrl: '',
+              originalFileName: '',
+              memo: f.memo || '',
+              description: f.description || '',
+            },
+          ]
+        }
+
+        // 파일이 있을 경우
+        return f.files.map((fileObj: FileUploadInfo) => ({
+          id: f.id || Date.now(),
+          fileUrl: fileObj.fileUrl || '',
+          originalFileName: fileObj.name || fileObj.originalFileName,
+          memo: f.memo || '',
+          description: f.description || '',
+        }))
+      }),
+      siteId: undefined,
+      siteProcessId: undefined,
+      reportDate: undefined,
+      weather: undefined,
+      employees: undefined,
+      outsourcings: undefined,
+      outsourcingEquipments: undefined,
+      fuels: undefined,
     }
   },
 }))

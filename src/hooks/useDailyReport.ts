@@ -1,21 +1,25 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
-import { useRouter } from 'next/navigation'
-import { useOrderingFormStore } from '@/stores/orderingStore'
-import { ModifyClientCompany } from '@/services/ordering/orderingRegistrationService'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import {
   CreatedailyReport,
   GetEmployeeInfoService,
+  GetWithEquipmentService,
+  ModifyEmployeesReport,
+  ModifyEquipmentReport,
+  ModifyFileReport,
+  ModifyFuelReport,
+  ModifyOutsourcingReport,
   OutsourcingWorkerNameScroll,
 } from '@/services/dailyReport/dailyReportRegistrationService'
 import { useOutSourcingClientId } from './useOutsourcingClientIdNumber'
+import { useDailyFormStore } from '@/stores/dailyReportStore'
 
 export function useDailyReport() {
   const { showSnackbar } = useSnackbarStore()
-  const { reset } = useOrderingFormStore()
 
-  const router = useRouter()
+  const { reset } = useDailyFormStore()
+
   const queryClient = useQueryClient()
 
   // 출역일보 등록
@@ -24,40 +28,184 @@ export function useDailyReport() {
     onSuccess: () => {
       showSnackbar('출역일보가 등록 되었습니다.', 'success')
       // 초기화 로직
-      queryClient.invalidateQueries({ queryKey: ['DailyInfo'] })
-      reset()
-      router.push('/dailyReport/registration')
+      queryClient.invalidateQueries({ queryKey: ['DailyCreate'] })
     },
-    onError: () => {
-      showSnackbar('출역일보 등록이 실패했습니다.', 'error')
-    },
-  })
 
-  // 발주처 수정
-
-  const ClientModifyMutation = useMutation({
-    mutationFn: (userIds: number) => ModifyClientCompany(userIds),
-
-    onSuccess: () => {
-      if (window.confirm('수정하시겠습니까?')) {
-        showSnackbar('발주처가 수정 되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['ClientInfo'] })
-        reset()
-        router.push('/ordering')
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('출역일보 등록이 실패했습니다.', 'error')
       }
     },
+  })
 
-    onError: () => {
-      showSnackbar(' 발주처 수정에 실패했습니다.', 'error')
+  // 출역일보 수정
+
+  const EmployeesModifyMutation = useMutation({
+    mutationFn: ({
+      siteId,
+      siteProcessId,
+      reportDate,
+    }: {
+      siteId: number
+      siteProcessId: number
+      reportDate: string
+    }) => ModifyEmployeesReport({ siteId, siteProcessId, reportDate }),
+
+    onSuccess: () => {
+      showSnackbar('출역일보(직원)이 수정 되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['DailyEmployee'] })
+      // reset()
+    },
+
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('출역일보(직원) 수정에 실패했습니다.', 'error')
+      }
     },
   })
 
-  // 발주처에서 사용하는 유저 정보데이터
-  // 조회에서 이름 검색 스크롤
+  // 외주 수정
+  const OutsourcingModifyMutation = useMutation({
+    mutationFn: ({
+      siteId,
+      siteProcessId,
+      reportDate,
+    }: {
+      siteId: number
+      siteProcessId: number
+      reportDate: string
+    }) => ModifyOutsourcingReport({ siteId, siteProcessId, reportDate }),
 
-  // 구분을 기타로 선택 시 보여주는 쿼리
+    onSuccess: () => {
+      showSnackbar('출역일보(외주)가 수정 되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['DailyOut'] })
+    },
 
-  const [EmployeeSearch, setEmployeeSearch] = useState('')
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('출역일보(외주) 수정에 실패했습니다.', 'error')
+      }
+    },
+  })
+
+  // 장비를 가지고 있는 업체만 조회 쿼리
+
+  const {
+    data: withEquipmentInfo,
+    fetchNextPage: withEquipmentFetchNextPage,
+    hasNextPage: withEquipmenthasNextPage,
+    isFetching: withEquipmentFetching,
+    isLoading: withEquipmentLoading,
+  } = useInfiniteQuery({
+    queryKey: ['withEquipmentInfo'],
+    queryFn: ({ pageParam = 0 }) => GetWithEquipmentService({ pageParam, size: 6 }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      const nextPage = sliceInfo.page + 1
+      return sliceInfo.hasNext ? nextPage : undefined
+    },
+  })
+
+  const withEquipmentInfoOptions = useMemo(() => {
+    const defaultOptions = [{ id: 0, name: '선택', deleted: false }]
+
+    const options = (withEquipmentInfo?.pages || [])
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+        deleted: false,
+      }))
+
+    return [...defaultOptions, ...options]
+  }, [withEquipmentInfo])
+
+  // 장비 수정
+  const EquipmentModifyMutation = useMutation({
+    mutationFn: ({
+      siteId,
+      siteProcessId,
+      reportDate,
+    }: {
+      siteId: number
+      siteProcessId: number
+      reportDate: string
+    }) => ModifyEquipmentReport({ siteId, siteProcessId, reportDate }),
+
+    onSuccess: () => {
+      showSnackbar('출역일보(장비)가 수정 되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['DailyEq'] })
+    },
+
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('출역일보(장비) 수정에 실패했습니다.', 'error')
+      }
+    },
+  })
+
+  // 유류 수정
+  const FuelModifyMutation = useMutation({
+    mutationFn: ({
+      siteId,
+      siteProcessId,
+      reportDate,
+    }: {
+      siteId: number
+      siteProcessId: number
+      reportDate: string
+    }) => ModifyFuelReport({ siteId, siteProcessId, reportDate }),
+
+    onSuccess: () => {
+      showSnackbar('출역일보(유류)가 수정 되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['DailyFuel'] })
+    },
+
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('출역일보(유류) 수정에 실패했습니다.', 'error')
+      }
+    },
+  })
+
+  // 파일 수정
+
+  // 유류 수정
+  const FileModifyMutation = useMutation({
+    mutationFn: ({
+      siteId,
+      siteProcessId,
+      reportDate,
+    }: {
+      siteId: number
+      siteProcessId: number
+      reportDate: string
+    }) => ModifyFileReport({ siteId, siteProcessId, reportDate }),
+
+    onSuccess: () => {
+      showSnackbar('출역일보(현장 사진)을 수정 되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['DailyFileInfo'] })
+    },
+
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('출역일보(현장 사진) 수정에 실패했습니다.', 'error')
+      }
+    },
+  })
 
   const {
     data: employeeInfo,
@@ -66,8 +214,8 @@ export function useDailyReport() {
     isFetching: employeeFetching,
     isLoading: employeeLoading,
   } = useInfiniteQuery({
-    queryKey: ['employeeInfo', EmployeeSearch],
-    queryFn: ({ pageParam }) => GetEmployeeInfoService({ pageParam, keyword: EmployeeSearch }),
+    queryKey: ['employeeInfo'],
+    queryFn: ({ pageParam = 0 }) => GetEmployeeInfoService({ pageParam, size: 6 }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
       const { sliceInfo } = lastPage.data
@@ -96,8 +244,6 @@ export function useDailyReport() {
 
   const clientId = useOutSourcingClientId()
 
-  const [workerSearch, setWorkerSearch] = useState('')
-
   const {
     data: workerList,
     fetchNextPage: workerListFetchNextPage,
@@ -105,12 +251,12 @@ export function useDailyReport() {
     isFetching: workerListIsFetching,
     isLoading: workerListLoading,
   } = useInfiniteQuery({
-    queryKey: ['WorkDataInfo', workerSearch, clientId],
-    queryFn: ({ pageParam }) =>
+    queryKey: ['WorkDataInfo', clientId],
+    queryFn: ({ pageParam = 0 }) =>
       OutsourcingWorkerNameScroll({
         pageParam,
         id: clientId || 0,
-        keyword: workerSearch,
+        size: 6,
       }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
@@ -137,11 +283,20 @@ export function useDailyReport() {
     return [defaultOption, ...options]
   }, [workerList])
 
+  const reportCancel = () => {
+    reset()
+  }
+
   return {
     createDailyMutation,
-    ClientModifyMutation,
+    EmployeesModifyMutation,
 
-    setEmployeeSearch,
+    OutsourcingModifyMutation,
+    EquipmentModifyMutation,
+    FuelModifyMutation,
+    FileModifyMutation,
+
+    reportCancel,
     employeeInfoOptions,
     employeeFetchNextPage,
     employeehasNextPage,
@@ -151,10 +306,16 @@ export function useDailyReport() {
     // 인력 정보 조회
 
     workListOptions,
-    setWorkerSearch,
     workerListFetchNextPage,
     workerListHasNextPage,
     workerListIsFetching,
     workerListLoading,
+
+    // 장비를 가지고 있는 업체명
+    withEquipmentInfoOptions,
+    withEquipmentFetchNextPage,
+    withEquipmenthasNextPage,
+    withEquipmentFetching,
+    withEquipmentLoading,
   }
 }
