@@ -603,7 +603,6 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                 onScrollToBottom={() => {
                   if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
                 }}
-                // onInputChange={(value) => setCompanySearch(value)}
                 loading={comPanyNameLoading}
               />
             </div>
