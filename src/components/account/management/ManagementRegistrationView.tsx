@@ -8,7 +8,7 @@ import { useAccountFormStore } from '@/stores/accountManagementStore'
 import { useUserMg } from '@/hooks/useUserMg'
 import { formatAreaNumber, formatPhoneNumber } from '@/utils/formatPhoneNumber'
 
-import { UseORnotOptions } from '@/config/erp.confing'
+import { isHeadOfficeOptions, UseORnotOptions } from '@/config/erp.confing'
 import { useParams } from 'next/navigation'
 import { UserDetailService } from '@/services/account/accountManagementService'
 import { useQuery } from '@tanstack/react-query'
@@ -105,6 +105,10 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
       const isActiveId = client.isActive === true ? '1' : '2'
 
       if (isActiveId !== form.isActive) setField('isActive', isActiveId)
+
+      const isHeadOfficeId = client.isHeadOffice === true ? '1' : '2'
+
+      if (isHeadOfficeId !== form.isHeadOffice) setField('isHeadOffice', isHeadOfficeId)
     } else {
       reset()
     }
@@ -383,6 +387,20 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
               </div>
             </>
           )}
+          <div className="flex">
+            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              본사 직원 여부
+            </label>
+            <div className="border flex items-center gap-4 p-2 border-gray-400 px-2 w-full">
+              <CommonSelect
+                fullWidth={true}
+                className="text-2xl"
+                value={form.isHeadOffice}
+                onChange={(value) => setField('isHeadOffice', value)}
+                options={isHeadOfficeOptions}
+              />
+            </div>
+          </div>
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">

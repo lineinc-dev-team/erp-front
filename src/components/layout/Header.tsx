@@ -84,9 +84,16 @@ function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {
     const basePath = menuNameToBasePath[menu.name] || '/'
     const icon = menuNameToIcon[menu.name] || null
 
-    const filteredPermissions = menu.permissions.filter(
+    let filteredPermissions = menu.permissions.filter(
       (perm: ApiPermission) => !['승인', '수정', '삭제'].includes(perm.action),
     )
+
+    // 출역일보에서는 등록도 제거
+    if (menu.name === '출역일보') {
+      filteredPermissions = filteredPermissions.filter(
+        (perm: ApiPermission) => perm.action !== '등록',
+      )
+    }
 
     const children = filteredPermissions.map((perm: ApiPermission) => {
       let path = basePath

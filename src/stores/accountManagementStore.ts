@@ -76,6 +76,7 @@ export const useAccountFormStore = create<AccountFormStore>((set, get) => ({
     landlineNumber: '',
     password: '',
     isActive: '1',
+    isHeadOffice: '1',
     memo: '',
     changeHistories: [],
   },
@@ -93,6 +94,7 @@ export const useAccountFormStore = create<AccountFormStore>((set, get) => ({
         landlineNumber: '',
         password: '',
         isActive: '1',
+        isHeadOffice: '1',
         memo: '',
         changeHistories: [],
       },
@@ -133,6 +135,7 @@ export const useAccountFormStore = create<AccountFormStore>((set, get) => ({
       ...form,
       ...(form.password && form.password.trim() !== '' ? { password: form.password } : undefined),
       isActive: form.isActive === '1' ? true : false,
+      isHeadOffice: form.isHeadOffice === '1' ? true : false,
 
       // 수정된 항목만 보내기 (없으면 빈 배열)
       changeHistories: form.editedHistories ?? undefined,

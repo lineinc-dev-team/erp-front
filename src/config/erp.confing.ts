@@ -35,6 +35,12 @@ export const UseORnotOptions = [
   { id: '2', name: '미사용' },
 ]
 
+export const isHeadOfficeOptions = [
+  { id: '0', name: '선택' },
+  { id: '1', name: 'Y' },
+  { id: '2', name: 'N' },
+]
+
 export const UseStateOptions = [
   { id: '0', name: '선택' },
   { id: '1', name: '활성' },
