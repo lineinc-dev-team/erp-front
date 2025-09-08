@@ -322,7 +322,6 @@ export default function ManagementSteel() {
                 onScrollToBottom={() => {
                   if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
                 }}
-                // onInputChange={(value) => setCompanySearch(value)}
                 loading={comPanyNameLoading}
               />
             </div>

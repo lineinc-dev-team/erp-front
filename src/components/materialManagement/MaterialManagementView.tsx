@@ -308,7 +308,6 @@ export default function MaterialManagementView() {
                 onScrollToBottom={() => {
                   if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
                 }}
-                // onInputChange={(value) => setCompanySearch(value)}
                 loading={comPanyNameLoading}
               />
             </div>

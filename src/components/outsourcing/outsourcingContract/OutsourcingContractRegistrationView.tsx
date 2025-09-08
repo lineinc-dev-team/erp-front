@@ -1013,43 +1013,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
               업체명
             </label>
             <div className="border border-gray-400 p-2 px-2 w-full">
-              {/* <CommonSelect
-                fullWidth
-                value={form.CompanyId || 0}
-                onChange={async (value) => {
-                  const selectedCompany = updatedCompanyOptions.find((opt) => opt.id === value)
-                  if (!selectedCompany) return
-
-                  setField('CompanyId', selectedCompany.id)
-                  setField('CompanyName', selectedCompany.name)
-
-                  // 1. 회사 정보 요청
-                  const res = await GetCompanyNameInfoService({
-                    pageParam: 0,
-                    keyword: '',
-                  })
-
-                  const companyList = res.data?.content || []
-
-                  // 2. 선택한 업체 ID와 일치하는 항목 찾기
-                  const matched = companyList.find(
-                    (company: CompanyInfo) => company.id === selectedCompany.id,
-                  )
-
-                  if (matched) {
-                    setField('businessNumber', matched.businessNumber)
-                  } else {
-                    setField('businessNumber', '')
-                  }
-                }}
-                options={updatedCompanyOptions}
-                onScrollToBottom={() => {
-                  if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
-                }}
-                onInputChange={(value) => setCompanySearch(value)}
-                loading={comPanyNameLoading}
-              /> */}
-
               <CommonSelect
                 fullWidth
                 value={form.CompanyId || 0}

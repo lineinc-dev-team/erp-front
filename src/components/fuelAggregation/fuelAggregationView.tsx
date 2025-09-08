@@ -304,7 +304,6 @@ export default function FuelAggregationView() {
                 onScrollToBottom={() => {
                   if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
                 }}
-                // onInputChange={(value) => setCompanySearch(value)}
                 loading={comPanyNameLoading}
               />
             </div>

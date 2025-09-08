@@ -289,7 +289,6 @@ export default function ManagementCost() {
                 onScrollToBottom={() => {
                   if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
                 }}
-                // onInputChange={(value) => setCompanySearch(value)}
                 loading={comPanyNameLoading}
               />
             </div>
