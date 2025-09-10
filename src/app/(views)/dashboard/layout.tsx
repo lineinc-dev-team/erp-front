@@ -1,3 +1,3 @@
 export default function Layout() {
-  return <div>대쉬보드에만 들어가는 레이아웃이 들어감</div>
+  return <div>대쉬보드 레이아웃</div>
 }
