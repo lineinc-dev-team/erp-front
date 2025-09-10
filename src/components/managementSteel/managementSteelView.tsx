@@ -8,7 +8,7 @@ import { Pagination } from '@mui/material'
 import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
 import { ArrayStatusOptions, PageCount, SteelColumnList } from '@/config/erp.confing'
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import ExcelModal from '../common/ExcelModal'
 import { SteelExcelFieldMap } from '@/utils/userExcelField'
 import CommonInput from '../common/Input'
@@ -23,6 +23,8 @@ import {
 import CommonSelectByName from '../common/CommonSelectByName'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
+import { useMenuPermission } from '../common/MenuPermissionView'
+import { myInfoProps } from '@/types/user'
 
 export default function ManagementSteel() {
   const { handleNewSteelCreate } = ManagementSteelService()
@@ -77,6 +79,7 @@ export default function ManagementSteel() {
       // 날짜들 (string 변환 처리)
       orderDate: steel.orderDate ? getTodayDateString(steel.orderDate) : '-',
 
+      startDate: steel.startDate ? getTodayDateString(steel.startDate) : '-',
       endDate: steel.endDate ? getTodayDateString(steel.endDate) : '-',
       approvalDate: steel.approvalDate ? getTodayDateString(steel.approvalDate) : '-',
       releaseDate: steel.releaseDate ? getTodayDateString(steel.releaseDate) : '-',
@@ -132,12 +135,24 @@ export default function ManagementSteel() {
         flex: 1,
         renderCell: (params: GridRenderCellParams) => {
           const steelId = params.row.id
+
+          const handleClick = () => {
+            if (hasModify) {
+              router.push(`/managementSteel/registration/${steelId}`)
+            }
+          }
+
           return (
             <div
-              onClick={() => router.push(`/managementSteel/registration/${steelId}`)}
-              className="flex justify-center items-center cursor-pointer"
+              onClick={handleClick}
+              className={`flex justify-center items-center ${
+                hasModify
+                  ? 'cursor-pointer text-orange-500 font-bold'
+                  : 'cursor-not-allowed text-gray-400'
+              }`}
+              style={!hasModify ? { pointerEvents: 'none' } : {}}
             >
-              <span className="text-orange-500 font-bold">{params.value}</span>
+              <span>{params.value}</span>
             </div>
           )
         },
@@ -208,6 +223,31 @@ export default function ManagementSteel() {
       fields, // 필수 필드: ["id", "name", "businessNumber", ...] })
     })
   }
+
+  // 권한에 따른 버튼 활성화
+
+  const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
+
+  useEffect(() => {
+    const headerData = sessionStorage.getItem('myInfo')
+    if (headerData) {
+      setMyInfo(JSON.parse(headerData))
+    }
+  }, [])
+
+  const roleId = Number(myInfo?.roles?.[0]?.id)
+
+  const rolePermissionStatus = myInfo?.roles?.[0]?.deleted
+
+  const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
+
+  // "계정 관리" 메뉴에 대한 권한
+  const { hasCreate, hasModify, hasApproval } = useMenuPermission(
+    roleId,
+    '강재수불부 관리',
+    enabled,
+  )
+
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
@@ -423,6 +463,7 @@ export default function ManagementSteel() {
               /> */}
               <CommonButton
                 label="승인"
+                disabled={!hasApproval}
                 variant="primary"
                 onClick={() => {
                   if (!selectedIds || !(selectedIds.ids instanceof Set)) {
@@ -501,6 +542,7 @@ export default function ManagementSteel() {
               />
               <CommonButton
                 label="+ 신규등록"
+                disabled={!hasCreate} // 권한 없으면 비활성화
                 variant="secondary"
                 onClick={handleNewSteelCreate}
                 className="px-3"

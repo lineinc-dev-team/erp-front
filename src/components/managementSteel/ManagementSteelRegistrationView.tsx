@@ -131,6 +131,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     unitPrice: '단가',
     quantity: '수량',
     supplyPrice: '공급가',
+    originalFileName: '파일 추가',
   }
 
   const {

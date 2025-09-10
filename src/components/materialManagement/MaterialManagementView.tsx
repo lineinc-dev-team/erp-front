@@ -8,7 +8,7 @@ import { Pagination } from '@mui/material'
 import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
 import { ArrayStatusOptions, MaterialColumnList, PageCount } from '@/config/erp.confing'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import ExcelModal from '../common/ExcelModal'
 import { MaterialExcelFieldMap } from '@/utils/userExcelField'
 import { useManagementMaterial } from '@/hooks/useMaterialManagement'
@@ -22,6 +22,8 @@ import { getTodayDateString } from '@/utils/formatters'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import CommonSelectByName from '../common/CommonSelectByName'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
+import { myInfoProps } from '@/types/user'
+import { useMenuPermission } from '../common/MenuPermissionView'
 
 export default function MaterialManagementView() {
   const { handleNewMaterialCreate } = ManagementMaterialService()
@@ -157,12 +159,23 @@ export default function MaterialManagementView() {
 
         renderCell: (params: GridRenderCellParams) => {
           const materialId = params.row.backendId
+          const handleClick = () => {
+            if (hasModify) {
+              router.push(`/materialManagement/registration/${materialId}`)
+            }
+          }
+
           return (
             <div
-              onClick={() => router.push(`/materialManagement/registration/${materialId}`)}
-              className="flex justify-center items-center cursor-pointer"
+              onClick={handleClick}
+              className={`flex justify-center items-center ${
+                hasModify
+                  ? 'cursor-pointer text-orange-500 font-bold'
+                  : 'cursor-not-allowed text-gray-400'
+              }`}
+              style={!hasModify ? { pointerEvents: 'none' } : {}}
             >
-              <span className="text-orange-500 font-bold">{params.value}</span>
+              <span>{params.value}</span>
             </div>
           )
         },
@@ -201,6 +214,27 @@ export default function MaterialManagementView() {
   const handleDownloadExcel = async (fields: string[]) => {
     await MaterialExcelDownload({ fields })
   }
+
+  // 권한에 따른 버튼 활성화
+
+  const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
+
+  useEffect(() => {
+    const headerData = sessionStorage.getItem('myInfo')
+    if (headerData) {
+      setMyInfo(JSON.parse(headerData))
+    }
+  }, [])
+
+  const roleId = Number(myInfo?.roles?.[0]?.id)
+
+  const rolePermissionStatus = myInfo?.roles?.[0]?.deleted
+
+  const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
+
+  // "계정 관리" 메뉴에 대한 권한
+  const { hasCreate, hasModify } = useMenuPermission(roleId, '자재 관리', enabled)
+
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
@@ -428,6 +462,7 @@ export default function MaterialManagementView() {
               />
               <CommonButton
                 label="+ 신규등록"
+                disabled={!hasCreate}
                 variant="secondary"
                 onClick={handleNewMaterialCreate}
                 className="px-3"

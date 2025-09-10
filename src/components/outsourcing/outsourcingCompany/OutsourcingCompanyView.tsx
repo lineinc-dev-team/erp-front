@@ -16,7 +16,7 @@ import CommonDatePicker from '@/components/common/DatePicker'
 import useOutSourcingCompany from '@/hooks/useOutSourcingCompany'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { useAccountStore } from '@/stores/accountManagementStore'
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { useTabOpener } from '@/utils/openTab'
 import { OutsourcingCompanyList } from '@/types/outsourcingCompany'
 import { getTodayDateString } from '@/utils/formatters'
@@ -25,6 +25,8 @@ import { OutsourcingCompanyExcelDownload } from '@/services/outsourcingCompany/o
 import ExcelModal from '@/components/common/ExcelModal'
 import { outsourcingCompanyExcelFieldMap } from '@/utils/userExcelField'
 import ContractHistory from '@/components/common/ContractHistory'
+import { myInfoProps } from '@/types/user'
+import { useMenuPermission } from '@/components/common/MenuPermissionView'
 
 export default function OutsourcingCompanyView() {
   const { showSnackbar } = useSnackbarStore()
@@ -146,12 +148,24 @@ export default function OutsourcingCompanyView() {
 
         renderCell: (params: GridRenderCellParams) => {
           const clientId = params.row.id
+
+          const handleClick = () => {
+            if (hasModify) {
+              router.push(`/outsourcingCompany/registration/${clientId}`)
+            }
+          }
+
           return (
             <div
-              onClick={() => router.push(`/outsourcingCompany/registration/${clientId}`)}
-              className="flex justify-center items-center cursor-pointer"
+              onClick={handleClick}
+              className={`flex justify-center items-center ${
+                hasModify
+                  ? 'cursor-pointer text-orange-500 font-bold'
+                  : 'cursor-not-allowed text-gray-400'
+              }`}
+              style={!hasModify ? { pointerEvents: 'none' } : {}}
             >
-              <span className="text-orange-500 font-bold">{params.value}</span>
+              <span>{params.value}</span>
             </div>
           )
         },
@@ -208,6 +222,26 @@ export default function OutsourcingCompanyView() {
       console.error('엑셀 다운로드 에러:', error)
     }
   }
+
+  // 권한에 따른 버튼 활성화
+
+  const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
+
+  useEffect(() => {
+    const headerData = sessionStorage.getItem('myInfo')
+    if (headerData) {
+      setMyInfo(JSON.parse(headerData))
+    }
+  }, [])
+
+  const roleId = Number(myInfo?.roles?.[0]?.id)
+
+  const rolePermissionStatus = myInfo?.roles?.[0]?.deleted
+
+  const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
+
+  // "계정 관리" 메뉴에 대한 권한
+  const { hasDelete, hasCreate, hasModify } = useMenuPermission(roleId, '외주업체 관리', enabled)
 
   return (
     <>
@@ -402,6 +436,7 @@ export default function OutsourcingCompanyView() {
             <div className="flex items-center gap-2">
               <CommonButton
                 label="삭제"
+                disabled={!hasDelete}
                 variant="danger"
                 onClick={() => {
                   if (!selectedIds || !(selectedIds.ids instanceof Set)) {
@@ -439,6 +474,7 @@ export default function OutsourcingCompanyView() {
               />
               <CommonButton
                 label="+ 신규등록"
+                disabled={!hasCreate}
                 variant="secondary"
                 onClick={() => openTab('/outsourcingCompany/registration', '외주업체 관리 - 등록')}
                 className="px-3"

@@ -8,7 +8,7 @@ import { Pagination } from '@mui/material'
 import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
 import { ArrayStatusOptions, CostColumnList, PageCount } from '@/config/erp.confing'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import ExcelModal from '../common/ExcelModal'
 import { CostExcelFieldMap } from '@/utils/userExcelField'
 import { CostExcelDownload } from '@/services/managementCost/managementCostService'
@@ -20,6 +20,8 @@ import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import CommonSelectByName from '../common/CommonSelectByName'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import { useTabOpener } from '@/utils/openTab'
+import { myInfoProps } from '@/types/user'
+import { useMenuPermission } from '../common/MenuPermissionView'
 
 export default function ManagementCost() {
   const { search } = useCostSearchStore()
@@ -108,12 +110,23 @@ export default function ManagementCost() {
 
         renderCell: (params: GridRenderCellParams) => {
           const costId = params.row.id
+          const handleClick = () => {
+            if (hasModify) {
+              router.push(`/managementCost/registration/${costId}`)
+            }
+          }
+
           return (
             <div
-              onClick={() => router.push(`/managementCost/registration/${costId}`)}
-              className="flex justify-center items-center cursor-pointer"
+              onClick={handleClick}
+              className={`flex justify-center items-center ${
+                hasModify
+                  ? 'cursor-pointer text-orange-500 font-bold'
+                  : 'cursor-not-allowed text-gray-400'
+              }`}
+              style={!hasModify ? { pointerEvents: 'none' } : {}}
             >
-              <span className="text-orange-500 font-bold">{params.value}</span>
+              <span>{params.value}</span>
             </div>
           )
         },
@@ -162,6 +175,27 @@ export default function ManagementCost() {
       fields,
     })
   }
+
+  // 권한에 따른 버튼 활성화
+
+  const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
+
+  useEffect(() => {
+    const headerData = sessionStorage.getItem('myInfo')
+    if (headerData) {
+      setMyInfo(JSON.parse(headerData))
+    }
+  }, [])
+
+  const roleId = Number(myInfo?.roles?.[0]?.id)
+
+  const rolePermissionStatus = myInfo?.roles?.[0]?.deleted
+
+  const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
+
+  // "계정 관리" 메뉴에 대한 권한
+  const { hasDelete, hasCreate, hasModify } = useMenuPermission(roleId, '관리비 관리', enabled)
+
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
@@ -376,6 +410,7 @@ export default function ManagementCost() {
             <div className="flex items-center gap-2">
               <CommonButton
                 label="삭제"
+                disabled={!hasDelete}
                 variant="danger"
                 onClick={() => {
                   if (!selectedIds || !(selectedIds.ids instanceof Set)) {
@@ -414,6 +449,7 @@ export default function ManagementCost() {
               />
               <CommonButton
                 label="+ 신규등록"
+                disabled={!hasCreate}
                 variant="secondary"
                 onClick={() => openTab('/managementCost/registration', '관리비 관리 - 등록')}
                 className="px-3"
