@@ -61,6 +61,7 @@ export const useLaborSearchStore = create<{ search: LaborSearchState }>((set) =>
 
 export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
   form: {
+    currentPage: 1,
     type: '',
     typeDescription: '',
     outsourcingCompanyId: -1,
@@ -115,6 +116,7 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
   reset: () =>
     set(() => ({
       form: {
+        currentPage: 1,
         type: '',
         typeDescription: '',
         outsourcingCompanyId: -1,

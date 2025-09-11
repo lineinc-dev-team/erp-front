@@ -9,7 +9,7 @@ import { Pagination } from '@mui/material'
 import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
 import ExcelModal from '../common/ExcelModal'
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { laborExcelFieldMap } from '@/utils/userExcelField'
 import { useTabOpener } from '@/utils/openTab'
 import { useLaborSearchStore } from '@/stores/laborStore'
@@ -19,6 +19,8 @@ import { formatNumber, getTodayDateString } from '@/utils/formatters'
 import { formatPhoneNumber } from '@/utils/formatPhoneNumber'
 import { LaborExcelDownload } from '@/services/labor/laborService'
 import CommonSelectByName from '../common/CommonSelectByName'
+import { myInfoProps } from '@/types/user'
+import { useMenuPermission } from '../common/MenuPermissionView'
 
 export default function LaborView() {
   const openTab = useTabOpener()
@@ -59,6 +61,9 @@ export default function LaborView() {
       ...item,
       outsourcingCompanyName: item.outsourcingCompany?.name ?? '라인공영',
       residentNumber: item.residentNumber || '-',
+      workType: item.workType || '-',
+      mainWork: item.mainWork || '-',
+      phoneNumber: item.phoneNumber || '-',
       dailyWage: formatNumber(item.dailyWage),
       hasFile: item.hasFile ? 'Y' : 'N',
       isSeverancePayEligible: item.isSeverancePayEligible ? 'Y' : 'N',
@@ -90,7 +95,7 @@ export default function LaborView() {
           return (
             <div className="flex flex-col items-center">
               <Fragment>
-                <div className="whitespace-pre-wrap">{item.bankName}</div>
+                <div className="whitespace-pre-wrap">{item.bankName || '-'}</div>
                 <div className="whitespace-pre-wrap">{item.accountNumber}</div>
               </Fragment>
             </div>
@@ -139,12 +144,24 @@ export default function LaborView() {
 
         renderCell: (params: GridRenderCellParams) => {
           const clientId = params.row.id
+
+          const handleClick = () => {
+            if (hasModify) {
+              router.push(`/labors/registration/${clientId}`)
+            }
+          }
+
           return (
             <div
-              onClick={() => router.push(`/labors/registration/${clientId}`)}
-              className="flex justify-center items-center cursor-pointer"
+              onClick={handleClick}
+              className={`flex justify-center items-center ${
+                hasModify
+                  ? 'cursor-pointer text-orange-500 font-bold'
+                  : 'cursor-not-allowed text-gray-400'
+              }`}
+              style={!hasModify ? { pointerEvents: 'none' } : {}}
             >
-              <span className="text-orange-500 font-bold">{params.value}</span>
+              <span>{params.value}</span>
             </div>
           )
         },
@@ -193,6 +210,27 @@ export default function LaborView() {
       fields, // 필수 필드: ["id", "name", "businessNumber", ...]
     })
   }
+
+  // 권한에 따른 버튼 활성화
+
+  const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
+
+  useEffect(() => {
+    const headerData = sessionStorage.getItem('myInfo')
+    if (headerData) {
+      setMyInfo(JSON.parse(headerData))
+    }
+  }, [])
+
+  const roleId = Number(myInfo?.roles?.[0]?.id)
+
+  const rolePermissionStatus = myInfo?.roles?.[0]?.deleted
+
+  const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
+
+  // "계정 관리" 메뉴에 대한 권한
+  const { hasDelete, hasCreate, hasModify } = useMenuPermission(roleId, '노무 관리', enabled)
+
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
@@ -376,6 +414,7 @@ export default function LaborView() {
             <div className="flex items-center gap-2">
               <CommonButton
                 label="삭제"
+                disabled={!hasDelete}
                 variant="danger"
                 onClick={() => {
                   if (!selectedIds || !(selectedIds.ids instanceof Set)) {
@@ -413,6 +452,7 @@ export default function LaborView() {
               />
               <CommonButton
                 label="+ 신규등록"
+                disabled={!hasCreate}
                 variant="secondary"
                 onClick={() => openTab('/labors/registration', '노무 관리 - 등록')}
                 className="px-3"

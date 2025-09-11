@@ -61,6 +61,7 @@ const menuNameToBasePath: Record<string, string> = {
   '외주업체 계약 관리': '/outsourcingContract',
   '노무 관리': '/labors',
   출역일보: '/dailyReport/registration',
+  '노무명세서 관리': '/laborStatement',
 }
 
 const menuNameToIcon: Record<string, React.ReactNode> = {
@@ -77,6 +78,7 @@ const menuNameToIcon: Record<string, React.ReactNode> = {
   '외주업체 계약 관리': <Description />, // 계약 문서 → 문서 아이콘
   '노무 관리': <WorkHistory />, // 근무/노무 → 출퇴근 기록 아이콘
   출역일보: <Today />,
+  '노무명세서 관리': <WorkHistory />, // 근무/노무 → 출퇴근 기록 아이콘
 }
 
 function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {
@@ -90,6 +92,12 @@ function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {
 
     // 출역일보에서는 등록도 제거
     if (menu.name === '출역일보') {
+      filteredPermissions = filteredPermissions.filter(
+        (perm: ApiPermission) => perm.action !== '등록',
+      )
+    }
+
+    if (menu.name === '노무명세서 관리') {
       filteredPermissions = filteredPermissions.filter(
         (perm: ApiPermission) => perm.action !== '등록',
       )

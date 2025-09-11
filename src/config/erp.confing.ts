@@ -467,3 +467,19 @@ export const WithoutApprovalAndRemovalOptions = [
     name: '임대',
   },
 ]
+
+// 노무 명세서
+
+export const LaborStateMentColumnList: GridColDef[] = [
+  { field: 'no', headerName: 'No', width: 70 },
+  // { field: 'id', headerName: 'No', width: 70 },
+  { field: 'siteName', headerName: '현장', width: 130 },
+  { field: 'processName', headerName: '공정', width: 130 },
+  { field: 'regularEmployeeCount', headerName: '정직원', width: 130 },
+  { field: 'directContractCount', headerName: '직영/계약직', width: 180 },
+  { field: 'etcCount', headerName: '기타', width: 100 },
+  { field: 'totalLaborCost', headerName: '노무비 합게', width: 100 },
+  { field: 'totalDeductions', headerName: '공제금 합계', width: 120 },
+  { field: 'totalNetPayment', headerName: '차감지급액 합계', width: 100 },
+  { field: 'memo', headerName: '비고', width: 100 },
+]

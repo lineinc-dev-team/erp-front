@@ -3,6 +3,7 @@ export interface myInfoProps {
   loginId: string
   roles: roleInfo[]
   username: string
+  isHeadOffice: boolean
 }
 
 type roleInfo = {

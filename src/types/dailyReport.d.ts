@@ -86,18 +86,20 @@ export type EmployeesItem = {
   modifyDate?: string
 }
 
-// export type directContractsItem = {
-//   id: number
-//   outsourcingCompanyId: T
-//   laborId: T
-//   position: string
-//   workContent: string
-//   unitPrice: number
-//   workQuantity: 1
-//   memo: string
-//   isTemporary: boolean
-//   temporaryLaborName: string
-// }
+export type directContractsItem = {
+  id: T
+  checkId: number
+  outsourcingCompanyId: T
+  laborId: T
+  position: string
+  workContent: string
+  unitPrice: number
+  workQuantity: number
+  memo: string
+  isTemporary: boolean
+  temporaryLaborName: string
+  modifyDate?: string
+}
 
 export type OutsourcingsItem = {
   id: number
@@ -148,8 +150,8 @@ export type DailyFormState = {
   // 선택된 체크박스 id
   checkedManagerIds: number[]
 
-  // directContracts: directContractsItem[]
-  // checkeddirectContractsIds: number[]
+  directContracts: directContractsItem[]
+  checkeddirectContractsIds: number[]
 
   outsourcings: OutsourcingsItem[]
   checkedOutsourcingIds: number[]
@@ -170,6 +172,7 @@ type DailyReportFormStore = {
 
   reset: () => void
   resetEmployees: () => void
+  resetDirectContracts: () => void
   resetOutsourcing: () => void
   resetEquipment: () => void
   resetFuel: () => void
@@ -183,35 +186,39 @@ type DailyReportFormStore = {
   addItem: (
     type:
       | 'Employees'
-      | 'contractWorkers'
+      | 'directContracts'
       | 'outsourcings'
       | 'equipment'
       | 'fuel'
       | 'ContractWorker'
       | 'attachedFile',
   ) => void
+
+  addTemporaryCheckedItems: (type: 'directContracts') => void
+
   updateItemField: (
-    type: 'Employees' | 'contractWorkers' | 'outsourcings' | 'equipment' | 'fuel' | 'attachedFile',
+    type: 'Employees' | 'directContracts' | 'outsourcings' | 'equipment' | 'fuel' | 'attachedFile',
     id: number,
     field: string,
     value: T,
   ) => void
   toggleCheckItem: (
-    type: 'Employees' | 'contractWorkers' | 'outsourcings' | 'equipment' | 'fuel' | 'attachedFile',
+    type: 'Employees' | 'directContracts' | 'outsourcings' | 'equipment' | 'fuel' | 'attachedFile',
     id: number,
     checked: boolean,
   ) => void
   toggleCheckAllItems: (
-    type: 'Employees' | 'contractWorkers' | 'outsourcings' | 'equipment' | 'fuel' | 'attachedFile',
+    type: 'Employees' | 'directContracts' | 'outsourcings' | 'equipment' | 'fuel' | 'attachedFile',
     checked: boolean,
   ) => void
   removeCheckedItems: (
-    type: 'Employees' | 'contractWorkers' | 'equipment' | 'outsourcings' | 'fuel' | 'attachedFile',
+    type: 'Employees' | 'directContracts' | 'equipment' | 'outsourcings' | 'fuel' | 'attachedFile',
   ) => void
 
   //payload 값
   newDailyReportData: () => void
   modifyEmployees: () => void
+  modifyDirectContracts: () => void
   modifyOutsourcing: () => void
   modifyEquipment: () => void
   modifyFuel: () => void

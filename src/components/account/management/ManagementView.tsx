@@ -47,9 +47,10 @@ export default function ManagementView() {
   const updatedUsers = UserInfoList.map((user: UserInfoProps) => ({
     ...user,
     isActive: user.isActive === true ? 'Y' : 'N',
-    lastLoginAt: getTodayDateString(user.lastLoginAt),
+    lastLoginAt: getTodayDateString(user.lastLoginAt) || '-',
     createdAt: getTodayDateString(user.createdAt),
     updatedAt: getTodayDateString(user.updatedAt),
+    memo: user.memo || '-',
   }))
 
   const { selectedIds, setSelectedIds } = useAccountStore()

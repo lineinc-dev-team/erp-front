@@ -82,6 +82,7 @@ export type AttachedFile = {
 }
 
 export type LaborFormState = {
+  currentPage: number
   type: string
   typeDescription: string
   outsourcingCompanyId: number

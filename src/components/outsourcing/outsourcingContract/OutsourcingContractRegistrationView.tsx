@@ -883,47 +883,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
               현장명
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              {/* <CommonSelect
-                fullWidth
-                value={form.siteId || 0}
-                onChange={async (value) => {
-                  const selectedSite = updatedSiteOptions.find((opt) => opt.id === value)
-                  if (!selectedSite) return
-
-                  setField('siteId', selectedSite.id)
-                  setField('siteName', selectedSite.name)
-
-                  // 🔹 삭제된 업체를 선택한 경우 - 기존 정보 바로 사용
-                  if (selectedSite.deleted) {
-                    setField('processId', selectedSite.id || '')
-                    setField('processName', selectedSite.name)
-                    return
-                  }
-
-                  const res = await SitesProcessNameScroll({
-                    pageParam: 0,
-                    siteId: selectedSite.id,
-                    keyword: '',
-                  })
-
-                  const processes = res.data?.content || []
-
-                  if (processes.length > 0) {
-                    setField('processId', processes[0].id)
-                    setField('processName', processes[0].name)
-                  } else {
-                    setField('processId', 0)
-                    setField('processName', '')
-                  }
-                }}
-                options={updatedSiteOptions}
-                onScrollToBottom={() => {
-                  if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
-                }}
-                onInputChange={(value) => setSitesSearch(value)}
-                loading={siteNameLoading}
-              /> */}
-
               <CommonSelect
                 fullWidth
                 value={form.siteId || 0}

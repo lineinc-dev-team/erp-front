@@ -176,3 +176,28 @@ export async function LaborInfoHistoryService(
   const data = await resData.json()
   return data
 }
+
+// 노무 명세서 이력 조회
+
+//  노무(인력) 공종 구분 목록 조회
+export async function LaborHistoreyService(laborId: number) {
+  const resData = await fetch(`${API.LABOR}/${laborId}/payrolls`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}

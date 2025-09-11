@@ -233,3 +233,22 @@ export const laborExcelFieldMap = {
 
 export type LaborExcelFieldLabel = keyof typeof laborExcelFieldMap
 export type LaborExcelFieldKey = (typeof laborExcelFieldMap)[LaborExcelFieldLabel]
+
+// 노무명세서
+
+export const laborStateMentExcelFieldMap = {
+  No: 'id',
+  현장: 'siteName',
+  공정: 'processName',
+  정직원: 'regularEmployeeCount',
+  '직영/계약직': 'directContractCount',
+  기타: 'etcCount',
+  '노무비 합계': 'totalLaborCost',
+  '공제금 합계': 'totalDeductions',
+  '차감지급액 합계': 'totalNetPayment',
+  비고: 'memo',
+} as const
+
+export type LaborStateExcelFieldLabel = keyof typeof laborStateMentExcelFieldMap
+export type LaborStateMentExcelFieldKey =
+  (typeof laborStateMentExcelFieldMap)[LaborStateExcelFieldLabel]

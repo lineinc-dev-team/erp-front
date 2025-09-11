@@ -316,7 +316,7 @@ export default function useOutSourcingContract() {
     isLoading: comPanyNameLoading,
   } = useInfiniteQuery({
     queryKey: ['compnayInfo'],
-    queryFn: ({ pageParam = 0 }) => GetCompanyNameInfoService({ pageParam, size: 6 }),
+    queryFn: ({ pageParam = 0 }) => GetCompanyNameInfoService({ pageParam, size: 20 }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
       const { sliceInfo } = lastPage.data
@@ -327,6 +327,7 @@ export default function useOutSourcingContract() {
 
   const companyOptions = useMemo(() => {
     const defaultOption = { id: 0, name: '선택', businessNumber: '', deleted: false }
+
     const options = (comPanyNameInfo?.pages || [])
       .flatMap((page) => page.data.content)
       .map((user) => ({

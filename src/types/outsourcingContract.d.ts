@@ -154,6 +154,7 @@ export type OutsourcingContractSearchState = {
 type HistoryItem = {
   id: number
   no: number
+  description?: string
   getChanges: string
   createdAt: string // or Date
   updatedAt: string

@@ -18,5 +18,6 @@ export function useMenuPermission(roleId: number, menuName: string, enabled: boo
     hasCreate: permissions.some((p: ApiPermission) => p.action === '등록'),
     hasModify: permissions.some((p: ApiPermission) => p.action === '수정'),
     hasView: permissions.some((p: ApiPermission) => p.action === '조회'),
+    hasApproval: permissions.some((p: ApiPermission) => p.action === '승인'),
   }
 }

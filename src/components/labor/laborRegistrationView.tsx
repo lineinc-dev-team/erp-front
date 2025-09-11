@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
 import DaumPostcodeEmbed from 'react-daum-postcode'
 import {
   Checkbox,
+  Pagination,
   Paper,
   Table,
   TableBody,
@@ -19,7 +21,7 @@ import { formatPhoneNumber } from '@/utils/formatPhoneNumber'
 import CommonFileInput from '@/components/common/FileInput'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import { HistoryItem } from '@/types/outsourcingCompany'
 import {
   formatDateTime,
@@ -35,7 +37,7 @@ import CommonDatePicker from '../common/DatePicker'
 import { useLaborInfo } from '@/hooks/useLabor'
 import CommonResidentNumberInput from '@/utils/commonResidentNumberInput'
 import AmountInput from '../common/AmountInput'
-import { LaborDetailService } from '@/services/labor/laborRegistrationService'
+import { LaborDetailService, LaborHistoreyService } from '@/services/labor/laborRegistrationService'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { AttachedFile, LaborFormState } from '@/types/labor'
 import { idTypeValueToName } from '@/stores/outsourcingCompanyStore'
@@ -166,7 +168,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       setField('name', client.name)
       setField('type', client.typeCode)
 
-      setField('outsourcingCompanyId', client.outsourcingCompany.id)
+      setField('outsourcingCompanyId', client.outsourcingCompany?.id ?? '-1')
 
       setField('residentNumber', client.residentNumber)
 
@@ -185,7 +187,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       if (mappedItemType) {
         setField('bankName', mappedItemType)
       } else {
-        setField('bankName', '') // 혹은 기본값 처리
+        setField('bankName', '0') // 혹은 기본값 처리
       }
       setField('accountNumber', client.accountNumber)
       setField('accountHolder', client.accountHolder)
@@ -402,6 +404,83 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     } else {
       createLaborInfo.mutate()
     }
+  }
+
+  // 데이터 조회
+  const { data: StatementHistoryList } = useQuery({
+    queryKey: ['steelTypeInfo', laborDataId],
+    queryFn: () => LaborHistoreyService(laborDataId),
+  })
+
+  // const laborList = StatementHistoryList?.data.content ?? []
+
+  const laborList = StatementHistoryList?.data.content.map((item: any) => {
+    return {
+      id: item.id,
+      yearMonth: item.yearMonth,
+      site: item.site.name,
+      siteProcess: item.siteProcess.name,
+
+      dailyWage: item.dailyWage ?? 0,
+      totalWorkHours: item.totalWorkHours ?? 0,
+      totalWorkDays: item.totalWorkDays ?? 0,
+      totalLaborCost: item.totalLaborCost ?? 0,
+      incomeTax: item.incomeTax ?? 0,
+      employmentInsurance: item.employmentInsurance ?? 0,
+      healthInsurance: item.healthInsurance ?? 0,
+      localTax: item.localTax ?? 0,
+      nationalPension: item.nationalPension ?? 0,
+      longTermCareInsurance: item.longTermCareInsurance ?? 0,
+      netPayment: item.netPayment ?? 0,
+      memo: item.memo ?? '-',
+      dailyWork: Array.from(
+        { length: 31 },
+        (_, i) => item[`day${String(i + 1).padStart(2, '0')}Hours`] ?? null,
+      ),
+    }
+  })
+
+  // 페이지 정보
+  const totalList = StatementHistoryList?.data.pageInfo.totalElements ?? 0
+  const pageCount = 10
+  const totalPages = Math.ceil(totalList / pageCount)
+
+  const dates = Array.from({ length: 31 }, (_, i) => i + 1)
+
+  // 숫자를 그려주는 변수 0 부터 16
+  const firstHalfDates = dates.slice(0, 16) // 1~16
+  const secondHalfDates = dates.slice(16, 31) // 16~31
+
+  // 스타일 변수
+
+  const headerCellStyle = {
+    backgroundColor: '#c8c7c7',
+    border: '1px solid #ced2d9',
+    fontSize: '0.75rem', // 글자 작게
+    fontWeight: 'bold', // 글자 두껍게
+    padding: '2px 4px', // 위아래 2px, 좌우 4px
+    lineHeight: 1, // 줄 간격 최소화
+    height: '30px',
+  }
+
+  const dayCellStyle = {
+    border: '1px solid #ced2d9',
+    fontSize: '0.75rem', // 글자 작게
+    fontWeight: 'bold', // 글자 두껍게
+    padding: '2px 4px', // 위아래 2px, 좌우 4px
+    lineHeight: 2, // 줄 간격 최소화
+    width: '30px',
+    height: '40px',
+  }
+
+  const contentCellStyle = {
+    border: '1px solid #a3a3a3',
+    fontSize: '0.75rem', // 글자 작게
+    fontWeight: 'bold', // 글자 두껍게
+    padding: '2px 4px', // 위아래 2px, 좌우 4px
+    lineHeight: 2, // 줄 간격 최소화
+    width: '40px',
+    height: '40px',
   }
 
   return (
@@ -798,7 +877,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                       size="small"
                       placeholder="텍스트 입력"
                       sx={{ width: '100%' }}
-                      value={m.name}
+                      value={m.name ?? ''}
                       onChange={(e) =>
                         updateItemField('attachedFile', m.id, 'name', e.target.value)
                       }
@@ -842,7 +921,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                       size="small"
                       placeholder="텍스트 입력"
                       sx={{ width: '100%' }}
-                      value={m.memo}
+                      value={m.memo ?? ''}
                       onChange={(e) =>
                         updateItemField('attachedFile', m.id, 'memo', e.target.value)
                       }
@@ -854,6 +933,174 @@ export default function LaborRegistrationView({ isEditMode = false }) {
           </Table>
         </TableContainer>
       </div>
+
+      {isEditMode && (
+        <div>
+          <div className="flex justify-between items-center mt-10 mb-2">
+            <span className="font-bold border-b-2 mb-4">노무명세서이력</span>
+            <div className="flex gap-4"></div>
+          </div>
+
+          <TableContainer component={Paper} sx={{ maxHeight: '70vh', marginTop: '30px' }}>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                    연월
+                  </TableCell>
+                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                    현장
+                  </TableCell>
+                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                    공정
+                  </TableCell>
+                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                    일당
+                  </TableCell>
+
+                  {firstHalfDates.map((date) => (
+                    <TableCell key={date} align="center" sx={headerCellStyle}>
+                      {date}
+                    </TableCell>
+                  ))}
+
+                  {/* 합계 컬럼 */}
+                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                    총공수
+                  </TableCell>
+                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                    총일수
+                  </TableCell>
+                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                    노무부 총액
+                  </TableCell>
+                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                    소득세
+                  </TableCell>
+                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                    고용보험
+                  </TableCell>
+                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                    건강보험
+                  </TableCell>
+                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                    주민세
+                  </TableCell>
+                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                    국민연금
+                  </TableCell>
+                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                    장기요양
+                  </TableCell>
+                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                    차감지급액
+                  </TableCell>
+                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                    비고
+                  </TableCell>
+                </TableRow>
+
+                {/* 두 번째 행: 17~31일 */}
+                <TableRow>
+                  {secondHalfDates.map((date) => (
+                    <TableCell key={date} align="center" sx={headerCellStyle}>
+                      {date}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+
+              <TableBody>
+                {laborList?.map((row: any) => {
+                  const firstHalf = row.dailyWork.slice(0, 16)
+                  const secondHalf = row.dailyWork.slice(16)
+
+                  return (
+                    <Fragment key={row.no}>
+                      {/* 첫 번째 행 */}
+
+                      <TableRow>
+                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
+                          {row.yearMonth}
+                        </TableCell>
+                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
+                          {row.site}
+                        </TableCell>
+                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
+                          {row.siteProcess}
+                        </TableCell>
+
+                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
+                          {row.dailyWage}
+                        </TableCell>
+
+                        {firstHalf.map((val: any, idx: number) => (
+                          <TableCell key={idx} align="center" sx={dayCellStyle}>
+                            {val}
+                          </TableCell>
+                        ))}
+
+                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
+                          {row.totalWorkHours}
+                        </TableCell>
+                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
+                          {row.totalWorkDays}
+                        </TableCell>
+                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
+                          {row.totalLaborCost}
+                        </TableCell>
+                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
+                          {row.incomeTax}
+                        </TableCell>
+                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
+                          {row.employmentInsurance}
+                        </TableCell>
+                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
+                          {row.healthInsurance}
+                        </TableCell>
+                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
+                          {row.localTax}
+                        </TableCell>
+                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
+                          {row.nationalPension}
+                        </TableCell>
+                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
+                          {row.longTermCareInsurance}
+                        </TableCell>
+                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
+                          {row.netPayment}
+                        </TableCell>
+                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
+                          {row.memo}
+                        </TableCell>
+                      </TableRow>
+
+                      {/* 두 번째 행 */}
+                      <TableRow>
+                        {secondHalf.map((val: any, idx: number) => (
+                          <TableCell key={idx + 17} align="center" sx={dayCellStyle}>
+                            {val}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    </Fragment>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          <div className="flex justify-center mt-4 pb-6">
+            <Pagination
+              count={totalPages}
+              page={form.currentPage}
+              onChange={(_, newPage) => setField('currentPage', newPage)}
+              shape="rounded"
+              color="primary"
+            />
+          </div>
+        </div>
+      )}
 
       {isEditMode && (
         <div>

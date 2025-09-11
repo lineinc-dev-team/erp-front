@@ -28,5 +28,6 @@ export const API = {
   MATERIAL: `${apiBaseUrl}/material-managements`,
   DAILYREPORT: `${apiBaseUrl}/daily-reports`,
   LABOR: `${apiBaseUrl}/labors`,
+  LABORPAY: `${apiBaseUrl}/labor-payrolls`,
   // 다른 API endpoint도 여기에 추가 가능
 }

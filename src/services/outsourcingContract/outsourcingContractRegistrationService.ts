@@ -133,7 +133,7 @@ export async function OutsourcingContractDeductionIdInfoService() {
 // 업체명 + 자동완성 사업자등록 번호
 export async function GetCompanyNameInfoService({
   pageParam = 0,
-  size = 6,
+  size = 20,
   keyword = '',
   sort = '',
 }) {
