@@ -663,8 +663,6 @@ export default function DailyReportRegistrationView() {
     }))
   }, [workerList, selectedCompanyIds, selectId])
 
-  // 회사별 worker option 저장소
-
   // 상세페이지 데이터 (예: props나 query에서 가져온 값)
   const outsourcings = resultOutsourcing
 
