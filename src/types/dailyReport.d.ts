@@ -93,6 +93,7 @@ export type directContractsItem = {
   laborId: T
   position: string
   workContent: string
+  previousPrice: number
   unitPrice: number
   workQuantity: number
   memo: string

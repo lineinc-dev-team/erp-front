@@ -87,6 +87,80 @@ export async function ModifyEmployeesReport({
   return await res.status
 }
 
+// 계약/인력 쪽 인력 데이터 조회
+export async function GetContractNameInfoService({ pageParam = 0, size = 20, keyword = '' }) {
+  const url = `${API.LABOR}/search?page=${pageParam}&size=${size}&keyword=${encodeURIComponent(
+    keyword,
+  )}&types=DIRECT_CONTRACT&types=ETC`
+
+  const resData = await fetch(url, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+
+// 직영/계약직 수정
+
+export async function ModifyContractReport({
+  siteId,
+  siteProcessId,
+  reportDate,
+}: {
+  siteId: number
+  siteProcessId: number
+  reportDate: string
+}) {
+  const { modifyDirectContracts } = useDailyFormStore.getState()
+  const payload = modifyDirectContracts()
+
+  const res = await fetch(
+    `${API.DAILYREPORT}/direct-contracts?siteId=${siteId}&siteProcessId=${siteProcessId}&reportDate=${reportDate}`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      credentials: 'include',
+    },
+  )
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
+  }
+
+  return await res.status
+}
+
 // 노무쪽 인력 데이터 조회
 export async function GetEmployeeInfoService({
   pageParam = 0,
@@ -137,6 +211,46 @@ export async function GetEmployeesByFilterService({
   })
 
   const res = await fetch(`${API.DAILYREPORT}/employees?${query.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
+  }
+
+  const data = await res.json()
+  return data
+}
+
+// 계약직 데이터 조회
+
+export async function GetContractByFilterService({
+  pageParam = 0,
+  size = 10,
+  sort = 'id,asc',
+  siteId = 0,
+  siteProcessId = 0,
+  reportDate = '',
+}) {
+  const query = new URLSearchParams({
+    page: pageParam.toString(),
+    size: size.toString(),
+    sort,
+    siteId: siteId.toString(),
+    siteProcessId: siteProcessId.toString(),
+    reportDate,
+  })
+
+  const res = await fetch(`${API.DAILYREPORT}/direct-contracts?${query.toString()}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -532,7 +646,7 @@ export async function ModifyFileReport({
 
 export async function OutsourcingWorkerNameScroll({
   pageParam = 0,
-  size = 6,
+  size = 10,
   keyword = '',
   id = 0,
   sort = '',
@@ -600,4 +714,49 @@ export async function DetaileReport({
   }
 
   return await res.json()
+}
+
+// 마감 api
+
+export async function CompleteInfoData({
+  siteId,
+  siteProcessId,
+  reportDate,
+}: {
+  siteId: number
+  siteProcessId: number
+  reportDate: string
+}) {
+  const res = await fetch(
+    `${API.DAILYREPORT}/complete?siteId=${siteId}&siteProcessId=${siteProcessId}&reportDate=${reportDate}`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    },
+  )
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
+  }
+
+  return await res.status
 }

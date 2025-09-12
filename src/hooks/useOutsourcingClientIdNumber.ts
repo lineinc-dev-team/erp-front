@@ -23,3 +23,67 @@ export const useOutSourcingClientId = () => {
 
   return 0
 }
+
+// 기존 일반 함수 → hook으로 변경
+// export const useOutSourcingInfoClientId = (selectedCompanyId: any) => {
+//   const pathname = usePathname()
+//   const fuelForm = useFuelFormStore((state) => state.form)
+//   const dailyForm = useDailyFormStore((state) => state.form)
+
+//   console.log('selectedCompanyId234', selectedCompanyId)
+
+//   const keys = Object.keys(selectedCompanyId)
+
+//   if (!selectedCompanyId) return 0
+
+//   // 연료 집계 등록 페이지
+//   if (pathname.startsWith('/fuelAggregation/registration')) {
+//     const matched = fuelForm.fuelInfos.find(
+//       (item) => item.outsourcingCompanyId === selectedCompanyId.id,
+//     )
+//     return matched?.outsourcingCompanyId ?? 0
+//   }
+
+//   console.log('dailyFormdailyForm', dailyForm)
+
+//   // 일일 보고서 등록 페이지
+// if (pathname.startsWith('/dailyReport/registration')) {
+//   const matched = dailyForm.outsourcings.find(item => keys.includes(String(item.id))) ||
+//                   dailyForm.outsourcingEquipments.find(item => keys.includes(String(item.id))) ||
+//                   dailyForm.fuels.find(item => keys.includes(String(item.id)))
+
+//   return matched?.outsourcingCompanyId ?? 0
+// }
+
+//   return 0
+// }
+
+export const useOutSourcingInfoClientId = (
+  selectedCompanyIds: { [rowId: number]: number },
+  rowId: number, // 현재 row id를 추가로 받기
+) => {
+  const pathname = usePathname()
+  const fuelForm = useFuelFormStore((state) => state.form)
+  const dailyForm = useDailyFormStore((state) => state.form)
+
+  if (!selectedCompanyIds[rowId]) return 0 // 해당 row 선택이 없으면 0
+
+  // row별 회사 id
+  const selectedCompanyId = selectedCompanyIds[rowId]
+
+  if (pathname.startsWith('/fuelAggregation/registration')) {
+    const matched = fuelForm.fuelInfos.find((item) => item.id === Number(rowId))
+    return matched?.outsourcingCompanyId ?? selectedCompanyId
+  }
+
+  if (pathname.startsWith('/dailyReport/registration')) {
+    const matched =
+      dailyForm.outsourcings.find((item) => item.id === Number(rowId)) ||
+      dailyForm.outsourcingEquipments.find((item) => item.id === Number(rowId)) ||
+      dailyForm.fuels.find((item) => item.id === Number(rowId))
+
+    return matched?.outsourcingCompanyId ?? selectedCompanyId
+  }
+
+  return selectedCompanyId
+}

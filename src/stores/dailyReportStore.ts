@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import {
   DailyAttachedFile,
   DailyReportFormStore,
+  directContractsItem,
   EmployeesItem,
   EquipmentsItem,
   FuelsItem,
@@ -16,6 +17,8 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
     weather: '',
     employees: [],
     checkedManagerIds: [],
+    directContracts: [],
+    checkeddirectContractsIds: [],
     outsourcings: [],
     checkedOutsourcingIds: [],
     outsourcingEquipments: [],
@@ -35,6 +38,8 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         weather: '',
         employees: [],
         checkedManagerIds: [],
+        directContracts: [],
+        checkeddirectContractsIds: [],
         outsourcings: [],
         checkedOutsourcingIds: [],
         outsourcingEquipments: [],
@@ -51,6 +56,14 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       form: {
         ...state.form,
         employees: [],
+      },
+    })),
+
+  resetDirectContracts: () =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        directContracts: [],
       },
     })),
 
@@ -102,6 +115,25 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           memo: '',
         }
         return { form: { ...state.form, employees: [...state.form.employees, newItem] } }
+      } else if (type === 'directContracts') {
+        const newItem: directContractsItem = {
+          // id: Date.now(),
+          id: null,
+          checkId: Date.now(),
+          outsourcingCompanyId: 0,
+          laborId: 0,
+          position: '',
+          workContent: '',
+          previousPrice: 0,
+          unitPrice: 0,
+          workQuantity: 0,
+          memo: '',
+          isTemporary: false,
+          temporaryLaborName: '',
+        }
+        return {
+          form: { ...state.form, directContracts: [...state.form.directContracts, newItem] },
+        }
       } else if (type === 'outsourcings') {
         const newItem: OutsourcingsItem = {
           id: Date.now(),
@@ -160,6 +192,30 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       }
     }),
 
+  addTemporaryCheckedItems: (type) =>
+    set((state) => {
+      if (type === 'directContracts') {
+        const newItem: directContractsItem = {
+          id: null,
+          checkId: Date.now(),
+          outsourcingCompanyId: null,
+          laborId: null,
+          position: '',
+          workContent: '',
+          previousPrice: 0,
+          unitPrice: 0,
+          workQuantity: 0,
+          memo: '',
+          isTemporary: true,
+          temporaryLaborName: '',
+        }
+        return {
+          form: { ...state.form, directContracts: [...state.form.directContracts, newItem] },
+        }
+      }
+      return state // 👈 type이 안 맞으면 기존 state 반환
+    }),
+
   updateItemField: (type, id, field, value) =>
     set((state) => {
       if (type === 'Employees') {
@@ -168,6 +224,15 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
             ...state.form,
             employees: state.form.employees.map((m) =>
               m.id === id ? { ...m, [field]: value } : m,
+            ),
+          },
+        }
+      } else if (type === 'directContracts') {
+        return {
+          form: {
+            ...state.form,
+            directContracts: state.form.directContracts.map((m) =>
+              m.checkId === id ? { ...m, [field]: value } : m,
             ),
           },
         }
@@ -215,6 +280,15 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
             checkedManagerIds: checked
               ? [...state.form.checkedManagerIds, id]
               : state.form.checkedManagerIds.filter((cid) => cid !== id),
+          },
+        }
+      } else if (type === 'directContracts') {
+        return {
+          form: {
+            ...state.form,
+            checkeddirectContractsIds: checked
+              ? [...state.form.checkeddirectContractsIds, id]
+              : state.form.checkeddirectContractsIds.filter((cid) => cid !== id),
           },
         }
       } else if (type === 'outsourcings') {
@@ -265,6 +339,15 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
             checkedManagerIds: checked ? state.form.employees.map((m) => m.id) : [],
           },
         }
+      } else if (type === 'directContracts') {
+        return {
+          form: {
+            ...state.form,
+            checkeddirectContractsIds: checked
+              ? state.form.directContracts.map((m) => m.checkId)
+              : [],
+          },
+        }
       } else if (type === 'outsourcings') {
         return {
           form: {
@@ -306,6 +389,16 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
               (m) => !state.form.checkedManagerIds.includes(m.id),
             ),
             checkedManagerIds: [],
+          },
+        }
+      } else if (type === 'directContracts') {
+        return {
+          form: {
+            ...state.form,
+            directContracts: state.form.directContracts.filter(
+              (m) => !state.form.checkeddirectContractsIds.includes(m.checkId),
+            ),
+            checkeddirectContractsIds: [],
           },
         }
       } else if (type === 'outsourcings') {
@@ -380,6 +473,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       reportDate: form.reportDate,
       weather: form.weather === 'BASE' || form.weather === '' ? undefined : form.weather,
       employees: form.employees,
+      directContracts: form.directContracts,
       outsourcings: form.outsourcings,
       outsourcingEquipments: form.outsourcingEquipments,
       fuels: form.fuels,
@@ -395,6 +489,22 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       reportDate: undefined,
       weather: undefined,
       employees: form.employees,
+      outsourcings: undefined,
+      outsourcingEquipments: undefined,
+      fuels: undefined,
+    }
+  },
+
+  modifyDirectContracts: () => {
+    const form = get().form
+    return {
+      files: undefined,
+      siteId: undefined,
+      siteProcessId: undefined,
+      reportDate: undefined,
+      weather: undefined,
+      employees: undefined,
+      directContracts: form.directContracts,
       outsourcings: undefined,
       outsourcingEquipments: undefined,
       fuels: undefined,

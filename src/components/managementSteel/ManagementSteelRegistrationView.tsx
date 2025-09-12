@@ -132,6 +132,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     quantity: '수량',
     supplyPrice: '공급가',
     originalFileName: '파일 추가',
+    usage: '용도',
   }
 
   const {

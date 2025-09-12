@@ -44,6 +44,11 @@ import {
 } from '@/utils/formatters'
 import { useMenuPermission } from '../common/MenuPermissionView'
 import { myInfoProps } from '@/types/user'
+import { useSnackbarStore } from '@/stores/useSnackbarStore'
+import {
+  FuelDriverNameScroll,
+  FuelEquipmentNameScroll,
+} from '@/services/fuelAggregation/fuelAggregationRegistrationService'
 
 export default function DailyReportRegistrationView() {
   const {
@@ -65,6 +70,8 @@ export default function DailyReportRegistrationView() {
 
     // 직원 정보
   } = useDailyFormStore()
+
+  const { showSnackbar } = useSnackbarStore()
 
   const { WeatherTypeMethodOptions } = useFuelAggregation()
 
@@ -125,22 +132,7 @@ export default function DailyReportRegistrationView() {
     withEquipmentLoading,
   } = useDailyReport()
 
-  const {
-    fuelDriverOptions,
-    fuelDriverFetchNextPage,
-    fuelDriverHasNextPage,
-    fuelDriverIsFetching,
-    fuelDriverLoading,
-
-    // 차량번호 & 장비명
-    fuelEquipmentOptions,
-    fuelEquipmentFetchNextPage,
-    fuelEquipmentHasNextPage,
-    fuelEquipmentIsFetching,
-    fuelEquipmentLoading,
-
-    OilTypeMethodOptions,
-  } = useFuelAggregation()
+  const { OilTypeMethodOptions } = useFuelAggregation()
 
   const [selectedCompanyIds, setSelectedCompanyIds] = useState<{ [rowId: number]: number }>({})
   const [selectId, setSelectId] = useState(0)
@@ -582,6 +574,9 @@ export default function DailyReportRegistrationView() {
         reportDate: getTodayDateString(form.reportDate) || '',
       }),
     enabled: !!form.siteId && !!form.siteProcessId && !!form.reportDate,
+    refetchOnWindowFocus: false, // 포커스 바뀌어도 재요청 안 함
+    refetchOnReconnect: false, // 네트워크 재연결해도 재요청 안 함
+    retry: false, // 실패했을 때 자동 재시도 X
   })
 
   const { data: detailReport } = detailReportQuery
@@ -667,6 +662,153 @@ export default function DailyReportRegistrationView() {
       [selectedCompanyIds[selectId]]: [{ id: 0, name: '선택', category: '' }, ...options],
     }))
   }, [workerList, selectedCompanyIds, selectId])
+
+  // 회사별 worker option 저장소
+
+  // 상세페이지 데이터 (예: props나 query에서 가져온 값)
+  const outsourcings = resultOutsourcing
+
+  // 1. 상세페이지 들어올 때 각 업체별 worker 데이터 API 호출
+  useEffect(() => {
+    if (!outsourcings.length) return
+
+    outsourcings.forEach(async (row) => {
+      const companyId = row.outsourcingCompanyId
+      const worker = row.outsourcingCompanyContractWorkerId
+      if (!companyId) return
+
+      try {
+        const res = await OutsourcingWorkerNameScroll({
+          pageParam: 0,
+          id: companyId,
+          size: 10,
+        })
+
+        const options = res.data.content.map((user: any) => ({
+          id: user.id,
+          name: user.name,
+          category: user.category,
+        }))
+
+        setWorkerOptionsByCompany((prev) => {
+          const exists = options.some((opt: any) => opt.id === worker)
+
+          return {
+            ...prev,
+            [companyId]: [
+              { id: 0, name: '선택', category: '' },
+              ...options,
+              // 만약 선택된 worker가 목록에 없으면 추가
+              ...(worker && !exists ? [{ id: worker, name: '', category: '' }] : []),
+            ],
+          }
+        })
+      } catch (err) {
+        console.error('업체별 인력 조회 실패', err)
+      }
+    })
+  }, [outsourcings])
+
+  // 장비에서 업체명 선택 시 기사명과 차량번호를 선택해주는 코드
+
+  const [selectedDriverIds, setSelectedDriverIds] = useState<{ [rowId: number]: number }>({})
+
+  // 옵션에 따른 상태값
+
+  const [driverOptionsByCompany, setDriverOptionsByCompany] = useState<Record<number, any[]>>({})
+
+  // 업체명 id
+
+  const {
+    data: fuelDriver,
+    fetchNextPage: fuelDriverFetchNextPage,
+    hasNextPage: fuelDriverHasNextPage,
+    isFetching: fuelDriverIsFetching,
+    isLoading: fuelDriverLoading,
+  } = useInfiniteQuery({
+    queryKey: ['FuelDriverInfo', selectedCompanyIds[selectId]],
+
+    queryFn: ({ pageParam }) =>
+      FuelDriverNameScroll({
+        pageParam,
+        id: selectedCompanyIds[selectId] || 0,
+        size: 10,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+    },
+    enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
+  })
+
+  useEffect(() => {
+    if (!fuelDriver) return
+
+    const options = fuelDriver.pages
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+      }))
+
+    setDriverOptionsByCompany((prev) => ({
+      ...prev,
+      [selectedCompanyIds[selectId]]: [{ id: 0, name: '선택' }, ...options],
+    }))
+  }, [fuelDriver, selectedCompanyIds, selectId])
+
+  //차량번호 & 규격 무한 스크롤
+  const [selectedCarNumberIds, setSelectedCarNumberIds] = useState<{ [rowId: number]: number }>({})
+
+  // 옵션에 따른 상태값
+
+  const [carNumberOptionsByCompany, setCarNumberOptionsByCompany] = useState<Record<number, any[]>>(
+    {},
+  )
+
+  const {
+    data: fuelEquipment,
+    fetchNextPage: fuelEquipmentFetchNextPage,
+    hasNextPage: fuelEquipmentHasNextPage,
+    isFetching: fuelEquipmentIsFetching,
+    isLoading: fuelEquipmentLoading,
+  } = useInfiniteQuery({
+    queryKey: ['FuelEquipmentInfo', selectedCompanyIds[selectId]],
+    queryFn: ({ pageParam }) =>
+      FuelEquipmentNameScroll({
+        pageParam,
+        id: selectedCompanyIds[selectId] || 0,
+        size: 10,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+    },
+    enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
+  })
+
+  useEffect(() => {
+    if (!fuelEquipment) return
+
+    const options = fuelEquipment.pages
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        specification: user.specification,
+        vehicleNumber: user.vehicleNumber,
+        category: user.category,
+      }))
+
+    setCarNumberOptionsByCompany((prev) => ({
+      ...prev,
+      [selectedCompanyIds[selectId]]: [
+        { id: 0, specification: '', vehicleNumber: '선택', category: '' },
+        ...options,
+      ],
+    }))
+  }, [fuelEquipment, selectedCompanyIds, selectId])
 
   return (
     <>
@@ -1165,6 +1307,15 @@ export default function DailyReportRegistrationView() {
                                 (opt) => opt.id === value,
                               )
 
+                              console.log('contractInfo', selectedOption)
+
+                              if (selectedOption?.isSeverancePayEligible) {
+                                showSnackbar(
+                                  '해당 직원 근속일이 6개월에 도달했습니다. 퇴직금 발생에 주의하세요.',
+                                  'error',
+                                )
+                              }
+
                               updateItemField('directContracts', m.checkId, 'laborId', value)
                               updateItemField(
                                 'directContracts',
@@ -1591,13 +1742,41 @@ export default function DailyReportRegistrationView() {
                       >
                         <TextField
                           size="small"
-                          placeholder="'-'없이 숫자만 입력"
-                          value={m.workQuantity}
+                          type="number" // type을 number로 변경
+                          placeholder="숫자를 입력해주세요."
+                          inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
+                          value={
+                            m.workQuantity === 0 || m.workQuantity === null ? '' : m.workQuantity
+                          }
                           onChange={(e) => {
-                            const workQuantity = Number(e.target.value)
-                            updateItemField('outsourcings', m.id, 'workQuantity', workQuantity)
+                            const value = e.target.value
+                            const numericValue = value === '' ? null : parseFloat(value)
+
+                            // dailyWork 배열 idx 위치 업데이트
+                            updateItemField('outsourcings', m.id, 'workQuantity', numericValue)
                           }}
-                          sx={{ width: 120 }}
+                          sx={{
+                            height: '100%',
+                            '& .MuiInputBase-root': {
+                              height: '100%',
+                              fontSize: '1rem',
+                            },
+                            '& input': {
+                              textAlign: 'center',
+                              padding: '10px',
+                              MozAppearance: 'textfield', // Firefox
+                              '&::-webkit-outer-spin-button': {
+                                // Chrome, Safari
+                                WebkitAppearance: 'none',
+                                margin: 0,
+                              },
+                              '&::-webkit-inner-spin-button': {
+                                // Chrome, Safari
+                                WebkitAppearance: 'none',
+                                margin: 0,
+                              },
+                            },
+                          }}
                         />
                       </TableCell>
 
@@ -1740,12 +1919,21 @@ export default function DailyReportRegistrationView() {
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <CommonSelect
                           fullWidth
-                          value={m.outsourcingCompanyId || 0}
+                          // value={m.outsourcingCompanyId || 0}
+                          value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
                           onChange={async (value) => {
                             const selectedCompany = withEquipmentInfoOptions.find(
                               (opt) => opt.id === value,
                             )
                             if (!selectedCompany) return
+
+                            // 해당 row만 업데이트
+                            setSelectedCompanyIds((prev) => ({
+                              ...prev,
+                              [m.id]: selectedCompany.id,
+                            }))
+
+                            setSelectId(m.id)
 
                             updateItemField(
                               'equipment',
@@ -1753,6 +1941,19 @@ export default function DailyReportRegistrationView() {
                               'outsourcingCompanyId',
                               selectedCompany.id,
                             )
+
+                            // 해당 row 기사, 차량 초기화
+                            setSelectedDriverIds((prev) => ({
+                              ...prev,
+                              [m.id]: 0,
+                            }))
+
+                            setSelectedCarNumberIds((prev) => ({
+                              ...prev,
+                              [m.id]: 0,
+                            }))
+
+                            // 차량 값도 추가
                           }}
                           options={withEquipmentInfoOptions}
                           onScrollToBottom={() => {
@@ -1766,9 +1967,16 @@ export default function DailyReportRegistrationView() {
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <CommonSelect
                           fullWidth
-                          value={m.outsourcingCompanyContractDriverId}
+                          // value={m.outsourcingCompanyContractDriverId}
+
+                          value={
+                            selectedDriverIds[m.id] || m.outsourcingCompanyContractDriverId || 0
+                          }
                           onChange={async (value) => {
-                            const selectedDriver = fuelDriverOptions.find((opt) => opt.id === value)
+                            const selectedDriver = (
+                              driverOptionsByCompany[m.outsourcingCompanyId] ?? []
+                            ).find((opt) => opt.id === value)
+
                             if (!selectedDriver) return
 
                             updateItemField(
@@ -1778,7 +1986,11 @@ export default function DailyReportRegistrationView() {
                               selectedDriver.id,
                             )
                           }}
-                          options={fuelDriverOptions}
+                          options={
+                            driverOptionsByCompany[m.outsourcingCompanyId] ?? [
+                              { id: 0, name: '선택', category: '' },
+                            ]
+                          }
                           onScrollToBottom={() => {
                             if (fuelDriverHasNextPage && !fuelDriverIsFetching)
                               fuelDriverFetchNextPage()
@@ -1790,35 +2002,44 @@ export default function DailyReportRegistrationView() {
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <CommonSelect
                           fullWidth
-                          value={m.outsourcingCompanyContractEquipmentId || 0} // 장비 선택은 ID 기준
+                          value={
+                            selectedCarNumberIds[m.id] ||
+                            m.outsourcingCompanyContractEquipmentId ||
+                            0
+                          }
                           onChange={async (value) => {
-                            const selectedEquipment = fuelEquipmentOptions.find(
-                              (opt) => opt.id === value,
-                            )
-                            if (!selectedEquipment) return
+                            const selectedCarNumber = (
+                              carNumberOptionsByCompany[m.outsourcingCompanyId] ?? []
+                            ).find((opt) => opt.id === value)
+
+                            if (!selectedCarNumber) return
 
                             updateItemField(
                               'equipment',
                               m.id,
                               'outsourcingCompanyContractEquipmentId',
-                              selectedEquipment.id,
+                              selectedCarNumber.id,
                             )
 
                             updateItemField(
                               'equipment',
                               m.id,
                               'specificationName',
-                              selectedEquipment.specification || '',
+                              selectedCarNumber.specification || '',
                             )
 
                             updateItemField(
                               'equipment',
                               m.id,
                               'type',
-                              selectedEquipment.category || '-', // type 없으면 '-'
+                              selectedCarNumber.category || '-', // type 없으면 '-'
                             )
                           }}
-                          options={fuelEquipmentOptions}
+                          options={
+                            carNumberOptionsByCompany[m.outsourcingCompanyId] ?? [
+                              { id: 0, name: '선택', category: '' },
+                            ]
+                          }
                           onScrollToBottom={() => {
                             if (fuelEquipmentHasNextPage && !fuelEquipmentIsFetching)
                               fuelEquipmentFetchNextPage()
@@ -1869,14 +2090,45 @@ export default function DailyReportRegistrationView() {
                         />
                       </TableCell>
 
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TableCell
+                        align="center"
+                        sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                      >
                         <TextField
                           size="small"
-                          placeholder="텍스트 입력"
-                          value={Number(m.workHours)}
-                          onChange={(e) =>
-                            updateItemField('equipment', m.id, 'workHours', e.target.value)
-                          }
+                          type="number" // type을 number로 변경
+                          placeholder="숫자를 입력해주세요."
+                          inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
+                          value={m.workHours === 0 || m.workHours === null ? '' : m.workHours}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            const numericValue = value === '' ? null : parseFloat(value)
+
+                            // dailyWork 배열 idx 위치 업데이트
+                            updateItemField('equipment', m.id, 'workHours', numericValue)
+                          }}
+                          sx={{
+                            height: '100%',
+                            '& .MuiInputBase-root': {
+                              height: '100%',
+                              fontSize: '1rem',
+                            },
+                            '& input': {
+                              textAlign: 'center',
+                              padding: '10px',
+                              MozAppearance: 'textfield', // Firefox
+                              '&::-webkit-outer-spin-button': {
+                                // Chrome, Safari
+                                WebkitAppearance: 'none',
+                                margin: 0,
+                              },
+                              '&::-webkit-inner-spin-button': {
+                                // Chrome, Safari
+                                WebkitAppearance: 'none',
+                                margin: 0,
+                              },
+                            },
+                          }}
                         />
                       </TableCell>
 
@@ -2018,21 +2270,41 @@ export default function DailyReportRegistrationView() {
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <CommonSelect
                           fullWidth
-                          value={m.outsourcingCompanyId || 0}
+                          // value={m.outsourcingCompanyId || 0}
+                          value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
                           onChange={async (value) => {
                             const selectedCompany = withEquipmentInfoOptions.find(
                               (opt) => opt.id === value,
                             )
-
                             if (!selectedCompany) return
+
+                            // 해당 row만 업데이트
+                            setSelectedCompanyIds((prev) => ({
+                              ...prev,
+                              [m.id]: selectedCompany.id,
+                            }))
+
+                            setSelectId(m.id)
 
                             updateItemField(
                               'fuel',
                               m.id,
-                              // 'outsourcingCompanyId',
                               'outsourcingCompanyId',
                               selectedCompany.id,
                             )
+
+                            // 해당 row 기사, 차량 초기화
+                            setSelectedDriverIds((prev) => ({
+                              ...prev,
+                              [m.id]: 0,
+                            }))
+
+                            setSelectedCarNumberIds((prev) => ({
+                              ...prev,
+                              [m.id]: 0,
+                            }))
+
+                            // 차량 값도 추가
                           }}
                           options={withEquipmentInfoOptions}
                           onScrollToBottom={() => {
@@ -2046,9 +2318,14 @@ export default function DailyReportRegistrationView() {
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <CommonSelect
                           fullWidth
-                          value={m.outsourcingCompanyContractDriverId}
+                          value={
+                            selectedDriverIds[m.id] || m.outsourcingCompanyContractDriverId || 0
+                          }
                           onChange={async (value) => {
-                            const selectedDriver = fuelDriverOptions.find((opt) => opt.id === value)
+                            const selectedDriver = (
+                              driverOptionsByCompany[m.outsourcingCompanyId] ?? []
+                            ).find((opt) => opt.id === value)
+
                             if (!selectedDriver) return
 
                             updateItemField(
@@ -2058,7 +2335,11 @@ export default function DailyReportRegistrationView() {
                               selectedDriver.id,
                             )
                           }}
-                          options={fuelDriverOptions}
+                          options={
+                            driverOptionsByCompany[m.outsourcingCompanyId] ?? [
+                              { id: 0, name: '선택', category: '' },
+                            ]
+                          }
                           onScrollToBottom={() => {
                             if (fuelDriverHasNextPage && !fuelDriverIsFetching)
                               fuelDriverFetchNextPage()
@@ -2067,38 +2348,40 @@ export default function DailyReportRegistrationView() {
                         />
                       </TableCell>
 
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TableCell>
                         <CommonSelect
                           fullWidth
-                          value={m.outsourcingCompanyContractEquipmentId || 0} // 장비 선택은 ID 기준
+                          value={
+                            selectedCarNumberIds[m.id] ||
+                            m.outsourcingCompanyContractEquipmentId ||
+                            0
+                          }
                           onChange={async (value) => {
-                            const selectedEquipment = fuelEquipmentOptions.find(
-                              (opt) => opt.id === value,
-                            )
-                            if (!selectedEquipment) return
+                            const selectedCarNumber = (
+                              carNumberOptionsByCompany[m.outsourcingCompanyId] ?? []
+                            ).find((opt) => opt.id === value)
+
+                            if (!selectedCarNumber) return
 
                             updateItemField(
                               'fuel',
                               m.id,
                               'outsourcingCompanyContractEquipmentId',
-                              selectedEquipment.id,
+                              selectedCarNumber.id,
                             )
 
                             updateItemField(
                               'fuel',
                               m.id,
                               'specificationName',
-                              selectedEquipment.specification || '',
-                            )
-
-                            updateItemField(
-                              'fuel',
-                              m.id,
-                              'type',
-                              selectedEquipment.category || '-', // type 없으면 '-'
+                              selectedCarNumber.specification || '',
                             )
                           }}
-                          options={fuelEquipmentOptions}
+                          options={
+                            carNumberOptionsByCompany[m.outsourcingCompanyId] ?? [
+                              { id: 0, name: '선택', category: '' },
+                            ]
+                          }
                           onScrollToBottom={() => {
                             if (fuelEquipmentHasNextPage && !fuelEquipmentIsFetching)
                               fuelEquipmentFetchNextPage()

@@ -442,7 +442,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
   // 페이지 정보
   const totalList = StatementHistoryList?.data.pageInfo.totalElements ?? 0
-  const pageCount = 10
+  const pageCount = 20
   const totalPages = Math.ceil(totalList / pageCount)
 
   const dates = Array.from({ length: 31 }, (_, i) => i + 1)
@@ -941,69 +941,83 @@ export default function LaborRegistrationView({ isEditMode = false }) {
             <div className="flex gap-4"></div>
           </div>
 
-          <TableContainer component={Paper} sx={{ maxHeight: '70vh', marginTop: '30px' }}>
-            <Table stickyHeader>
+          <TableContainer
+            component={Paper}
+            sx={{
+              maxHeight: '70vh',
+              marginTop: '30px',
+              overflowX: 'auto', // 가로 스크롤 활성화
+            }}
+          >
+            <Table stickyHeader sx={{ minWidth: '1500px' }}>
               <TableHead>
                 <TableRow>
-                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 80 }}>
                     연월
                   </TableCell>
-                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 140 }}>
                     현장
                   </TableCell>
-                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
                     공정
                   </TableCell>
-                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
                     일당
                   </TableCell>
 
                   {firstHalfDates.map((date) => (
-                    <TableCell key={date} align="center" sx={headerCellStyle}>
+                    <TableCell key={date} align="center" sx={{ ...headerCellStyle, minWidth: 60 }}>
                       {date}
                     </TableCell>
                   ))}
 
-                  {/* 합계 컬럼 */}
-                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
                     총공수
                   </TableCell>
-                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
                     총일수
                   </TableCell>
-                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 120 }}>
                     노무부 총액
                   </TableCell>
-                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 80 }}>
                     소득세
                   </TableCell>
-                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
                     고용보험
                   </TableCell>
-                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
                     건강보험
                   </TableCell>
-                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 80 }}>
                     주민세
                   </TableCell>
-                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
                     국민연금
                   </TableCell>
-                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
                     장기요양
                   </TableCell>
-                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 120 }}>
                     차감지급액
                   </TableCell>
-                  <TableCell rowSpan={2} align="center" sx={headerCellStyle}>
+                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 120 }}>
                     비고
                   </TableCell>
                 </TableRow>
 
-                {/* 두 번째 행: 17~31일 */}
                 <TableRow>
                   {secondHalfDates.map((date) => (
-                    <TableCell key={date} align="center" sx={headerCellStyle}>
+                    <TableCell
+                      key={date}
+                      align="center"
+                      sx={{
+                        ...headerCellStyle,
+                        minWidth: 60,
+                        position: 'sticky',
+                        top: 30,
+                      }}
+                    >
                       {date}
                     </TableCell>
                   ))}

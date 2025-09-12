@@ -2,23 +2,28 @@ import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-q
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { useMemo } from 'react'
 import {
+  CompleteInfoData,
   CreatedailyReport,
+  GetContractNameInfoService,
   GetEmployeeInfoService,
   GetWithEquipmentService,
+  ModifyContractReport,
   ModifyEmployeesReport,
   ModifyEquipmentReport,
   ModifyFileReport,
   ModifyFuelReport,
   ModifyOutsourcingReport,
-  OutsourcingWorkerNameScroll,
 } from '@/services/dailyReport/dailyReportRegistrationService'
-import { useOutSourcingClientId } from './useOutsourcingClientIdNumber'
 import { useDailyFormStore } from '@/stores/dailyReportStore'
 
 export function useDailyReport() {
   const { showSnackbar } = useSnackbarStore()
 
-  const { reset } = useDailyFormStore()
+  const {
+    // 직원 정보
+  } = useDailyFormStore()
+
+  // const router = useRouter()
 
   const queryClient = useQueryClient()
 
@@ -153,6 +158,34 @@ export function useDailyReport() {
     },
   })
 
+  // 직영/계약직 수정
+
+  const ContractModifyMutation = useMutation({
+    mutationFn: ({
+      siteId,
+      siteProcessId,
+      reportDate,
+    }: {
+      siteId: number
+      siteProcessId: number
+      reportDate: string
+    }) => ModifyContractReport({ siteId, siteProcessId, reportDate }),
+
+    onSuccess: () => {
+      showSnackbar('출역일보(직영/계약직)이 수정 되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['DailyContract'] })
+      // reset()
+    },
+
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('출역일보(직영/계약직) 수정에 실패했습니다.', 'error')
+      }
+    },
+  })
+
   // 유류 수정
   const FuelModifyMutation = useMutation({
     mutationFn: ({
@@ -207,6 +240,32 @@ export function useDailyReport() {
     },
   })
 
+  // 마감 활성화
+  const CompleteInfoMutation = useMutation({
+    mutationFn: ({
+      siteId,
+      siteProcessId,
+      reportDate,
+    }: {
+      siteId: number
+      siteProcessId: number
+      reportDate: string
+    }) => CompleteInfoData({ siteId, siteProcessId, reportDate }),
+
+    onSuccess: () => {
+      showSnackbar('출역일보 정보가 마감 되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['CompleteInfo'] })
+    },
+
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('출역일보 정보가 마감 에 실패했습니다.', 'error')
+      }
+    },
+  })
+
   const {
     data: employeeInfo,
     fetchNextPage: employeeFetchNextPage,
@@ -238,63 +297,87 @@ export function useDailyReport() {
     return [...defaultOptions, ...options]
   }, [employeeInfo])
 
-  // 업체명의 인력 조회cp
-
-  //차량번호 & 규격 무한 스크롤
-
-  const clientId = useOutSourcingClientId()
+  // 계약직만 데이터 조회
 
   const {
-    data: workerList,
-    fetchNextPage: workerListFetchNextPage,
-    hasNextPage: workerListHasNextPage,
-    isFetching: workerListIsFetching,
-    isLoading: workerListLoading,
+    data: contractInfo,
+    fetchNextPage: contractNameFetchNextPage,
+    hasNextPage: contractNamehasNextPage,
+    isFetching: contractNameFetching,
+    isLoading: contractNameLoading,
   } = useInfiniteQuery({
-    queryKey: ['WorkDataInfo', clientId],
-    queryFn: ({ pageParam = 0 }) =>
-      OutsourcingWorkerNameScroll({
-        pageParam,
-        id: clientId || 0,
-        size: 6,
-      }),
+    queryKey: ['contractInfo'],
+    queryFn: ({ pageParam = 0 }) => GetContractNameInfoService({ pageParam, size: 20 }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
       const { sliceInfo } = lastPage.data
-      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+      const nextPage = sliceInfo.page + 1
+      return sliceInfo.hasNext ? nextPage : undefined
     },
-    enabled: !!clientId,
   })
 
-  const workListOptions = useMemo(() => {
-    const defaultOption = {
-      id: 0,
-      name: '선택',
-      category: '',
-    }
-    const options = (workerList?.pages || [])
+  console.log('contractInfo', contractInfo)
+
+  const contractNameInfoOptions = useMemo(() => {
+    const defaultOptions = [
+      {
+        id: 0,
+        name: '선택',
+        type: '',
+        previousDailyWage: '',
+        dailyWage: '',
+        isSeverancePayEligible: false,
+      },
+    ]
+
+    const options = (contractInfo?.pages || [])
       .flatMap((page) => page.data.content)
       .map((user) => ({
         id: user.id,
         name: user.name,
-        category: user.category,
+        type: user.type,
+        previousDailyWage: user.previousDailyWage,
+        dailyWage: user.dailyWage,
+        isSeverancePayEligible: user.isSeverancePayEligible,
       }))
 
-    return [defaultOption, ...options]
-  }, [workerList])
+    return [...defaultOptions, ...options]
+  }, [contractInfo])
+
+  // 업체명의 인력 조회cp
+
+  // // 회사 변경
+  // const handleCompanyChange = (rowId: number, companyId: number) => {
+  //   setSelectedCompanyIds((prev) => ({
+  //     ...prev,
+  //     [rowId]: companyId,
+  //   }))
+
+  //   updateItemField('outsourcings', rowId, 'outsourcingCompanyId', companyId)
+  //   updateItemField('outsourcings', rowId, 'outsourcingCompanyContractWorkerId', 0)
+  // }
+
+  // // selectedCompanyIds가 바뀌면 testNumber 업데이트
+  // const newTestId = useOutSourcingInfoClientId(selectedCompanyIds)
 
   const reportCancel = () => {
-    reset()
+    // router.push('dailyReport/registration')
+    // router.refresh()
+    window.location.reload() // push 후 강제 새로고침
   }
 
   return {
     createDailyMutation,
     EmployeesModifyMutation,
 
+    ContractModifyMutation,
+
     OutsourcingModifyMutation,
     EquipmentModifyMutation,
     FuelModifyMutation,
     FileModifyMutation,
+
+    CompleteInfoMutation,
 
     reportCancel,
     employeeInfoOptions,
@@ -303,13 +386,15 @@ export function useDailyReport() {
     employeeFetching,
     employeeLoading,
 
-    // 인력 정보 조회
+    // 계약직 이름
 
-    workListOptions,
-    workerListFetchNextPage,
-    workerListHasNextPage,
-    workerListIsFetching,
-    workerListLoading,
+    contractNameInfoOptions,
+    contractNameFetchNextPage,
+    contractNamehasNextPage,
+    contractNameFetching,
+    contractNameLoading,
+
+    // 인력 정보 조회
 
     // 장비를 가지고 있는 업체명
     withEquipmentInfoOptions,
