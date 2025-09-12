@@ -26,15 +26,24 @@ import { useFuelAggregation } from '@/hooks/useFuelAggregation'
 import {
   DetaileReport,
   GetAttachedFileByFilterService,
+  GetContractByFilterService,
   GetEmployeesByFilterService,
   GetEquipmentByFilterService,
   GetFuelByFilterService,
   GetOutsoucingByFilterService,
+  OutsourcingWorkerNameScroll,
 } from '@/services/dailyReport/dailyReportRegistrationService'
 import CommonSelectByName from '../common/CommonSelectByName'
 import CommonFileInput from '../common/FileInput'
 import CommonInput from '../common/Input'
-import { formatNumber, getTodayDateString, unformatNumber } from '@/utils/formatters'
+import {
+  formatDateSecondTime,
+  formatNumber,
+  getTodayDateString,
+  unformatNumber,
+} from '@/utils/formatters'
+import { useMenuPermission } from '../common/MenuPermissionView'
+import { myInfoProps } from '@/types/user'
 
 export default function DailyReportRegistrationView() {
   const {
@@ -42,8 +51,10 @@ export default function DailyReportRegistrationView() {
     setField,
     updateItemField,
     removeCheckedItems,
+    addTemporaryCheckedItems,
     reset,
     resetEmployees,
+    resetDirectContracts,
     resetOutsourcing,
     resetEquipment,
     resetFuel,
@@ -86,8 +97,11 @@ export default function DailyReportRegistrationView() {
     EmployeesModifyMutation,
     OutsourcingModifyMutation,
     EquipmentModifyMutation,
+    ContractModifyMutation,
     FuelModifyMutation,
     FileModifyMutation,
+
+    CompleteInfoMutation,
 
     reportCancel,
     employeeInfoOptions,
@@ -96,13 +110,13 @@ export default function DailyReportRegistrationView() {
     employeeFetching,
     employeeLoading,
 
-    // 인력의 정보 조회
+    contractNameInfoOptions,
+    contractNameFetchNextPage,
+    contractNamehasNextPage,
+    contractNameFetching,
+    contractNameLoading,
 
-    workListOptions,
-    workerListFetchNextPage,
-    workerListHasNextPage,
-    workerListIsFetching,
-    workerListLoading,
+    // 인력의 정보 조회
 
     withEquipmentInfoOptions,
     withEquipmentFetchNextPage,
@@ -127,6 +141,14 @@ export default function DailyReportRegistrationView() {
 
     OilTypeMethodOptions,
   } = useFuelAggregation()
+
+  const [selectedCompanyIds, setSelectedCompanyIds] = useState<{ [rowId: number]: number }>({})
+  const [selectId, setSelectId] = useState(0)
+  const [selectedWorkerIds, setSelectedWorkerIds] = useState<{ [rowId: number]: number }>({})
+
+  // 옵션에 따른 상태값
+
+  const [workerOptionsByCompany, setWorkerOptionsByCompany] = useState<Record<number, any[]>>({})
 
   // 체크 박스에 활용
   //   const employees = form.employees
@@ -209,6 +231,73 @@ export default function DailyReportRegistrationView() {
   const checkedIds = form.checkedManagerIds
   const isAllChecked = employees.length > 0 && checkedIds.length === employees.length
 
+  // 직영 계약직
+
+  const {
+    // data: employeesData,
+    fetchNextPage: contractFetchNextPage,
+    hasNextPage: contractHasNextPage,
+    isFetching: contractFetching,
+    refetch: contractRefetch, // 조회 버튼에서 직접 실행할 수 있게
+  } = useInfiniteQuery({
+    queryKey: ['contract', form.siteId, form.siteProcessId, form.reportDate],
+    queryFn: ({ pageParam }) =>
+      GetContractByFilterService({
+        pageParam,
+        siteId: form.siteId,
+        siteProcessId: form.siteProcessId,
+        reportDate: form.reportDate ? form.reportDate.toISOString().slice(0, 10) : '',
+      }),
+    enabled: false, // 버튼 누르기 전에는 자동 조회 안 되게
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      const nextPage = sliceInfo.page + 1
+      return sliceInfo.hasNext ? nextPage : undefined
+    },
+  })
+
+  const handleContractRefetch = async () => {
+    const res = await contractRefetch()
+    if (!res.data) return
+
+    // content 배열 합치기
+    const allContract = res.data.pages.flatMap((page) => page.data.content)
+
+    if (allContract.length === 0) {
+      // 데이터가 아예 없는 경우
+      setIsEditMode(false)
+      resetDirectContracts()
+      return
+    }
+
+    // 데이터가 있는 경우
+    const fetched = allContract.map((item: any) => ({
+      id: item.id,
+      checkId: item.checkId,
+      outsourcingCompanyId: item.outsourcingCompany?.id ?? null,
+      laborId: item.labor?.id ?? 0,
+      position: item.position,
+      workContent: item.workContent,
+      previousPrice: item.labor.previousDailyWage,
+      unitPrice: item.unitPrice,
+      workQuantity: item.workQuantity,
+      memo: item.memo,
+      isTemporary: item.labor.isTemporary,
+      temporaryLaborName: item.labor.name,
+      modifyDate: `${getTodayDateString(item.createdAt)} / ${getTodayDateString(item.updatedAt)}`,
+    }))
+
+    setIsEditMode(true)
+    setField('directContracts', fetched)
+  }
+
+  const contractData = useMemo(() => form.directContracts, [form.directContracts])
+
+  const ContractCheckedIds = form.checkeddirectContractsIds
+  const isContractAllChecked =
+    contractData.length > 0 && ContractCheckedIds.length === contractData.length
+
   // 외주 조회
 
   const {
@@ -252,13 +341,15 @@ export default function DailyReportRegistrationView() {
     const fetched = allOutsourcingContents.map((item: any) => ({
       id: item.id,
       outsourcingCompanyId: item.outsourcingCompany?.id ?? 0,
-      outsourcingCompanyContractWorkerId: item.outsourcingCompanyWorker?.id ?? '',
+      outsourcingCompanyContractWorkerId: item.outsourcingCompanyWorker?.id ?? 0,
       category: item.category ?? '',
       workContent: item.workContent,
       workQuantity: item.workQuantity,
       memo: item.memo,
       modifyDate: `${getTodayDateString(item.createdAt)} / ${getTodayDateString(item.updatedAt)}`,
     }))
+
+    console.log('fetchedfetchedallOutsourcingContents', fetched)
 
     setIsEditMode(true)
     setField('outsourcings', fetched)
@@ -462,7 +553,11 @@ export default function DailyReportRegistrationView() {
     const fetchData = async () => {
       if (activeTab === '직원') {
         handleEmployeesRefetch()
-      } else if (activeTab === '외주') {
+      }
+      if (activeTab === '직영/계약직') {
+        handleContractRefetch()
+      }
+      if (activeTab === '외주') {
         handleOutsourcingRefetch()
       } else if (activeTab === '장비') {
         handleEquipmentRefetch()
@@ -478,16 +573,19 @@ export default function DailyReportRegistrationView() {
 
   // 출역일보 전체 데이터 조회
 
-  const { data: detailReport } = useQuery({
-    queryKey: ['detailReport', form.siteId, form.siteProcessId, form.reportDate], // 캐시 키
+  const detailReportQuery = useQuery({
+    queryKey: ['detailReport', form.siteId, form.siteProcessId, form.reportDate],
     queryFn: () =>
       DetaileReport({
         siteId: form.siteId,
         siteProcessId: form.siteProcessId,
         reportDate: getTodayDateString(form.reportDate) || '',
-      }), // API 호출
-    enabled: !!form.siteId && !!form.siteProcessId && !!form.reportDate, // 조건부 실행
+      }),
+    enabled: !!form.siteId && !!form.siteProcessId && !!form.reportDate,
   })
+
+  const { data: detailReport } = detailReportQuery
+
   useEffect(() => {
     if (detailReport?.status === 200 && !isEditMode) {
       setIsEditMode(true)
@@ -495,10 +593,81 @@ export default function DailyReportRegistrationView() {
   }, [detailReport, isEditMode])
 
   const Deadline = () => {
-    alert('마감로직 설정')
+    CompleteInfoMutation.mutate(
+      {
+        siteId: form.siteId,
+        siteProcessId: form.siteProcessId,
+        reportDate: getTodayDateString(form.reportDate) || '',
+      },
+      {
+        onSuccess: () => {
+          detailReportQuery.refetch() // React Query 사용 시
+        },
+      },
+    )
   }
 
-  console.log(isEditMode)
+  // 권한에 따른 버튼 활성화
+
+  const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
+
+  useEffect(() => {
+    const headerData = sessionStorage.getItem('myInfo')
+    if (headerData) {
+      setMyInfo(JSON.parse(headerData))
+    }
+  }, [])
+
+  const isHeadOfficeInfo = myInfo?.isHeadOffice
+
+  console.log('isHeadOfficeInfoisHeadOfficeInfo', isHeadOfficeInfo)
+
+  const roleId = Number(myInfo?.roles?.[0]?.id)
+  const rolePermissionStatus = myInfo?.roles?.[0]?.deleted
+  const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
+
+  // "계정 관리" 메뉴에 대한 권한
+  const { hasApproval } = useMenuPermission(roleId, '출역일보', enabled)
+
+  const {
+    data: workerList,
+    fetchNextPage: workerListFetchNextPage,
+    hasNextPage: workerListHasNextPage,
+    isFetching: workerListIsFetching,
+    isLoading: workerListLoading,
+  } = useInfiniteQuery({
+    queryKey: ['WorkDataInfo', selectedCompanyIds[selectId]],
+    queryFn: ({ pageParam = 0 }) =>
+      OutsourcingWorkerNameScroll({
+        pageParam,
+        id: selectedCompanyIds[selectId] || 0,
+        size: 10,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+    },
+    enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
+  })
+
+  useEffect(() => {
+    if (!workerList) return
+
+    const options = workerList.pages
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+        category: user.category,
+      }))
+
+    setWorkerOptionsByCompany((prev) => ({
+      ...prev,
+      [selectedCompanyIds[selectId]]: [{ id: 0, name: '선택', category: '' }, ...options],
+    }))
+  }, [workerList, selectedCompanyIds, selectId])
+
   return (
     <>
       <div className="flex gap-10 items-center justify-between">
@@ -613,12 +782,22 @@ export default function DailyReportRegistrationView() {
             </button>
           ))}
         </div>
-        <CommonButton
-          label="마감"
-          className="px-6 py-2 mb-2"
-          variant="secondary"
-          onClick={Deadline}
-        />
+        {detailReport?.data?.status === 'AUTO_COMPLETED' ||
+        detailReport?.data?.status === 'COMPLETED' ? (
+          <div>{formatDateSecondTime(detailReport.data.completedAt)}</div>
+        ) : (
+          <CommonButton
+            label="마감"
+            disabled={
+              !hasApproval ||
+              detailReport?.data?.status === 'AUTO_COMPLETED' ||
+              detailReport?.data?.status === 'COMPLETED'
+            }
+            className="px-6 py-2 mb-2"
+            variant="secondary"
+            onClick={Deadline}
+          />
+        )}
       </div>
 
       {activeTab === '직원' && (
@@ -631,12 +810,20 @@ export default function DailyReportRegistrationView() {
                 className="px-7"
                 variant="danger"
                 onClick={() => removeCheckedItems('Employees')}
+                disabled={
+                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                  detailReport?.data?.status === 'COMPLETED'
+                }
               />
               <CommonButton
                 label="추가"
                 className="px-7"
                 variant="secondary"
                 onClick={() => addItem('Employees')}
+                disabled={
+                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                  detailReport?.data?.status === 'COMPLETED'
+                }
               />
             </div>
           </div>
@@ -728,17 +915,41 @@ export default function DailyReportRegistrationView() {
                       >
                         <TextField
                           size="small"
-                          placeholder="'-'없이 숫자만 입력"
-                          value={m.workQuantity}
-                          onChange={(e) =>
-                            updateItemField(
-                              'Employees',
-                              m.id,
-                              'workQuantity',
-                              Number(e.target.value),
-                            )
+                          type="number" // type을 number로 변경
+                          placeholder="숫자를 입력해주세요."
+                          inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
+                          value={
+                            m.workQuantity === 0 || m.workQuantity === null ? '' : m.workQuantity
                           }
-                          sx={{ width: 70 }}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            const numericValue = value === '' ? null : parseFloat(value)
+
+                            // dailyWork 배열 idx 위치 업데이트
+                            updateItemField('Employees', m.id, 'workQuantity', numericValue)
+                          }}
+                          sx={{
+                            height: '100%',
+                            '& .MuiInputBase-root': {
+                              height: '100%',
+                              fontSize: '1rem',
+                            },
+                            '& input': {
+                              textAlign: 'center',
+                              padding: '10px',
+                              MozAppearance: 'textfield', // Firefox
+                              '&::-webkit-outer-spin-button': {
+                                // Chrome, Safari
+                                WebkitAppearance: 'none',
+                                margin: 0,
+                              },
+                              '&::-webkit-inner-spin-button': {
+                                // Chrome, Safari
+                                WebkitAppearance: 'none',
+                                margin: 0,
+                              },
+                            },
+                          }}
                         />
                       </TableCell>
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -787,23 +998,42 @@ export default function DailyReportRegistrationView() {
                 label="삭제"
                 className="px-7"
                 variant="danger"
-                onClick={() => removeCheckedItems('Employees')}
+                onClick={() => removeCheckedItems('directContracts')}
+                disabled={
+                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                  detailReport?.data?.status === 'COMPLETED'
+                }
+              />
+              <CommonButton
+                label="임시 인력 추가"
+                className="px-7"
+                variant="primary"
+                onClick={() => addTemporaryCheckedItems('directContracts')}
+                disabled={
+                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                  detailReport?.data?.status === 'COMPLETED'
+                }
               />
               <CommonButton
                 label="추가"
                 className="px-7"
                 variant="secondary"
-                onClick={() => addItem('Employees')}
+                onClick={() => addItem('directContracts')}
+                disabled={
+                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                  detailReport?.data?.status === 'COMPLETED'
+                }
               />
             </div>
           </div>
+
           <TableContainer
             component={Paper}
             onScroll={(e) => {
               const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
               if (scrollHeight - scrollTop <= clientHeight * 1.2) {
-                if (employeesHasNextPage && !employeesFetching) {
-                  employeesFetchNextPage()
+                if (contractHasNextPage && !contractFetching) {
+                  contractFetchNextPage()
                 }
               }
             }}
@@ -813,13 +1043,23 @@ export default function DailyReportRegistrationView() {
                 <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
                   <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
                     <Checkbox
-                      checked={isAllChecked}
-                      indeterminate={checkedIds.length > 0 && !isAllChecked}
-                      onChange={(e) => toggleCheckAllItems('Employees', e.target.checked)}
+                      checked={isContractAllChecked}
+                      indeterminate={ContractCheckedIds.length > 0 && !isContractAllChecked}
+                      onChange={(e) => toggleCheckAllItems('directContracts', e.target.checked)}
                       sx={{ color: 'black' }}
                     />
                   </TableCell>
-                  {['이름', '작업내용', '공수', '비고', '등록/수정일'].map((label) => (
+                  {[
+                    '업체명',
+                    '이름',
+                    '직급(직책)',
+                    '작업내용',
+                    '이전(기준)단가',
+                    '단가',
+                    '공수',
+                    '비고',
+                    '등록/수정일',
+                  ].map((label) => (
                     <TableCell
                       key={label}
                       align="center"
@@ -837,45 +1077,127 @@ export default function DailyReportRegistrationView() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {employees.length === 0 ? (
+                {contractData.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                      직원 데이터가 없습니다.
+                    <TableCell colSpan={10} align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                      직영/계약직 데이터가 없습니다.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  employees.map((m) => (
-                    <TableRow key={m.id}>
+                  contractData.map((m, idx) => (
+                    <TableRow key={`${m.checkId}-${idx}`}>
                       <TableCell
                         padding="checkbox"
                         align="center"
                         sx={{ border: '1px solid  #9CA3AF' }}
                       >
                         <Checkbox
-                          checked={checkedIds.includes(m.id)}
-                          onChange={(e) => toggleCheckItem('Employees', m.id, e.target.checked)}
-                        />
-                      </TableCell>
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        <CommonSelect
-                          value={m.laborId || 0}
-                          onChange={async (value) =>
-                            updateItemField('Employees', m.id, 'laborId', value)
-                          }
-                          options={employeeInfoOptions}
-                          onScrollToBottom={() => {
-                            if (employeehasNextPage && !employeeFetching) employeeFetchNextPage()
-                          }}
-                          loading={employeeLoading}
-                        />
-                      </TableCell>
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        <TextField
-                          placeholder="텍스트 입력"
-                          size="small"
-                          value={m.workContent}
+                          checked={ContractCheckedIds.includes(m.checkId)}
                           onChange={(e) =>
-                            updateItemField('Employees', m.id, 'workContent', e.target.value)
+                            toggleCheckItem('directContracts', m.checkId, e.target.checked)
+                          }
+                        />
+                      </TableCell>
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        {m.isTemporary ? (
+                          <TextField
+                            size="small"
+                            fullWidth
+                            value={'라인공영(임시)'}
+                            onChange={(e) =>
+                              updateItemField(
+                                'directContracts',
+                                m.checkId,
+                                'temporaryCompanyName',
+                                e.target.value,
+                              )
+                            }
+                            placeholder="업체명 입력"
+                            disabled
+                          />
+                        ) : (
+                          <CommonSelect
+                            fullWidth
+                            value={m.outsourcingCompanyId || 0}
+                            onChange={async (value) => {
+                              const selectedCompany = companyOptions.find((opt) => opt.id === value)
+                              if (!selectedCompany) return
+
+                              updateItemField(
+                                'directContracts',
+                                m.checkId,
+                                'outsourcingCompanyId',
+                                selectedCompany.id,
+                              )
+                            }}
+                            options={companyOptions}
+                            onScrollToBottom={() => {
+                              if (comPanyNamehasNextPage && !comPanyNameFetching)
+                                comPanyNameFetchNextPage()
+                            }}
+                            loading={comPanyNameLoading}
+                          />
+                        )}
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        {m.isTemporary ? (
+                          <TextField
+                            size="small"
+                            fullWidth
+                            value={m.temporaryLaborName || ''}
+                            onChange={(e) =>
+                              updateItemField(
+                                'directContracts',
+                                m.checkId,
+                                'temporaryLaborName',
+                                e.target.value,
+                              )
+                            }
+                            placeholder="이름 입력"
+                          />
+                        ) : (
+                          <CommonSelect
+                            value={m.laborId || 0}
+                            onChange={(value) => {
+                              // 선택된 옵션 찾기
+                              const selectedOption = contractNameInfoOptions.find(
+                                (opt) => opt.id === value,
+                              )
+
+                              updateItemField('directContracts', m.checkId, 'laborId', value)
+                              updateItemField(
+                                'directContracts',
+                                m.checkId,
+                                'previousPrice',
+                                selectedOption?.previousDailyWage ?? 0, // 선택된 항목의 previousDailyWage 자동 입력
+                              )
+                            }}
+                            options={contractNameInfoOptions}
+                            onScrollToBottom={() => {
+                              if (contractNamehasNextPage && !contractNameFetching)
+                                contractNameFetchNextPage()
+                            }}
+                            loading={contractNameLoading}
+                          />
+                        )}
+                      </TableCell>
+
+                      <TableCell
+                        align="center"
+                        sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                      >
+                        <TextField
+                          size="small"
+                          placeholder="텍스트 입력"
+                          value={m.position}
+                          onChange={(e) =>
+                            updateItemField(
+                              'directContracts',
+                              m.checkId,
+                              'position',
+                              e.target.value,
+                            )
                           }
                         />
                       </TableCell>
@@ -885,17 +1207,156 @@ export default function DailyReportRegistrationView() {
                       >
                         <TextField
                           size="small"
-                          placeholder="'-'없이 숫자만 입력"
-                          value={m.workQuantity}
+                          placeholder="텍스트 입력 "
+                          value={m.workContent}
                           onChange={(e) =>
                             updateItemField(
-                              'Employees',
-                              m.id,
-                              'workQuantity',
-                              Number(e.target.value),
+                              'directContracts',
+                              m.checkId,
+                              'workContent',
+                              e.target.value,
                             )
                           }
-                          sx={{ width: 70 }}
+                        />
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                      >
+                        <TextField
+                          size="small"
+                          value={
+                            m.previousPrice === 0 || m.previousPrice === null
+                              ? ''
+                              : formatNumber(m.previousPrice)
+                          }
+                          onChange={(e) => {
+                            const numericValue =
+                              e.target.value === '' ? null : unformatNumber(e.target.value)
+
+                            updateItemField(
+                              'directContracts',
+                              m.checkId,
+                              'previousPrice',
+                              numericValue,
+                            )
+                          }}
+                          sx={{
+                            height: '100%',
+                            '& .MuiInputBase-root': {
+                              height: '100%',
+                              fontSize: '1rem',
+                            },
+                            '& input': {
+                              backgroundColor: '#E5E7EB', // 연한 회색 (Tailwind gray-200)
+                              color: '#111827', // 진한 글자색 (Tailwind gray-900)
+                              fontWeight: 'bold', // 글자 강조
+                              textAlign: 'center',
+                              padding: '10px',
+                              MozAppearance: 'textfield', // Firefox
+                              '&::-webkit-outer-spin-button': {
+                                // Chrome, Safari
+                                WebkitAppearance: 'none',
+                                margin: 0,
+                              },
+                              '&::-webkit-inner-spin-button': {
+                                // Chrome, Safari
+                                WebkitAppearance: 'none',
+                                margin: 0,
+                              },
+                            },
+                          }}
+                          disabled
+                        />
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                      >
+                        <TextField
+                          size="small"
+                          placeholder="숫자를 입력해주세요."
+                          value={
+                            m.unitPrice === 0 || m.unitPrice === null
+                              ? ''
+                              : formatNumber(m.unitPrice)
+                          }
+                          onChange={(e) => {
+                            const numericValue =
+                              e.target.value === '' ? null : unformatNumber(e.target.value)
+
+                            updateItemField('directContracts', m.checkId, 'unitPrice', numericValue)
+                          }}
+                          sx={{
+                            height: '100%',
+                            '& .MuiInputBase-root': {
+                              height: '100%',
+                              fontSize: '1rem',
+                            },
+                            '& input': {
+                              textAlign: 'center',
+                              padding: '10px',
+                              MozAppearance: 'textfield', // Firefox
+                              '&::-webkit-outer-spin-button': {
+                                // Chrome, Safari
+                                WebkitAppearance: 'none',
+                                margin: 0,
+                              },
+                              '&::-webkit-inner-spin-button': {
+                                // Chrome, Safari
+                                WebkitAppearance: 'none',
+                                margin: 0,
+                              },
+                            },
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                      >
+                        <TextField
+                          size="small"
+                          type="number" // type을 number로 변경
+                          placeholder="숫자를 입력해주세요."
+                          inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
+                          value={
+                            m.workQuantity === 0 || m.workQuantity === null ? '' : m.workQuantity
+                          }
+                          onChange={(e) => {
+                            const value = e.target.value
+                            const numericValue = value === '' ? null : parseFloat(value)
+
+                            // dailyWork 배열 idx 위치 업데이트
+                            updateItemField(
+                              'directContracts',
+                              m.checkId,
+                              'workQuantity',
+                              numericValue,
+                            )
+                          }}
+                          sx={{
+                            height: '100%',
+                            '& .MuiInputBase-root': {
+                              height: '100%',
+                              fontSize: '1rem',
+                            },
+                            '& input': {
+                              textAlign: 'center',
+                              padding: '10px',
+                              MozAppearance: 'textfield', // Firefox
+                              '&::-webkit-outer-spin-button': {
+                                // Chrome, Safari
+                                WebkitAppearance: 'none',
+                                margin: 0,
+                              },
+                              '&::-webkit-inner-spin-button': {
+                                // Chrome, Safari
+                                WebkitAppearance: 'none',
+                                margin: 0,
+                              },
+                            },
+                          }}
                         />
                       </TableCell>
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -904,7 +1365,7 @@ export default function DailyReportRegistrationView() {
                           placeholder="텍스트 입력"
                           value={m.memo}
                           onChange={(e) =>
-                            updateItemField('Employees', m.id, 'memo', e.target.value)
+                            updateItemField('directContracts', m.checkId, 'memo', e.target.value)
                           }
                         />
                       </TableCell>
@@ -916,7 +1377,7 @@ export default function DailyReportRegistrationView() {
                           placeholder="-"
                           value={m.modifyDate ?? ''}
                           onChange={(value) =>
-                            updateItemField('Employees', m.id, 'modifyDate', value)
+                            updateItemField('directContracts', m.checkId, 'modifyDate', value)
                           }
                           disabled
                           className="flex-1"
@@ -943,12 +1404,20 @@ export default function DailyReportRegistrationView() {
                 className="px-7"
                 variant="danger"
                 onClick={() => removeCheckedItems('outsourcings')}
+                disabled={
+                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                  detailReport?.data?.status === 'COMPLETED'
+                }
               />
               <CommonButton
                 label="추가"
                 className="px-7"
                 variant="secondary"
                 onClick={() => addItem('outsourcings')}
+                disabled={
+                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                  detailReport?.data?.status === 'COMPLETED'
+                }
               />
             </div>
           </div>
@@ -997,7 +1466,7 @@ export default function DailyReportRegistrationView() {
               <TableBody>
                 {resultOutsourcing.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                    <TableCell colSpan={8} align="center" sx={{ border: '1px solid #9CA3AF' }}>
                       외주 데이터가 없습니다.
                     </TableCell>
                   </TableRow>
@@ -1018,11 +1487,20 @@ export default function DailyReportRegistrationView() {
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <CommonSelect
                           fullWidth
-                          value={m.outsourcingCompanyId || 0}
+                          value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
                           onChange={async (value) => {
                             const selectedCompany = companyOptions.find((opt) => opt.id === value)
                             if (!selectedCompany) return
 
+                            // 해당 row만 업데이트
+                            setSelectedCompanyIds((prev) => ({
+                              ...prev,
+                              [m.id]: selectedCompany.id,
+                            }))
+
+                            setSelectId(m.id)
+
+                            // 필드 업데이트
                             updateItemField(
                               'outsourcings',
                               m.id,
@@ -1030,12 +1508,11 @@ export default function DailyReportRegistrationView() {
                               selectedCompany.id,
                             )
 
-                            updateItemField(
-                              'outsourcings',
-                              m.id,
-                              'outsourcingCompanyContractWorkerId',
-                              0,
-                            )
+                            // 해당 row 워커만 초기화
+                            setSelectedWorkerIds((prev) => ({
+                              ...prev,
+                              [m.id]: 0,
+                            }))
                           }}
                           options={companyOptions}
                           onScrollToBottom={() => {
@@ -1049,26 +1526,35 @@ export default function DailyReportRegistrationView() {
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <CommonSelect
                           fullWidth
-                          value={m.outsourcingCompanyContractWorkerId || 0}
+                          // value={m.outsourcingCompanyContractWorkerId || 0}
+                          value={
+                            selectedWorkerIds[m.id] || m.outsourcingCompanyContractWorkerId || 0
+                          }
                           onChange={async (value) => {
-                            const selectedCompany = workListOptions.find((opt) => opt.id === value)
-                            if (!selectedCompany) return
+                            const selectedWorker = (
+                              workerOptionsByCompany[m.outsourcingCompanyId] ?? []
+                            ).find((opt) => opt.id === value)
+                            if (!selectedWorker) return
 
                             updateItemField(
                               'outsourcings',
                               m.id,
                               'outsourcingCompanyContractWorkerId',
-                              selectedCompany.id,
+                              selectedWorker.id,
                             )
 
                             updateItemField(
                               'outsourcings',
                               m.id,
                               'category',
-                              selectedCompany.category ?? '-', // category 없으면 '-'
+                              selectedWorker.category ?? '-', // category 없으면 '-'
                             )
                           }}
-                          options={workListOptions}
+                          options={
+                            workerOptionsByCompany[m.outsourcingCompanyId] ?? [
+                              { id: 0, name: '선택', category: '' },
+                            ]
+                          }
                           onScrollToBottom={() => {
                             if (workerListHasNextPage && !workerListIsFetching)
                               workerListFetchNextPage()
@@ -1161,12 +1647,20 @@ export default function DailyReportRegistrationView() {
                 className="px-7"
                 variant="danger"
                 onClick={() => removeCheckedItems('equipment')}
+                disabled={
+                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                  detailReport?.data?.status === 'COMPLETED'
+                }
               />
               <CommonButton
                 label="추가"
                 className="px-7"
                 variant="secondary"
                 onClick={() => addItem('equipment')}
+                disabled={
+                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                  detailReport?.data?.status === 'COMPLETED'
+                }
               />
             </div>
           </div>
@@ -1225,7 +1719,7 @@ export default function DailyReportRegistrationView() {
               <TableBody>
                 {equipmentData.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                    <TableCell colSpan={11} align="center" sx={{ border: '1px solid #9CA3AF' }}>
                       장비 데이터가 없습니다.
                     </TableCell>
                   </TableRow>
@@ -1433,12 +1927,20 @@ export default function DailyReportRegistrationView() {
                 className="px-7"
                 variant="danger"
                 onClick={() => removeCheckedItems('fuel')}
+                disabled={
+                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                  detailReport?.data?.status === 'COMPLETED'
+                }
               />
               <CommonButton
                 label="추가"
                 className="px-7"
                 variant="secondary"
                 onClick={() => addItem('fuel')}
+                disabled={
+                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                  detailReport?.data?.status === 'COMPLETED'
+                }
               />
             </div>
           </div>
@@ -1495,7 +1997,7 @@ export default function DailyReportRegistrationView() {
               <TableBody>
                 {fuelData.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                    <TableCell colSpan={9} align="center" sx={{ border: '1px solid #9CA3AF' }}>
                       유류 데이터가 없습니다.
                     </TableCell>
                   </TableRow>
@@ -1521,7 +2023,7 @@ export default function DailyReportRegistrationView() {
                             const selectedCompany = withEquipmentInfoOptions.find(
                               (opt) => opt.id === value,
                             )
-                            console.log('dbfb ghkrdls ', withEquipmentInfoOptions)
+
                             if (!selectedCompany) return
 
                             updateItemField(
@@ -1684,12 +2186,24 @@ export default function DailyReportRegistrationView() {
                 className="px-7"
                 variant="danger"
                 onClick={() => removeCheckedItems('attachedFile')}
+                disabled={
+                  isHeadOfficeInfo
+                    ? false // 본사 정보이면 무조건 활성화
+                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
+                }
               />
               <CommonButton
                 label="추가"
                 className="px-7"
                 variant="secondary"
                 onClick={() => addItem('attachedFile')}
+                disabled={
+                  isHeadOfficeInfo
+                    ? false // 본사 정보이면 무조건 활성화
+                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
+                }
               />
             </div>
           </div>
@@ -1819,6 +2333,10 @@ export default function DailyReportRegistrationView() {
 
         <CommonButton
           label={isEditMode ? '+ 수정' : '+ 등록'}
+          disabled={
+            detailReport?.data?.status === 'AUTO_COMPLETED' ||
+            detailReport?.data?.status === 'COMPLETED'
+          }
           className="px-10 font-bold"
           variant="secondary"
           onClick={() => {
@@ -1833,6 +2351,19 @@ export default function DailyReportRegistrationView() {
                   {
                     onSuccess: () => {
                       handleEmployeesRefetch() // 등록 성공 후 실행
+                    },
+                  },
+                )
+              } else if (activeTab === '직영/계약직') {
+                ContractModifyMutation.mutate(
+                  {
+                    siteId: form.siteId,
+                    siteProcessId: form.siteProcessId,
+                    reportDate: getTodayDateString(form.reportDate) || '',
+                  },
+                  {
+                    onSuccess: () => {
+                      handleContractRefetch() // 등록 성공 후 실행
                     },
                   },
                 )
@@ -1894,6 +2425,12 @@ export default function DailyReportRegistrationView() {
                 createDailyMutation.mutate(undefined, {
                   onSuccess: () => {
                     handleEmployeesRefetch() // 등록 성공 후 실행
+                  },
+                })
+              } else if (activeTab === '직영/계약직') {
+                createDailyMutation.mutate(undefined, {
+                  onSuccess: () => {
+                    handleContractRefetch() // 등록 성공 후 실행
                   },
                 })
               } else if (activeTab === '외주') {
