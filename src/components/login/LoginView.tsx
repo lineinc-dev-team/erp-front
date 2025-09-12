@@ -22,8 +22,15 @@ export default function LoginView() {
     await handleLogin()
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault() // 기본 제출 막기
+      onLogin()
+    }
+  }
+
   return (
-    <div>
+    <div onKeyDown={handleKeyDown}>
       <h1 className="text-[42px] mb-4">라인공영 관리 시스템</h1>
 
       <div className="w-88 flex flex-col gap-2 m-0">
