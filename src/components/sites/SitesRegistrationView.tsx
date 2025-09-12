@@ -496,7 +496,6 @@ export default function SitesRegistrationView({ isEditMode = false }) {
       )
       setField('changeHistories', allHistories)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [siteHistoryList, setField])
 
   const observerRef = useRef<IntersectionObserver | null>(null)

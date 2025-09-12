@@ -410,7 +410,6 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
       )
       setField('changeHistories', allHistories)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [materialHistoryList, setField])
 
   const observerRef = useRef<IntersectionObserver | null>(null)

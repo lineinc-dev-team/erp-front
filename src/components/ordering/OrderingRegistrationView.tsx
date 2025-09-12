@@ -336,7 +336,6 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
       )
       setField('changeHistories', allHistories)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientHistoryList, setField])
 
   const observerRef = useRef<IntersectionObserver | null>(null)

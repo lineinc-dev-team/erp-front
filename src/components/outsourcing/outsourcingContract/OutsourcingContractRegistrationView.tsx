@@ -709,7 +709,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       )
       setField('changeHistories', allHistories)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [outsourcingContractHistoryList, setField])
 
   const observerRef = useRef<IntersectionObserver | null>(null)

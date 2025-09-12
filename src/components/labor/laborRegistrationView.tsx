@@ -318,7 +318,6 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       )
       setField('changeHistories', allHistories)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [laborHistoryList, setField])
 
   const observerRef = useRef<IntersectionObserver | null>(null)
