@@ -312,22 +312,30 @@ export default function SitesView() {
           </div>
 
           <div className="flex">
-            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
               지역(시/군/구)
             </label>
             <div className="border border-gray-400 gap-6 px-2 w-full flex justify-center items-center">
-              <CommonSelectByName
+              {/* 시/도 선택 */}
+              <CommonSelect
                 className="text-2xl w-full"
-                value={search.city || '선택'}
-                onChange={(value) => search.setField('city', value)}
+                value={search.city || '0'}
+                onChange={(value) => {
+                  search.setField('city', value)
+                  // 시/도 바뀌면 구 선택 초기화
+                  search.setField('district', '0')
+                }}
                 options={CityOptions}
                 fullWidth={true}
               />
-              <CommonSelectByName
+
+              <CommonSelect
                 className="text-2xl w-full"
-                value={search.district || '선택'}
+                value={search.district || '0'}
                 onChange={(value) => search.setField('district', value)}
-                options={DistrictGuOptions}
+                options={DistrictGuOptions.filter(
+                  (d) => d.id === '0' || d.id.startsWith(search.city),
+                )}
                 fullWidth={true}
               />
             </div>

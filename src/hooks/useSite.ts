@@ -1,3 +1,4 @@
+import { CityOptions, DistrictGuOptions } from '@/config/erp.confing'
 import {
   CreateSiteInfo,
   ModifySiteService,
@@ -50,8 +51,11 @@ export default function useSite() {
         name: search.name === '선택' ? '' : search.name,
         type: search.type === '선택' ? '' : search.type,
         processName: search.processName || '',
-        city: search.city === '선택' ? '' : '',
-        district: search.district === '선택' ? '' : '',
+        city: search.city === '0' ? '' : CityOptions.find((c) => c.id === search.city)?.name || '',
+        district:
+          search.district === '0'
+            ? ''
+            : DistrictGuOptions.find((d) => d.id === search.district)?.name || '',
         processStatuses: search.processStatuses.length > 0 ? search.processStatuses : undefined,
         clientCompanyName: search.clientCompanyName === '선택' ? '' : search.clientCompanyName,
         createdBy: search.createdBy || '',
