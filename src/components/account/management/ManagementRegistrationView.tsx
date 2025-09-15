@@ -148,6 +148,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
       const allHistories = userHistoryList.pages.flatMap((page) =>
         page.data.content.map((item: HistoryItem) => ({
           id: item.id,
+          description: item.description,
           content: formatChangeDetail(item.getChanges), // 여기 변경
           createdAt: item.createdAt,
           updatedAt: item.updatedAt,
@@ -464,7 +465,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
                         align="left"
                         sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'pre-line' }}
                       >
-                        {item.content}
+                        {item.description ? item.description : item.content}
                       </TableCell>
                       <TableCell
                         align="left"

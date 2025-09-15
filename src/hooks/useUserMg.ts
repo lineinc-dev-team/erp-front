@@ -155,7 +155,7 @@ export function useUserMg() {
   const resetPasswordMutation = useMutation({
     mutationFn: ModifyUserPasswordManagement,
     onSuccess: () => {
-      showSnackbar('비밀번호가 초기화되었습니다.', 'success')
+      showSnackbar('초기 비밀번호는 line1234 입니다.', 'success')
     },
     onError: () => {
       showSnackbar('비밀번호 초기화에 실패했습니다.', 'error')
