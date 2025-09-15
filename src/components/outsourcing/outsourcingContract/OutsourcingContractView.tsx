@@ -71,7 +71,8 @@ export default function OutsourcingContractView() {
       ...user,
       type: user.contractType,
       contactName: mainContact?.name || '-',
-      hasFile: user.hasFile === false ? 'N' : 'Y',
+      hasGuaranteeCertificate: user.hasGuaranteeCertificate === false ? 'N' : 'Y',
+      hasContractCertificate: user.hasContractCertificate === false ? 'N' : 'Y',
       memo: user.memo || '-',
       createdAt: getTodayDateString(user.createdAt),
     }

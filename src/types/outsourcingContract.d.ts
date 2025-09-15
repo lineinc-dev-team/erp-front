@@ -120,6 +120,8 @@ export interface OutsourcingContractList {
   createdAt: string
   updatedAt: string
   hasFile: false
+  hasGuaranteeCertificate: boolean
+  hasContractCertificate: boolean
   contacts: Contact[]
 }
 

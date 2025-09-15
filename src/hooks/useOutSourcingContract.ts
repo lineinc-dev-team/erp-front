@@ -57,12 +57,13 @@ export default function useOutSourcingContract() {
     ],
     queryFn: () => {
       const rawParams = {
-        siteName: search.siteName,
+        siteName: search.siteName === '선택' ? '' : search.siteName,
+
         processName: search.processName,
         companyName: search.companyName,
         businessNumber: search.businessNumber,
-        contractType: search.contractType,
-        contractStatus: search.contractStatus,
+        contractType: search.contractType === 'BASE' ? '' : search.contractType,
+        contractStatus: search.contractStatus === 'BASE' ? '' : search.contractStatus,
         contractStartDate: getTodayDateString(search.contractStartDate),
         contractEndDate: getTodayDateString(search.contractEndDate),
         contactName: search.contactName,
