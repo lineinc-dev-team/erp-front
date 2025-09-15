@@ -16,7 +16,6 @@ import { useLaborSearchStore } from '@/stores/laborStore'
 import { useLaborInfo } from '@/hooks/useLabor'
 import { LaborDataList } from '@/types/labor'
 import { formatNumber, getTodayDateString } from '@/utils/formatters'
-import { formatPhoneNumber } from '@/utils/formatPhoneNumber'
 import { LaborExcelDownload } from '@/services/labor/laborService'
 import CommonSelectByName from '../common/CommonSelectByName'
 import { myInfoProps } from '@/types/user'
@@ -361,8 +360,7 @@ export default function LaborView() {
                 placeholder="'-'없이 숫자만 입력"
                 value={search.phoneNumber}
                 onChange={(value) => {
-                  const clientPhone = formatPhoneNumber(value)
-                  search.setField('phoneNumber', clientPhone)
+                  search.setField('phoneNumber', value)
                 }}
                 className=" flex-1"
               />

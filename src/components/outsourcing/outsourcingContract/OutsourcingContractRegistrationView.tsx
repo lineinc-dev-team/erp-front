@@ -251,6 +251,14 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     department: '부서',
     email: '이메일',
     phoneNumber: '개인 휴대폰',
+    specification: '규격',
+    vehicleNumber: '차량번호',
+    contractQuantity: '도급 수량',
+    outsourcingContractPrice: '외주계약금액',
+    item: '단위',
+    unit: '단가',
+    outsourcingContractQuantity: '외주계약금액의 수량',
+    contractPrice: '도급금액의 금액',
   }
 
   const { showSnackbar } = useSnackbarStore()

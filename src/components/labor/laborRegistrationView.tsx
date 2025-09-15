@@ -106,6 +106,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     accountHolder: '예금주',
     memo: '비고',
     originalFileName: '파일 추가',
+    outsourcingCompanyName: '소속업체',
+    address: '주소',
   }
 
   // const [isChecked, setIsChecked] = useState(false)
@@ -170,8 +172,6 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       // 각 필드에 set
       setField('name', client.name)
       setField('type', client.typeCode)
-
-      setField('outsourcingCompanyId', client.outsourcingCompany?.id ?? '-1')
 
       setField('residentNumber', client.residentNumber)
 
@@ -252,7 +252,11 @@ export default function LaborRegistrationView({ isEditMode = false }) {
         ...normalUsers,
       ])
 
-      setField('outsourcingCompanyId', client.outsourcingCompany?.id ?? -1)
+      setField(
+        'outsourcingCompanyId',
+
+        client.isHeadOffice ? 0 : client.outsourcingCompany?.id ?? -1,
+      )
     } else if (!isEditMode) {
       // 등록 모드일 경우
       setUpdatedOutSourcingCompanyOptions(companyOptions)
@@ -349,7 +353,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       return '구분 내용을 입력하세요.'
     }
 
-    if (!form.outsourcingCompanyId || form.outsourcingCompanyId <= 0) {
+    if (form.outsourcingCompanyId < 0) {
       return '소속업체를 선택하세요.'
     }
 
@@ -398,6 +402,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
     return null
   }
+
+  console.log('form.outsourcingCompanyIdform.outsourcingCompanyId', form.outsourcingCompanyId)
 
   const handleLaborSubmit = () => {
     const errorMsg = validateClientForm(form)
@@ -508,6 +514,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                   value={form.type || 'BASE'}
                   onChange={(value) => setField('type', value)}
                   options={LaborTypeMethodOptions}
+                  disabled={isEditMode}
                 />
 
                 <CommonInput
