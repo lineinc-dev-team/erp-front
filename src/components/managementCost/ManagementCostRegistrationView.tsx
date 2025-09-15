@@ -165,7 +165,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     bankName: '은행명',
     accountNumber: '계좌번호',
     accountHolder: '예금주',
-    memo: '메모',
+    memo: '비고',
     originalFileName: '파일 추가',
     paymentDateFormat: '일자',
     lunchCount: '중식 갯수',
@@ -360,11 +360,16 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     if (!form.paymentDate) return '일자를 선택하세요.'
     if (!form.outsourcingCompanyInfo) return '업체 정보를 입력하세요.'
 
+    if (form.memo.length > 500) {
+      return '비고는 500자 이하로 입력해주세요.'
+    }
+
     if (itemDetails.length > 0) {
       for (const item of itemDetails) {
         if (!item.name?.trim()) return '품목명을 입력해주세요.'
         if (!item.unitPrice && item.unitPrice !== 0) return '단가를 입력해주세요.'
         if (!item.supplyPrice && item.supplyPrice !== 0) return '공급가를 입력해주세요.'
+        if (item.memo.length > 500) return '비고는 500자 이하로 입력해주세요.'
       }
     }
 
@@ -659,14 +664,14 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              비교 / 메모
+              비고
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
                 value={form.memo}
                 onChange={(value) => setField('memo', value)}
                 className="flex-1"
-                placeholder="텍스트 입력"
+                placeholder="500자 이하 텍스트 입력"
               />
             </div>
           </div>
@@ -1379,7 +1384,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
                         size="small"
-                        placeholder="텍스트 입력"
+                        placeholder="500자 이하 텍스트 입력"
                         value={m.memo}
                         onChange={(e) =>
                           updateItemField('keyMoneyList', m.id, 'memo', e.target.value)
@@ -1525,7 +1530,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder="텍스트 입력"
+                      placeholder="500자 이하 텍스트 입력"
                       sx={{ width: '100%' }}
                       value={m.memo}
                       onChange={(e) =>
@@ -1550,15 +1555,26 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
             <Table size="small">
               <TableHead>
                 <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                  {['수정일시', '항목', '수정항목', '수정자', '비고 / 메모'].map((label) => (
+                  {[
+                    { label: '수정일시', width: '12%' },
+                    { label: '항목', width: '5%' },
+                    { label: '수정항목', width: '30%' },
+                    { label: '수정자', width: '2%' },
+                    { label: '비고', width: '15%' },
+                  ].map(({ label, width }) => (
                     <TableCell
                       key={label}
                       align="center"
                       sx={{
                         backgroundColor: '#D1D5DB',
-                        border: '1px solid  #9CA3AF',
+                        border: '1px solid #9CA3AF',
                         color: 'black',
                         fontWeight: 'bold',
+                        width,
+                        maxWidth: width,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
                       }}
                     >
                       {label}
@@ -1599,7 +1615,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                         fullWidth
                         size="small"
                         value={item.memo ?? ''}
-                        placeholder="메모 입력"
+                        placeholder="500자 이하 텍스트 입력"
                         onChange={(e) => updateMemo(item.id, e.target.value)}
                         multiline
                         inputProps={{ maxLength: 500 }}

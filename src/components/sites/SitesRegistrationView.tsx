@@ -104,7 +104,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     contractAmount: '도급금액',
     officePhone: '사무실 연락처',
     amount: '계약금액',
-    memo: '메모',
+    memo: '비고',
     originalFileName: '파일 추가',
   }
 
@@ -363,7 +363,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
               </label>
               <div className="flex-1 border border-gray-400 px-2 py-1">
                 <CommonInput
-                  placeholder="텍스트 입력"
+                  placeholder="500자 이하 텍스트 입력"
                   className="flex-1"
                   value={contract.memo}
                   onChange={(v) => updateContractField(idx, 'memo', v)}
@@ -530,12 +530,19 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     if (!form.endedAt) return '사업 종료일을 선택하세요.'
     if (!form.userId || String(form.userId) === '0') return '본사 담당자를 선택하세요.'
     if (!form.contractAmount || form.contractAmount <= 0) return '도급금액을 입력하세요.'
+    if (form.memo.length > 500) {
+      return '비고는 500자 이하로 입력해주세요.'
+    }
     if (!form.process?.name?.trim()) return '공정명을 입력하세요.'
     if (!form.process?.managerId || String(form.process.managerId) === '0')
       return '공정소장을 입력하세요.'
     if (!form.process?.officePhone?.trim()) return '사무실 연락처를 입력하세요.'
     if (!form.process.status || String(form.process.status) === '선택')
       return '진행상태를 입력하세요.'
+
+    if (form.process.memo.length > 500) {
+      return '비고는 500자 이하로 입력해주세요.'
+    }
 
     // 날짜 유효성 검사
     if (form.startedAt && form.endedAt) {
@@ -547,6 +554,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     if (form.contracts.length > 0) {
       for (const item of form.contracts) {
         if (!item.name?.trim()) return '계약서의 이름을 입력해주세요.'
+        if (item.memo.length > 500) return '계약서의 비고는 500자 이하로 입력해주세요.'
       }
     }
 
@@ -732,11 +740,11 @@ export default function SitesRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36  text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              비고 / 메모
+              비고
             </label>
             <div className="border flex  items-center border-gray-400 px-2 w-full">
               <CommonInput
-                placeholder="텍스트 입력"
+                placeholder="500자 이하 텍스트 입력"
                 value={form.memo}
                 onChange={(value) => setField('memo', value)}
                 className=" flex-1"
@@ -825,11 +833,12 @@ export default function SitesRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36  text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              비고 / 메모
+              비고
             </label>
             <div className="border flex  items-center border-gray-400 px-2 w-full">
               <CommonInput
                 value={form.process.memo}
+                placeholder="500자 이하 텍스트 입력"
                 onChange={(value) => setProcessField('memo', value)}
                 className=" flex-1"
               />
@@ -862,16 +871,27 @@ export default function SitesRegistrationView({ isEditMode = false }) {
           <TableContainer component={Paper}>
             <Table size="small">
               <TableHead>
-                <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                  {['수정일시', '항목', '수정항목', '수정자', '비고 / 메모'].map((label) => (
+                <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid #9CA3AF' }}>
+                  {[
+                    { label: '수정일시', width: '12%' },
+                    { label: '항목', width: '5%' },
+                    { label: '수정항목', width: '30%' },
+                    { label: '수정자', width: '2%' },
+                    { label: '비고', width: '15%' },
+                  ].map(({ label, width }) => (
                     <TableCell
                       key={label}
                       align="center"
                       sx={{
                         backgroundColor: '#D1D5DB',
-                        border: '1px solid  #9CA3AF',
+                        border: '1px solid #9CA3AF',
                         color: 'black',
                         fontWeight: 'bold',
+                        width,
+                        maxWidth: width,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
                       }}
                     >
                       {label}
@@ -883,7 +903,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                 {historyList.map((item: HistoryItem) => (
                   <TableRow key={item.id}>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {formatDateTime(item.createdAt)} / {formatDateTime(item.updatedAt)}
+                      {formatDateTime(item.createdAt)}({formatDateTime(item.updatedAt)})
                     </TableCell>
                     <TableCell
                       align="left"
@@ -915,7 +935,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                         fullWidth
                         size="small"
                         value={item.memo ?? ''}
-                        placeholder="메모 입력"
+                        placeholder="500자 이하 텍스트 입력"
                         onChange={(e) => updateMemo(item.id, e.target.value)}
                         multiline
                         inputProps={{ maxLength: 500 }}

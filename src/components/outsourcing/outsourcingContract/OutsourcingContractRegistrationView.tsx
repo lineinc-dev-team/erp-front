@@ -232,7 +232,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     CompanyName: '업체명',
     categoryName: '유형',
     contractAmount: '계약금액(총액)',
-    memo: '메모',
+    memo: '비고',
     businessNumber: '사업자등록번호',
     typeName: '구분명',
     typeDescription: '구분 설명',
@@ -502,7 +502,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       // 상태
       setField('status', client.statusCode || '')
 
-      // 메모
+      // 비고
       setField('memo', client.memo || '')
       setField('headManagers', formattedContacts)
       setField('attachedFiles', formattedFiles)
@@ -799,6 +799,10 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
     if (!form.status) return '상태를 입력해주세요.'
 
+    if (form.memo.length > 500) {
+      return '비고는 500자 이하로 입력해주세요.'
+    }
+
     if (managers.length > 0) {
       for (const item of managers) {
         if (!item.name?.trim()) return '담당자의 이름을 입력해주세요.'
@@ -807,6 +811,9 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
         if (!item.landlineNumber?.trim()) return '담당자의 전화번호를 입력해주세요.'
         if (!item.phoneNumber?.trim()) return '담당자의 개인 휴대폰을 입력해주세요.'
         if (!item.email?.trim()) return '담당자의 이메일을 입력해주세요.'
+        if (item.memo.length > 500) {
+          return '담당자의 비고는 500자 이하로 입력해주세요.'
+        }
       }
     }
 
@@ -815,6 +822,9 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
         if (!item.name?.trim()) return '인력의 이름을 입력해주세요.'
         if (!item.category?.trim()) return '인력의 구분을 입력해주세요.'
         if (!item.taskDescription?.trim()) return '인력의 작업내용을 입력해주세요.'
+        if (item.memo.length > 500) {
+          return '인력의 비고는 500자 이하로 입력해주세요.'
+        }
       }
     }
 
@@ -825,12 +835,18 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
         if (!item.category?.trim()) return '장비의 구분을 입력해주세요.'
         if (!item.unitPrice) return '장비의 단가를 입력해주세요.'
         if (!item.subtotal) return '장비의 소계를 입력해주세요.'
+        if (item.memo.length > 500) {
+          return '장비의 비고는 500자 이하로 입력해주세요.'
+        }
       }
     }
 
     if (articleAddAttachedFiles.length > 0) {
       for (const item of articleAddAttachedFiles) {
         if (!item.name?.trim()) return '기사의 이름을 입력해주세요.'
+        if (item.memo.length > 500) {
+          return '기사의 비고는 500자 이하로 입력해주세요.'
+        }
       }
     }
 
@@ -844,12 +860,18 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
         if (!item.contractPrice) return '공사의 도급금액의 금액을 입력해주세요.'
         if (!item.outsourcingContractQuantity) return '공사의 외주계약금액의 수량을 입력해주세요.'
         if (!item.outsourcingContractPrice) return '공사의 외주계약금액의 금액을 입력해주세요.'
+        if (item.memo.length > 500) {
+          return '공사의 비고는 500자 이하로 입력해주세요.'
+        }
       }
     }
 
     if (attachedFiles.length > 0) {
       for (const item of attachedFiles) {
         if (!item.name?.trim()) return '첨부파일의 이름을 입력해주세요.'
+        if (item.memo.length > 500) {
+          return '첨부파일의 비고는 500자 이하로 입력해주세요.'
+        }
       }
     }
 
@@ -1197,14 +1219,14 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              비고 / 메모
+              비고
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
                 value={form.memo}
                 onChange={(value) => setField('memo', value)}
                 className=" flex-1"
-                placeholder="텍스트 입력"
+                placeholder="500자 이하 텍스트 입력"
               />
             </div>
           </div>
@@ -1366,7 +1388,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder="텍스트 입력"
+                      placeholder="500자 이하 텍스트 입력"
                       value={m.memo}
                       onChange={(e) => updateItemField('manager', m.id, 'memo', e.target.value)}
                     />
@@ -1477,7 +1499,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder="텍스트 입력"
+                      placeholder="500자 이하 텍스트 입력"
                       sx={{ width: '100%' }}
                       value={m.memo}
                       onChange={(e) =>
@@ -1619,7 +1641,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
                         size="small"
-                        placeholder="텍스트 입력"
+                        placeholder="500자 이하 텍스트 입력"
                         sx={{ width: '100%' }}
                         value={m.memo}
                         onChange={(e) =>
@@ -1915,7 +1937,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
                       <TextField
                         size="small"
-                        placeholder="멀티라인 텍스트"
+                        placeholder="500자 이하 텍스트 입력"
                         multiline
                         rows={2}
                         value={m.memo || ''}
@@ -2166,7 +2188,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
                       <TextField
                         size="small"
-                        placeholder="비고 입력"
+                        placeholder="500자 이하 텍스트 입력"
                         sx={{ width: '100%' }}
                         value={m.memo}
                         onChange={(e) => updateItemField('equipment', m.id, 'memo', e.target.value)}
@@ -2323,7 +2345,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
                         size="small"
-                        placeholder="텍스트 입력"
+                        placeholder="500자 이하 텍스트 입력"
                         sx={{ width: '100%' }}
                         value={m.memo}
                         onChange={(e) =>
@@ -2349,15 +2371,26 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
             <Table size="small">
               <TableHead>
                 <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                  {['수정일시', '항목', '수정항목', '수정자', '비고 / 메모'].map((label) => (
+                  {[
+                    { label: '수정일시', width: '12%' },
+                    { label: '항목', width: '5%' },
+                    { label: '수정항목', width: '30%' },
+                    { label: '수정자', width: '2%' },
+                    { label: '비고', width: '15%' },
+                  ].map(({ label, width }) => (
                     <TableCell
                       key={label}
                       align="center"
                       sx={{
                         backgroundColor: '#D1D5DB',
-                        border: '1px solid  #9CA3AF',
+                        border: '1px solid #9CA3AF',
                         color: 'black',
                         fontWeight: 'bold',
+                        width,
+                        maxWidth: width,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
                       }}
                     >
                       {label}
@@ -2398,7 +2431,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                         fullWidth
                         size="small"
                         value={item.memo ?? ''}
-                        placeholder="메모 입력"
+                        placeholder="500자 이하 텍스트 입력"
                         onChange={(e) => updateMemo(item.id, e.target.value)}
                         multiline
                         inputProps={{ maxLength: 500 }}

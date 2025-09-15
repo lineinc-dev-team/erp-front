@@ -477,7 +477,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                     size="small"
                     value={form.memo}
                     onChange={(e) => setField('memo', e.target.value)}
-                    placeholder="텍스트 입력"
+                    placeholder="500자 이하 텍스트 입력"
                     fullWidth
                   />
                 </TableCell>
@@ -524,7 +524,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                       sx={{ color: 'black' }}
                     />
                   </TableCell>
-                  {['No.', '계정', '이름', '부서', '등록일', '비고/메모']
+                  {['No.', '계정', '이름', '부서', '등록일', '비고']
                     .filter((label) => (isEditMode ? true : !['등록일'].includes(label)))
                     .map((label) => (
                       <TableCell
@@ -624,7 +624,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                         value={user.memo}
                         onChange={(e) => updateUserMemo(user.userId, e.target.value)}
                         variant="outlined"
-                        placeholder="메모 입력"
+                        placeholder="500자 이하 텍스트 입력"
                         sx={{
                           '& .MuiOutlinedInput-root': {
                             '& fieldset': {

@@ -120,7 +120,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     startDateFormat: '시작 기간',
     endDateFormat: '종료 기간',
     inputTypeName: '투입 구분',
-    memo: '메모',
+    memo: '비고',
     name: '품명',
     unit: '단위',
     unitWeight: '단위중량',
@@ -301,6 +301,10 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     if (form.startDate && form.endDate && new Date(form.startDate) > new Date(form.endDate))
       return '종료일은 시작일 이후여야 합니다.'
 
+    if (form.memo.length > 500) {
+      return '비고는 500자 이하로 입력해주세요.'
+    }
+
     // type이 PURCHASE 또는 LEASE일 경우 거래선 필수
     if (['PURCHASE', 'LEASE'].includes(form.type)) {
       if (!form.outsourcingCompanyId) return '업체명을 선택하세요.'
@@ -319,6 +323,9 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         if (!item.quantity) return '수량을 입력해주세요.'
         if (!item.unitPrice) return '단가를 입력해주세요.'
         if (!item.supplyPrice) return '공급가를 입력해주세요.'
+        if (item.memo.length > 500) {
+          return '품목상세의 비고는 500자 이하로 입력해주세요.'
+        }
       }
     }
 
@@ -326,6 +333,9 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     if (attachedFiles.length > 0) {
       for (const file of attachedFiles) {
         if (!file.name?.trim()) return '첨부파일의 이름을 입력해주세요.'
+        if (file.memo.length > 500) {
+          return '첨부파일의 비고는 500자 이하로 입력해주세요.'
+        }
       }
     }
 
@@ -495,10 +505,11 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              비교 / 메모
+              비고
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
+                placeholder="500자 이하 텍스트 입력"
                 value={form.memo}
                 onChange={(value) => setField('memo', value)}
                 className="flex-1"
@@ -893,7 +904,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                   <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder="입력"
+                      placeholder="500자 이하 텍스트 입력"
                       multiline
                       value={m.memo || ''}
                       onChange={(e) =>
@@ -1042,7 +1053,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder="텍스트 입력"
+                      placeholder="500자 이하 텍스트 입력"
                       sx={{ width: '100%' }}
                       value={m.memo}
                       onChange={(e) =>
@@ -1080,15 +1091,26 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
             <Table size="small">
               <TableHead>
                 <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                  {['수정일시', '항목', '수정항목', '수정자', '비고 / 메모'].map((label) => (
+                  {[
+                    { label: '수정일시', width: '12%' },
+                    { label: '항목', width: '5%' },
+                    { label: '수정항목', width: '30%' },
+                    { label: '수정자', width: '2%' },
+                    { label: '비고', width: '15%' },
+                  ].map(({ label, width }) => (
                     <TableCell
                       key={label}
                       align="center"
                       sx={{
                         backgroundColor: '#D1D5DB',
-                        border: '1px solid  #9CA3AF',
+                        border: '1px solid #9CA3AF',
                         color: 'black',
                         fontWeight: 'bold',
+                        width,
+                        maxWidth: width,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
                       }}
                     >
                       {label}
@@ -1129,7 +1151,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         fullWidth
                         size="small"
                         value={item.memo ?? ''}
-                        placeholder="메모 입력"
+                        placeholder="500자 이하 텍스트 입력"
                         onChange={(e) => updateMemo(item.id, e.target.value)}
                         multiline
                         inputProps={{ maxLength: 500 }}

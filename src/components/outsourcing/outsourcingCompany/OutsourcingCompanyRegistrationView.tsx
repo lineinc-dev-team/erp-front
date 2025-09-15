@@ -102,7 +102,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     landlineNumber: '전화번호',
     email: '이메일',
     isActive: '계정 상태',
-    memo: '메모',
+    memo: '비고',
     name: '업체명',
     businessNumber: '사업자등록번호',
     typeName: '구분명',
@@ -382,6 +382,10 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     }
     if (form.isActive === '0') return '사용 여부를 선택하세요.'
 
+    if (form.memo.length > 500) {
+      return '비고는 500자 이하로 입력해주세요.'
+    }
+
     // 담당자 유효성 체크
     if (managers.length > 0) {
       for (const item of managers) {
@@ -399,12 +403,19 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item.email)) {
           return '담당자의 이메일 형식이 올바르지 않습니다.'
         }
+
+        if (item.memo.length > 500) {
+          return '담당자의 비고는 500자 이하로 입력해주세요.'
+        }
       }
     }
 
     if (attachedFiles.length > 0) {
       for (const item of attachedFiles) {
         if (!item.name?.trim()) return '첨부파일의 이름을 입력해주세요.'
+        if (item.memo.length > 500) {
+          return '첨부파일의 비고는 500자 이하로 입력해주세요.'
+        }
       }
     }
 
@@ -651,13 +662,14 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              비고 / 메모
+              비고
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
                 value={form.memo ?? ''}
                 onChange={(value) => setField('memo', value)}
                 className=" flex-1"
+                placeholder="500자 이하 텍스트 입력"
               />
             </div>
           </div>
@@ -819,7 +831,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder="텍스트 입력"
+                      placeholder="500자 이하 텍스트 입력"
                       value={m.memo}
                       onChange={(e) => updateItemField('manager', m.id, 'memo', e.target.value)}
                     />
@@ -930,7 +942,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder="텍스트 입력"
+                      placeholder="500자 이하 텍스트 입력"
                       sx={{ width: '100%' }}
                       value={m.memo}
                       onChange={(e) =>
@@ -1042,15 +1054,26 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
             <Table size="small">
               <TableHead>
                 <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                  {['수정일시', '항목', '수정항목', '수정자', '비고 / 메모'].map((label) => (
+                  {[
+                    { label: '수정일시', width: '12%' },
+                    { label: '항목', width: '5%' },
+                    { label: '수정항목', width: '30%' },
+                    { label: '수정자', width: '2%' },
+                    { label: '비고', width: '15%' },
+                  ].map(({ label, width }) => (
                     <TableCell
                       key={label}
                       align="center"
                       sx={{
                         backgroundColor: '#D1D5DB',
-                        border: '1px solid  #9CA3AF',
+                        border: '1px solid #9CA3AF',
                         color: 'black',
                         fontWeight: 'bold',
+                        width,
+                        maxWidth: width,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
                       }}
                     >
                       {label}
@@ -1091,7 +1114,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                         fullWidth
                         size="small"
                         value={item.memo ?? ''}
-                        placeholder="메모 입력"
+                        placeholder="500자 이하 텍스트 입력"
                         onChange={(e) => updateMemo(item.id, e.target.value)}
                         multiline
                         inputProps={{ maxLength: 500 }}

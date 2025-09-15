@@ -1095,7 +1095,7 @@ export default function DailyReportRegistrationView() {
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <TextField
                           size="small"
-                          placeholder="텍스트 입력"
+                          placeholder="500자 이하 텍스트 입력"
                           value={m.memo}
                           onChange={(e) =>
                             updateItemField('Employees', m.id, 'memo', e.target.value)
@@ -1511,7 +1511,7 @@ export default function DailyReportRegistrationView() {
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <TextField
                           size="small"
-                          placeholder="텍스트 입력"
+                          placeholder="500자 이하 텍스트 입력"
                           value={m.memo}
                           onChange={(e) =>
                             updateItemField('directContracts', m.checkId, 'memo', e.target.value)
@@ -1781,7 +1781,7 @@ export default function DailyReportRegistrationView() {
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <TextField
                           size="small"
-                          placeholder="텍스트 입력"
+                          placeholder="500자 이하 텍스트 입력"
                           value={m.memo}
                           onChange={(e) =>
                             updateItemField('outsourcings', m.id, 'memo', e.target.value)
@@ -2133,7 +2133,7 @@ export default function DailyReportRegistrationView() {
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <TextField
                           size="small"
-                          placeholder="텍스트 입력"
+                          placeholder="500자 이하 텍스트 입력"
                           value={m.memo}
                           onChange={(e) =>
                             updateItemField('equipment', m.id, 'memo', e.target.value)
@@ -2427,7 +2427,7 @@ export default function DailyReportRegistrationView() {
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <TextField
                           size="small"
-                          placeholder="텍스트 입력"
+                          placeholder="500자 이하 텍스트 입력"
                           value={m.memo}
                           onChange={(e) => updateItemField('fuel', m.id, 'memo', e.target.value)}
                         />
@@ -2590,7 +2590,7 @@ export default function DailyReportRegistrationView() {
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <TextField
                           size="small"
-                          placeholder="텍스트 입력"
+                          placeholder="500자 이하 텍스트 입력"
                           sx={{ width: '100%' }}
                           value={m.memo ?? ''}
                           onChange={(e) =>

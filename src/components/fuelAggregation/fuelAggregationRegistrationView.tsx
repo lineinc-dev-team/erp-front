@@ -129,7 +129,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     equipmentSpecification: '차량번호',
     fuelTypeName: '유종',
     fuelAmount: '주유량',
-    memo: '메모',
+    memo: '비고',
   }
 
   const {
@@ -273,6 +273,10 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
         if (!item.specificationName?.trim()) return '규격이 올바르지 않습니다.'
         if (!item.fuelType?.trim()) return '유종을 선택하세요.'
         if (!item.fuelAmount) return '주유량을 입력하세요.'
+
+        if (item.memo.length > 500) {
+          return '유류정보의 비고는 500자 이하로 입력해주세요.'
+        }
       }
     }
 
@@ -573,8 +577,9 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                   {/* 비고 */}
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
+                      fullWidth
                       size="small"
-                      placeholder="텍스트 입력"
+                      placeholder="500자 이하 텍스트 입력"
                       value={m.memo}
                       onChange={(e) => updateItemField('FuelInfo', m.id, 'memo', e.target.value)}
                       variant="outlined"
@@ -622,15 +627,26 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
             <Table size="small">
               <TableHead>
                 <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                  {['수정일시', '항목', '수정항목', '수정자', '비고 / 메모'].map((label) => (
+                  {[
+                    { label: '수정일시', width: '12%' },
+                    { label: '항목', width: '5%' },
+                    { label: '수정항목', width: '30%' },
+                    { label: '수정자', width: '2%' },
+                    { label: '비고', width: '15%' },
+                  ].map(({ label, width }) => (
                     <TableCell
                       key={label}
                       align="center"
                       sx={{
                         backgroundColor: '#D1D5DB',
-                        border: '1px solid  #9CA3AF',
+                        border: '1px solid #9CA3AF',
                         color: 'black',
                         fontWeight: 'bold',
+                        width,
+                        maxWidth: width,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
                       }}
                     >
                       {label}
@@ -671,7 +687,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                         fullWidth
                         size="small"
                         value={item.memo ?? ''}
-                        placeholder="메모 입력"
+                        placeholder="500자 이하 텍스트 입력"
                         onChange={(e) => updateMemo(item.id, e.target.value)}
                         multiline
                         inputProps={{ maxLength: 500 }}

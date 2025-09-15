@@ -37,7 +37,7 @@ export const formatDateSecondTime = (dateString: string) => {
 // 숫자를 세 자리마다 콤마 붙인 문자열로 변환
 export function formatNumber(value: number | string): string {
   const num = Number(value)
-  if (isNaN(num)) return ''
+  if (isNaN(num) || num === 0) return ''
   return num.toLocaleString()
 }
 
