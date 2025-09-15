@@ -11,8 +11,13 @@ export const formatPhoneNumber = (value: string) => {
 export const formatPersonNumber = (value: string) => {
   const numbersOnly = value.replace(/\D/g, '') // 숫자만 추출
 
-  if (numbersOnly.length <= 3) return numbersOnly
-  return `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(3, 7)}`
+  if (numbersOnly.length <= 3) return numbersOnly // 3자리 이하
+  if (numbersOnly.length <= 7) {
+    // 3자리-4자리
+    return `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(3, 7)}`
+  }
+  // 4자리-4자리
+  return `${numbersOnly.slice(0, 4)}-${numbersOnly.slice(4, 8)}`
 }
 
 export const formatAreaNumber = (value: string) => {
