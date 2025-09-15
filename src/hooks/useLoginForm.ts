@@ -42,8 +42,11 @@ export function useLoginForm() {
         if (!isInfoLoaded) return
 
         // '/sites' 탭이 sessionStorage와 탭 스토어에 없으면 추가
-        const tabPath = '/dashboard'
-        const tabLabel = '대쉬보드 - 관리'
+        // const tabPath = '/dashboard'
+        // const tabLabel = '대쉬보드 - 관리'
+
+        const tabPath = '/dailyReport/registration'
+        const tabLabel = '출역일보 - 조회'
 
         const storedTabs = JSON.parse(sessionStorage.getItem('tabs') || '[]') as Array<{
           path: string
@@ -61,7 +64,10 @@ export function useLoginForm() {
         }
 
         useTabStore.getState().resetTabs() // 스토어에 resetTabs 함수 필요
-        useTabStore.getState().addTab({ label: '대쉬보드 - 관리', path: '/dashboard' })
+        // useTabStore.getState().addTab({ label: '대쉬보드 - 관리', path: '/dashboard' })
+        useTabStore
+          .getState()
+          .addTab({ label: '출역일보 - 조회', path: '/dailyReport/registration' })
 
         router.push(tabPath)
       } catch (err) {

@@ -108,7 +108,7 @@ function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {
       if (perm.action === '등록') path = `${basePath}/registration`
       else if (perm.action === '조회') path = basePath
 
-      const labelPrefix = '- ' // 항상 붙임
+      const labelPrefix = ' - ' // 항상 붙임
 
       return {
         label: `${labelPrefix}${perm.action}`,
