@@ -33,7 +33,6 @@ import CommonInput from '../common/Input'
 import CommonSelect from '../common/Select'
 import { useLaborFormStore } from '@/stores/laborStore'
 import CommonButton from '../common/Button'
-import CommonDatePicker from '../common/DatePicker'
 import { useLaborInfo } from '@/hooks/useLabor'
 import CommonResidentNumberInput from '@/utils/commonResidentNumberInput'
 import AmountInput from '../common/AmountInput'
@@ -109,17 +108,17 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     originalFileName: '파일 추가',
   }
 
-  const [isChecked, setIsChecked] = useState(false)
+  // const [isChecked, setIsChecked] = useState(false)
 
-  const handleTaxCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked
-    setIsChecked(checked)
+  // const handleTaxCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const checked = e.target.checked
+  //   setIsChecked(checked)
 
-    if (checked) {
-      // 체크하면 퇴사일 초기화
-      setField('resignationDate', null)
-    }
-  }
+  //   if (checked) {
+  //     // 체크하면 퇴사일 초기화
+  //     setField('resignationDate', null)
+  //   }
+  // }
 
   const {
     data: laborHistoryList,
@@ -202,21 +201,21 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       setField('memo', client.memo)
       setField('files', formattedFiles)
 
-      setField('tenureDays', client.tenureDays === null ? '-' : client.tenureDays + '일')
+      setField('tenureMonths', client.tenureMonths === null ? '-' : client.tenureMonths + '개월')
 
       // isSeverancePayEligible 설정
       setField('isSeverancePayEligible', client.isSeverancePayEligible ? 'Y' : 'N')
 
-      // resignationDate 연동
-      if (client.resignationDate === null) {
-        // 퇴직금 발생하면 퇴사일 초기화
-        setIsChecked(true)
-        setField('resignationDate', null)
-      } else {
-        // 퇴직금 미발생이면 퇴사일 값이 있어야 함
-        setIsChecked(false)
-        setField('resignationDate', new Date(client.resignationDate))
-      }
+      // // resignationDate 연동
+      // if (client.resignationDate === null) {
+      //   // 퇴직금 발생하면 퇴사일 초기화
+      //   setIsChecked(true)
+      //   setField('resignationDate', null)
+      // } else {
+      //   // 퇴직금 미발생이면 퇴사일 값이 있어야 함
+      //   setIsChecked(false)
+      //   setField('resignationDate', new Date(client.resignationDate))
+      // }
     } else {
       reset()
     }
@@ -382,11 +381,11 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     if (!form.accountNumber?.trim()) return '계좌번호를 입력하세요.'
     if (!form.accountHolder?.trim()) return '예금주를 입력하세요.'
 
-    if (!form.hireDate) return '입사일을 선택하세요.'
-    // 퇴사일은 선택 optional → 선택되면 입사일보다 이후인지 확인
-    if (form.resignationDate && form.hireDate && form.resignationDate < form.hireDate) {
-      return '퇴사일은 입사일 이후여야 합니다.'
-    }
+    // if (!form.hireDate) return '입사일을 선택하세요.'
+    // // 퇴사일은 선택 optional → 선택되면 입사일보다 이후인지 확인
+    // if (form.resignationDate && form.hireDate && form.resignationDate < form.hireDate) {
+    //   return '퇴사일은 입사일 이후여야 합니다.'
+    // }
 
     if (attachedFiles.length > 0) {
       for (const item of attachedFiles) {
@@ -751,7 +750,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
               />
             </div>
           </div>
-          <div className="flex">
+          {/* <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
               입사일
             </label>
@@ -782,17 +781,17 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                 미지정
               </label>
             </div>
-          </div>
+          </div> */}
           {isEditMode && (
             <>
               <div className="flex">
                 <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-                  근속일수
+                  근속기간
                 </label>
                 <div className="border border-gray-400 flex items-center px-2 w-full">
                   <CommonInput
-                    value={form.tenureDays ?? ''}
-                    onChange={(value) => setField('tenureDays', value)}
+                    value={form.tenureMonths ?? ''}
+                    onChange={(value) => setField('tenureMonths', value)}
                     className=" flex-1"
                     disabled
                   />
@@ -1039,7 +1038,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                   const secondHalf = row.dailyWork.slice(16)
 
                   return (
-                    <Fragment key={row.no}>
+                    <Fragment key={`${row.no}-${Math.random()}`}>
                       {/* 첫 번째 행 */}
 
                       <TableRow>

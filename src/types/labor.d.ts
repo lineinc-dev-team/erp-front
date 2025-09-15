@@ -103,7 +103,8 @@ export type LaborFormState = {
   accountHolder: string
   hireDate: Date | null
   resignationDate: Date | null
-  tenureDays: string
+  tenureDays?: string
+  tenureMonths: string
   isSeverancePayEligible: string
   initialHireDateAt: string
   initialResignationDateAt: string

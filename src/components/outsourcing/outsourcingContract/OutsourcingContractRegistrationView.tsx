@@ -245,6 +245,12 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     subtotal: '소계',
     taskDescription: '작업내용',
     category: '구분',
+    position: '직급(직책)',
+    landlineNumber: '전화번호',
+    name: '이름',
+    department: '부서',
+    email: '이메일',
+    phoneNumber: '개인 휴대폰',
   }
 
   const { showSnackbar } = useSnackbarStore()

@@ -125,7 +125,7 @@ export default function LaborView() {
       }
     }
 
-    if (col.field === 'tenureDays') {
+    if (col.field === 'tenureMonths') {
       return {
         ...col,
         headerAlign: 'center',
@@ -135,9 +135,9 @@ export default function LaborView() {
           const value = params.value as number | string
 
           // 문자열이면 '일' 제거 후 숫자로 변환
-          const numericValue = typeof value === 'string' ? Number(value.replace('일', '')) : value
+          const numericValue = typeof value === 'string' ? Number(value.replace('개월', '')) : value
 
-          const isOver180 = numericValue >= 180
+          const isOver180 = numericValue >= 6
 
           return (
             <div
@@ -149,7 +149,7 @@ export default function LaborView() {
                 height: '100%',
               }}
             >
-              {params.value}
+              {params.value ?? '-'}
             </div>
           )
         },
