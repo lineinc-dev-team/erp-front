@@ -38,10 +38,28 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_FRONT_PEM_KEY }}
           script: |
-            sudo docker pull kyoungholee/docker-example:latest
+            # 새 컨테이너 이름과 포트
+            NEW_CONTAINER="erp-next-front-$(date +%s)"
+            NEW_PORT=3001
 
-            NEW_PORT=$(( ( RANDOM % 2 ) + 3001 ))
+            # Docker 이미지 최신화
+            docker pull kyoungholee/docker-example:latest
 
-            sudo docker run -d --restart=always -p $NEW_PORT:3000 --name erp-next-front-$NEW_PORT kyoungholee/docker-example:latest
+            # 새 컨테이너 실행 (기존 서비스 중단 없이)
+            docker run -d --restart=always -p $NEW_PORT:3000 --name $NEW_CONTAINER kyoungholee/docker-example:latest
 
-            sudo docker ps --filter "name=erp-next-front-" --format "{{.Names}}" | grep -v "$NEW_PORT" | xargs -r sudo docker rm -f
+            # Nginx upstream 파일 경로
+            UPSTREAM_CONF="/etc/nginx/conf.d/erp_upstream.conf"
+
+            # 새 컨테이너로 upstream 변경
+            echo "upstream erp_frontend { server 127.0.0.1:$NEW_PORT; }" > $UPSTREAM_CONF
+
+            # Nginx reload
+            nginx -s reload
+
+            # 기존 컨테이너 중지 및 삭제
+            EXISTING=$(docker ps -q -f name=erp-next-front)
+            if [ -n "$EXISTING" ]; then
+              docker stop $EXISTING
+              docker rm $EXISTING
+            fi
