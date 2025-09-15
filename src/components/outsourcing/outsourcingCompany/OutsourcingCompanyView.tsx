@@ -252,13 +252,14 @@ export default function OutsourcingCompanyView() {
       await OutsourcingCompanyExcelDownload({
         sort: search.arraySort === '최신순' ? 'id,desc' : 'id,asc',
         name: search.name,
+        isActive: search.isActive === '0' ? undefined : search.isActive === '1' ? true : false,
+
         businessNumber: search.businessNumber,
         ceoName: search.ceoName,
         landlineNumber: search.landlineNumber,
         type: search.type,
         createdStartDate: search.startDate ? getTodayDateString(search.startDate) : undefined,
         createdEndDate: search.endDate ? getTodayDateString(search.endDate) : undefined,
-        isActive: search.isActive !== 'N',
         fields, // 필수 필드: ["id", "name", "businessNumber", ...]
       })
     } catch (error: unknown) {

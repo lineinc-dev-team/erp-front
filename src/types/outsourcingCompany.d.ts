@@ -48,7 +48,7 @@ export interface OutsourcingCompanyList {
   landlineNumber: string
   phoneNumber: string
   email: string
-  isActive: false
+  isActive: boolean
   defaultDeductions: string
   defaultDeductionsCode: string
   defaultDeductionsDescription: string
@@ -69,7 +69,7 @@ export type OutsourcingSearchState = {
   type: string
   startDate: Date | null
   endDate: Date | null
-  isActive: string
+  isActive: T
   currentPage: number
   arraySort: string
   pageCount: string

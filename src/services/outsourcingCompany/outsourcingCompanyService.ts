@@ -79,7 +79,7 @@ export async function OutsourcingCompanyExcelDownload({
   ceoName,
   type,
   landlineNumber,
-  isActive = true,
+  isActive,
   createdStartDate,
   createdEndDate,
   fields,
@@ -103,8 +103,7 @@ export async function OutsourcingCompanyExcelDownload({
   if (type) queryParams.append('type', type)
   if (ceoName) queryParams.append('ceoName', ceoName)
   if (landlineNumber) queryParams.append('landlineNumber', landlineNumber)
-  queryParams.append('isActive', String(isActive))
-  // if (isActive !== undefined) queryParams.append('isActive', String(isActive))
+  if (isActive !== undefined) queryParams.append('isActive', String(isActive))
   if (createdStartDate) queryParams.append('createdStartDate', createdStartDate)
   if (createdEndDate) queryParams.append('createdEndDate', createdEndDate)
 

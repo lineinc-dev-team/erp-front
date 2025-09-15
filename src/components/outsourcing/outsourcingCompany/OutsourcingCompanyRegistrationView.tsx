@@ -117,6 +117,9 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     accountNumber: '계좌번호',
     accountHolder: '예금주',
     originalFileName: '파일 추가',
+    address: '주소',
+    department: '부서',
+    position: '직급(직책',
   }
 
   const {
