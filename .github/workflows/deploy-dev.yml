@@ -68,8 +68,15 @@ jobs:
             # 7️⃣ Nginx reload
             sudo nginx -s reload
 
-            # 8️⃣ 기존 컨테이너 중지 및 삭제
+
+              # 8️⃣ 기존 컨테이너 중지 및 삭제
             if [ -n "$EXISTING" ]; then
               docker stop $EXISTING
               docker rm $EXISTING
+
+              # 9️⃣ 기존 이미지 정리
+              OLD_IMAGE=$(docker images -q kyoungholee/docker-example:latest)
+              if [ -n "$OLD_IMAGE" ]; then
+                docker rmi $OLD_IMAGE
+              fi
             fi
