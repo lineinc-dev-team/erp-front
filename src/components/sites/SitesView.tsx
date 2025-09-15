@@ -1,6 +1,8 @@
 'use client'
 
 import CommonButton from '../common/Button'
+import { Tooltip } from '@mui/material'
+
 import CommonInput from '../common/Input'
 import CommonSelect from '../common/Select'
 import CommonDatePicker from '../common/DatePicker'
@@ -156,6 +158,27 @@ export default function SitesView() {
           const indexInCurrentPage = sortedRowIds.indexOf(params.id)
           const no = totalList - ((search.currentPage - 1) * pageCount + indexInCurrentPage)
           return <span>{no}</span>
+        },
+      }
+    }
+
+    if (col.field === 'memo') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 2,
+        renderCell: (params: GridRenderCellParams) => {
+          const text = params.value as string
+          if (!text) return <span style={{ fontSize: 12 }}>-</span>
+
+          return (
+            <Tooltip title={text} arrow>
+              <span style={{ fontSize: 12 }}>
+                {text.length > 10 ? `${text.slice(0, 10)}...` : text}
+              </span>
+            </Tooltip>
+          )
         },
       }
     }

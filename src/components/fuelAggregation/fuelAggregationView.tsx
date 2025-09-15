@@ -4,7 +4,7 @@ import CommonButton from '../common/Button'
 import CommonSelect from '../common/Select'
 import CommonDatePicker from '../common/DatePicker'
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-import { Checkbox, ListItemText, MenuItem, Pagination, Select } from '@mui/material'
+import { Checkbox, ListItemText, MenuItem, Pagination, Select, Tooltip } from '@mui/material'
 import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
 import {
@@ -107,6 +107,27 @@ export default function FuelAggregationView() {
 
   // 그리도 라우팅 로직!
   const enhancedColumns = FuelColumnList.map((col): GridColDef => {
+    if (col.field === 'memo') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 2,
+        renderCell: (params: GridRenderCellParams) => {
+          const text = params.value as string
+          if (!text) return <span style={{ fontSize: 12 }}>-</span>
+
+          return (
+            <Tooltip title={text} arrow>
+              <span style={{ fontSize: 12 }}>
+                {text.length > 10 ? `${text.slice(0, 10)}...` : text}
+              </span>
+            </Tooltip>
+          )
+        },
+      }
+    }
+
     if (col.field === 'vehicleNumber') {
       return {
         ...col,

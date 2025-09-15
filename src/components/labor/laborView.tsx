@@ -5,7 +5,7 @@ import CommonInput from '../common/Input'
 import CommonSelect from '../common/Select'
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { ArrayStatusOptions, LaborColumnList, PageCount } from '@/config/erp.confing'
-import { Pagination } from '@mui/material'
+import { Pagination, Tooltip } from '@mui/material'
 import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
 import ExcelModal from '../common/ExcelModal'
@@ -82,6 +82,27 @@ export default function LaborView() {
 
   // 그리도 라우팅 로직!
   const enhancedColumns = LaborColumnList.map((col): GridColDef => {
+    if (col.field === 'memo') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 2,
+        renderCell: (params: GridRenderCellParams) => {
+          const text = params.value as string
+          if (!text) return <span style={{ fontSize: 12 }}>-</span>
+
+          return (
+            <Tooltip title={text} arrow>
+              <span style={{ fontSize: 12 }}>
+                {text.length > 10 ? `${text.slice(0, 10)}...` : text}
+              </span>
+            </Tooltip>
+          )
+        },
+      }
+    }
+
     if (col.field === 'accountNumber') {
       return {
         ...col,

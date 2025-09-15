@@ -2,7 +2,7 @@
 
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { UserDataList, ArrayStatusOptions, PageCount, UseStateOptions } from '@/config/erp.confing'
-import { Pagination } from '@mui/material'
+import { Pagination, Tooltip } from '@mui/material'
 
 import CommonSelect from '@/components/common/Select'
 import CommonButton from '@/components/common/Button'
@@ -59,6 +59,26 @@ export default function ManagementView() {
 
   // 그리도 라우팅 로직!
   const enhancedColumns = UserDataList.map((col): GridColDef => {
+    if (col.field === 'memo') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 2,
+        renderCell: (params: GridRenderCellParams) => {
+          const text = params.value as string
+          if (!text) return <span style={{ fontSize: 12 }}>-</span>
+
+          return (
+            <Tooltip title={text} arrow>
+              <span style={{ fontSize: 12 }}>
+                {text.length > 10 ? `${text.slice(0, 10)}...` : text}
+              </span>
+            </Tooltip>
+          )
+        },
+      }
+    }
     if (col.field === 'loginId') {
       return {
         ...col,

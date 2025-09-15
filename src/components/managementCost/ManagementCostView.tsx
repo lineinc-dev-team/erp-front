@@ -4,7 +4,7 @@ import CommonButton from '../common/Button'
 import CommonSelect from '../common/Select'
 import CommonDatePicker from '../common/DatePicker'
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-import { Pagination } from '@mui/material'
+import { Pagination, Tooltip } from '@mui/material'
 import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
 import { ArrayStatusOptions, CostColumnList, PageCount } from '@/config/erp.confing'
@@ -101,6 +101,26 @@ export default function ManagementCost() {
 
   // 그리도 라우팅 로직!
   const enhancedColumns = CostColumnList.map((col): GridColDef => {
+    if (col.field === 'memo') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 2,
+        renderCell: (params: GridRenderCellParams) => {
+          const text = params.value as string
+          if (!text) return <span style={{ fontSize: 12 }}>-</span>
+
+          return (
+            <Tooltip title={text} arrow>
+              <span style={{ fontSize: 12 }}>
+                {text.length > 10 ? `${text.slice(0, 10)}...` : text}
+              </span>
+            </Tooltip>
+          )
+        },
+      }
+    }
     if (col.field === 'itemType') {
       return {
         ...col,
