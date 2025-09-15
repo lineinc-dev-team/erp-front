@@ -65,18 +65,15 @@ jobs:
             sudo sed -i "s/server 127.0.0.1:[0-9]\+/server 127.0.0.1:$NEW_PORT/" $UPSTREAM_CONF
 
 
-            # 7️⃣ Nginx reload
             sudo nginx -s reload
 
-
-              # 8️⃣ 기존 컨테이너 중지 및 삭제
             if [ -n "$EXISTING" ]; then
               docker stop $EXISTING
               docker rm $EXISTING
-
-              # 9️⃣ 기존 이미지 정리
-              OLD_IMAGE=$(docker images -q kyoungholee/docker-example:latest)
-              if [ -n "$OLD_IMAGE" ]; then
-                docker rmi $OLD_IMAGE
-              fi
             fi
+
+            for img in $(docker images kyoungholee/docker-example --format "{{.ID}}"); do
+              if ! docker ps -q --filter ancestor=$img | grep -q .; then
+                docker rmi $img
+              fi
+            done
