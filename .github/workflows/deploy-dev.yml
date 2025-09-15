@@ -38,27 +38,37 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_FRONT_PEM_KEY }}
           script: |
-            # 새 컨테이너 이름과 포트
-            NEW_CONTAINER="erp-next-front-$(date +%s)"
-            NEW_PORT=3001
+            # 1️⃣ 디스크 여유 확보
+            docker system prune -af
 
-            # Docker 이미지 최신화
+            # 2️⃣ 기존 컨테이너 확인
+            EXISTING=$(docker ps -q -f name=erp-next-front)
+            if [ -z "$EXISTING" ]; then
+              # 최초 배포: 3000번 포트
+              NEW_PORT=3000
+            else
+              # 신규 배포: timestamp 기반 포트
+              NEW_PORT=$((3000 + $(date +%s) % 1000))
+            fi
+
+            NEW_CONTAINER="erp-next-front-$(date +%s)"
+
+            # 3️⃣ Docker 이미지 최신화
             docker pull kyoungholee/docker-example:latest
 
-            # 새 컨테이너 실행 (기존 서비스 중단 없이)
+            # 4️⃣ 새 컨테이너 실행 (기존 서비스 중단 없이)
             docker run -d --restart=always -p $NEW_PORT:3000 --name $NEW_CONTAINER kyoungholee/docker-example:latest
 
-            # Nginx upstream 파일 경로
+            # 5️⃣ Nginx upstream 파일 경로
             UPSTREAM_CONF="/etc/nginx/conf.d/erp_upstream.conf"
 
-            # 새 컨테이너로 upstream 변경
-            echo "upstream erp_frontend { server 127.0.0.1:$NEW_PORT; }" > $UPSTREAM_CONF
+            # 6️⃣ 새 컨테이너로 upstream 변경 (root 권한 필요)
+            echo "upstream erp_frontend { server 127.0.0.1:$NEW_PORT; }" | sudo tee $UPSTREAM_CONF
 
-            # Nginx reload
-            nginx -s reload
+            # 7️⃣ Nginx reload
+            sudo nginx -s reload
 
-            # 기존 컨테이너 중지 및 삭제
-            EXISTING=$(docker ps -q -f name=erp-next-front)
+            # 8️⃣ 기존 컨테이너 중지 및 삭제
             if [ -n "$EXISTING" ]; then
               docker stop $EXISTING
               docker rm $EXISTING
