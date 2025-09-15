@@ -64,6 +64,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
     email: '이메일',
     isActive: '계정 상태',
     memo: '비고',
+    isHeadOffice: '본사 직원 여부',
   }
 
   const {

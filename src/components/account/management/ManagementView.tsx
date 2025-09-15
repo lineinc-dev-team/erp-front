@@ -163,7 +163,12 @@ export default function ManagementView() {
 
   const handleDownloadExcel = async (fields: string[]) => {
     await UserDataExcelDownload({
-      sort: search.arraySort === '최신순' ? 'username,desc' : 'username,asc',
+      sort:
+        search.arraySort === '최신순'
+          ? 'id,desc'
+          : search.arraySort === '오래된순'
+          ? 'id,asc'
+          : 'username,asc',
       username: search.username,
       roleId: search.roleId === 0 ? undefined : Number(search.roleId),
       isActive: search.isActive === '0' ? undefined : search.isActive,
