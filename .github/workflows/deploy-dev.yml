@@ -38,12 +38,10 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_FRONT_PEM_KEY }}
           script: |
-            docker pull kyoungholee/docker-example:latest
-
+            sudo docker pull kyoungholee/docker-example:latest
 
             NEW_PORT=$(( ( RANDOM % 2 ) + 3001 ))
 
-            docker pull kyoungholee/docker-example:latest
-            docker run -d --restart=always -p $NEW_PORT:3000 --name erp-next-front-$NEW_PORT kyoungholee/docker-example:latest
+            sudo docker run -d --restart=always -p $NEW_PORT:3000 --name erp-next-front-$NEW_PORT kyoungholee/docker-example:latest
 
-            docker ps --filter "name=erp-next-front-" --format "{{.Names}}" | grep -v "$NEW_PORT" | xargs -r docker rm -f
+            sudo docker ps --filter "name=erp-next-front-" --format "{{.Names}}" | grep -v "$NEW_PORT" | xargs -r sudo docker rm -f
