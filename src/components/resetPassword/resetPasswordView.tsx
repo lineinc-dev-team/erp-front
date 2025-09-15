@@ -20,7 +20,7 @@ export default function ResetPasswordView() {
   }
   const handleSubmit = async () => {
     if (!isValidPassword(password)) {
-      setError('비밀번호는 8~16자리, 영문/숫자/특수문자를 각각 포함해야 합니다. 예: Fds!hdu6@@')
+      setError('비밀번호 양식에 맞지 않습니다.')
       setSuccess(false)
       return
     }
@@ -60,6 +60,10 @@ export default function ResetPasswordView() {
         <p className="text-sm text-gray-600 text-center mb-6 leading-relaxed">
           최초 로그인 시 비밀번호를 반드시 변경해야 합니다. <br />
           비밀번호 변경 후 다시 로그인해주세요.
+        </p>
+
+        <p className="text-sm text-red-400 ">
+          비밀번호는 8~16자리, 영문/숫자/특수문자를 각각 포함해야 합니다. 예: Fds!hdu6@@
         </p>
 
         <div className="space-y-4">
