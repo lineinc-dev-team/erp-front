@@ -443,7 +443,11 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         return {
           form: {
             ...state.form,
-            checkedAttachedFileIds: checked ? state.form.attachedFiles.map((f) => f.id) : [],
+            checkedAttachedFileIds: checked
+              ? state.form.attachedFiles
+                  .filter((f) => f.type !== 'GUARANTEE' && f.type !== 'CONTRACT') // 제외
+                  .map((f) => f.id)
+              : [],
           },
         }
       }

@@ -75,7 +75,11 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
   const attachedFiles = form.files
   const fileCheckIds = form.checkedAttachedFileIds
-  const isFilesAllChecked = attachedFiles.length > 0 && fileCheckIds.length === attachedFiles.length
+
+  const filesToCheck = attachedFiles.filter(
+    (f) => f.type !== 'ID_CARD' && f.type !== 'BANKBOOK' && f.type !== 'SIGNATURE_IMAGE',
+  )
+  const isFilesAllChecked = filesToCheck.length > 0 && fileCheckIds.length === filesToCheck.length
 
   const params = useParams()
   const laborDataId = Number(params?.id)

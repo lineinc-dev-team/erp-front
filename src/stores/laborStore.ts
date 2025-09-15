@@ -246,7 +246,16 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
         return {
           form: {
             ...state.form,
-            checkedAttachedFileIds: checked ? state.form.files.map((f) => f.id) : [],
+            checkedAttachedFileIds: checked
+              ? state.form.files
+                  .filter(
+                    (item) =>
+                      item.type !== 'ID_CARD' &&
+                      item.type !== 'BANKBOOK' &&
+                      item.type !== 'SIGNATURE_IMAGE',
+                  )
+                  .map((f) => f.id)
+              : [],
           },
         }
       }

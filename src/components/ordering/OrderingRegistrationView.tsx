@@ -68,9 +68,9 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
 
   const attachedFiles = form.attachedFiles
   const fileCheckIds = form.checkedAttachedFileIds
-  const isFilesAllChecked = attachedFiles.length > 0 && fileCheckIds.length === attachedFiles.length
 
-  // 상세페이지 로직
+  const filesToCheck = attachedFiles.filter((f) => f.type !== 'BUSINESS_LICENSE')
+  const isFilesAllChecked = filesToCheck.length > 0 && fileCheckIds.length === filesToCheck.length
 
   const params = useParams()
   const clientCompanyId = Number(params?.id)

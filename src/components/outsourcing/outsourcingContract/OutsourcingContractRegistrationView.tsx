@@ -120,8 +120,9 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
   const attachedFiles = form.attachedFiles
   const fileCheckIds = form.checkedAttachedFileIds
-  const isFilesAllChecked = attachedFiles.length > 0 && fileCheckIds.length === attachedFiles.length
 
+  const filesToCheck = attachedFiles.filter((f) => f.type !== 'GUARANTEE' && f.type !== 'CONTRACT')
+  const isFilesAllChecked = filesToCheck.length > 0 && fileCheckIds.length === filesToCheck.length
   // 인력
   const personAddAttachedFiles = form.personManagers
   const personCheckIds = form.checkedPersonIds
