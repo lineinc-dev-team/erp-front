@@ -62,8 +62,8 @@ jobs:
             # 5️⃣ Nginx upstream 파일 경로
             UPSTREAM_CONF="/etc/nginx/conf.d/erp_upstream.conf"
 
-            # 6️⃣ 새 컨테이너로 upstream 변경 (root 권한 필요)
-            echo "upstream erp_frontend { server 127.0.0.1:$NEW_PORT; }" | sudo tee $UPSTREAM_CONF
+            sudo sed -i "s/server 127.0.0.1:[0-9]\+/server 127.0.0.1:$NEW_PORT/" $UPSTREAM_CONF
+
 
             # 7️⃣ Nginx reload
             sudo nginx -s reload
