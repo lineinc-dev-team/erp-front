@@ -95,6 +95,29 @@ export default function SitesView() {
 
   // 그리도 라우팅 로직!
   const enhancedColumns = SiteColumnList.map((col): GridColDef => {
+    if (col.field === 'address') {
+      return {
+        ...col,
+        sortable: false,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 2,
+        renderCell: (params: GridRenderCellParams) => {
+          const item = params.row as SiteListProps
+
+          if (!item.address && !item.detailAddress) {
+            return <div className="flex flex-col items-center">-</div>
+          }
+
+          return (
+            <div className="flex flex-col items-center">
+              <div className="whitespace-pre-wrap">{item.address || '-'}</div>
+              <div className="whitespace-pre-wrap">{item.detailAddress || '-'}</div>
+            </div>
+          )
+        },
+      }
+    }
     if (col.field === 'period') {
       return {
         ...col,

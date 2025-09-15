@@ -26,6 +26,7 @@ export const clientCompanyExcelFieldMap = {
   No: 'id',
   사업자등록번호: 'businessNumber',
   발주처명: 'name',
+  이메일: 'email',
   대표자명: 'ceoName',
   본사주소: 'address',
   전화번호: 'landlineNumber',

@@ -198,6 +198,7 @@ export const clientCompanyList: GridColDef[] = [
   { field: 'businessNumber', headerName: '사업자등록번호', width: 130 },
   { field: 'name', headerName: '발주처명', width: 130 },
   { field: 'ceoName', headerName: '대표자명', width: 130 },
+  { field: 'email', headerName: '이메일', width: 130 },
   { field: 'address', headerName: '본사 주소', width: 180 },
   { field: 'landlineNumber', headerName: '전화번호', width: 100 },
   { field: 'contactName', headerName: '담당자명', width: 100 },
