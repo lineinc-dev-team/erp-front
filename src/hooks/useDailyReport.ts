@@ -274,7 +274,7 @@ export function useDailyReport() {
     isLoading: employeeLoading,
   } = useInfiniteQuery({
     queryKey: ['employeeInfo'],
-    queryFn: ({ pageParam = 0 }) => GetEmployeeInfoService({ pageParam, size: 6 }),
+    queryFn: ({ pageParam = 0 }) => GetEmployeeInfoService({ pageParam }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
       const { sliceInfo } = lastPage.data
@@ -336,7 +336,7 @@ export function useDailyReport() {
         id: user.id,
         name: user.name,
         type: user.type,
-        previousDailyWage: user.previousDailyWage,
+        previousDailyWage: user.previousDailyWage || user.dailyWage,
         dailyWage: user.dailyWage,
         isSeverancePayEligible: user.isSeverancePayEligible,
       }))

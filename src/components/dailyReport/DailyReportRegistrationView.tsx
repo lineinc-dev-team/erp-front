@@ -70,8 +70,6 @@ export default function DailyReportRegistrationView() {
     // 직원 정보
   } = useDailyFormStore()
 
-  const { showSnackbar } = useSnackbarStore()
-
   const { WeatherTypeMethodOptions } = useFuelAggregation()
 
   const [isEditMode, setIsEditMode] = useState(false)
@@ -130,6 +128,8 @@ export default function DailyReportRegistrationView() {
     withEquipmentFetching,
     withEquipmentLoading,
   } = useDailyReport()
+
+  const { showSnackbar } = useSnackbarStore()
 
   const { OilTypeMethodOptions } = useFuelAggregation()
 
@@ -210,6 +210,8 @@ export default function DailyReportRegistrationView() {
     const res = await employeesRefetch()
     if (!res.data) return
 
+    console.log('직원 정보 확인', res)
+
     // content 배열 합치기
     const allContents = res.data.pages.flatMap((page) => page.data.content)
 
@@ -286,7 +288,7 @@ export default function DailyReportRegistrationView() {
     // 데이터가 있는 경우
     const fetched = allContract.map((item: any) => ({
       id: item.id,
-      checkId: item.checkId,
+      checkId: item.id,
       outsourcingCompanyId: item.outsourcingCompany?.id ?? null,
       laborId: item.labor?.id ?? 0,
       position: item.position,
@@ -827,6 +829,180 @@ export default function DailyReportRegistrationView() {
       ],
     }))
   }, [fuelEquipment, selectedCompanyIds, selectId])
+
+  // 유효성 검사
+
+  // 유효성 검사 함수
+  const validateEmployees = () => {
+    for (const emp of employees) {
+      if (!emp.laborId || emp.laborId === 0) {
+        return showSnackbar('직원의 이름을 선택해주세요.', 'warning')
+      }
+      if (!emp.workContent || emp.workContent.trim() === '') {
+        return showSnackbar('직원의 작업내용을 입력해주세요.', 'warning')
+      }
+
+      if (emp.workQuantity === null || emp.workQuantity === 0 || isNaN(emp.workQuantity)) {
+        return showSnackbar('직원의 공수는 0보다 큰 숫자를 입력해야 합니다.', 'warning')
+      }
+
+      if (emp.memo && emp.memo.length > 500) {
+        return showSnackbar('직원의 비고는 500자를 초과할 수 없습니다.', 'warning')
+      }
+    }
+    return true
+  }
+
+  const validateContract = () => {
+    for (const c of contractData) {
+      // 이름(직원) 선택 여부
+      if (!c.laborId || c.laborId === 0) {
+        return showSnackbar('계약직원의 이름을 선택해주세요.', 'warning')
+      }
+
+      if (!c.position || c.position.trim() === '') {
+        return showSnackbar('계약직원의 직급을 입력해주세요.', 'warning')
+      }
+
+      // 작업내용 필수
+      if (!c.workContent || c.workContent.trim() === '') {
+        return showSnackbar('계약직원의 작업내용을 입력해주세요.', 'warning')
+      }
+
+      if (!c.unitPrice || c.unitPrice === 0) {
+        return showSnackbar('계약직원의 단가를 입력해주세요.', 'warning')
+      }
+
+      // 공수 필수 (0, null, NaN 불가)
+      if (c.workQuantity === null || c.workQuantity === 0 || isNaN(c.workQuantity)) {
+        return showSnackbar('계약직원의 공수는 0보다 큰 숫자를 입력해야 합니다.', 'warning')
+      }
+
+      // 비고는 500자 제한
+      if (c.memo && c.memo.length > 500) {
+        return showSnackbar('계약직원의 비고는 500자를 초과할 수 없습니다.', 'warning')
+      }
+    }
+    return true
+  }
+
+  const validateOutsourcing = () => {
+    for (const o of outsourcings) {
+      // 업체명 선택 여부
+      if (!o.outsourcingCompanyId || o.outsourcingCompanyId === 0) {
+        return showSnackbar('외주의 업체명을 선택해주세요.', 'warning')
+      }
+
+      // 이름 선택 여부
+      if (!o.outsourcingCompanyContractWorkerId || o.outsourcingCompanyContractWorkerId === 0) {
+        return showSnackbar('외주의 이름을 선택해주세요.', 'warning')
+      }
+
+      // 구분 필수
+      if (!o.category || o.category.trim() === '') {
+        return showSnackbar('외주의 구분을 입력해주세요.', 'warning')
+      }
+
+      // 작업내용 필수
+      if (!o.workContent || o.workContent.trim() === '') {
+        return showSnackbar('외주의 작업내용을 입력해주세요.', 'warning')
+      }
+
+      // 공수 필수 (0, null, NaN 불가)
+      if (o.workQuantity === null || o.workQuantity === 0 || isNaN(o.workQuantity)) {
+        return showSnackbar('외주의 공수는 0보다 큰 숫자를 입력해야 합니다.', 'warning')
+      }
+
+      // 비고는 500자 제한
+      if (o.memo && o.memo.length > 500) {
+        return showSnackbar('외주의 비고는 500자를 초과할 수 없습니다.', 'warning')
+      }
+    }
+
+    return true
+  }
+  const validateEquipment = () => {
+    for (const e of equipmentData) {
+      if (!e.outsourcingCompanyId || e.outsourcingCompanyId === 0) {
+        return showSnackbar('장비의 업체명을 선택해주세요.', 'warning')
+      }
+      if (!e.outsourcingCompanyContractDriverId || e.outsourcingCompanyContractDriverId === 0) {
+        return showSnackbar('장비의 기사명을 선택해주세요.', 'warning')
+      }
+      if (
+        !e.outsourcingCompanyContractEquipmentId ||
+        e.outsourcingCompanyContractEquipmentId === 0
+      ) {
+        return showSnackbar('장비의 차량번호를 선택해주세요.', 'warning')
+      }
+      if (!e.specificationName || e.specificationName.trim() === '') {
+        return showSnackbar('장비의 규격을 입력해주세요.', 'warning')
+      }
+      if (!e.type || e.type.trim() === '') {
+        return showSnackbar('장비의 구분을 입력해주세요.', 'warning')
+      }
+      if (!e.workContent || e.workContent.trim() === '') {
+        return showSnackbar('장비의 작업내용을 입력해주세요.', 'warning')
+      }
+      if (e.unitPrice === null || isNaN(e.unitPrice) || e.unitPrice <= 0) {
+        return showSnackbar('장비의 단가는 0보다 큰 숫자를 입력해야 합니다.', 'warning')
+      }
+      if (e.workHours === null || isNaN(e.workHours) || e.workHours <= 0) {
+        return showSnackbar('장비의 시간은 0보다 큰 숫자를 입력해야 합니다.', 'warning')
+      }
+      if (e.memo && e.memo.length > 500) {
+        return showSnackbar('장비의 비고는 500자를 초과할 수 없습니다.', 'warning')
+      }
+    }
+    return true
+  }
+
+  const validateFuel = () => {
+    for (const f of fuelData) {
+      if (!f.outsourcingCompanyId || f.outsourcingCompanyId === 0) {
+        return showSnackbar('유류의 업체명을 선택해주세요.', 'warning')
+      }
+      if (!f.outsourcingCompanyContractDriverId || f.outsourcingCompanyContractDriverId === 0) {
+        return showSnackbar('유류의 기사명을 선택해주세요.', 'warning')
+      }
+      if (
+        !f.outsourcingCompanyContractEquipmentId ||
+        f.outsourcingCompanyContractEquipmentId === 0
+      ) {
+        return showSnackbar('유류의 차량번호를 선택해주세요.', 'warning')
+      }
+      if (!f.specificationName || f.specificationName.trim() === '') {
+        return showSnackbar('유류의 규격을 입력해주세요.', 'warning')
+      }
+      if (!f.fuelType || f.fuelType.trim() === '' || f.fuelType === '선택') {
+        return showSnackbar('유류의 유종을 선택해주세요.', 'warning')
+      }
+      if (f.fuelAmount === null || isNaN(f.fuelAmount) || f.fuelAmount <= 0) {
+        return showSnackbar('유류의 주유량은 0보다 큰 숫자를 입력해야 합니다.', 'warning')
+      }
+      if (f.memo && f.memo.length > 500) {
+        return showSnackbar('유류의 비고는 500자를 초과할 수 없습니다.', 'warning')
+      }
+    }
+    return true
+  }
+
+  const validateFile = () => {
+    for (const file of attachedFiles) {
+      if (!file.description || file.description.trim() === '') {
+        return showSnackbar('설명을 입력해주세요.', 'warning')
+      }
+
+      if (!file.files || file.files.length === 0) {
+        return showSnackbar('첨부 파일을 선택해주세요.', 'warning')
+      }
+
+      if (file.memo && file.memo.length > 500) {
+        return showSnackbar('비고는 500자를 초과할 수 없습니다.', 'warning')
+      }
+    }
+    return true
+  }
 
   return (
     <>
@@ -2665,6 +2841,8 @@ export default function DailyReportRegistrationView() {
           onClick={() => {
             if (isEditMode) {
               if (activeTab === '직원') {
+                if (!validateEmployees()) return
+
                 EmployeesModifyMutation.mutate(
                   {
                     siteId: form.siteId || 0,
@@ -2678,6 +2856,7 @@ export default function DailyReportRegistrationView() {
                   },
                 )
               } else if (activeTab === '직영/계약직') {
+                if (!validateContract()) return
                 ContractModifyMutation.mutate(
                   {
                     siteId: form.siteId || 0,
@@ -2691,6 +2870,7 @@ export default function DailyReportRegistrationView() {
                   },
                 )
               } else if (activeTab === '외주') {
+                if (!validateOutsourcing()) return
                 OutsourcingModifyMutation.mutate(
                   {
                     siteId: form.siteId || 0,
@@ -2704,6 +2884,7 @@ export default function DailyReportRegistrationView() {
                   },
                 )
               } else if (activeTab === '장비') {
+                if (!validateEquipment()) return
                 EquipmentModifyMutation.mutate(
                   {
                     siteId: form.siteId || 0,
@@ -2717,6 +2898,7 @@ export default function DailyReportRegistrationView() {
                   },
                 )
               } else if (activeTab === '유류') {
+                if (!validateFuel()) return
                 FuelModifyMutation.mutate(
                   {
                     siteId: form.siteId || 0,
@@ -2730,6 +2912,7 @@ export default function DailyReportRegistrationView() {
                   },
                 )
               } else if (activeTab === '현장 사진 등록') {
+                if (!validateFile()) return
                 FileModifyMutation.mutate(
                   {
                     siteId: form.siteId || 0,
@@ -2745,36 +2928,43 @@ export default function DailyReportRegistrationView() {
               }
             } else {
               if (activeTab === '직원') {
+                if (!validateEmployees()) return
+
                 createDailyMutation.mutate(undefined, {
                   onSuccess: () => {
                     handleEmployeesRefetch() // 등록 성공 후 실행
                   },
                 })
               } else if (activeTab === '직영/계약직') {
+                if (!validateContract()) return
                 createDailyMutation.mutate(undefined, {
                   onSuccess: () => {
                     handleContractRefetch() // 등록 성공 후 실행
                   },
                 })
               } else if (activeTab === '외주') {
+                if (!validateOutsourcing()) return
                 createDailyMutation.mutate(undefined, {
                   onSuccess: () => {
                     handleOutsourcingRefetch() // 등록 성공 후 실행
                   },
                 })
               } else if (activeTab === '장비') {
+                if (!validateEquipment()) return
                 createDailyMutation.mutate(undefined, {
                   onSuccess: () => {
                     handleEquipmentRefetch() // 등록 성공 후 실행
                   },
                 })
               } else if (activeTab === '유류') {
+                if (!validateFuel()) return
                 createDailyMutation.mutate(undefined, {
                   onSuccess: () => {
                     handleFuelRefetch() // 등록 성공 후 실행
                   },
                 })
               } else if (activeTab === '현장 사진 등록') {
+                if (!validateFile()) return
                 createDailyMutation.mutate(undefined, {
                   onSuccess: () => {
                     handleFileRefetch() // 등록 성공 후 실행

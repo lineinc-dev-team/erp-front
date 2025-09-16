@@ -164,7 +164,7 @@ export async function ModifyContractReport({
 // 노무쪽 인력 데이터 조회
 export async function GetEmployeeInfoService({
   pageParam = 0,
-  size = 6,
+  size = 200,
   keyword = '',
   types = 'REGULAR_EMPLOYEE',
 }) {
