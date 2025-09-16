@@ -1917,7 +1917,6 @@ export default function DailyReportRegistrationView() {
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <CommonSelect
                           fullWidth
-                          // value={m.outsourcingCompanyId || 0}
                           value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
                           onChange={async (value) => {
                             const selectedCompany = withEquipmentInfoOptions.find(
@@ -1965,8 +1964,6 @@ export default function DailyReportRegistrationView() {
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <CommonSelect
                           fullWidth
-                          // value={m.outsourcingCompanyContractDriverId}
-
                           value={
                             selectedDriverIds[m.id] || m.outsourcingCompanyContractDriverId || 0
                           }

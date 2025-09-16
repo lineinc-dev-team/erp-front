@@ -109,7 +109,7 @@ export function useDailyReport() {
     isLoading: withEquipmentLoading,
   } = useInfiniteQuery({
     queryKey: ['withEquipmentInfo'],
-    queryFn: ({ pageParam = 0 }) => GetWithEquipmentService({ pageParam, size: 6 }),
+    queryFn: ({ pageParam = 0 }) => GetWithEquipmentService({ pageParam, size: 200 }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
       const { sliceInfo } = lastPage.data

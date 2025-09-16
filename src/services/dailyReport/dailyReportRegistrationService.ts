@@ -399,7 +399,7 @@ export async function GetEquipmentByFilterService({
 
 // 장비를 가지고 있는 업체만 조회
 
-export async function GetWithEquipmentService({ pageParam = 0, size = 6, sort = '' }) {
+export async function GetWithEquipmentService({ pageParam = 0, size = 200, sort = '' }) {
   const resData = await fetch(
     `${API.OUTSOURCINGCOMPANY}/with-equipment?page=${pageParam}&size=${size}&sort=${sort}`,
     {

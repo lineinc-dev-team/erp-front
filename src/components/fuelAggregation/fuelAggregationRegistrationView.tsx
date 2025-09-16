@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import CommonSelect from '../common/Select'
@@ -17,16 +18,21 @@ import {
 import CommonDatePicker from '../common/DatePicker'
 import { formatDateTime, getTodayDateString, unformatNumber } from '@/utils/formatters'
 import { useParams } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
-import { useCallback, useEffect, useRef } from 'react'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { useFuelAggregation } from '@/hooks/useFuelAggregation'
 import { useFuelFormStore } from '@/stores/fuelAggregationStore'
 import CommonInput from '../common/Input'
-import { FuelDetailService } from '@/services/fuelAggregation/fuelAggregationRegistrationService'
+import {
+  FuelDetailService,
+  FuelDriverNameScroll,
+  FuelEquipmentNameScroll,
+} from '@/services/fuelAggregation/fuelAggregationRegistrationService'
 import { FuelInfo, FuelListInfoData, HistoryItem } from '@/types/fuelAggregation'
+import { useDailyReport } from '@/hooks/useDailyReport'
 // import { useEffect } from 'react'
 // import { AttachedFile, DetailItem } from '@/types/managementSteel'
 
@@ -60,35 +66,20 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     processInfoHasNextPage,
     processInfoIsFetching,
     processInfoLoading,
-
-    // 업체명
-
-    companyOptions,
-    comPanyNameFetchNextPage,
-    comPanyNamehasNextPage,
-    comPanyNameFetching,
-    comPanyNameLoading,
   } = useOutSourcingContract()
+
+  const {
+    withEquipmentInfoOptions,
+    withEquipmentFetchNextPage,
+    withEquipmenthasNextPage,
+    withEquipmentFetching,
+    withEquipmentLoading,
+  } = useDailyReport()
 
   const {
     WeatherTypeMethodOptions,
     FuelCancel,
     FuelModifyMutation,
-
-    setDriverSearch,
-    fuelDriverOptions,
-    fuelDriverFetchNextPage,
-    fuelDriverHasNextPage,
-    fuelDriverIsFetching,
-    fuelDriverLoading,
-
-    // 차량번호 & 장비명
-    setEquipmentSearch,
-    fuelEquipmentOptions,
-    fuelEquipmentFetchNextPage,
-    fuelEquipmentHasNextPage,
-    fuelEquipmentIsFetching,
-    fuelEquipmentLoading,
 
     createFuelMutation,
     OilTypeMethodOptions,
@@ -148,7 +139,6 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     if (data && isEditMode === true) {
       const client = data.data
 
-      console.log('상세 자재 !!', client)
       // // 상세 항목 가공
       const formattedDetails = (client.fuelInfos ?? []).map((item: FuelListInfoData) => ({
         id: item.id,
@@ -305,6 +295,183 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
       createFuelMutation.mutate()
     }
   }
+
+  const [selectedCompanyIds, setSelectedCompanyIds] = useState<{ [rowId: number]: number }>({})
+  const [selectId, setSelectId] = useState(0)
+
+  const [selectedDriverIds, setSelectedDriverIds] = useState<{ [rowId: number]: number }>({})
+
+  const [driverOptionsByCompany, setDriverOptionsByCompany] = useState<Record<number, any[]>>({})
+
+  // 업체명 id
+
+  const {
+    data: fuelDriver,
+    fetchNextPage: fuelDriverFetchNextPage,
+    hasNextPage: fuelDriverHasNextPage,
+    isFetching: fuelDriverIsFetching,
+    isLoading: fuelDriverLoading,
+  } = useInfiniteQuery({
+    queryKey: ['FuelDriverInfo', selectedCompanyIds[selectId]],
+
+    queryFn: ({ pageParam }) =>
+      FuelDriverNameScroll({
+        pageParam,
+        id: selectedCompanyIds[selectId] || 0,
+        size: 200,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+    },
+    enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
+  })
+
+  useEffect(() => {
+    if (!fuelDriver) return
+
+    const options = fuelDriver.pages
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+      }))
+
+    setDriverOptionsByCompany((prev) => ({
+      ...prev,
+      [selectedCompanyIds[selectId]]: [{ id: 0, name: '선택' }, ...options],
+    }))
+  }, [fuelDriver, selectedCompanyIds, selectId])
+
+  const [selectedCarNumberIds, setSelectedCarNumberIds] = useState<{ [rowId: number]: number }>({})
+
+  const [carNumberOptionsByCompany, setCarNumberOptionsByCompany] = useState<Record<number, any[]>>(
+    {},
+  )
+
+  const {
+    data: fuelEquipment,
+    fetchNextPage: fuelEquipmentFetchNextPage,
+    hasNextPage: fuelEquipmentHasNextPage,
+    isFetching: fuelEquipmentIsFetching,
+    isLoading: fuelEquipmentLoading,
+  } = useInfiniteQuery({
+    queryKey: ['FuelEquipmentInfo', selectedCompanyIds[selectId]],
+    queryFn: ({ pageParam }) =>
+      FuelEquipmentNameScroll({
+        pageParam,
+        id: selectedCompanyIds[selectId] || 0,
+        size: 200,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+    },
+    enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
+  })
+
+  // 상세페이지 들어올떄 기사명, 차량번호  데이터 호출
+
+  useEffect(() => {
+    if (!fuelEquipment) return
+
+    const options = fuelEquipment.pages
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        specification: user.specification,
+        vehicleNumber: user.vehicleNumber,
+        category: user.category,
+      }))
+
+    setCarNumberOptionsByCompany((prev) => ({
+      ...prev,
+      [selectedCompanyIds[selectId]]: [
+        { id: 0, specification: '', vehicleNumber: '선택', category: '' },
+        ...options,
+      ],
+    }))
+  }, [fuelEquipment, selectedCompanyIds, selectId])
+
+  const outsourcings = fuelInfo
+
+  useEffect(() => {
+    if (!outsourcings.length) return
+
+    outsourcings.forEach(async (row) => {
+      const companyId = row.outsourcingCompanyId
+      const driverData = row.driverId
+      const carNumberId = row.equipmentId
+      if (!companyId) return
+
+      try {
+        const res = await FuelDriverNameScroll({
+          pageParam: 0,
+          id: companyId,
+          size: 200,
+        })
+
+        const options = res.data.content.map((user: any) => ({
+          id: user.id,
+          name: user.name,
+        }))
+
+        setDriverOptionsByCompany((prev) => {
+          const exists = options.some((opt: any) => opt.id === driverData)
+
+          return {
+            ...prev,
+            [companyId]: [
+              { id: 0, name: '선택' },
+              ...options,
+              // 만약 선택된 worker가 목록에 없으면 추가
+              ...(driverData && !exists ? [{ id: driverData, name: '' }] : []),
+            ],
+          }
+        })
+
+        const carNumberRes = await FuelEquipmentNameScroll({
+          pageParam: 0,
+          id: companyId,
+          size: 200,
+        })
+
+        const carOptions = carNumberRes.data.content.map((user: any) => ({
+          id: user.id,
+          specification: user.specification,
+          vehicleNumber: user.vehicleNumber,
+          category: user.category,
+        }))
+
+        setCarNumberOptionsByCompany((prev) => {
+          const exists = carOptions.some((opt: any) => opt.id === carNumberId)
+
+          return {
+            ...prev,
+            [companyId]: [
+              { id: 0, name: '선택' },
+              ...carOptions,
+              // 만약 선택된 worker가 목록에 없으면 추가
+              ...(carNumberId && !exists
+                ? [
+                    {
+                      id: carNumberId,
+                      specification: '',
+                      vehicleNumber: '',
+                      category: '',
+                    },
+                  ]
+                : []),
+            ],
+          }
+        })
+      } catch (err) {
+        console.error('업체별 인력 조회 실패', err)
+      }
+    })
+  }, [outsourcings])
 
   return (
     <>
@@ -471,14 +638,24 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                       onChange={(e) => toggleCheckItem('FuelInfo', m.id, e.target.checked)}
                     />
                   </TableCell>
-                  {/*   업체명 */}
-                  <TableCell>
+
+                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <CommonSelect
                       fullWidth
-                      value={m.outsourcingCompanyId || 0}
+                      value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
                       onChange={async (value) => {
-                        const selectedCompany = companyOptions.find((opt) => opt.id === value)
+                        const selectedCompany = withEquipmentInfoOptions.find(
+                          (opt) => opt.id === value,
+                        )
                         if (!selectedCompany) return
+
+                        // 해당 row만 업데이트
+                        setSelectedCompanyIds((prev) => ({
+                          ...prev,
+                          [m.id]: selectedCompany.id,
+                        }))
+
+                        setSelectId(m.id)
 
                         updateItemField(
                           'FuelInfo',
@@ -486,64 +663,93 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                           'outsourcingCompanyId',
                           selectedCompany.id,
                         )
+
+                        // 해당 row 기사, 차량 초기화
+                        setSelectedDriverIds((prev) => ({
+                          ...prev,
+                          [m.id]: 0,
+                        }))
+
+                        setSelectedCarNumberIds((prev) => ({
+                          ...prev,
+                          [m.id]: 0,
+                        }))
+
+                        // 차량 값도 추가
                       }}
-                      options={companyOptions}
+                      options={withEquipmentInfoOptions}
                       onScrollToBottom={() => {
-                        if (comPanyNamehasNextPage && !comPanyNameFetching)
-                          comPanyNameFetchNextPage()
+                        if (withEquipmenthasNextPage && !withEquipmentFetching)
+                          withEquipmentFetchNextPage()
                       }}
-                      loading={comPanyNameLoading}
+                      loading={withEquipmentLoading}
                     />
                   </TableCell>
+
                   {/* 기사명 */}
-                  <TableCell sx={{ border: '1px solid  #9CA3AF', width: '140px' }}>
+
+                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <CommonSelect
                       fullWidth
-                      value={m.driverId}
+                      value={selectedDriverIds[m.id] || m.driverId || 0}
                       onChange={async (value) => {
-                        const selectedDriver = fuelDriverOptions.find((opt) => opt.id === value)
+                        const selectedDriver = (
+                          driverOptionsByCompany[m.outsourcingCompanyId] ?? []
+                        ).find((opt) => opt.id === value)
+
                         if (!selectedDriver) return
 
                         updateItemField('FuelInfo', m.id, 'driverId', selectedDriver.id)
                       }}
-                      options={fuelDriverOptions}
+                      options={
+                        driverOptionsByCompany[m.outsourcingCompanyId] ?? [
+                          { id: 0, name: '선택', category: '' },
+                        ]
+                      }
                       onScrollToBottom={() => {
                         if (fuelDriverHasNextPage && !fuelDriverIsFetching)
                           fuelDriverFetchNextPage()
                       }}
-                      onInputChange={(value) => setDriverSearch(value)}
                       loading={fuelDriverLoading}
                     />
                   </TableCell>
-                  {/* 차량번호 */}
-                  {/* 차량번호 */}
-                  <TableCell sx={{ border: '1px solid  #9CA3AF', width: '140px' }}>
+
+                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <CommonSelect
                       fullWidth
-                      value={m.equipmentId || 0} // 장비 선택은 ID 기준
+                      value={selectedCarNumberIds[m.id] || m.equipmentId || 0}
                       onChange={async (value) => {
-                        const selectedEquipment = fuelEquipmentOptions.find(
-                          (opt) => opt.id === value,
-                        )
-                        if (!selectedEquipment) return
+                        const selectedCarNumber = (
+                          carNumberOptionsByCompany[m.outsourcingCompanyId] ?? []
+                        ).find((opt) => opt.id === value)
 
-                        // 차량번호
-                        updateItemField('FuelInfo', m.id, 'equipmentId', selectedEquipment.id)
+                        if (!selectedCarNumber) return
 
-                        // ID는 equipmentId에, 차량번호는 specificationName 필드에 저장
+                        updateItemField('FuelInfo', m.id, 'equipmentId', selectedCarNumber.id)
+
                         updateItemField(
                           'FuelInfo',
                           m.id,
                           'specificationName',
-                          selectedEquipment.specification || '',
+                          selectedCarNumber.specification || '',
+                        )
+
+                        updateItemField(
+                          'FuelInfo',
+                          m.id,
+                          'type',
+                          selectedCarNumber.category || '-', // type 없으면 '-'
                         )
                       }}
-                      options={fuelEquipmentOptions}
+                      options={
+                        carNumberOptionsByCompany[m.outsourcingCompanyId] ?? [
+                          { id: 0, name: '선택', category: '' },
+                        ]
+                      }
                       onScrollToBottom={() => {
                         if (fuelEquipmentHasNextPage && !fuelEquipmentIsFetching)
                           fuelEquipmentFetchNextPage()
                       }}
-                      onInputChange={(value) => setEquipmentSearch(value)}
                       loading={fuelEquipmentLoading}
                     />
                   </TableCell>
