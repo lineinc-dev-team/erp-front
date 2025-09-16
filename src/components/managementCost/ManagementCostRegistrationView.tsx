@@ -178,6 +178,12 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     processName: '공정명',
     itemTypeDescription: '항목 내용',
     outsourcingCompanyName: '업체명',
+    vat: '단가',
+    supplyPrice: '공급가',
+    total: '합계',
+    account: '계정',
+    personnelCount: '인원수',
+    purpose: '사용목적',
   }
 
   const {
@@ -372,6 +378,11 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     ) {
       return '사업자등록번호를 정확히 입력해주세요.'
     }
+
+    if (!form.outsourcingCompanyInfo?.ceoName) return '대표자명을 입력해주세요.'
+    if (form.outsourcingCompanyInfo?.bankName == '선택') return '은행을 선택해주세요.'
+    if (!form.outsourcingCompanyInfo?.accountNumber) return '계좌번호를 입력해주세요.'
+    if (!form.outsourcingCompanyInfo?.accountHolder) return '예금주명을 입력해주세요.'
 
     if (form.memo.length > 500) {
       return '비고는 500자 이하로 입력해주세요.'

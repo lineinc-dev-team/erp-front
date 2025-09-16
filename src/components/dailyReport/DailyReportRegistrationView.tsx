@@ -57,7 +57,6 @@ export default function DailyReportRegistrationView() {
     updateItemField,
     removeCheckedItems,
     addTemporaryCheckedItems,
-    reset,
     resetEmployees,
     resetDirectContracts,
     resetOutsourcing,
@@ -152,13 +151,34 @@ export default function DailyReportRegistrationView() {
     const confirmLeave = window.confirm(
       `현재 ${activeTab}의 데이터를 저장 혹은 수정하지 않았습니다. 이동하시면 데이터는 초기화 됩니다. 이동하시겠습니까?`,
     )
-    if (!confirmLeave) {
-      return // 취소 시 이동하지 않음
+    if (!confirmLeave) return // 취소 시 이동하지 않음
+
+    // 이전 탭에 맞는 reset 함수만 실행
+    switch (activeTab) {
+      case '직원':
+        resetEmployees()
+        break
+      case '직영/계약직':
+        resetDirectContracts()
+        break
+      case '외주':
+        resetOutsourcing()
+        break
+      case '장비':
+        resetEquipment()
+        break
+      case '유류':
+        resetFuel()
+        break
+      case '현장 사진 등록':
+        resetFile()
+        break
+      default:
+        break
     }
 
     setActiveTab(tab)
     setIsEditMode(false)
-    reset()
   }
 
   //   직원 조회
@@ -569,8 +589,8 @@ export default function DailyReportRegistrationView() {
     queryKey: ['detailReport', form.siteId, form.siteProcessId, form.reportDate],
     queryFn: () =>
       DetaileReport({
-        siteId: form.siteId,
-        siteProcessId: form.siteProcessId,
+        siteId: form.siteId || 0,
+        siteProcessId: form.siteProcessId || 0,
         reportDate: getTodayDateString(form.reportDate) || '',
       }),
     enabled: !!form.siteId && !!form.siteProcessId && !!form.reportDate,
@@ -590,8 +610,8 @@ export default function DailyReportRegistrationView() {
   const Deadline = () => {
     CompleteInfoMutation.mutate(
       {
-        siteId: form.siteId,
-        siteProcessId: form.siteProcessId,
+        siteId: form.siteId || 0,
+        siteProcessId: form.siteProcessId || 0,
         reportDate: getTodayDateString(form.reportDate) || '',
       },
       {
@@ -883,7 +903,7 @@ export default function DailyReportRegistrationView() {
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonDatePicker
-                value={form.reportDate}
+                value={form.reportDate || null}
                 onChange={(value) => setField('reportDate', value)}
               />
             </div>
@@ -2622,8 +2642,8 @@ export default function DailyReportRegistrationView() {
               if (activeTab === '직원') {
                 EmployeesModifyMutation.mutate(
                   {
-                    siteId: form.siteId,
-                    siteProcessId: form.siteProcessId,
+                    siteId: form.siteId || 0,
+                    siteProcessId: form.siteProcessId || 0,
                     reportDate: getTodayDateString(form.reportDate) || '',
                   },
                   {
@@ -2635,8 +2655,8 @@ export default function DailyReportRegistrationView() {
               } else if (activeTab === '직영/계약직') {
                 ContractModifyMutation.mutate(
                   {
-                    siteId: form.siteId,
-                    siteProcessId: form.siteProcessId,
+                    siteId: form.siteId || 0,
+                    siteProcessId: form.siteProcessId || 0,
                     reportDate: getTodayDateString(form.reportDate) || '',
                   },
                   {
@@ -2648,8 +2668,8 @@ export default function DailyReportRegistrationView() {
               } else if (activeTab === '외주') {
                 OutsourcingModifyMutation.mutate(
                   {
-                    siteId: form.siteId,
-                    siteProcessId: form.siteProcessId,
+                    siteId: form.siteId || 0,
+                    siteProcessId: form.siteProcessId || 0,
                     reportDate: getTodayDateString(form.reportDate) || '',
                   },
                   {
@@ -2661,8 +2681,8 @@ export default function DailyReportRegistrationView() {
               } else if (activeTab === '장비') {
                 EquipmentModifyMutation.mutate(
                   {
-                    siteId: form.siteId,
-                    siteProcessId: form.siteProcessId,
+                    siteId: form.siteId || 0,
+                    siteProcessId: form.siteProcessId || 0,
                     reportDate: getTodayDateString(form.reportDate) || '',
                   },
                   {
@@ -2674,8 +2694,8 @@ export default function DailyReportRegistrationView() {
               } else if (activeTab === '유류') {
                 FuelModifyMutation.mutate(
                   {
-                    siteId: form.siteId,
-                    siteProcessId: form.siteProcessId,
+                    siteId: form.siteId || 0,
+                    siteProcessId: form.siteProcessId || 0,
                     reportDate: getTodayDateString(form.reportDate) || '',
                   },
                   {
@@ -2687,8 +2707,8 @@ export default function DailyReportRegistrationView() {
               } else if (activeTab === '현장 사진 등록') {
                 FileModifyMutation.mutate(
                   {
-                    siteId: form.siteId,
-                    siteProcessId: form.siteProcessId,
+                    siteId: form.siteId || 0,
+                    siteProcessId: form.siteProcessId || 0,
                     reportDate: getTodayDateString(form.reportDate) || '',
                   },
                   {
