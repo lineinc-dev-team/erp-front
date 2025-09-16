@@ -128,14 +128,12 @@ export function useManagementSteel() {
       SteelApproveService(steelManagementIds),
 
     onSuccess: () => {
-      if (window.confirm('정말 승인 하시겠습니까?')) {
-        showSnackbar('강재 관리가 승인되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
-      }
+      showSnackbar('강재 관리가 승인되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
     },
 
     onError: () => {
-      showSnackbar('강재 관리 승인에 실패했습니다.', 'error')
+      showSnackbar('승인 실패: 이미 반출된 건은 승인 상태로 변경할 수 없습니다.', 'error')
     },
   })
 
@@ -145,14 +143,12 @@ export function useManagementSteel() {
       SteelReleaseService(steelManagementIds),
 
     onSuccess: () => {
-      if (window.confirm('정말 반출 하시겠습니까?')) {
-        showSnackbar('강재 관리가 반출되었습니다.', 'success')
-        queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
-      }
+      showSnackbar('강재 관리가 반출되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
     },
 
     onError: () => {
-      showSnackbar('강재 관리 반출에 실패했습니다.', 'error')
+      showSnackbar('반출 실패: 승인되지 않은 건은 반출할 수 없습니다.', 'error')
     },
   })
 

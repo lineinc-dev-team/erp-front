@@ -194,7 +194,11 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
       setField('startDate', client.startDate ? new Date(client.startDate) : null)
       setField('endDate', client.endDate ? new Date(client.endDate) : null)
 
-      if (client.previousType === '발주') {
+      if (client.typeCode === 'PURCHASE') {
+        setField('type', client.type ?? '')
+      }
+
+      if (client.previousType === '발주' || !client.previousType) {
         setField('type', client.type ?? '') // 예: '승인' 같은 필드
       } else {
         setField('type', `${client.type ?? ''}(${client.previousType ?? ''})`)
@@ -202,7 +206,13 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
 
       setField('usage', client.usage ?? '')
 
+      setField('typeCode', client.typeCode)
+
       setField('memo', client.memo ?? '')
+
+      setField('outsourcingCompanyId', client.outsourcingCompany?.id)
+
+      setField('businessNumber', client.outsourcingCompany?.businessNumber ?? '')
     } else {
       reset()
     }
@@ -519,7 +529,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         </div>
       </div>
 
-      {['PURCHASE', 'LEASE'].includes(form.type) && (
+      {['PURCHASE', 'LEASE'].includes(form.typeCode) && (
         <div className="mt-6">
           <span className="font-bold border-b-2 mb-4">거래선</span>
           <div className="grid grid-cols-2 mt-1 ">
@@ -1195,16 +1205,18 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
             label="승인"
             className="px-10 font-bold"
             variant="primary"
-            onClick={() =>
-              SteelApproveMutation.mutate(
-                { steelManagementIds: [steelDetailId] },
-                {
-                  onSuccess: () => {
-                    router.push('/managementSteel')
+            onClick={() => {
+              if (window.confirm('정말 승인 하시겠습니까?')) {
+                SteelApproveMutation.mutate(
+                  { steelManagementIds: [steelDetailId] },
+                  {
+                    onSuccess: () => {
+                      router.push('/managementSteel')
+                    },
                   },
-                },
-              )
-            }
+                )
+              }
+            }}
           />
         )}
 
@@ -1213,16 +1225,18 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
             label="반출"
             className="px-10 font-bold"
             variant="danger"
-            onClick={() =>
-              SteelReleaseMutation.mutate(
-                { steelManagementIds: [steelDetailId] },
-                {
-                  onSuccess: () => {
-                    router.push('/managementSteel')
+            onClick={() => {
+              if (window.confirm('정말 반출 하시겠습니까?')) {
+                SteelReleaseMutation.mutate(
+                  { steelManagementIds: [steelDetailId] },
+                  {
+                    onSuccess: () => {
+                      router.push('/managementSteel')
+                    },
                   },
-                },
-              )
-            }
+                )
+              }
+            }}
           />
         )}
       </div>

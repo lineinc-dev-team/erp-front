@@ -14,7 +14,7 @@ import { SteelExcelFieldMap } from '@/utils/userExcelField'
 import CommonInput from '../common/Input'
 import { useManagementSteel } from '@/hooks/useManagementSteel'
 import { SteelList } from '@/types/managementSteel'
-import { getTodayDateString } from '@/utils/formatters'
+import { formatNumber, getTodayDateString } from '@/utils/formatters'
 import { useSteelSearchStore } from '@/stores/managementSteelStore'
 import {
   ManagementSteelService,
@@ -91,7 +91,7 @@ export default function ManagementSteel() {
       outsourcingCompanyBusinessNumber: steel.outsourcingCompany?.businessNumber ?? '-',
 
       // 숫자
-      totalAmount: steel.totalAmount ?? null,
+      totalAmount: formatNumber(steel.totalAmount) ?? '-',
     }
   })
 
@@ -498,19 +498,20 @@ export default function ManagementSteel() {
                     return
                   }
 
-                  // 이미 승인된 항목이 있는지 확인
-                  const alreadyApproved = SteelDataList.filter(
-                    (steel: SteelList) => idsArray.includes(steel.id) && steel.type === '승인',
-                  )
+                  if (window.confirm('정말 승인 하시겠습니까?')) {
+                    const alreadyApproved = SteelDataList.filter(
+                      (steel: SteelList) => idsArray.includes(steel.id) && steel.type === '승인',
+                    )
 
-                  if (alreadyApproved.length > 0) {
-                    alert('이미 승인된 항목이 포함되어 있습니다.')
-                    return
+                    if (alreadyApproved.length > 0) {
+                      alert('이미 승인된 항목이 포함되어 있습니다.')
+                      return
+                    }
+
+                    // 승인 요청
+                    SteelApproveMutation.mutate({ steelManagementIds: idsArray })
+                    selectedIds.ids.clear() // 체크박스 초기화
                   }
-
-                  // 승인 요청
-                  SteelApproveMutation.mutate({ steelManagementIds: idsArray })
-                  selectedIds.ids.clear() // 체크박스 초기화
                 }}
                 className="px-3"
               />
@@ -540,9 +541,10 @@ export default function ManagementSteel() {
                     return
                   }
 
-                  // 승인 요청
-                  SteelReleaseMutation.mutate({ steelManagementIds: idsArray })
-                  selectedIds.ids.clear() // 체크박스 초기화
+                  if (window.confirm('정말 반출 하시겠습니까?')) {
+                    SteelReleaseMutation.mutate({ steelManagementIds: idsArray })
+                    selectedIds.ids.clear() // 체크박스 초기화
+                  }
                 }}
                 className="px-3"
               />

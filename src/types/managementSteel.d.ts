@@ -42,7 +42,7 @@ export interface SteelList {
     name: string
     businessNumber: string
   }
-  totalAmount?: number
+  totalAmount?: T
 }
 
 // 검색타입
