@@ -18,7 +18,7 @@ import {
 } from '@/services/materialManagement/materialManagementService'
 import { useMaterialSearchStore } from '@/stores/materialManagementStore'
 import { MaterialList } from '@/types/materialManagement'
-import { getTodayDateString } from '@/utils/formatters'
+import { formatNumber, getTodayDateString } from '@/utils/formatters'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import CommonSelectByName from '../common/CommonSelectByName'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
@@ -128,17 +128,17 @@ export default function MaterialManagementView() {
 
         // detail 정보
         name: detail.name ?? '-',
-        standard: detail.standard ?? '-',
+        standard: detail.standard !== undefined ? formatNumber(detail.standard) : '-',
         unit: detail.unit ?? '-',
-        count: detail.count ?? '-',
-        length: detail.length ?? '-',
-        totalLength: detail.totalLength ?? '-',
-        unitWeight: detail.unitWeight ?? '-',
-        quantity: detail.quantity ?? '-',
-        unitPrice: detail.unitPrice ?? '-',
-        supplyPrice: detail.supplyPrice ?? '-',
-        total: detail.total ?? '-',
-        vat: detail.vat ?? '-',
+        count: detail.count !== undefined ? formatNumber(detail.count) : '-',
+        length: detail.length !== undefined ? formatNumber(detail.length) : '-',
+        totalLength: detail.totalLength !== undefined ? formatNumber(detail.totalLength) : '-',
+        unitWeight: detail.unitWeight !== undefined ? formatNumber(detail.unitWeight) : '-',
+        quantity: detail.quantity !== undefined ? formatNumber(detail.quantity) : '-',
+        unitPrice: detail.unitPrice !== undefined ? formatNumber(detail.unitPrice) : '-',
+        supplyPrice: detail.supplyPrice !== undefined ? formatNumber(detail.supplyPrice) : '-',
+        total: detail.total !== undefined ? formatNumber(detail.total) : '-',
+        vat: detail.vat !== undefined ? formatNumber(detail.vat) : '-',
         usage: detail.usage ?? '-',
       }))
     },
@@ -502,7 +502,7 @@ export default function MaterialManagementView() {
             flex: 1,
           }))}
           getRowId={(row) => row.rowId} // DataGrid에는 rowId를 유니크 키로 사용
-          checkboxSelection
+          // checkboxSelection
           disableRowSelectionOnClick
           keepNonExistentRowsSelected
           disableColumnFilter // 필터 비활성화

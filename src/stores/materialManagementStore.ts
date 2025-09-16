@@ -269,7 +269,7 @@ export const useManagementMaterialFormStore = create<MaterialFormStore>((set, ge
         return {
           form: {
             ...state.form,
-            checkedAttachmentFileIds: checked ? state.form.attachedFiles.map((f) => f.id) : [],
+            checkedAttachedFileIds: checked ? state.form.attachedFiles.map((f) => f.id) : [],
           },
         }
       }

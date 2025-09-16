@@ -259,6 +259,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     unit: '단가',
     outsourcingContractQuantity: '외주계약금액의 수량',
     contractPrice: '도급금액의 금액',
+    processName: '업체명',
   }
 
   const { showSnackbar } = useSnackbarStore()

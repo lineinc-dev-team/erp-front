@@ -34,12 +34,12 @@ import CommonSelect from '../common/Select'
 import { useLaborFormStore } from '@/stores/laborStore'
 import CommonButton from '../common/Button'
 import { useLaborInfo } from '@/hooks/useLabor'
-import CommonResidentNumberInput from '@/utils/commonResidentNumberInput'
 import AmountInput from '../common/AmountInput'
 import { LaborDetailService, LaborHistoreyService } from '@/services/labor/laborRegistrationService'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { AttachedFile, LaborFormState } from '@/types/labor'
 import { idTypeValueToName } from '@/stores/outsourcingCompanyStore'
+import { CommonResidentNumberInput } from '@/utils/commonResidentNumberInput'
 
 export default function LaborRegistrationView({ isEditMode = false }) {
   const {
