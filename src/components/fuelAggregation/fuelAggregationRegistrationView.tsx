@@ -39,6 +39,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     reset,
     addItem,
     updateMemo,
+    toggleCheckAllItems,
     toggleCheckItem,
   } = useFuelFormStore()
 
@@ -106,7 +107,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
   // 체크 박스에 활용
   const fuelInfo = form.fuelInfos
   const checkedIds = form.checkedFuelItemIds
-  // const isAllChecked = managers.length > 0 && checkedIds.length === managers.length
+  const isAllChecked = fuelInfo.length > 0 && checkedIds.length === fuelInfo.length
 
   // 상세페이지 로직
 
@@ -126,7 +127,8 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     dateFormat: '일자',
     weatherName: '날씨',
     driverName: '기사명',
-    equipmentSpecification: '차량번호',
+    equipmentSpecification: '규격',
+    vehicleNumber: '차량번호',
     fuelTypeName: '유종',
     fuelAmount: '주유량',
     memo: '비고',
@@ -422,7 +424,14 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
           <Table size="small">
             <TableHead>
               <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}></TableCell>
+                <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                  <Checkbox
+                    checked={isAllChecked}
+                    indeterminate={checkedIds.length > 0 && !isAllChecked}
+                    onChange={(e) => toggleCheckAllItems('FuelInfo', e.target.checked)}
+                    sx={{ color: 'black' }}
+                  />
+                </TableCell>
                 {['업체명', '기사명', '차량번호', '규격', '유종', '주유량', '비고'].map((label) => (
                   <TableCell
                     key={label}

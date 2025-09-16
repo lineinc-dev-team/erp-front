@@ -87,7 +87,7 @@ export async function CreateFuelInfo() {
 // 외주 업체에 대한 기사명
 export async function FuelDriverNameScroll({
   pageParam = 0,
-  size = 5,
+  size = 200,
   keyword = '',
   id = 0,
   sort = '',
@@ -115,7 +115,7 @@ export async function FuelDriverNameScroll({
 // 외주 업체에 대한 차량번호
 export async function FuelEquipmentNameScroll({
   pageParam = 0,
-  size = 5,
+  size = 200,
   keyword = '',
   id = 0,
   sort = '',

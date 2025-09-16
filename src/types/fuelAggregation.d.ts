@@ -44,6 +44,7 @@ export interface FuelListInfoData {
 export interface FuelDataList {
   id: number
   date: string // Date로 변환할 수도 있지만, 백엔드가 ISO 문자열을 보내므로 string 유지
+  date: string
   createdAt: string
   updatedAt: string
   site: Site

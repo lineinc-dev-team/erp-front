@@ -156,6 +156,9 @@ export const MaterialColumnList: GridColDef[] = [
 export const FuelColumnList: GridColDef[] = [
   { field: 'no', headerName: 'No', width: 70 },
   // { field: 'backendId', headerName: 'No', width: 70 },
+  { field: 'site', headerName: '현장명', width: 130 },
+  { field: 'process', headerName: '공정명', width: 130 },
+  { field: 'date', headerName: '일자', width: 130 },
   { field: 'outsourcingCompany', headerName: '업체명', width: 130 },
   { field: 'driverName', headerName: '기사명', width: 130 },
   { field: 'vehicleNumber', headerName: '차량번호', width: 180 },

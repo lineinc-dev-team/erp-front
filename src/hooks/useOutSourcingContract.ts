@@ -317,7 +317,7 @@ export default function useOutSourcingContract() {
     isLoading: comPanyNameLoading,
   } = useInfiniteQuery({
     queryKey: ['compnayInfo'],
-    queryFn: ({ pageParam = 0 }) => GetCompanyNameInfoService({ pageParam, size: 20 }),
+    queryFn: ({ pageParam = 0 }) => GetCompanyNameInfoService({ pageParam }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
       const { sliceInfo } = lastPage.data

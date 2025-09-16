@@ -86,6 +86,9 @@ export default function FuelAggregationView() {
         rowId: `fuel-${fuelIndex}`,
         backendId: fuel.id,
         fuelInfoId: fuelInfo?.id ?? null,
+        site: fuel.site.name,
+        process: fuel.process.name,
+        date: getTodayDateString(fuel.date),
 
         outsourcingCompany: fuelInfo?.outsourcingCompany?.name ?? '-',
         createdAt: `${getTodayDateString(fuel.createdAt)} / ${getTodayDateString(fuel.updatedAt)}`,
