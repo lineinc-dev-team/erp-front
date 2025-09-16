@@ -88,7 +88,7 @@ export async function ModifyEmployeesReport({
 }
 
 // 계약/인력 쪽 인력 데이터 조회
-export async function GetContractNameInfoService({ pageParam = 0, size = 20, keyword = '' }) {
+export async function GetContractNameInfoService({ pageParam = 0, size = 100, keyword = '' }) {
   const url = `${API.LABOR}/search?page=${pageParam}&size=${size}&keyword=${encodeURIComponent(
     keyword,
   )}&types=DIRECT_CONTRACT&types=ETC`

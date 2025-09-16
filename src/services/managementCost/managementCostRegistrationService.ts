@@ -135,7 +135,7 @@ export async function ModifyCostManagement(costId: number) {
 
 // 식대 인력 조회
 
-export async function GetPersonCostInfoService({ pageParam = 0, size = 5, keyword = '' }) {
+export async function GetPersonCostInfoService({ pageParam = 0, size = 200, keyword = '' }) {
   const resData = await fetch(
     `${API.LABOR}/search?page=${pageParam}&size=${size}&keyword=${keyword}`,
     {

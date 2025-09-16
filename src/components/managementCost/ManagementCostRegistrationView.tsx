@@ -152,7 +152,8 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
   const PROPERTY_NAME_MAP: Record<string, string> = {
     phoneNumber: '개인 휴대폰',
-    name: '업체명',
+    name: '직접입력한 성명',
+    laborName: '성명',
     mainWork: '주 작업',
     dailyWage: '기준일당',
     hireDateFormat: '입사일',
@@ -172,7 +173,6 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     breakfastCount: '조식 갯수',
     unitPrice: '단가',
     amount: '금액',
-    laborName: '성명',
     workType: '직종',
     siteName: '현장명',
     processName: '공정명',
@@ -231,7 +231,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
         unitPrice: item.unitPrice,
         amount: item.amount,
         memo: item.memo,
-        name: item.name,
+        name: item.name || item.labor?.name,
         inputType: item.labor === null ? 'manual' : 'select',
       }))
 
@@ -1009,10 +1009,9 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                             if (value === '직접입력') {
                               updateItemField('mealListData', m.id, 'inputType', 'manual')
                               updateItemField('mealListData', m.id, 'name', '') // 직접입력 모드 전환 시 빈 값
-                              {
-                                if (isEditMode === true) {
-                                  updateItemField('mealListData', m.id, 'laborId', '')
-                                }
+                              if (isEditMode === true) {
+                                updateItemField('mealListData', m.id, 'laborId', null)
+                              } else {
                                 updateItemField('mealListData', m.id, 'laborId', null)
                               }
                               return

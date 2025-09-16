@@ -944,7 +944,10 @@ export default function DailyReportRegistrationView() {
         </div>
         {detailReport?.data?.status === 'AUTO_COMPLETED' ||
         detailReport?.data?.status === 'COMPLETED' ? (
-          <div>{formatDateSecondTime(detailReport.data.completedAt)}</div>
+          <div>
+            {detailReport.data.status === 'AUTO_COMPLETED' ? '자동마감' : '마감'}{' '}
+            {formatDateSecondTime(detailReport.data.completedAt)}
+          </div>
         ) : (
           <CommonButton
             label="마감"
@@ -971,8 +974,10 @@ export default function DailyReportRegistrationView() {
                 variant="danger"
                 onClick={() => removeCheckedItems('Employees')}
                 disabled={
-                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                  detailReport?.data?.status === 'COMPLETED'
+                  isHeadOfficeInfo
+                    ? false // 본사 정보이면 무조건 활성화
+                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
                 }
               />
               <CommonButton
@@ -981,8 +986,10 @@ export default function DailyReportRegistrationView() {
                 variant="secondary"
                 onClick={() => addItem('Employees')}
                 disabled={
-                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                  detailReport?.data?.status === 'COMPLETED'
+                  isHeadOfficeInfo
+                    ? false // 본사 정보이면 무조건 활성화
+                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
                 }
               />
             </div>
@@ -1170,8 +1177,10 @@ export default function DailyReportRegistrationView() {
                 variant="primary"
                 onClick={() => addTemporaryCheckedItems('directContracts')}
                 disabled={
-                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                  detailReport?.data?.status === 'COMPLETED'
+                  isHeadOfficeInfo
+                    ? false // 본사 정보이면 무조건 활성화
+                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
                 }
               />
               <CommonButton
@@ -1180,8 +1189,10 @@ export default function DailyReportRegistrationView() {
                 variant="secondary"
                 onClick={() => addItem('directContracts')}
                 disabled={
-                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                  detailReport?.data?.status === 'COMPLETED'
+                  isHeadOfficeInfo
+                    ? false // 본사 정보이면 무조건 활성화
+                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
                 }
               />
             </div>
@@ -1574,8 +1585,10 @@ export default function DailyReportRegistrationView() {
                 variant="danger"
                 onClick={() => removeCheckedItems('outsourcings')}
                 disabled={
-                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                  detailReport?.data?.status === 'COMPLETED'
+                  isHeadOfficeInfo
+                    ? false // 본사 정보이면 무조건 활성화
+                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
                 }
               />
               <CommonButton
@@ -1584,8 +1597,10 @@ export default function DailyReportRegistrationView() {
                 variant="secondary"
                 onClick={() => addItem('outsourcings')}
                 disabled={
-                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                  detailReport?.data?.status === 'COMPLETED'
+                  isHeadOfficeInfo
+                    ? false // 본사 정보이면 무조건 활성화
+                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
                 }
               />
             </div>
@@ -1845,8 +1860,10 @@ export default function DailyReportRegistrationView() {
                 variant="danger"
                 onClick={() => removeCheckedItems('equipment')}
                 disabled={
-                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                  detailReport?.data?.status === 'COMPLETED'
+                  isHeadOfficeInfo
+                    ? false // 본사 정보이면 무조건 활성화
+                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
                 }
               />
               <CommonButton
@@ -1855,8 +1872,10 @@ export default function DailyReportRegistrationView() {
                 variant="secondary"
                 onClick={() => addItem('equipment')}
                 disabled={
-                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                  detailReport?.data?.status === 'COMPLETED'
+                  isHeadOfficeInfo
+                    ? false // 본사 정보이면 무조건 활성화
+                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
                 }
               />
             </div>
@@ -2195,8 +2214,10 @@ export default function DailyReportRegistrationView() {
                 variant="danger"
                 onClick={() => removeCheckedItems('fuel')}
                 disabled={
-                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                  detailReport?.data?.status === 'COMPLETED'
+                  isHeadOfficeInfo
+                    ? false // 본사 정보이면 무조건 활성화
+                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
                 }
               />
               <CommonButton
@@ -2205,8 +2226,10 @@ export default function DailyReportRegistrationView() {
                 variant="secondary"
                 onClick={() => addItem('fuel')}
                 disabled={
-                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                  detailReport?.data?.status === 'COMPLETED'
+                  isHeadOfficeInfo
+                    ? false // 본사 정보이면 무조건 활성화
+                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
                 }
               />
             </div>
@@ -2632,8 +2655,10 @@ export default function DailyReportRegistrationView() {
         <CommonButton
           label={isEditMode ? '+ 수정' : '+ 등록'}
           disabled={
-            detailReport?.data?.status === 'AUTO_COMPLETED' ||
-            detailReport?.data?.status === 'COMPLETED'
+            isHeadOfficeInfo
+              ? false // 본사 정보이면 무조건 활성화
+              : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
           }
           className="px-10 font-bold"
           variant="secondary"

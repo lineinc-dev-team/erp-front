@@ -90,9 +90,9 @@ export default function ManagementCost() {
       businessNumber: cost.outsourcingCompany?.businessNumber ?? '-',
       ceoName: cost.outsourcingCompany?.ceoName ?? '-',
       accountHolder: cost.outsourcingCompany?.accountHolder ?? '-',
-      supplyPrice: formatNumber(cost.supplyPrice),
-      vat: formatNumber(cost.vat),
-      total: formatNumber(cost.total),
+      supplyPrice: formatNumber(cost.supplyPrice) || '-',
+      vat: formatNumber(cost.vat) || '-',
+      total: formatNumber(cost.total) || '-',
       paymentDate: getTodayDateString(cost.paymentDate),
     }
   })

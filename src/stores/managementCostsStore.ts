@@ -438,7 +438,33 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
       memo: form.memo,
       details: form.details,
       keyMoneyDetails: form.keyMoneyDetails,
-      mealFeeDetails: form.mealFeeDetails,
+
+      mealFeeDetails: form.mealFeeDetails.map((detail: MealFeeDetail) => {
+        const base = {
+          id: detail.id,
+          workType: detail.workType,
+          breakfastCount: detail.breakfastCount,
+          lunchCount: detail.lunchCount,
+          mealCount: detail.mealCount,
+          unitPrice: detail.unitPrice,
+          amount: detail.amount,
+          memo: detail.memo,
+        }
+
+        if (detail.laborId !== null && detail.laborId !== 0 && detail.laborId !== -1) {
+          return {
+            ...base,
+            name: '',
+            laborId: detail.laborId, // laborId만 보냄
+          }
+        }
+
+        return {
+          ...base,
+          laborId: detail.laborId,
+          name: detail.name, // laborId가 0 또는 -1이면 name만 보냄
+        }
+      }),
       files: form.attachedFiles.flatMap((f) =>
         f.files.length === 0
           ? [

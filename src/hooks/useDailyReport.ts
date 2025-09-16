@@ -307,7 +307,7 @@ export function useDailyReport() {
     isLoading: contractNameLoading,
   } = useInfiniteQuery({
     queryKey: ['contractInfo'],
-    queryFn: ({ pageParam = 0 }) => GetContractNameInfoService({ pageParam, size: 20 }),
+    queryFn: ({ pageParam = 0 }) => GetContractNameInfoService({ pageParam, size: 100 }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
       const { sliceInfo } = lastPage.data
