@@ -366,6 +366,13 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     if (!form.paymentDate) return '일자를 선택하세요.'
     if (!form.outsourcingCompanyInfo) return '업체 정보를 입력하세요.'
 
+    if (
+      form.outsourcingCompanyInfo?.businessNumber.replace(/\D/g, '').length !== 10 ||
+      form.outsourcingCompanyInfo?.businessNumber.replace(/\D/g, '').length > 10
+    ) {
+      return '사업자등록번호를 정확히 입력해주세요.'
+    }
+
     if (form.memo.length > 500) {
       return '비고는 500자 이하로 입력해주세요.'
     }

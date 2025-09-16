@@ -83,10 +83,12 @@ export default function ManagementCost() {
       site: cost.site.name,
       process: cost.process.name,
       outsourcingCompany: cost.outsourcingCompany?.name,
+      accountNumber: `${cost.outsourcingCompany.bankName ?? ''} / ${
+        cost.outsourcingCompany.accountNumber ?? ''
+      }`,
       hasFile: cost.hasFile === true ? 'Y' : 'N',
       businessNumber: cost.outsourcingCompany?.businessNumber ?? '-',
       ceoName: cost.outsourcingCompany?.ceoName ?? '-',
-      accountNumber: cost.outsourcingCompany?.accountNumber ?? '-',
       accountHolder: cost.outsourcingCompany?.accountHolder ?? '-',
       supplyPrice: formatNumber(cost.supplyPrice),
       vat: formatNumber(cost.vat),
