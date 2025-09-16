@@ -224,4 +224,5 @@ type DailyReportFormStore = {
   modifyEquipment: () => void
   modifyFuel: () => void
   modifyFile: () => void
+  modifyWeather: () => void
 }

@@ -471,7 +471,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       siteId: form.siteId,
       siteProcessId: form.siteProcessId,
       reportDate: form.reportDate,
-      weather: form.weather === 'BASE' || form.weather === '' ? undefined : form.weather,
+      weather: form.weather,
       employees: form.employees,
       directContracts: form.directContracts,
       outsourcings: form.outsourcings,
@@ -553,6 +553,21 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       outsourcings: undefined,
       outsourcingEquipments: undefined,
       fuels: form.fuels,
+    }
+  },
+
+  modifyWeather: () => {
+    const form = get().form
+    return {
+      files: undefined,
+      siteId: undefined,
+      siteProcessId: undefined,
+      reportDate: undefined,
+      weather: form.weather,
+      employees: undefined,
+      outsourcings: undefined,
+      outsourcingEquipments: undefined,
+      fuels: undefined,
     }
   },
 

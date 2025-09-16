@@ -15,7 +15,7 @@ import {
   TableRow,
   TextField,
 } from '@mui/material'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import CommonDatePicker from '../common/DatePicker'
 import { useDailyReport } from '@/hooks/useDailyReport'
@@ -31,6 +31,7 @@ import {
   GetEquipmentByFilterService,
   GetFuelByFilterService,
   GetOutsoucingByFilterService,
+  ModifyWeatherReport,
   OutsourcingWorkerNameScroll,
 } from '@/services/dailyReport/dailyReportRegistrationService'
 import CommonSelectByName from '../common/CommonSelectByName'
@@ -609,6 +610,16 @@ export default function DailyReportRegistrationView() {
     }
   }, [detailReport, isEditMode])
 
+  useEffect(() => {
+    if (detailReport === undefined) {
+      setField('weather', 'BASE') // 상세 데이터가 있을 때만 세팅
+    }
+    if (detailReport?.status === 200) {
+      setField('weather', detailReport.data.weatherCode) // 상세 데이터가 있을 때만 세팅
+      if (!isEditMode) setIsEditMode(true) // 최초 로딩 시 editMode 설정
+    }
+  }, [detailReport])
+
   const Deadline = () => {
     CompleteInfoMutation.mutate(
       {
@@ -831,9 +842,11 @@ export default function DailyReportRegistrationView() {
   }, [fuelEquipment, selectedCompanyIds, selectId])
 
   // 유효성 검사
+  console.log('245', form.weather)
 
   // 유효성 검사 함수
   const validateEmployees = () => {
+    // 직원 데이터 검증
     for (const emp of employees) {
       if (!emp.laborId || emp.laborId === 0) {
         return showSnackbar('직원의 이름을 선택해주세요.', 'warning')
@@ -841,15 +854,19 @@ export default function DailyReportRegistrationView() {
       if (!emp.workContent || emp.workContent.trim() === '') {
         return showSnackbar('직원의 작업내용을 입력해주세요.', 'warning')
       }
-
       if (emp.workQuantity === null || emp.workQuantity === 0 || isNaN(emp.workQuantity)) {
         return showSnackbar('직원의 공수는 0보다 큰 숫자를 입력해야 합니다.', 'warning')
       }
-
       if (emp.memo && emp.memo.length > 500) {
         return showSnackbar('직원의 비고는 500자를 초과할 수 없습니다.', 'warning')
       }
     }
+
+    // form 전체 필드 검증 (루프 밖)
+    if (form.weather === 'BASE' || form.weather === '') {
+      return showSnackbar('날씨를 선택해주세요.', 'warning')
+    }
+
     return true
   }
 
@@ -882,6 +899,9 @@ export default function DailyReportRegistrationView() {
       if (c.memo && c.memo.length > 500) {
         return showSnackbar('계약직원의 비고는 500자를 초과할 수 없습니다.', 'warning')
       }
+    }
+    if (form.weather === 'BASE' || form.weather === '') {
+      return showSnackbar('날씨를 선택해주세요.', 'warning')
     }
     return true
   }
@@ -919,6 +939,10 @@ export default function DailyReportRegistrationView() {
       }
     }
 
+    if (form.weather === 'BASE' || form.weather === '') {
+      return showSnackbar('날씨를 선택해주세요.', 'warning')
+    }
+
     return true
   }
   const validateEquipment = () => {
@@ -954,6 +978,11 @@ export default function DailyReportRegistrationView() {
         return showSnackbar('장비의 비고는 500자를 초과할 수 없습니다.', 'warning')
       }
     }
+
+    if (form.weather === 'BASE' || form.weather === '') {
+      return showSnackbar('날씨를 선택해주세요.', 'warning')
+    }
+
     return true
   }
 
@@ -984,6 +1013,11 @@ export default function DailyReportRegistrationView() {
         return showSnackbar('유류의 비고는 500자를 초과할 수 없습니다.', 'warning')
       }
     }
+
+    if (form.weather === 'BASE' || form.weather === '') {
+      return showSnackbar('날씨를 선택해주세요.', 'warning')
+    }
+
     return true
   }
 
@@ -1001,8 +1035,14 @@ export default function DailyReportRegistrationView() {
         return showSnackbar('비고는 500자를 초과할 수 없습니다.', 'warning')
       }
     }
+    if (form.weather === 'BASE' || form.weather === '') {
+      return showSnackbar('날씨를 선택해주세요.', 'warning')
+    }
+
     return true
   }
+
+  const previousWeatherRef = useRef(form.weather)
 
   return (
     <>
@@ -1091,7 +1131,7 @@ export default function DailyReportRegistrationView() {
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
                 fullWidth={true}
-                value={form.weather || 'BASE'}
+                value={form.weather || 'BASE'} // nullish 병합 사용
                 onChange={(value) => setField('weather', value)}
                 options={WeatherTypeMethodOptions}
               />
@@ -2850,13 +2890,33 @@ export default function DailyReportRegistrationView() {
                     reportDate: getTodayDateString(form.reportDate) || '',
                   },
                   {
-                    onSuccess: () => {
-                      handleEmployeesRefetch() // 등록 성공 후 실행
+                    onSuccess: async () => {
+                      handleEmployeesRefetch() // 직원 데이터 재조회
+
+                      // 날씨가 바뀌었을 경우만 호출
+                      if (previousWeatherRef.current !== form.weather) {
+                        try {
+                          await ModifyWeatherReport({
+                            siteId: form.siteId || 0,
+                            siteProcessId: form.siteProcessId || 0,
+                            reportDate: getTodayDateString(form.reportDate) || '',
+                          })
+                          // 성공 후 현재 form.weather를 previousWeatherRef에 업데이트
+                          previousWeatherRef.current = form.weather
+                        } catch (error: unknown) {
+                          if (error instanceof Error) {
+                            showSnackbar(error.message, 'error')
+                          } else {
+                            showSnackbar('날씨 수정에 실패했습니다.', 'error')
+                          }
+                        }
+                      }
                     },
                   },
                 )
               } else if (activeTab === '직영/계약직') {
                 if (!validateContract()) return
+
                 ContractModifyMutation.mutate(
                   {
                     siteId: form.siteId || 0,
@@ -2864,13 +2924,33 @@ export default function DailyReportRegistrationView() {
                     reportDate: getTodayDateString(form.reportDate) || '',
                   },
                   {
-                    onSuccess: () => {
-                      handleContractRefetch() // 등록 성공 후 실행
+                    onSuccess: async () => {
+                      handleContractRefetch() // 직원 데이터 재조회
+
+                      // 날씨가 바뀌었을 경우만 호출
+                      if (previousWeatherRef.current !== form.weather) {
+                        try {
+                          await ModifyWeatherReport({
+                            siteId: form.siteId || 0,
+                            siteProcessId: form.siteProcessId || 0,
+                            reportDate: getTodayDateString(form.reportDate) || '',
+                          })
+                          // 성공 후 현재 form.weather를 previousWeatherRef에 업데이트
+                          previousWeatherRef.current = form.weather
+                        } catch (error: unknown) {
+                          if (error instanceof Error) {
+                            showSnackbar(error.message, 'error')
+                          } else {
+                            showSnackbar('날씨 수정에 실패했습니다.', 'error')
+                          }
+                        }
+                      }
                     },
                   },
                 )
               } else if (activeTab === '외주') {
                 if (!validateOutsourcing()) return
+
                 OutsourcingModifyMutation.mutate(
                   {
                     siteId: form.siteId || 0,
@@ -2878,13 +2958,33 @@ export default function DailyReportRegistrationView() {
                     reportDate: getTodayDateString(form.reportDate) || '',
                   },
                   {
-                    onSuccess: () => {
-                      handleOutsourcingRefetch() // 등록 성공 후 실행
+                    onSuccess: async () => {
+                      handleOutsourcingRefetch() // 직원 데이터 재조회
+
+                      // 날씨가 바뀌었을 경우만 호출
+                      if (previousWeatherRef.current !== form.weather) {
+                        try {
+                          await ModifyWeatherReport({
+                            siteId: form.siteId || 0,
+                            siteProcessId: form.siteProcessId || 0,
+                            reportDate: getTodayDateString(form.reportDate) || '',
+                          })
+                          // 성공 후 현재 form.weather를 previousWeatherRef에 업데이트
+                          previousWeatherRef.current = form.weather
+                        } catch (error: unknown) {
+                          if (error instanceof Error) {
+                            showSnackbar(error.message, 'error')
+                          } else {
+                            showSnackbar('날씨 수정에 실패했습니다.', 'error')
+                          }
+                        }
+                      }
                     },
                   },
                 )
               } else if (activeTab === '장비') {
                 if (!validateEquipment()) return
+
                 EquipmentModifyMutation.mutate(
                   {
                     siteId: form.siteId || 0,
@@ -2892,13 +2992,33 @@ export default function DailyReportRegistrationView() {
                     reportDate: getTodayDateString(form.reportDate) || '',
                   },
                   {
-                    onSuccess: () => {
-                      handleEquipmentRefetch() // 등록 성공 후 실행
+                    onSuccess: async () => {
+                      handleEquipmentRefetch() // 직원 데이터 재조회
+
+                      // 날씨가 바뀌었을 경우만 호출
+                      if (previousWeatherRef.current !== form.weather) {
+                        try {
+                          await ModifyWeatherReport({
+                            siteId: form.siteId || 0,
+                            siteProcessId: form.siteProcessId || 0,
+                            reportDate: getTodayDateString(form.reportDate) || '',
+                          })
+                          // 성공 후 현재 form.weather를 previousWeatherRef에 업데이트
+                          previousWeatherRef.current = form.weather
+                        } catch (error: unknown) {
+                          if (error instanceof Error) {
+                            showSnackbar(error.message, 'error')
+                          } else {
+                            showSnackbar('날씨 수정에 실패했습니다.', 'error')
+                          }
+                        }
+                      }
                     },
                   },
                 )
               } else if (activeTab === '유류') {
                 if (!validateFuel()) return
+
                 FuelModifyMutation.mutate(
                   {
                     siteId: form.siteId || 0,
@@ -2906,13 +3026,33 @@ export default function DailyReportRegistrationView() {
                     reportDate: getTodayDateString(form.reportDate) || '',
                   },
                   {
-                    onSuccess: () => {
-                      handleFuelRefetch() // 등록 성공 후 실행
+                    onSuccess: async () => {
+                      handleFuelRefetch() // 직원 데이터 재조회
+
+                      // 날씨가 바뀌었을 경우만 호출
+                      if (previousWeatherRef.current !== form.weather) {
+                        try {
+                          await ModifyWeatherReport({
+                            siteId: form.siteId || 0,
+                            siteProcessId: form.siteProcessId || 0,
+                            reportDate: getTodayDateString(form.reportDate) || '',
+                          })
+                          // 성공 후 현재 form.weather를 previousWeatherRef에 업데이트
+                          previousWeatherRef.current = form.weather
+                        } catch (error: unknown) {
+                          if (error instanceof Error) {
+                            showSnackbar(error.message, 'error')
+                          } else {
+                            showSnackbar('날씨 수정에 실패했습니다.', 'error')
+                          }
+                        }
+                      }
                     },
                   },
                 )
               } else if (activeTab === '현장 사진 등록') {
                 if (!validateFile()) return
+
                 FileModifyMutation.mutate(
                   {
                     siteId: form.siteId || 0,
@@ -2920,8 +3060,27 @@ export default function DailyReportRegistrationView() {
                     reportDate: getTodayDateString(form.reportDate) || '',
                   },
                   {
-                    onSuccess: () => {
-                      handleFileRefetch() // 등록 성공 후 실행
+                    onSuccess: async () => {
+                      handleFileRefetch() // 직원 데이터 재조회
+
+                      // 날씨가 바뀌었을 경우만 호출
+                      if (previousWeatherRef.current !== form.weather) {
+                        try {
+                          await ModifyWeatherReport({
+                            siteId: form.siteId || 0,
+                            siteProcessId: form.siteProcessId || 0,
+                            reportDate: getTodayDateString(form.reportDate) || '',
+                          })
+                          // 성공 후 현재 form.weather를 previousWeatherRef에 업데이트
+                          previousWeatherRef.current = form.weather
+                        } catch (error: unknown) {
+                          if (error instanceof Error) {
+                            showSnackbar(error.message, 'error')
+                          } else {
+                            showSnackbar('날씨 수정에 실패했습니다.', 'error')
+                          }
+                        }
+                      }
                     },
                   },
                 )
