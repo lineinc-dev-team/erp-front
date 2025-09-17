@@ -88,7 +88,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
     bankName: '은행명',
     accountNumber: '계좌번호',
     accountHolder: '예금주',
-    memo: '메모',
+    비고: '메모',
     originalFileName: '파일 추가',
     day01Hours: '제1일 공수',
     day02Hours: '제2일 공수',
@@ -389,7 +389,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
         nationalPension: item.nationalPension ?? 0,
         longTermCareInsurance: item.longTermCareInsurance ?? 0,
         netPayment: item.netPayment ?? 0,
-        memo: item.memo ?? '-',
+        memo: item.memo ?? '',
         dailyWork: Array.from(
           { length: 31 },
           (_, i) => item[`day${String(i + 1).padStart(2, '0')}Hours`] ?? null,
