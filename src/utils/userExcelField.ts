@@ -252,7 +252,7 @@ export const laborStateMentExcelFieldMap = {
   '직영/계약직': 'directContractCount',
   기타: 'etcCount',
   '노무비 합계': 'totalLaborCost',
-  '공제금 합계': 'totalDeductions',
+  '공제 합계': 'totalDeductions',
   '차감지급액 합계': 'totalNetPayment',
   비고: 'memo',
 } as const

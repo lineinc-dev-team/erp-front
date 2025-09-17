@@ -130,7 +130,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
     employmentInsurance: '고용보험료',
     incomeTax: '소득세',
     localTax: '주민세',
-    totalDeductions: '공제금 합계',
+    totalDeductions: '총 공제액',
     netPayment: '차감지급 합계',
   }
 
@@ -174,6 +174,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
     dailyWage: number
     totalWorkHours: number
     totalWorkDays: number
+    totalDeductions: number
     totalLaborCost: number
     incomeTax: number
     employmentInsurance: number
@@ -379,6 +380,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
         dailyWage: item.dailyWage ?? 0,
         totalWorkHours: item.totalWorkHours ?? 0,
         totalWorkDays: item.totalWorkDays ?? 0,
+        totalDeductions: item.totalDeductions ?? 0,
         totalLaborCost: item.totalLaborCost ?? 0,
         incomeTax: item.incomeTax ?? 0,
         employmentInsurance: item.employmentInsurance ?? 0,
@@ -790,10 +792,13 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
 
               {/* 합계 컬럼 */}
               <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
-                총공수
+                총 공수
               </TableCell>
               <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
-                총일수
+                총 일수
+              </TableCell>
+              <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
+                총 공제액
               </TableCell>
               <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 120 }}>
                 노무비 총액
@@ -1042,6 +1047,36 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                           <TextField
                             size="small"
                             type="text"
+                            value={formatNumber(row.totalDeductions) ?? ''}
+                            onChange={(e) => {
+                              const numericValue = unformatNumber(e.target.value)
+                              updateItemField(
+                                'REGULAR_EMPLOYEE',
+                                row.id,
+                                'totalDeductions',
+                                numericValue,
+                              )
+                            }}
+                            // 부모 셀에 꽉 차도록
+                            sx={{
+                              width: '100%',
+                              height: '100%',
+                              '& .MuiInputBase-root': {
+                                height: '100%',
+                                fontSize: '0.75rem', // 글자 크기 줄이기
+                              },
+                              '& input': {
+                                textAlign: 'center', // 가운데 정렬
+                                padding: '4px', // padding 줄이기
+                              },
+                            }}
+                          />
+                        </TableCell>
+
+                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
+                          <TextField
+                            size="small"
+                            type="text"
                             value={formatNumber(row.totalLaborCost) ?? ''}
                             onChange={(e) => {
                               const numericValue = unformatNumber(e.target.value)
@@ -1067,6 +1102,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                             }}
                           />
                         </TableCell>
+
                         <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
                           <TextField
                             size="small"
@@ -1091,6 +1127,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                             }}
                           />
                         </TableCell>
+
                         <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
                           <TextField
                             size="small"
@@ -1120,6 +1157,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                             }}
                           />
                         </TableCell>
+
                         <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
                           <TextField
                             size="small"
@@ -1149,6 +1187,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                             }}
                           />
                         </TableCell>
+
                         <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
                           <TextField
                             size="small"
@@ -1173,6 +1212,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                             }}
                           />
                         </TableCell>
+
                         <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
                           <TextField
                             size="small"
@@ -1202,6 +1242,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                             }}
                           />
                         </TableCell>
+
                         <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
                           <TextField
                             size="small"
@@ -1231,6 +1272,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                             }}
                           />
                         </TableCell>
+
                         <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
                           <TextField
                             size="small"
@@ -1573,6 +1615,34 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                             }}
                           />
                         </TableCell>
+
+                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
+                          <TextField
+                            value={formatNumber(row.totalDeductions) ?? ''}
+                            onChange={(e) => {
+                              const numericValue = unformatNumber(e.target.value)
+                              updateItemField(
+                                'DIRECT_CONTRACT',
+                                row.id,
+                                'totalDeductions',
+                                numericValue,
+                              )
+                            }}
+                            sx={{
+                              width: '100%',
+                              height: '100%',
+                              '& .MuiInputBase-root': {
+                                height: '100%',
+                                fontSize: '0.75rem', // 글자 크기 줄이기
+                              },
+                              '& input': {
+                                textAlign: 'center', // 가운데 정렬
+                                padding: '4px', // padding 줄이기
+                              },
+                            }}
+                          />
+                        </TableCell>
+
                         <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
                           <TextField
                             value={formatNumber(row.totalLaborCost) ?? ''}
@@ -2044,6 +2114,32 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                             }}
                           />
                         </TableCell>
+
+                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
+                          <TextField
+                            size="small"
+                            type="text"
+                            value={formatNumber(row.totalDeductions) ?? ''}
+                            onChange={(e) => {
+                              const numericValue = unformatNumber(e.target.value)
+                              updateItemField('ETC', row.id, 'totalDeductions', numericValue)
+                            }}
+                            // 부모 셀에 꽉 차도록
+                            sx={{
+                              width: '100%',
+                              height: '100%',
+                              '& .MuiInputBase-root': {
+                                height: '100%',
+                                fontSize: '0.75rem', // 글자 크기 줄이기
+                              },
+                              '& input': {
+                                textAlign: 'center', // 가운데 정렬
+                                padding: '4px', // padding 줄이기
+                              },
+                            }}
+                          />
+                        </TableCell>
+
                         <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
                           <TextField
                             size="small"
