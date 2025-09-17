@@ -28,6 +28,7 @@ import { formatAreaNumber } from '@/utils/formatPhoneNumber'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { useMenuPermission } from '../common/MenuPermissionView'
 import { myInfoProps } from '@/types/user'
+import { CustomNoRowsOverlay } from '../common/NoData'
 
 export default function OrderingView() {
   const openTab = useTabOpener()
@@ -598,6 +599,9 @@ export default function OrderingView() {
           onRowSelectionModelChange={(newSelection) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setSelectedIds(newSelection as any) // 타입 보장된다면 사용 가능
+          }}
+          slots={{
+            noRowsOverlay: CustomNoRowsOverlay,
           }}
         />
         <div className="flex justify-center mt-4 pb-6">

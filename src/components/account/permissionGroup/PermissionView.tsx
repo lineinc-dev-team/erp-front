@@ -2,6 +2,7 @@
 
 import CommonButton from '@/components/common/Button'
 import CommonInput from '@/components/common/Input'
+import { CustomNoRowsOverlay } from '@/components/common/NoData'
 import CommonSelect from '@/components/common/Select'
 import { ArrayStatusOptions, PageCount, PermissionDataList } from '@/config/erp.confing'
 import { usePermission } from '@/hooks/usePermission'
@@ -282,6 +283,9 @@ export default function PermissionView() {
               onRowSelectionModelChange={(newSelection) => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 setSelectedIds(newSelection as any) // 타입 보장된다면 사용 가능
+              }}
+              slots={{
+                noRowsOverlay: CustomNoRowsOverlay,
               }}
             />
             <div className="flex justify-center mt-4 pb-6">

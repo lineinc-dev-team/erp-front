@@ -18,6 +18,7 @@ import { SitesProcessNameScroll } from '@/services/managementCost/managementCost
 import CommonMonthPicker from '../common/MonthPicker'
 import { LaborStateMentExcelDownload } from '@/services/laborStateMent/laborStateMentService'
 import { formatNumber } from '@/utils/formatters'
+import { CustomNoRowsOverlay } from '../common/NoData'
 
 export default function LaborStateMentView() {
   const { search } = useLaborStateMentSearchStore()
@@ -346,6 +347,9 @@ export default function LaborStateMentView() {
           onRowSelectionModelChange={(newSelection) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setSelectedIds(newSelection as any) // 타입 보장된다면 사용 가능
+          }}
+          slots={{
+            noRowsOverlay: CustomNoRowsOverlay,
           }}
         />
         <div className="flex justify-center mt-4 pb-6">

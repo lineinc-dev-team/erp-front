@@ -28,6 +28,7 @@ import { useFuelSearchStore } from '@/stores/fuelAggregationStore'
 import { FuelExcelDownload } from '@/services/fuelAggregation/fuelAggregationService'
 import { myInfoProps } from '@/types/user'
 import { useMenuPermission } from '../common/MenuPermissionView'
+import { CustomNoRowsOverlay } from '../common/NoData'
 
 export default function FuelAggregationView() {
   const openTab = useTabOpener()
@@ -540,6 +541,9 @@ export default function FuelAggregationView() {
           onRowSelectionModelChange={(newSelection) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setSelectedIds(newSelection as any) // 타입 보장된다면 사용 가능
+          }}
+          slots={{
+            noRowsOverlay: CustomNoRowsOverlay,
           }}
         />
         <div className="flex justify-center mt-4 pb-6">

@@ -20,6 +20,7 @@ import { LaborExcelDownload } from '@/services/labor/laborService'
 import CommonSelectByName from '../common/CommonSelectByName'
 import { myInfoProps } from '@/types/user'
 import { useMenuPermission } from '../common/MenuPermissionView'
+import { CustomNoRowsOverlay } from '../common/NoData'
 
 export default function LaborView() {
   const openTab = useTabOpener()
@@ -505,6 +506,9 @@ export default function LaborView() {
           onRowSelectionModelChange={(newSelection) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setSelectedIds(newSelection as any) // 타입 보장된다면 사용 가능
+          }}
+          slots={{
+            noRowsOverlay: CustomNoRowsOverlay,
           }}
         />
 
