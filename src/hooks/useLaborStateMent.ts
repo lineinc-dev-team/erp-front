@@ -47,12 +47,7 @@ export function useLaborStateMentInfo() {
 
         page: search.currentPage - 1,
         size: Number(search.pageCount) || 10,
-        sort:
-          search.arraySort === '최신순'
-            ? 'id,desc'
-            : search.arraySort === '오래된순'
-            ? 'id,asc'
-            : 'siteName,asc',
+        sort: search.arraySort === '최신순' ? 'id,desc' : 'id,asc',
       }
 
       const filteredParams = Object.fromEntries(

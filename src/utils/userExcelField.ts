@@ -247,6 +247,7 @@ export const laborStateMentExcelFieldMap = {
   No: 'id',
   현장: 'siteName',
   공정: 'processName',
+  조회월: 'yearMonth',
   정직원: 'regularEmployeeCount',
   '직영/계약직': 'directContractCount',
   기타: 'etcCount',

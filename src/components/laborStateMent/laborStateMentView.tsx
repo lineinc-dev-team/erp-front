@@ -3,7 +3,7 @@
 import CommonButton from '../common/Button'
 import CommonSelect from '../common/Select'
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-import { ArrayStatusOptions, LaborStateMentColumnList, PageCount } from '@/config/erp.confing'
+import { LaborArrayStatusOptions, LaborStateMentColumnList, PageCount } from '@/config/erp.confing'
 import { Pagination, Tooltip } from '@mui/material'
 import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
@@ -63,6 +63,8 @@ export default function LaborStateMentView() {
   const { setSelectedIds } = useAccountStore()
 
   const router = useRouter()
+
+  console.log('updateClientListupdateClientList', updateClientList)
 
   // 그리도 라우팅 로직!
   const enhancedColumns = LaborStateMentColumnList.map((col): GridColDef => {
@@ -275,7 +277,7 @@ export default function LaborStateMentView() {
                   search.setField('arraySort', value)
                   search.setField('currentPage', 1)
                 }}
-                options={ArrayStatusOptions}
+                options={LaborArrayStatusOptions}
               />
             </div>
 

@@ -66,6 +66,11 @@ export const ArrayStatusOptions = [
   { id: '이름순', name: '이름순' },
 ]
 
+export const LaborArrayStatusOptions = [
+  { id: '최신순', name: '최신순' },
+  { id: '오래된순', name: '오래된순' },
+]
+
 export const PageCount = [
   { id: '20', name: '20' },
   { id: '50', name: '50' },
@@ -480,6 +485,7 @@ export const LaborStateMentColumnList: GridColDef[] = [
   { field: 'siteName', headerName: '현장', width: 130 },
   { field: 'processName', headerName: '공정', width: 130 },
   { field: 'regularEmployeeCount', headerName: '정직원', width: 130 },
+  { field: 'yearMonth', headerName: '조회월', width: 130 },
   { field: 'directContractCount', headerName: '직영/계약직', width: 180 },
   { field: 'etcCount', headerName: '기타', width: 100 },
   { field: 'totalLaborCost', headerName: '노무비 합게', width: 100 },

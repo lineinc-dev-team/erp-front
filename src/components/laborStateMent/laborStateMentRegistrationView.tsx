@@ -200,9 +200,9 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
     공종: 'position',
     주작업: 'task',
     일당: 'dailyWage',
-    총공수: 'totalWork',
-    총일수: 'totalDay',
-    노무부총액: 'totalLaborCost',
+    '총 근무시간': 'totalWork',
+    '총 근무일수': 'totalDay',
+    '노무비 총액': 'totalLaborCost',
     소득세: 'incomeTax',
     고용보험: 'employmentInsurance',
     건강보험: 'healthInsurance',
@@ -569,7 +569,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                 ? `추가됨 => ${after}`
                 : after === '삭제'
                 ? ` ${before} => 삭제됨`
-                : `${propertyKo} : ${before} => ${after}`}
+                : `${propertyKo}${before} => ${after}`}
             </Typography>
           )
         },
@@ -796,7 +796,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                 총일수
               </TableCell>
               <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 120 }}>
-                노무부 총액
+                노무비 총액
               </TableCell>
               <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 80 }}>
                 소득세
@@ -2422,7 +2422,6 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                       }}
                     >
                       <span style={{ fontWeight: 600, color: '#377be8' }}>{item.description}</span>
-                      <span style={{ color: '#9CA3AF', margin: '0 4px' }}>:</span>
                       <span style={{ color: '#111827' }}>{item.content}</span>
                     </TableCell>
 
