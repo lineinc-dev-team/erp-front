@@ -398,7 +398,8 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
     })
   }, [results])
 
-  // 1️⃣ 초기 데이터 세팅 (상세 페이지 진입 시)
+  console.log('allRowsallRows', form.laborStateMentInfo)
+
   useEffect(() => {
     if (allRows.length) {
       const isDifferent = JSON.stringify(form.laborStateMentInfo) !== JSON.stringify(allRows)
@@ -407,15 +408,6 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
       }
     }
   }, [setField, isEditMode])
-
-  // useEffect(() => {
-  //   if (allRows.length) {
-  //     const isDifferent = JSON.stringify(form.laborStateMentInfo) !== JSON.stringify(allRows)
-  //     if (isDifferent) {
-  //       setField('laborStateMentInfo', allRows)
-  //     }
-  //   }
-  // }, [allRows, setField, form.laborStateMentInfo])
 
   useEffect(() => {
     if (!form.laborStateMentInfo?.length && allRows.length) {
@@ -474,6 +466,53 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
       })
     return result
   }, [allSumeRows])
+
+  // 합계 계산
+
+  // 1. 합계 계산
+  const laborTotalsByType = useMemo(() => {
+    if (!form.laborStateMentInfo) return {}
+
+    const types = ['정직원', '직영/계약직', '기타']
+
+    const result: Record<string, any> = {}
+
+    types.forEach((type) => {
+      const filtered = form.laborStateMentInfo.filter((item) => item.type === type)
+
+      result[type] = filtered.reduce(
+        (acc, item) => {
+          acc.totalWorkHours += Number(item.totalWorkHours || 0)
+          acc.totalWorkDays += Number(item.totalWorkDays || 0)
+          acc.totalDeductions += Number(item.totalDeductions || 0)
+          acc.totalLaborCost += Number(item.totalLaborCost || 0)
+          acc.incomeTax += Number(item.incomeTax || 0)
+          acc.employmentInsurance += Number(item.employmentInsurance || 0)
+          acc.healthInsurance += Number(item.healthInsurance || 0)
+          acc.localTax += Number(item.localTax || 0)
+          acc.nationalPension += Number(item.nationalPension || 0)
+          acc.longTermCareInsurance += Number(item.longTermCareInsurance || 0)
+          acc.netPayment += Number(item.netPayment || 0)
+          return acc
+        },
+        {
+          totalWorkHours: 0,
+          totalWorkDays: 0,
+          totalDeductions: 0,
+          totalLaborCost: 0,
+          incomeTax: 0,
+          employmentInsurance: 0,
+          healthInsurance: 0,
+          localTax: 0,
+          nationalPension: 0,
+          longTermCareInsurance: 0,
+          netPayment: 0,
+        },
+      )
+    })
+
+    return result
+  }, [form.laborStateMentInfo])
 
   const headerCellStyle = {
     backgroundColor: '#c8c7c7',
@@ -621,6 +660,10 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
     },
     [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading],
   )
+
+  const totalEmployment = laborTotalsByType['정직원']
+  const totalContract = laborTotalsByType['직영/계약직']
+  const totalEtc = laborTotalsByType['기타']
 
   return (
     <>
@@ -1401,14 +1444,32 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                     {sum}
                   </TableCell>
                 ))}
-                {Array(11)
-                  .fill(0)
-                  .map((_, idx) => (
-                    <TableCell
-                      key={idx + 16}
-                      sx={{ border: '1px solid #9CA3AF', backgroundColor: '#F3F4F6' }}
-                    />
-                  ))}
+                {[
+                  totalEmployment.totalWorkHours,
+                  totalEmployment.totalWorkDays,
+                  totalEmployment.totalDeductions,
+                  totalEmployment.totalLaborCost,
+                  totalEmployment.incomeTax,
+                  totalEmployment.employmentInsurance,
+                  totalEmployment.healthInsurance,
+                  totalEmployment.localTax,
+                  totalEmployment.nationalPension,
+                  totalEmployment.longTermCareInsurance,
+                  totalEmployment.netPayment,
+                ].map((value, idx) => (
+                  <TableCell
+                    key={idx}
+                    rowSpan={2}
+                    align="center"
+                    sx={{
+                      border: '1px solid #9CA3AF',
+                      backgroundColor: '#F3F4F6',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    {formatNumber(value) || 0}
+                  </TableCell>
+                ))}
               </TableRow>
 
               {/* 16일 부터 31일 까지*/}
@@ -1422,14 +1483,6 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                     {sum}
                   </TableCell>
                 ))}
-                {Array(12)
-                  .fill(0)
-                  .map((_, idx) => (
-                    <TableCell
-                      key={idx + 16}
-                      sx={{ border: '1px solid #9CA3AF', backgroundColor: '#F3F4F6' }}
-                    />
-                  ))}
               </TableRow>
             </TableBody>
           )}
@@ -1920,19 +1973,36 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                     {sum}
                   </TableCell>
                 ))}
-                {Array(11)
-                  .fill(0)
-                  .map((_, idx) => (
-                    <TableCell
-                      key={idx + 16}
-                      sx={{ border: '1px solid #9CA3AF', backgroundColor: '#F3F4F6' }}
-                    />
-                  ))}
+
+                {[
+                  totalContract.totalWorkHours,
+                  totalContract.totalWorkDays,
+                  totalContract.totalDeductions,
+                  totalContract.totalLaborCost,
+                  totalContract.incomeTax,
+                  totalContract.employmentInsurance,
+                  totalContract.healthInsurance,
+                  totalContract.localTax,
+                  totalContract.nationalPension,
+                  totalContract.longTermCareInsurance,
+                  totalContract.netPayment,
+                ].map((value, idx) => (
+                  <TableCell
+                    key={idx}
+                    rowSpan={2}
+                    align="center"
+                    sx={{
+                      border: '1px solid #9CA3AF',
+                      backgroundColor: '#F3F4F6',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    {formatNumber(value) || 0}
+                  </TableCell>
+                ))}
               </TableRow>
 
               <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
-                {/* 16~31일 합계 */}
-                {/* 15로 바꿔야함!! */}
                 {dailyContract.slice(16).map((sum, idx) => (
                   <TableCell
                     key={idx + 16}
@@ -1942,14 +2012,6 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                     {sum}
                   </TableCell>
                 ))}
-                {Array(12)
-                  .fill(0)
-                  .map((_, idx) => (
-                    <TableCell
-                      key={idx + 16}
-                      sx={{ border: '1px solid #9CA3AF', backgroundColor: '#F3F4F6' }}
-                    />
-                  ))}
               </TableRow>
             </TableBody>
           )}
@@ -2432,14 +2494,32 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                     {sum}
                   </TableCell>
                 ))}
-                {Array(11)
-                  .fill(0)
-                  .map((_, idx) => (
-                    <TableCell
-                      key={idx + 16}
-                      sx={{ border: '1px solid #9CA3AF', backgroundColor: '#F3F4F6' }}
-                    />
-                  ))}
+                {[
+                  totalEtc.totalWorkHours,
+                  totalEtc.totalWorkDays,
+                  totalEtc.totalDeductions,
+                  totalEtc.totalLaborCost,
+                  totalEtc.incomeTax,
+                  totalEtc.employmentInsurance,
+                  totalEtc.healthInsurance,
+                  totalEtc.localTax,
+                  totalEtc.nationalPension,
+                  totalEtc.longTermCareInsurance,
+                  totalEtc.netPayment,
+                ].map((value, idx) => (
+                  <TableCell
+                    key={idx}
+                    rowSpan={2}
+                    align="center"
+                    sx={{
+                      border: '1px solid #9CA3AF',
+                      backgroundColor: '#F3F4F6',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    {formatNumber(value) || 0}
+                  </TableCell>
+                ))}
               </TableRow>
 
               <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
@@ -2454,14 +2534,6 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                     {sum}
                   </TableCell>
                 ))}
-                {Array(12)
-                  .fill(0)
-                  .map((_, idx) => (
-                    <TableCell
-                      key={idx + 16}
-                      sx={{ border: '1px solid #9CA3AF', backgroundColor: '#F3F4F6' }}
-                    />
-                  ))}
               </TableRow>
             </TableBody>
           )}
