@@ -18,7 +18,6 @@ import { CostList } from '@/types/managementCost'
 import { formatNumber, getTodayDateString } from '@/utils/formatters'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import CommonSelectByName from '../common/CommonSelectByName'
-import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import { useTabOpener } from '@/utils/openTab'
 import { myInfoProps } from '@/types/user'
 import { useMenuPermission } from '../common/MenuPermissionView'
@@ -237,18 +236,18 @@ export default function ManagementCost() {
                   search.setField('siteId', selectedSite.id)
                   search.setField('siteName', selectedSite.name)
 
-                  const res = await SitesProcessNameScroll({
-                    pageParam: 0,
-                    siteId: selectedSite.id,
-                    keyword: '',
-                  })
+                  // const res = await SitesProcessNameScroll({
+                  //   pageParam: 0,
+                  //   siteId: selectedSite.id,
+                  //   keyword: '',
+                  // })
 
-                  const processes = res.data?.content || []
-                  if (processes.length > 0) {
-                    search.setField('processName', processes[0].name)
-                  } else {
-                    search.setField('processName', '')
-                  }
+                  // const processes = res.data?.content || []
+                  // if (processes.length > 0) {
+                  //   search.setField('processName', processes[0].name)
+                  // } else {
+                  //   search.setField('processName', '')
+                  // }
                 }}
                 options={sitesOptions}
                 onScrollToBottom={() => {

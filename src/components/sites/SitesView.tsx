@@ -29,7 +29,6 @@ import { SiteExcelFieldMap } from '@/utils/userExcelField'
 import { useTabOpener } from '@/utils/openTab'
 import CommonSelectByName from '../common/CommonSelectByName'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
-import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { myInfoProps } from '@/types/user'
 import { useMenuPermission } from '../common/MenuPermissionView'
@@ -283,20 +282,20 @@ export default function SitesView() {
                   search.setField('nameId', selectedSite.id)
                   search.setField('name', selectedSite.name)
 
-                  const res = await SitesProcessNameScroll({
-                    pageParam: 0,
-                    siteId: selectedSite.id,
-                    keyword: '',
-                  })
+                  // const res = await SitesProcessNameScroll({
+                  //   pageParam: 0,
+                  //   siteId: selectedSite.id,
+                  //   keyword: '',
+                  // })
 
-                  const processes = res.data?.content || []
-                  if (processes.length > 0) {
-                    search.setField('processId', processes[0].id)
-                    search.setField('processName', processes[0].name)
-                  } else {
-                    search.setField('processId', 0)
-                    search.setField('processName', '')
-                  }
+                  // const processes = res.data?.content || []
+                  // if (processes.length > 0) {
+                  //   search.setField('processId', processes[0].id)
+                  //   search.setField('processName', processes[0].name)
+                  // } else {
+                  //   search.setField('processId', 0)
+                  //   search.setField('processName', '')
+                  // }
                 }}
                 options={sitesOptions}
                 onScrollToBottom={() => {

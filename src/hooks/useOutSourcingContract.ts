@@ -245,7 +245,7 @@ export default function useOutSourcingContract() {
     queryFn: ({ pageParam }) =>
       SitesProcessNameScroll({
         pageParam,
-        siteId: siteId || 0,
+        siteId: siteId,
         keyword: processSearch,
       }),
     initialPageParam: 0,
@@ -253,7 +253,7 @@ export default function useOutSourcingContract() {
       const { sliceInfo } = lastPage.data
       return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
     },
-    enabled: !!siteId, // siteId가 있을 때만 실행
+    enabled: true,
   })
 
   const processOptions = useMemo(() => {

@@ -26,10 +26,16 @@ export async function SitesPersonScroll({ pageParam = 0, size = 5, keyword = '',
 // 공정명 무한 스크롤 조회
 export async function SitesProcessNameScroll({
   pageParam = 0,
-  size = 5,
-  siteId = 0,
+  size = 200,
+  siteId = '',
   keyword = '',
   sort = '',
+}: {
+  pageParam?: number
+  size?: number
+  siteId?: string | number | ''
+  keyword?: string
+  sort?: string
 }) {
   const resData = await fetch(
     `${API.PROCESS}/search?page=${pageParam}&size=${size}&siteId=${siteId}&keyword=${keyword}&sort=${sort}`,
