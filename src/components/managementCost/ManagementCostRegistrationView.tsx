@@ -583,7 +583,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                     }
                   }
                 }}
-                options={[...companyOptions, { id: -2, name: '직접입력' }]}
+                options={[{ id: -2, name: '직접입력' }, ...companyOptions]}
                 onScrollToBottom={() => {
                   if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
                 }}

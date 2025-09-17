@@ -2038,7 +2038,18 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                         <TableCell
                           rowSpan={2}
                           align="center"
-                          sx={{ cursor: 'pointer', textDecoration: 'underline' }}
+                          sx={{
+                            cursor: 'pointer',
+                            textDecoration: 'underline',
+
+                            border: '1px solid #a3a3a3',
+                            fontSize: '0.75rem', // 글자 작게
+                            fontWeight: 'bold', // 글자 두껍게
+                            padding: '2px 4px', // 위아래 2px, 좌우 4px
+                            lineHeight: 2, // 줄 간격 최소화
+                            width: '40px',
+                            height: '40px',
+                          }}
                           onClick={() => {
                             setSelectedIdInfo({
                               laborAccountHolder: row.accountHolder,
