@@ -88,7 +88,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
     bankName: '은행명',
     accountNumber: '계좌번호',
     accountHolder: '예금주',
-    비고: '메모',
+    memo: '메모',
     originalFileName: '파일 추가',
     day01Hours: '제1일 공수',
     day02Hours: '제2일 공수',
@@ -398,28 +398,6 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
     })
   }, [results])
 
-  console.log('allRowsallRows', form.laborStateMentInfo)
-
-  useEffect(() => {
-    if (allRows.length) {
-      const isDifferent = JSON.stringify(form.laborStateMentInfo) !== JSON.stringify(allRows)
-      if (isDifferent) {
-        setField('laborStateMentInfo', allRows)
-      }
-    }
-  }, [setField, isEditMode])
-
-  useEffect(() => {
-    if (!form.laborStateMentInfo?.length && allRows.length) {
-      setField('laborStateMentInfo', allRows)
-      return
-    }
-
-    if (isEditMode && !form.laborStateMentInfo?.length && allRows.length) {
-      setField('laborStateMentInfo', allRows)
-    }
-  }, [allRows, form.laborStateMentInfo])
-
   // 항상 최신 allRows를 반영하도록 수정
   // allRows는 form 데이터를 기준으로 계산
   const allSumeRows = useMemo(() => {
@@ -544,8 +522,6 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
     height: '40px',
   }
 
-  console.log('allwor', laborStateMentList)
-
   const [originalMemo, setOriginalMemo] = useState<string>('')
 
   useEffect(() => {
@@ -553,6 +529,29 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
       setOriginalMemo(laborSummaryDetail.data.memo ?? '')
     }
   }, [laborSummaryDetail])
+
+  console.log('123', allRows)
+  console.log('44', form.laborStateMentInfo)
+
+  useEffect(() => {
+    if (!allRows.length) return // allRows가 없으면 아무 것도 하지 않음
+
+    // form 데이터가 비어있거나 allRows와 내용이 다르면 업데이트
+    const isDifferent = form.laborStateMentInfo.length !== allRows.length
+
+    if (isDifferent) {
+      setField('laborStateMentInfo', allRows)
+    }
+  }, [form.laborStateMentInfo, allRows])
+
+  useEffect(() => {
+    if (!allRows.length) return
+
+    // form.laborStateMentInfo가 비어있을 때만 초기 세팅
+    if (!form.laborStateMentInfo?.length) {
+      setField('laborStateMentInfo', allRows)
+    }
+  }, [allRows, setField, form.laborStateMentInfo])
 
   const handleLaborSummarySubmit = () => {
     if (!isEditMode) return

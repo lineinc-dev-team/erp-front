@@ -3,7 +3,7 @@ import LaborStateMentRegistrationView from '@/components/laborStateMent/laborSta
 export default function page() {
   return (
     <div>
-      <LaborStateMentRegistrationView isEditMode={true} />
+      <LaborStateMentRegistrationView />
     </div>
   )
 }
