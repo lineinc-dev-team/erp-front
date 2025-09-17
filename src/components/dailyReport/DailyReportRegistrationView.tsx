@@ -873,7 +873,7 @@ export default function DailyReportRegistrationView() {
   const validateContract = () => {
     for (const c of contractData) {
       // 이름(직원) 선택 여부
-      if (!c.laborId || c.laborId === 0) {
+      if (c.laborId === 0) {
         return showSnackbar('계약직원의 이름을 선택해주세요.', 'warning')
       }
 
@@ -1383,8 +1383,10 @@ export default function DailyReportRegistrationView() {
                 variant="danger"
                 onClick={() => removeCheckedItems('directContracts')}
                 disabled={
-                  detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                  detailReport?.data?.status === 'COMPLETED'
+                  isHeadOfficeInfo
+                    ? false // 본사 정보이면 무조건 활성화
+                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
                 }
               />
               <CommonButton
@@ -1500,7 +1502,12 @@ export default function DailyReportRegistrationView() {
                               )
                             }
                             placeholder="업체명 입력"
-                            disabled
+                            InputProps={{
+                              sx: {
+                                color: 'red', // 글자색 빨강
+                                WebkitTextFillColor: 'red', // disabled 상태에서도 빨강 유지
+                              },
+                            }}
                           />
                         ) : (
                           <CommonSelect

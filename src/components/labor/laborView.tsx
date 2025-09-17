@@ -136,32 +136,17 @@ export default function LaborView() {
           // 문자열이면 '일' 제거 후 숫자로 변환
           const numericValue = typeof value === 'string' ? Number(value.replace('개월', '')) : value
 
-          const isOver180 = numericValue >= 6
-
-          return (
-            <div
-              className={`w-full h-full flex items-center justify-center`}
-              style={{
-                backgroundColor: isOver180 ? '#ff0000' : 'transparent', // 빨간색 / 기본
-                color: isOver180 ? '#fff' : 'inherit', // 글자색
-                width: '100%',
-                height: '100%',
-              }}
-            >
-              {params.value ?? '-'}
-            </div>
-          )
+          return <div>{numericValue ?? '-'}</div>
         },
       }
     }
-
     if (col.field === 'type') {
       return {
         ...col,
         headerAlign: 'center',
         align: 'center',
         flex: 1,
-
+        cellClassName: 'no-hover-bg', // 커스텀 클래스 지정
         renderCell: (params: GridRenderCellParams) => {
           const clientId = params.row.id
 
@@ -175,11 +160,8 @@ export default function LaborView() {
             <div
               onClick={handleClick}
               className={`flex justify-center items-center ${
-                hasModify
-                  ? 'cursor-pointer text-orange-500 font-bold'
-                  : 'cursor-not-allowed text-gray-400'
+                hasModify && 'cursor-pointer text-black-500 font-bold'
               }`}
-              style={!hasModify ? { pointerEvents: 'none' } : {}}
             >
               <span>{params.value}</span>
             </div>
@@ -187,6 +169,7 @@ export default function LaborView() {
         },
       }
     }
+
     if (col.field === 'no') {
       return {
         ...col,
@@ -197,7 +180,6 @@ export default function LaborView() {
           const sortedRowIds = params.api.getSortedRowIds?.() ?? []
           const indexInCurrentPage = sortedRowIds.indexOf(params.id)
           const no = totalList - ((search.currentPage - 1) * pageCount + indexInCurrentPage)
-          // const no = (search.currentPage - 1) * pageCount + indexInCurrentPage + 1
           return <span>{no}</span>
         },
       }
@@ -493,21 +475,31 @@ export default function LaborView() {
           checkboxSelection
           disableRowSelectionOnClick
           keepNonExistentRowsSelected
-          disableColumnFilter // 필터 비활성화
+          disableColumnFilter
           hideFooter
           disableColumnMenu
           hideFooterPagination
-          // pageSize={pageSize}
           getRowHeight={() => 'auto'}
+          getRowClassName={(params) =>
+            params.row.isSeverancePayEligible === 'Y' ? 'severance-row' : ''
+          }
           sx={{
+            '& .MuiDataGrid-row:hover': {
+              backgroundColor: 'inherit !important', // hover 효과 제거
+              color: 'black',
+            },
             '& .MuiDataGrid-cell': {
               display: 'flex',
-              justifyContent: 'center', // 가로 가운데 정렬
-              alignItems: 'center', // 세로 가운데 정렬
-              whiteSpace: 'normal', // 줄바꿈 허용
-              lineHeight: '2.8rem', // 줄 간격
-              paddingTop: '12px', // 위 여백
-              paddingBottom: '12px', // 아래 여백
+              justifyContent: 'center',
+              alignItems: 'center',
+              whiteSpace: 'normal',
+              lineHeight: '2.8rem',
+              paddingTop: '12px',
+              paddingBottom: '12px',
+            },
+            '& .severance-row': {
+              backgroundColor: 'red',
+              color: 'white',
             },
           }}
           onRowSelectionModelChange={(newSelection) => {
@@ -515,6 +507,7 @@ export default function LaborView() {
             setSelectedIds(newSelection as any) // 타입 보장된다면 사용 가능
           }}
         />
+
         <div className="flex justify-center mt-4 pb-6">
           <Pagination
             count={totalPages}
