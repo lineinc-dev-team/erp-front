@@ -94,7 +94,7 @@ export function useManagementCost() {
             ? 'id,desc'
             : search.arraySort === '오래된순'
             ? 'id,asc'
-            : 'username,asc',
+            : 'outsourcingCompany.name,desc',
       }
 
       const filteredParams = Object.fromEntries(

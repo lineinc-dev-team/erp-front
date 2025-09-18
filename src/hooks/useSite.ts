@@ -71,7 +71,7 @@ export default function useSite() {
             ? 'id,desc'
             : search.arraySort === '오래된순'
             ? 'id,asc'
-            : 'username,asc',
+            : 'name,desc',
       }
 
       const filteredParams = Object.fromEntries(
