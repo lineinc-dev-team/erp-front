@@ -7,7 +7,7 @@ import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { Pagination, Tooltip } from '@mui/material'
 import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
-import { ArrayStatusOptions, CostColumnList, PageCount } from '@/config/erp.confing'
+import { CostColumnList, LaborArrayStatusOptions, PageCount } from '@/config/erp.confing'
 import { useEffect, useState } from 'react'
 import ExcelModal from '../common/ExcelModal'
 import { CostExcelFieldMap } from '@/utils/userExcelField'
@@ -408,7 +408,7 @@ export default function ManagementCost() {
                   search.setField('arraySort', value)
                   search.setField('currentPage', 1)
                 }}
-                options={ArrayStatusOptions}
+                options={LaborArrayStatusOptions}
               />
             </div>
 
