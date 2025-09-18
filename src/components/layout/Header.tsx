@@ -13,6 +13,7 @@ import {
   Collapse,
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
+import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import {
   Menu as MenuIcon,
   AccountCircle,
@@ -70,15 +71,15 @@ const menuNameToIcon: Record<string, React.ReactNode> = {
   '발주처 관리': <Business />, // 회사/거래처 → 건물 아이콘
   '현장 관리': <Apartment />, // 현장/프로젝트 → 아파트 아이콘
   '관리비 관리': <Assignment />, // 비용/리포트 → 과제/문서 아이콘
-  '강재 관리': <Inventory />, // 자재/강재 → 재고 아이콘
   '자재 관리': <Inventory />, // 자재 관리도 재고 아이콘
   '유류집계 관리': <LocalGasStation />, // 유류 → 주유소 아이콘
   '강재수불부 관리': <ReceiptLong />, // 수불부(장부 개념) → 장부/리포트 아이콘
   '외주업체 관리': <Groups />, // 협력사/외주업체 → 그룹 아이콘
   '외주업체 계약 관리': <Description />, // 계약 문서 → 문서 아이콘
-  '노무 관리': <WorkHistory />, // 근무/노무 → 출퇴근 기록 아이콘
-  출역일보: <Today />,
+  '노무 관리': <AccessTimeIcon />, // 근무/노무 → 출퇴근 기록 아이콘
   '노무명세서 관리': <WorkHistory />, // 근무/노무 → 출퇴근 기록 아이콘
+
+  출역일보: <Today />,
 }
 
 function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {
