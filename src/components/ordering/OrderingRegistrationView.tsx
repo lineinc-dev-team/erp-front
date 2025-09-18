@@ -78,7 +78,6 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
   const { showSnackbar } = useSnackbarStore()
 
   const PROPERTY_NAME_MAP: Record<string, string> = {
-    username: '이름',
     address: '본사 주소',
     detailAddress: '상세 주소',
     userName: '본사 담당자명',
@@ -88,11 +87,10 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
     businessNumber: '사업자등록번호',
     ceoName: '대표자명',
     position: '직급',
-    name: '발주처명',
     landlineNumber: '전화번호',
     email: '이메일',
     department: '부서/직급',
-    isActive: '계정 상태',
+    isActive: '사용 여부',
     memo: '비고',
     isMain: '대표담당자',
     originalFileName: '파일 추가',
@@ -275,14 +273,21 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
     }
   }, [data, isEditMode, reset, setField])
 
-  const formatChangeDetail = (getChanges: string) => {
+  const formatChangeDetail = (getChanges: string, typeCode: string) => {
     try {
       const parsed = JSON.parse(getChanges)
       if (!Array.isArray(parsed)) return '-'
 
       return parsed.map(
         (item: { property: string; before: string | null; after: string | null }, idx: number) => {
-          const propertyKo = PROPERTY_NAME_MAP[item.property] || item.property
+          const propertyKo =
+            item.property === 'name'
+              ? typeCode === 'BASIC'
+                ? '발주처명'
+                : typeCode === 'CONTACT'
+                ? '담당자 이름'
+                : '이름'
+              : PROPERTY_NAME_MAP[item.property] || item.property
 
           const convertValue = (value: string | null) => {
             if (value === 'true') return '사용'
@@ -327,7 +332,8 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
         page.data.content.map((item: HistoryItem) => ({
           id: item.id,
           type: item.type,
-          content: formatChangeDetail(item.getChanges), // 여기 변경
+          typeCode: item.typeCode,
+          content: formatChangeDetail(item.getChanges, item.typeCode), // 여기 변경
           createdAt: item.createdAt,
           updatedAt: item.updatedAt,
           updatedBy: item.updatedBy,

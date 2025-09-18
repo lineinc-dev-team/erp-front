@@ -154,7 +154,6 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
   const PROPERTY_NAME_MAP: Record<string, string> = {
     phoneNumber: '개인 휴대폰',
-    name: '직접입력한 성명',
     laborName: '성명',
     mainWork: '주 작업',
     dailyWage: '기준일당',
@@ -410,15 +409,23 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     }
   }, [data, isEditMode, reset, setField])
 
-  const formatChangeDetail = (getChanges: string) => {
+  const formatChangeDetail = (getChanges: string, typeCode: string) => {
     try {
       const parsed = JSON.parse(getChanges)
       if (!Array.isArray(parsed)) return '-'
 
+      console.log('paersed', parsed, typeCode)
+
       return parsed.map(
         (item: { property: string; before: string | null; after: string | null }, idx: number) => {
-          const propertyKo = PROPERTY_NAME_MAP[item.property] || item.property
-
+          const propertyKo =
+            item.property === 'name'
+              ? typeCode === 'MEAL_FEE'
+                ? '직접입력한 성명'
+                : typeCode === 'ITEM_DETAIL'
+                ? '품명'
+                : '이름'
+              : PROPERTY_NAME_MAP[item.property] || item.property
           const convertValue = (value: string | null) => {
             if (value === 'true') return '사용'
             if (value === 'false') return '미사용'
@@ -462,7 +469,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
         page.data.content.map((item: HistoryItem) => ({
           id: item.id,
           type: item.type,
-          content: formatChangeDetail(item.getChanges), // 여기 변경
+          content: formatChangeDetail(item.getChanges, item.typeCode), // 여기 변경
           createdAt: item.createdAt,
           updatedAt: item.updatedAt,
           updatedBy: item.updatedBy,

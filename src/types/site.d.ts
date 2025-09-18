@@ -44,6 +44,7 @@ type HistoryItem = {
   updatedBy: string
   memo: string
   type: string
+  typeCode: string
 }
 // 등록에 필요한 타입
 

@@ -91,7 +91,6 @@ export default function SitesRegistrationView({ isEditMode = false }) {
   // 수정이력 조회
 
   const PROPERTY_NAME_MAP: Record<string, string> = {
-    name: '현장명',
     address: '본사 주소',
     detailAddress: '상세 주소',
     typeName: '현장 유형',
@@ -435,14 +434,21 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     </>
   )
 
-  const formatChangeDetail = (getChanges: string) => {
+  const formatChangeDetail = (getChanges: string, typeCode: string) => {
     try {
       const parsed = JSON.parse(getChanges)
       if (!Array.isArray(parsed)) return '-'
 
       return parsed.map(
         (item: { property: string; before: string | null; after: string | null }, idx: number) => {
-          const propertyKo = PROPERTY_NAME_MAP[item.property] || item.property
+          const propertyKo =
+            item.property === 'name'
+              ? typeCode === 'BASIC'
+                ? '현장명'
+                : typeCode === 'PROCESS'
+                ? '공정명'
+                : '이름'
+              : PROPERTY_NAME_MAP[item.property] || item.property
 
           const convertValue = (value: string | null) => {
             if (value === 'true') return '사용'
@@ -487,7 +493,8 @@ export default function SitesRegistrationView({ isEditMode = false }) {
         page.data.content.map((item: HistoryItem) => ({
           id: item.id,
           type: item.type,
-          content: formatChangeDetail(item.getChanges), // 여기 변경
+          typeCode: item.typeCode,
+          content: formatChangeDetail(item.getChanges, item.typeCode), // 여기 변경
           createdAt: item.createdAt,
           updatedAt: item.updatedAt,
           updatedBy: item.updatedBy,

@@ -89,6 +89,7 @@ type HistoryItem = {
   updatedBy: string
   memo: string
   type: string
+  typeCode: string
 }
 
 export type KeyMoneyDetail = {
