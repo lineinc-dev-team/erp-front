@@ -174,7 +174,8 @@ export function useUserMg() {
     queryFn: PositionIdInfoService,
   })
 
-  const positionOptions = [{ id: 0, name: '선택' }, ...(positionId?.data ?? [])]
+  // const positionOptions = [{ id: 0, name: '선택' }, ...(positionId?.data ?? [])]
+  const positionOptions = [{ id: -1, name: '미선택' }, ...(positionId?.data ?? [])]
 
   const { data: gradeId } = useQuery({
     queryKey: ['gradeInfo'],

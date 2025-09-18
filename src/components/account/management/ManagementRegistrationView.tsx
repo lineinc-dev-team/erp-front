@@ -93,7 +93,8 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
       const departmentId = departmentOptions.find((opt) => opt.name === client.department)?.id ?? 0
       if (departmentId !== form.departmentId) setField('departmentId', departmentId)
 
-      const positionId = positionOptions.find((opt) => opt.name === client.position)?.id ?? 0
+      // const positionId = positionOptions.find((opt) => opt.name === client.position)?.id ?? 0
+      const positionId = positionOptions.find((opt) => opt.name === client.position)?.id ?? -1
       if (positionId !== form.positionId) setField('positionId', positionId)
 
       const gradeId = gradeOptions.find((opt) => opt.name === client.grade)?.id ?? 0
@@ -269,23 +270,8 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
           </div>
 
           <div className="flex">
-            <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              직급
-            </label>
-            <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
-              <CommonSelect
-                fullWidth={true}
-                className="text-2xl"
-                value={form.positionId}
-                onChange={(value) => setField('positionId', value)}
-                options={positionOptions}
-              />
-            </div>
-          </div>
-
-          <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              직책
+              직급
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
               <CommonSelect
@@ -296,6 +282,23 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
               />
             </div>
           </div>
+
+          <div className="flex">
+            <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+              직책
+            </label>
+            <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
+              <CommonSelect
+                fullWidth={true}
+                className="text-2xl"
+                value={form.positionId}
+                onChange={(value) => setField('positionId', value)}
+                options={positionOptions}
+                disabled
+              />
+            </div>
+          </div>
+
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               개인 휴대폰
