@@ -105,6 +105,7 @@ export function TotalInput({ supplyPrice, vat }: TotalInputProps) {
   return (
     <TextField
       size="small"
+      placeholder="자동 계산"
       value={formatNumber(total)}
       InputProps={{ readOnly: true }}
       variant="outlined"

@@ -321,7 +321,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
       setField('outsourcingCompanyId', client.outsourcingCompany?.id ?? 0)
     } else if (!isEditMode) {
       setUpdatedCompanyOptions(companyOptions)
-      setField('outsourcingCompanyId', 0) // "선택" 기본값
+      setField('outsourcingCompanyId', -1) // "선택" 기본값
     }
   }, [data, isEditMode, companyOptions])
 
@@ -964,10 +964,13 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                         size="small"
                         inputMode="numeric"
                         placeholder="숫자 입력"
-                        value={formatNumber(m.unitPrice) || 0}
+                        value={
+                          m.unitPrice === 0 || m.unitPrice === null ? '' : formatNumber(m.unitPrice)
+                        }
+                        // formatNumber(m.unitPrice) || 0}
                         onChange={(e) => {
                           const numericValue =
-                            e.target.value === '' ? '' : unformatNumber(e.target.value)
+                            e.target.value === '' || 0 ? '' : unformatNumber(e.target.value)
                           updateItemField('costItem', m.id, 'unitPrice', numericValue)
                         }}
                         variant="outlined"
@@ -1226,8 +1229,12 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                         <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
                           <TextField
                             size="small"
-                            placeholder="텍스트 입력"
-                            value={Number(m.breakfastCount)}
+                            placeholder="숫자만 입력"
+                            value={
+                              m.breakfastCount === 0 || m.breakfastCount === null
+                                ? ''
+                                : formatNumber(m.breakfastCount)
+                            }
                             onChange={(e) =>
                               updateItemField(
                                 'mealListData',
@@ -1252,8 +1259,12 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                         <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
                           <TextField
                             size="small"
-                            placeholder="텍스트 입력"
-                            value={Number(m.lunchCount)}
+                            placeholder="숫자만 입력"
+                            value={
+                              m.lunchCount === 0 || m.lunchCount === null
+                                ? ''
+                                : formatNumber(m.lunchCount)
+                            }
                             onChange={(e) =>
                               updateItemField('mealListData', m.id, 'lunchCount', e.target.value)
                             }
@@ -1271,8 +1282,14 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
                         size="small"
-                        placeholder="텍스트 입력"
-                        value={Number(m.breakfastCount) + Number(m.lunchCount)}
+                        placeholder="자동 계산"
+                        value={
+                          Number(m.breakfastCount) + Number(m.lunchCount) === 0 ||
+                          Number(m.breakfastCount) + Number(m.lunchCount) === null
+                            ? ''
+                            : Number(m.breakfastCount) + Number(m.lunchCount)
+                        }
+                        // value={Number(m.breakfastCount) + Number(m.lunchCount)}
                         variant="outlined"
                         InputProps={{
                           readOnly: true,
@@ -1302,21 +1319,15 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
                         size="small"
-                        placeholder="텍스트 입력"
-                        value={formatNumber(m.unitPrice || 0)}
+                        placeholder="자동 계산"
+                        value={
+                          m.unitPrice === 0 || m.unitPrice === null ? '' : formatNumber(m.unitPrice)
+                        }
                         variant="outlined"
-                        InputProps={{
-                          readOnly: true,
-                          sx: {
-                            textAlign: 'center',
-                            input: { textAlign: 'center' },
-                          },
-                        }}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            '& fieldset': { borderColor: 'black' },
-                            '&:hover fieldset': { borderColor: 'black' },
-                            '&.Mui-focused fieldset': { borderColor: 'black' },
+                        sx={textFieldStyle}
+                        inputProps={{
+                          style: {
+                            textAlign: 'right',
                           },
                         }}
                       />
@@ -1325,8 +1336,8 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
                         size="small"
-                        placeholder="텍스트 입력"
-                        value={formatNumber(m.amount || 0)}
+                        placeholder="숫자만 입력"
+                        value={m.amount === 0 || m.amount === null ? '' : formatNumber(m.amount)}
                         onChange={(e) => {
                           const numericValue =
                             e.target.value === '' ? 0 : Number(unformatNumber(e.target.value))
@@ -1340,19 +1351,18 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                           updateItemField('mealListData', m.id, 'unitPrice', calculatedUnitPrice)
                         }}
                         variant="outlined"
-                        InputProps={{
-                          sx: {
-                            textAlign: 'center',
-                            input: { textAlign: 'center' },
+                        sx={textFieldStyle}
+                        inputProps={{
+                          style: {
+                            textAlign: 'right',
                           },
                         }}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            '& fieldset': { borderColor: 'black' },
-                            '&:hover fieldset': { borderColor: 'black' },
-                            '&.Mui-focused fieldset': { borderColor: 'black' },
-                          },
-                        }}
+                        // InputProps={{
+                        //   sx: {
+                        //     textAlign: 'center',
+                        //     input: { textAlign: 'center' },
+                        //   },
+                        // }}
                       />
                     </TableCell>
 
@@ -1540,7 +1550,11 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                         size="small"
                         inputMode="numeric"
                         placeholder="숫자 입력"
-                        value={m.personnelCount || 0}
+                        value={
+                          m.personnelCount === 0 || m.personnelCount === null
+                            ? ''
+                            : m.personnelCount
+                        }
                         onChange={(e) => {
                           const numericValue =
                             e.target.value === '' ? '' : unformatNumber(e.target.value)
@@ -1550,7 +1564,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                         sx={textFieldStyle}
                         inputProps={{
                           style: {
-                            textAlign: 'right',
+                            textAlign: 'center',
                           },
                         }}
                       />
@@ -1560,7 +1574,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                         size="small"
                         inputMode="numeric"
                         placeholder="숫자 입력"
-                        value={formatNumber(m.amount) || 0}
+                        value={m.amount === 0 || m.amount === null ? '' : formatNumber(m.amount)}
                         onChange={(e) => {
                           const numericValue =
                             e.target.value === '' ? '' : unformatNumber(e.target.value)
