@@ -561,6 +561,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     if (form.contracts.length > 0) {
       for (const item of form.contracts) {
         if (!item.name?.trim()) return '계약서의 이름을 입력해주세요.'
+        if (!item.amount) return '계약서의 계약금액을 입력해주세요.'
         if (item.memo.length > 500) return '계약서의 비고는 500자 이하로 입력해주세요.'
       }
     }

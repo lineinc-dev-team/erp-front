@@ -11,7 +11,6 @@ import { useAccountManagementStore, useAccountStore } from '@/stores/accountMana
 import { getTodayDateString } from '@/utils/formatters'
 import { UserInfoProps } from '@/types/accountManagement'
 import { useEffect, useState } from 'react'
-import InfiniteScrollSelect from '@/components/common/InfiniteScrollSelect'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 import CommonDatePicker from '@/components/common/DatePicker'
 import ExcelModal from '@/components/common/ExcelModal'
@@ -23,6 +22,7 @@ import { useTabOpener } from '@/utils/openTab'
 import { myInfoProps } from '@/types/user'
 import { useMenuPermission } from '@/components/common/MenuPermissionView'
 import { CustomNoRowsOverlay } from '@/components/common/NoData'
+import { InfiniteScrollSelect } from '@/components/common/InfiniteScrollSelect'
 
 export default function ManagementView() {
   const { search } = useAccountManagementStore()

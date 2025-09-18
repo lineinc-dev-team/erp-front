@@ -1,7 +1,7 @@
 'use client'
 
 import CommonButton from '@/components/common/Button'
-import InfiniteScrollSelect from '@/components/common/InfiniteScrollSelect'
+import { InfinitePermissionScrollSelect } from '@/components/common/InfiniteScrollSelect'
 import CommonSelect from '@/components/common/Select'
 import { useDebouncedArrayValue } from '@/hooks/useDebouncedEffect'
 import { usePermission } from '@/hooks/usePermission'
@@ -526,7 +526,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                       {index + 1}
                     </TableCell>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      <InfiniteScrollSelect<RoleUser>
+                      <InfinitePermissionScrollSelect<RoleUser>
                         placeholder="이름을 입력하세요"
                         keyword={user.loginId ?? ''}
                         onChangeKeyword={(newKeyword) => {
