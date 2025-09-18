@@ -24,7 +24,6 @@ import { useState } from 'react'
 import { clientCompanyExcelFieldMap } from '@/utils/userExcelField'
 import { getTodayDateString } from '@/utils/formatters'
 import { useTabOpener } from '@/utils/openTab'
-import { formatAreaNumber } from '@/utils/formatPhoneNumber'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { useMenuPermission } from '../common/MenuPermissionView'
 import { myInfoProps } from '@/types/user'
@@ -354,7 +353,7 @@ export default function OrderingView() {
               <CommonInput
                 value={search.landlineNumber}
                 onChange={(value) => {
-                  const resultAreaNumber = formatAreaNumber(value)
+                  const resultAreaNumber = value
                   search.setField('landlineNumber', resultAreaNumber)
                 }}
                 className="flex-1"

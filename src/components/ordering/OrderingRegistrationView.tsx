@@ -370,6 +370,11 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
     if (!form.email?.trim()) return '이메일을 입력하세요.'
 
     // 필요시 추가 검증
+    if (!/^\d{3,4}-\d{4}$/.test(form.landlineNumber)) {
+      return '전화번호를 02-123-4567 형식으로 입력하세요.'
+    }
+
+    // 필요시 추가 검증
     if (!/^\d{2,3}-\d{3,4}-\d{4}$/.test(form.phoneNumber)) {
       return '휴대폰 번호를 010-1234-5678 형식으로 입력하세요.'
     }
@@ -398,10 +403,13 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
         if (item.memo.length > 500) {
           return '담당자의 비고는 500자 이하로 입력해주세요.'
         }
+        if (!/^\d{3,4}-\d{4}$/.test(item.landlineNumber)) {
+          return '담당자의 전화번호를 02-123-4567 형식으로 입력하세요.'
+        }
 
         // 필요시 형식 체크
         if (!/^\d{2,3}-\d{3,4}-\d{4}$/.test(item.phoneNumber)) {
-          return '담당자의 휴대폰 번호를 xxx-xxxx-xxxx 형식으로 입력해주세요.'
+          return '담당자의 휴대폰 번호를 010-1234-5678 형식으로 입력하세요.'
         }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item.email)) {
           return '담당자의 이메일 형식이 올바르지 않습니다.'
