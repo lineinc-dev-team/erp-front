@@ -547,6 +547,10 @@ export default function SitesRegistrationView({ isEditMode = false }) {
       return '비고는 500자 이하로 입력해주세요.'
     }
 
+    if (!/^\d{3,4}-\d{4}$/.test(form.process?.officePhone)) {
+      return '공정정보의 사무실 연락처를 02-123-4567 형식으로 입력하세요.'
+    }
+
     // 날짜 유효성 검사
     if (form.startedAt && form.endedAt) {
       const start = new Date(form.startedAt)
@@ -695,12 +699,32 @@ export default function SitesRegistrationView({ isEditMode = false }) {
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonDatePicker
                 value={form.startedAt}
-                onChange={(value) => setField('startedAt', value)}
+                onChange={(value) => {
+                  setField('startedAt', value)
+
+                  if (
+                    value !== null &&
+                    form.endedAt !== null &&
+                    new Date(form.endedAt) < new Date(value)
+                  ) {
+                    setField('endedAt', value)
+                  }
+                }}
               />
               ~
               <CommonDatePicker
                 value={form.endedAt}
-                onChange={(value) => setField('endedAt', value)}
+                onChange={(value) => {
+                  if (
+                    value !== null &&
+                    form.startedAt !== null &&
+                    new Date(value) < new Date(form.startedAt)
+                  ) {
+                    showSnackbar('종료일은 시작일 이후여야 합니다.', 'error')
+                    return
+                  }
+                  setField('endedAt', value)
+                }}
               />
             </div>
           </div>
