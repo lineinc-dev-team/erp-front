@@ -120,13 +120,14 @@ export default function PermissionManagementUI({ isEditMode = false }) {
         `${getTodayDateString(detail.createdAt)} / ${getTodayDateString(detail.updatedAt)}`,
       )
 
+      //[{ siteId: 0, processId: 0 }]
       const siteProcesses =
         Array.isArray(detail.sites) && detail.sites.length > 0
           ? detail.sites.map((site: PermissionGroupDetail, index: number) => ({
               siteId: site.id,
               processId: detail.processes?.[index]?.id ?? null,
             }))
-          : [{ siteId: 0, processId: 0 }] // 빈 배열일 경우 기본값 1행
+          : [] // 빈 배열일 경우 기본값 1행
       setField('siteProcesses', siteProcesses)
 
       const permissionIds = singleperMenumission?.data?.flatMap((menu: Menu) =>
@@ -191,11 +192,12 @@ export default function PermissionManagementUI({ isEditMode = false }) {
 
   const [processOptionsMap, setProcessOptionsMap] = useState<Record<number, []>>({})
 
-  useEffect(() => {
-    if (isEditMode === false && form.siteProcesses.length === 0) {
-      addSiteProcess()
-    }
-  }, [isEditMode, addSiteProcess, form.siteProcesses.length])
+  // 페이지 들어올 시 현장/공정이 1개 무조건 추가
+  // useEffect(() => {
+  //   if (isEditMode === false && form.siteProcesses.length === 0) {
+  //     addSiteProcess()
+  //   }
+  // }, [isEditMode, addSiteProcess, form.siteProcesses.length])
 
   // 유저 선택 시 처리
 
@@ -294,7 +296,31 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                         fontWeight: 'bold',
                       }}
                     >
-                      {label}
+                      {label === '현장/공정' ? (
+                        <div className="flex items-center justify-between">
+                          <span>현장/공정</span>
+                          <div className="flex items-center gap-4">
+                            <CommonButton
+                              label="추가"
+                              variant="primary"
+                              onClick={addSiteProcess}
+                              className="whitespace-nowrap"
+                              disabled={form.hasGlobalSiteProcessAccess}
+                            />
+                            <label className="flex items-center text-[15px] gap-1">
+                              <input
+                                type="checkbox"
+                                className="w-4 h-4"
+                                checked={form.hasGlobalSiteProcessAccess}
+                                onChange={(e) => handleGlobalSiteCheck(e.target.checked)}
+                              />
+                              전체 현장
+                            </label>
+                          </div>
+                        </div>
+                      ) : (
+                        label
+                      )}
                     </TableCell>
                   ))}
               </TableRow>
@@ -313,6 +339,17 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                     fullWidth
                   />
                 </TableCell>
+                {form.siteProcesses.length === 0 && (
+                  <TableCell
+                    align="center"
+                    sx={{
+                      borderRight: '1px solid #D1D5DB',
+                      color: '#9CA3AF',
+                    }}
+                  >
+                    (현장/공정 없음)
+                  </TableCell>
+                )}
 
                 {form.siteProcesses.map((item, idx) => (
                   <TableCell
@@ -320,9 +357,9 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                     sx={{
                       display: 'flex',
                       flexDirection: 'column', // 세로 정렬
-                      alignItems: 'center', // 가로 방향 가운데
-                      justifyContent: 'center', // 세로 방향 가운데 (높이 있을 때)
-                      textAlign: 'center',
+                      // alignItems: 'center', // 가로 방향 가운데
+                      // justifyContent: 'center', // 세로 방향 가운데 (높이 있을 때)
+                      // textAlign: 'center',
                     }}
                   >
                     <div className="flex gap-2 ">
@@ -377,33 +414,13 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                         loading={processInfoLoading}
                         disabled={form.hasGlobalSiteProcessAccess}
                       />
-                      {idx === 0 ? (
-                        <div className="flex items-center gap-4">
-                          <CommonButton
-                            label="추가"
-                            variant="primary"
-                            onClick={addSiteProcess}
-                            className="whitespace-nowrap"
-                            disabled={form.hasGlobalSiteProcessAccess}
-                          />
-                          <label className="flex items-center text-[15px] gap-1">
-                            <input
-                              type="checkbox"
-                              className="w-4 h-4" // 24px 크기
-                              checked={form.hasGlobalSiteProcessAccess}
-                              onChange={(e) => handleGlobalSiteCheck(e.target.checked)}
-                            />
-                            전체 현장
-                          </label>
-                        </div>
-                      ) : (
-                        <CommonButton
-                          label="삭제"
-                          variant="danger"
-                          onClick={() => removeSiteProcess(idx)}
-                          className="whitespace-nowrap"
-                        />
-                      )}
+                      <CommonButton
+                        label="삭제"
+                        variant="danger"
+                        onClick={() => removeSiteProcess(idx)}
+                        className="whitespace-nowrap"
+                        disabled={form.hasGlobalSiteProcessAccess}
+                      />
                     </div>
                   </TableCell>
                 ))}
