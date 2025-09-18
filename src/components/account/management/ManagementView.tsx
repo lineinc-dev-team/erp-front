@@ -206,7 +206,7 @@ export default function ManagementView() {
       <div className="border-10 border-gray-400 p-4">
         <div className="grid grid-cols-3">
           <div className="flex">
-            <label className="w-35 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               이름
             </label>
             <div className="border w-full  border-gray-400">
