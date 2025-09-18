@@ -143,7 +143,9 @@ export type outsourcingCompanyInfo = {
 export type ManagementCostFormState = {
   // 기존 필드들
   siteId: number
+  siteName: string
   siteProcessId: number
+  siteProcessName: string
   outsourcingCompanyId: number
   itemType: string
   itemTypeDescription: string

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
@@ -277,7 +278,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
   // 현장명이 지워졌을떄 보이는 로직
 
   const [updatedSiteOptions, setUpdatedSiteOptions] = useState(sitesOptions)
-  const [updatedProcessOptions, setUpdatedProcessOptions] = useState(processOptions)
 
   useEffect(() => {
     if (contractDetailData && isEditMode) {
@@ -320,13 +320,15 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     }
   }, [contractDetailData, isEditMode, sitesOptions])
 
+  const [updatedProcessOptions, setUpdatedProcessOptions] = useState(processOptions)
+
   useEffect(() => {
     if (isEditMode && contractDetailData) {
       const client = contractDetailData.data
 
       // 이전 상태 기반으로 새 배열 생성
 
-      const newProcessOptions = [...updatedProcessOptions, ...processOptions]
+      const newProcessOptions = [...processOptions, ...updatedProcessOptions]
         .filter((p, index, self) => index === self.findIndex((el) => el.id === p.id)) // id 중복 제거
         .filter((p) => p.id === 0 || p.deleted || (!p.deleted && p.id !== 0)) // 조건 필터링
 
@@ -334,16 +336,18 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
         const isDeleted = client.siteProcess.deleted || client.site?.deleted
         const processName = client.siteProcess.name + (isDeleted ? ' (삭제됨)' : '')
 
-        if (!newProcessOptions.some((p) => p.id === client.siteProcess.id)) {
-          newProcessOptions.push({
-            id: client.siteProcess.id,
-            name: processName,
-            deleted: isDeleted,
-          })
-        }
+        if (!form.processId) {
+          if (!newProcessOptions.some((p) => p.id === client.siteProcess.id)) {
+            newProcessOptions.push({
+              id: client.siteProcess.id,
+              name: processName,
+              deleted: isDeleted,
+            })
+          }
 
-        setField('processId', client.siteProcess.id)
-        setField('processName', processName)
+          setField('processId', client.siteProcess.id)
+          setField('processName', processName)
+        }
       }
 
       // 삭제된 공정 / 일반 공정 분리
@@ -927,7 +931,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                   const selectedSite = updatedSiteOptions.find((opt) => opt.id === value)
                   if (!selectedSite) return
 
-                  // 현장 선택값 세팅
                   setField('siteId', selectedSite.id)
                   setField(
                     'siteName',
@@ -935,6 +938,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                   )
 
                   if (selectedSite.deleted) {
+                    // 삭제된 경우
                     const deletedProcess = updatedProcessOptions.find(
                       (p) => p.id === contractDetailData?.data.siteProcess?.id,
                     )
@@ -948,21 +952,25 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       setField('processId', 0)
                       setField('processName', '')
                     }
-                    return
-                  } else if (selectedSite.deleted === false) {
-                    // 일반 현장은 API로 공정 목록 가져오기
+                  } else {
                     const res = await SitesProcessNameScroll({
                       pageParam: 0,
                       siteId: selectedSite.id,
                       keyword: '',
                     })
+
                     const processes = res.data?.content || []
-
-                    console.log('현재 processesprocesses!', processes)
-
                     if (processes.length > 0) {
-                      setField('processId', processes[0].id)
-                      setField('processName', processes[0].name)
+                      const firstProcess = processes[0]
+
+                      setUpdatedProcessOptions((prev) => [
+                        { id: 0, name: '선택', deleted: false },
+                        ...prev.filter((p) => p.deleted), // 삭제된 것 유지
+                        ...processes.map((p: any) => ({ ...p, deleted: false })),
+                      ])
+
+                      setField('processId', firstProcess.id)
+                      setField('processName', firstProcess.name)
                     } else {
                       setField('processId', 0)
                       setField('processName', '')
@@ -1019,7 +1027,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                   setField('CompanyId', selectedCompany.id)
                   setField('CompanyName', selectedCompany.name)
 
-                  // 🔹 삭제된 업체를 선택한 경우 - 기존 정보 바로 사용
                   if (selectedCompany.deleted) {
                     setField('businessNumber', selectedCompany.businessNumber || '')
 

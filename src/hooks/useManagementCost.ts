@@ -167,7 +167,7 @@ export function useManagementCost() {
   })
 
   const companyOptions = useMemo(() => {
-    const defaultOption = { id: -1, name: '선택' }
+    const defaultOption = { id: -1, name: '선택', businessNumber: '', deleted: false }
     const options = (comPanyNameInfo?.pages || [])
       .flatMap((page) => page.data.content)
       .map((user) => ({
@@ -178,6 +178,7 @@ export function useManagementCost() {
         bankName: user.bankName,
         accountNumber: user.accountNumber,
         accountHolder: user.accountHolder,
+        deleted: false,
       }))
 
     return [defaultOption, ...options]

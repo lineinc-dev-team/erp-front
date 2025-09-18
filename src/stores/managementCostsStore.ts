@@ -63,7 +63,9 @@ export const useCostSearchStore = create<{ search: CostSearchState }>((set) => (
 export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
   form: {
     siteId: 0,
+    siteName: '',
     siteProcessId: 0,
+    siteProcessName: '',
     outsourcingCompanyId: -1,
     itemType: '',
     itemTypeDescription: '',
@@ -92,7 +94,9 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
     set(() => ({
       form: {
         siteId: 0,
+        siteName: '',
         siteProcessId: 0,
+        siteProcessName: '',
         outsourcingCompanyId: -1,
         itemType: '',
         itemTypeDescription: '',

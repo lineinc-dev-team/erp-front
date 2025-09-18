@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import CommonInput from '../common/Input'
@@ -21,7 +23,7 @@ import { useParams, useRouter } from 'next/navigation'
 import CommonDatePicker from '../common/DatePicker'
 import { useManagementSteelFormStore } from '@/stores/managementSteelStore'
 import { useManagementSteel } from '@/hooks/useManagementSteel'
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { SteelDetailService } from '@/services/managementSteel/managementSteelRegistrationService'
 import {
   AttachedFile,
@@ -144,6 +146,96 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
   } = useSteelHistoryDataQuery(steelDetailId, isEditMode)
 
   const historyList = useManagementSteelFormStore((state) => state.form.changeHistories)
+
+  // 현장명이 지워졌을떄 보이는 로직
+
+  const [updatedSiteOptions, setUpdatedSiteOptions] = useState(sitesOptions)
+
+  useEffect(() => {
+    if (data && isEditMode) {
+      const client = data.data
+
+      // 기존 siteOptions 복사
+      const newSiteOptions = [...sitesOptions]
+
+      if (client.site) {
+        const siteName = client.site.name + (client.site.deleted ? ' (삭제됨)' : '')
+
+        // 이미 options에 있는지 체크
+        const exists = newSiteOptions.some((s) => s.id === client.site.id)
+        if (!exists) {
+          newSiteOptions.push({
+            id: client.site.id,
+            name: siteName,
+            deleted: client.site.deleted,
+          })
+        }
+      }
+
+      // 삭제된 현장 / 일반 현장 분리
+      const deletedSites = newSiteOptions.filter((s) => s.deleted)
+      const normalSites = newSiteOptions.filter((s) => !s.deleted && s.id !== 0)
+
+      // 최종 옵션 배열 세팅
+      setUpdatedSiteOptions([
+        newSiteOptions.find((s) => s.id === 0) ?? { id: 0, name: '선택', deleted: false },
+        ...deletedSites,
+        ...normalSites,
+      ])
+
+      // 선택된 현장 id 세팅
+      setField('siteId', client.site?.id ?? 0)
+    } else if (!isEditMode) {
+      // 등록 모드
+      setUpdatedSiteOptions(sitesOptions)
+      setField('siteId', 0)
+    }
+  }, [data, isEditMode, sitesOptions])
+
+  const [updatedProcessOptions, setUpdatedProcessOptions] = useState(processOptions)
+
+  useEffect(() => {
+    if (isEditMode && data) {
+      const client = data.data
+
+      // 이전 상태 기반으로 새 배열 생성
+
+      const newProcessOptions = [...processOptions, ...updatedProcessOptions]
+        .filter((p, index, self) => index === self.findIndex((el) => el.id === p.id)) // id 중복 제거
+        .filter((p) => p.id === 0 || p.deleted || (!p.deleted && p.id !== 0)) // 조건 필터링
+
+      if (client.process) {
+        const isDeleted = client.process.deleted || client.site?.deleted
+        const processName = client.process.name + (isDeleted ? ' (삭제됨)' : '')
+
+        if (!form.siteProcessId) {
+          if (!newProcessOptions.some((p) => p.id === client.process.id)) {
+            newProcessOptions.push({
+              id: client.process.id,
+              name: processName,
+              deleted: isDeleted,
+            })
+          }
+
+          setField('siteProcessId', client.process.id)
+          setField('siteProcessName', processName)
+        }
+      }
+
+      // 삭제된 공정 / 일반 공정 분리
+      const deletedProcesses = newProcessOptions.filter((p) => p.deleted)
+      const normalProcesses = newProcessOptions.filter((p) => !p.deleted && p.id !== 0)
+
+      setUpdatedProcessOptions([
+        newProcessOptions.find((s) => s.id === 0) ?? { id: 0, name: '선택', deleted: false },
+        ...deletedProcesses,
+        ...normalProcesses,
+      ])
+    } else if (!isEditMode) {
+      // 등록 모드
+      setUpdatedProcessOptions(processOptions)
+    }
+  }, [data, isEditMode, processOptions, setField])
 
   useEffect(() => {
     if (data && isEditMode === true) {
@@ -279,7 +371,6 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
       )
       setField('changeHistories', allHistories)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [steelHistoryList, setField])
 
   const observerRef = useRef<IntersectionObserver | null>(null)
@@ -382,25 +473,56 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                 fullWidth
                 value={form.siteId || 0}
                 onChange={async (value) => {
-                  const selectedSite = sitesOptions.find((opt) => opt.id === value)
+                  const selectedSite = updatedSiteOptions.find((opt) => opt.id === value)
                   if (!selectedSite) return
 
                   setField('siteId', selectedSite.id)
+                  setField(
+                    'siteName',
+                    selectedSite.name + (selectedSite.deleted ? ' (삭제됨)' : ''),
+                  )
 
-                  const res = await SitesProcessNameScroll({
-                    pageParam: 0,
-                    siteId: selectedSite.id,
-                    keyword: '',
-                  })
-
-                  const processes = res.data?.content || []
-                  if (processes.length > 0) {
-                    setField('siteProcessId', processes[0].id)
+                  if (selectedSite.deleted) {
+                    // 삭제된 경우
+                    const deletedProcess = updatedProcessOptions.find(
+                      (p) => p.id === data?.data.process?.id,
+                    )
+                    if (deletedProcess) {
+                      setField('siteProcessId', deletedProcess.id)
+                      setField(
+                        'siteProcessName',
+                        deletedProcess.name + (deletedProcess.deleted ? ' (삭제됨)' : ''),
+                      )
+                    } else {
+                      setField('siteProcessId', 0)
+                      setField('siteProcessName', '')
+                    }
                   } else {
-                    setField('siteProcessId', 0)
+                    const res = await SitesProcessNameScroll({
+                      pageParam: 0,
+                      siteId: selectedSite.id,
+                      keyword: '',
+                    })
+
+                    const processes = res.data?.content || []
+                    if (processes.length > 0) {
+                      const firstProcess = processes[0]
+
+                      setUpdatedProcessOptions((prev) => [
+                        { id: 0, name: '선택', deleted: false },
+                        ...prev.filter((p) => p.deleted), // 삭제된 것 유지
+                        ...processes.map((p: any) => ({ ...p, deleted: false })),
+                      ])
+
+                      setField('siteProcessId', firstProcess.id)
+                      setField('siteProcessName', firstProcess.name)
+                    } else {
+                      setField('siteProcessId', 0)
+                      setField('siteProcessName', '')
+                    }
                   }
                 }}
-                options={sitesOptions}
+                options={updatedSiteOptions}
                 onScrollToBottom={() => {
                   if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
                 }}
@@ -419,12 +541,13 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                 className="text-xl"
                 value={form.siteProcessId || 0}
                 onChange={(value) => {
-                  const selectedProcess = processOptions.find((opt) => opt.name === value)
+                  const selectedProcess = updatedProcessOptions.find((opt) => opt.name === value)
                   if (selectedProcess) {
                     setField('siteProcessId', selectedProcess.id)
+                    setField('siteProcessName', selectedProcess.name)
                   }
                 }}
-                options={processOptions}
+                options={updatedProcessOptions}
                 displayLabel
                 onScrollToBottom={() => {
                   if (processInfoHasNextPage && !processInfoIsFetching) processInfoFetchNextPage()

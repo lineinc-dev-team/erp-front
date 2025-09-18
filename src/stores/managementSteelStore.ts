@@ -59,7 +59,9 @@ export const useSteelSearchStore = create<{ search: SteelSearchState }>((set) =>
 export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => ({
   form: {
     siteId: 0,
+    siteName: '',
     siteProcessId: 0,
+    siteProcessName: '',
     outsourcingCompanyId: 0,
     usage: '',
     type: 'BASE',
@@ -83,7 +85,9 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
     set(() => ({
       form: {
         siteId: 0,
+        siteName: '',
         siteProcessId: 0,
+        siteProcessName: '',
         outsourcingCompanyId: 0,
         usage: '',
         type: 'BASE',

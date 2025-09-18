@@ -109,7 +109,9 @@ type HistoryItem = {
 
 export type ManagementSteelFormState = {
   siteId: number // 발행부서
+  siteName: string
   siteProcessId: number // 공정명
+  siteProcessName: string
   outsourcingCompanyId?: number
   usage: string // 구분
   type: string // 용도
