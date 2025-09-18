@@ -4,6 +4,7 @@ import React from 'react'
 import CommonInput from '../common/Input'
 import CommonButton from '../common/Button'
 import { useLoginForm } from '@/hooks/useLoginForm'
+import Image from 'next/image'
 
 export default function LoginView() {
   const {
@@ -30,7 +31,15 @@ export default function LoginView() {
   }
 
   return (
-    <div onKeyDown={handleKeyDown}>
+    <div onKeyDown={handleKeyDown} className="flex justify-center flex-col items-center">
+      <Image
+        src="/logo/logo.png"
+        alt="대쉬보드 이미지"
+        width={120}
+        height={120}
+        className="mb-4 "
+      />
+
       <h1 className="text-[42px] mb-4">라인공영 관리 시스템 </h1>
 
       <div className="w-88 flex flex-col gap-2 m-0">
