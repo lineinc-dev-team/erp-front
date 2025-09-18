@@ -50,6 +50,7 @@ export default function ManagementView() {
     isActive: user.isActive === true ? 'Y' : 'N',
     lastLoginAt: getTodayDateString(user.lastLoginAt) || '-',
     createdAt: getTodayDateString(user.createdAt),
+    position: user.position || '-',
     updatedAt: getTodayDateString(user.updatedAt),
     memo: user.memo || '-',
   }))

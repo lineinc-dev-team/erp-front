@@ -17,6 +17,7 @@ export type UserInfoProps = {
   username: string
   phoneNumber: string
   email: string
+  position: string
   isActive: boolean
   createdAt: Date | null
   updatedAt: Date | null
