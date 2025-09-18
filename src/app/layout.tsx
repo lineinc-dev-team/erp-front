@@ -18,7 +18,7 @@ export default function RootLayout({
   const { open, message, severity, closeSnackbar } = useSnackbarStore()
 
   const pathname = usePathname()
-  const isLoginPage = pathname === '/' || pathname === '/resetPassword'
+  const isLoginPage = pathname === '/' || pathname === '/resetPassword' || pathname === '/dashboard'
 
   return (
     <html lang="ko">

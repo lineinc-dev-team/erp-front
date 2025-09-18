@@ -21,8 +21,8 @@ type TabStore = {
 export const useTabStore = create<TabStore>()(
   persist(
     (set, get) => ({
-      // tabs: [{ label: '대쉬보드 - 관리', path: '/dashboard' }],
-      tabs: [{ label: '출역일보 - 조회', path: '/dailyReport/registration' }],
+      tabs: [{ label: '대쉬보드 - 조회', path: '/dashboard' }],
+      // tabs: [{ label: '출역일보 - 조회', path: '/dailyReport/registration' }],
 
       addTab: (tab) => {
         const tabs = get().tabs
