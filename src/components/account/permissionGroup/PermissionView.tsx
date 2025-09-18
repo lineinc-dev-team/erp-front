@@ -28,7 +28,6 @@ export default function PermissionView() {
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
-  console.log('PermissonInfoListPermissonInfoList', PermissonInfoList)
   // 가공 로직
   const updatedPermissionList = PermissonInfoList.map((item: PermissionGroupDetail) => ({
     ...item,
@@ -90,8 +89,6 @@ export default function PermissionView() {
               processName: matchedProcess?.name ?? '-',
             }
           })
-
-          console.log('mergedmerged', merged)
 
           if (merged.length > 0) {
             return (

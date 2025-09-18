@@ -50,8 +50,6 @@ export default function LaborView() {
 
   const laborList = LaborListQuery.data?.data.content ?? []
 
-  console.log('laborList@@', laborList)
-
   const totalList = LaborListQuery.data?.data.pageInfo.totalElements ?? 0
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)

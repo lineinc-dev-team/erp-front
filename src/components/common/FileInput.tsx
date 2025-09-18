@@ -29,7 +29,6 @@ export default function CommonFileInput({
       showSnackbar('파일은 1개만 업로드할 수 있습니다.', 'warning')
       return
     }
-    console.log('totalFilestotalFiles', totalFiles)
 
     const validFiles = newFiles.filter((file) => {
       const ext = file.name.split('.').pop()?.toLowerCase() || ''
@@ -48,10 +47,6 @@ export default function CommonFileInput({
     for (const file of validFiles) {
       try {
         const { publicUrl, uploadUrl } = await getPresignedUrl(file.type, uploadTarget)
-
-        console.log('s3 요청 @@1', uploadUrl)
-        console.log('s3 요청 @@2', file)
-        console.log('가장 중요한 파일 업로드 ', publicUrl)
 
         await uploadToS3(uploadUrl, file)
 
@@ -77,8 +72,6 @@ export default function CommonFileInput({
     if (files) {
       const updated = files.filter((_, i) => i !== index)
       onChange(updated)
-
-      console.log('totalFilestotalFileupdatedupdatedsupdatedupdated', updated)
     }
   }
 

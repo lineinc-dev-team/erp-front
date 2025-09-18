@@ -64,8 +64,6 @@ export async function ModifySteelManagement(steelId: number) {
   const { newSteelData } = useManagementSteelFormStore.getState()
   const originalPayload = newSteelData()
 
-  console.log('수정 페이로드 (type 제외)', originalPayload)
-
   const res = await fetch(`${API.STEEL}/${steelId}`, {
     method: 'PATCH',
     headers: {

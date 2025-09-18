@@ -316,8 +316,6 @@ export function useDailyReport() {
     },
   })
 
-  console.log('contractInfo', contractInfo)
-
   const contractNameInfoOptions = useMemo(() => {
     const defaultOptions = [
       {

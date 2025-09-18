@@ -66,7 +66,7 @@ export function useUserMg() {
             ? 'id,desc'
             : search.arraySort === '오래된순'
             ? 'id,asc'
-            : 'username,asc',
+            : 'loginId,desc',
       }
 
       const filteredParams = Object.fromEntries(

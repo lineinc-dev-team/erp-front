@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
 import {
@@ -15,6 +15,8 @@ import { useSnackbarStore } from '@/stores/useSnackbarStore'
 export function useLaborStateMentInfo() {
   // 인력정보 조회
   const { showSnackbar } = useSnackbarStore()
+
+  const router = useRouter()
 
   const queryClient = useQueryClient()
 
@@ -139,11 +141,16 @@ export function useLaborStateMentInfo() {
       }
     },
   })
+  const laborStateMentCancel = () => {
+    router.push('/laborStatement')
+  }
 
   return {
     LaborStateMentListQuery,
     LaborSummarytModifyBtn,
     laborExcelModifyBtn,
+
+    laborStateMentCancel,
 
     LaborSummaryMemotModifyBtn,
     useLaborStaMentHistoryDataQuery,

@@ -307,7 +307,6 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     if (data && isEditMode === true) {
       const client = data.data
 
-      console.log('상세 자재 !!', client)
       // // 상세 항목 가공
       const formattedDetails = (client.details ?? []).map((c: DetailItem) => ({
         id: c.id,

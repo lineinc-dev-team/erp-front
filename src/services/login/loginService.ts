@@ -23,8 +23,6 @@ export async function loginService({
       // 즉, 401, 403, 400, 500 등 모든 HTTP 에러는 여기서 처리 가능
       const data = await res.json()
 
-      console.log('API 응답 에러', res.status, data)
-
       if (res.status === 401 || res.status === 403) {
         return {
           status: 'error',

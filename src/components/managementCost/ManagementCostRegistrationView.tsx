@@ -92,6 +92,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     PersonSearchhasNextPage,
     PersonSearchFetching,
     PersonSearchLoading,
+    costCancel,
 
     useCostHistoryDataQuery,
   } = useManagementCost()
@@ -329,8 +330,6 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     if (data && isEditMode === true) {
       const client = data.data
 
-      console.log('발주처 데이터 확인', client)
-
       // 상세 항목 가공
       const formattedDetails = (client.details ?? []).map((c: DetailItem) => ({
         id: c.id,
@@ -413,8 +412,6 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     try {
       const parsed = JSON.parse(getChanges)
       if (!Array.isArray(parsed)) return '-'
-
-      console.log('paersed', parsed, typeCode)
 
       return parsed.map(
         (item: { property: string; before: string | null; after: string | null }, idx: number) => {
@@ -1848,12 +1845,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
       )}
 
       <div className="flex justify-center gap-10 mt-10">
-        <CommonButton
-          label="취소"
-          variant="reset"
-          className="px-10"
-          onClick={() => console.log('취소')}
-        />
+        <CommonButton label="취소" variant="reset" className="px-10" onClick={costCancel} />
 
         <CommonButton
           label={isEditMode ? '+ 수정' : '+ 등록'}

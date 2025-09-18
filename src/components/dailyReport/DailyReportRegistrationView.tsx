@@ -211,8 +211,6 @@ export default function DailyReportRegistrationView() {
     const res = await employeesRefetch()
     if (!res.data) return
 
-    console.log('직원 정보 확인', res)
-
     // content 배열 합치기
     const allContents = res.data.pages.flatMap((page) => page.data.content)
 
@@ -364,8 +362,6 @@ export default function DailyReportRegistrationView() {
       modifyDate: `${getTodayDateString(item.createdAt)} / ${getTodayDateString(item.updatedAt)}`,
     }))
 
-    console.log('fetchedfetchedallOutsourcingContents', fetched)
-
     setIsEditMode(true)
     setField('outsourcings', fetched)
   }
@@ -468,8 +464,6 @@ export default function DailyReportRegistrationView() {
     const res = await fuelRefetch()
     if (!res.data) return
 
-    console.log('유류  데이터@@', res)
-
     // content 배열 합치기
     const allFuels = res.data.pages.flatMap((page) => page.data.content)
 
@@ -480,7 +474,6 @@ export default function DailyReportRegistrationView() {
       return
     }
 
-    console.log('배열 돌기 전 allFuels', allFuels)
     const fetched = allFuels.map((item: any) => ({
       id: item.id,
       outsourcingCompanyId: item.outsourcingCompany?.id ?? 0,
@@ -532,7 +525,6 @@ export default function DailyReportRegistrationView() {
     // file 배열 합치기
     const allFileContents = res.data.pages.flatMap((page) => page.data.content)
 
-    console.log('allFileContentsallFileContentsallFileContentsallFileContents2324', allFileContents)
     if (allFileContents.length === 0) {
       // 데이터가 아예 없는 경우
       resetFile()
@@ -647,8 +639,6 @@ export default function DailyReportRegistrationView() {
   }, [])
 
   const isHeadOfficeInfo = myInfo?.isHeadOffice
-
-  console.log('isHeadOfficeInfoisHeadOfficeInfo', isHeadOfficeInfo)
 
   const roleId = Number(myInfo?.roles?.[0]?.id)
   const rolePermissionStatus = myInfo?.roles?.[0]?.deleted
@@ -842,7 +832,6 @@ export default function DailyReportRegistrationView() {
   }, [fuelEquipment, selectedCompanyIds, selectId])
 
   // 유효성 검사
-  console.log('245', form.weather)
 
   // 유효성 검사 함수
   const validateEmployees = () => {
@@ -1558,8 +1547,6 @@ export default function DailyReportRegistrationView() {
                               const selectedOption = contractNameInfoOptions.find(
                                 (opt) => opt.id === value,
                               )
-
-                              console.log('contractInfo', selectedOption)
 
                               if (selectedOption?.isSeverancePayEligible) {
                                 showSnackbar(

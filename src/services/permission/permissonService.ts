@@ -89,16 +89,23 @@ export async function CreatePermission() {
 
 // 유저 계정 조회 권한에서
 
-export async function UserInfoFromPermissionService(params = {}) {
-  const query = new URLSearchParams(params).toString()
-
-  const resData = await fetch(`${API.USER}/search?${query}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
+export async function UserInfoFromPermissionService({
+  pageParam = 0,
+  hasRole = false,
+  size = 20,
+  loginIdKeyword = '',
+  sort = '',
+}) {
+  const resData = await fetch(
+    `${API.USER}/search?page=${pageParam}&size=${size}&loginIdKeyword=${loginIdKeyword}&sort=${sort}&hasRole=${hasRole}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
     },
-    credentials: 'include',
-  })
+  )
 
   if (!resData.ok) {
     if (resData.status === 401) {
@@ -209,8 +216,6 @@ export async function SinglepermissionMenuService(singleId: number) {
 export async function ModifyPermissionService(permissionModifyId: number) {
   const { newPermissionGroupData } = usePermissionGroupStore.getState()
   const payload = newPermissionGroupData()
-
-  console.log('권한 수정 시 페이로드 !!', payload)
 
   const res = await fetch(`${API.SINGLEROLE}/${permissionModifyId}`, {
     method: 'PATCH',

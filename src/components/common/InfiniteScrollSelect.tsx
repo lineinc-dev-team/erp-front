@@ -57,13 +57,16 @@ export default function InfiniteScrollSelect<T>({
       return // 리스트 다시 열지 않음
     }
 
-    if (keyword.trim() !== '') {
-      setIsOpen(true)
-    } else {
-      setIsOpen(false)
-    }
+    setIsOpen(true) // 키워드가 빈 문자열이어도 리스트 열림
     setActiveIndex(-1)
   }, [keyword])
+  //   if (keyword.trim() !== '') {
+  //     setIsOpen(true)
+  //   } else {
+  //     setIsOpen(false)
+  //   }
+  //   setActiveIndex(-1)
+  // }, [keyword])
 
   useEffect(() => {
     const el = containerRef.current
@@ -144,12 +147,6 @@ export default function InfiniteScrollSelect<T>({
             if (onBlur) onBlur()
           }, 200) // 100~200ms 정도 딜레이 주면 충분합니다.
         }}
-        // onFocus={() => {
-        //   if (keyword.trim() !== '') setIsOpen(true)
-        // }}
-        // onBlur={() => {
-        //   // setTimeout(() => setIsOpen(false), 10000)
-        // }}
         onKeyDown={handleKeyDown}
       />
 

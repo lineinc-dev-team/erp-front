@@ -68,8 +68,6 @@ export default function ManagementSteel() {
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
-  console.log('SteelDataListSteelDataList', SteelDataList)
-
   const updateSteelList = SteelDataList.flatMap((steel: SteelList) => {
     return {
       id: steel.id, // 고유 ID
@@ -132,8 +130,6 @@ export default function ManagementSteel() {
         flex: 2,
         renderCell: (params: GridRenderCellParams) => {
           const item = params.row as SteelList
-
-          console.log('item54', item)
 
           return (
             <div className="flex flex-col items-center">

@@ -200,6 +200,9 @@ export function useManagementSteel() {
 
   const SteelTypeMethodOptions = [{ code: 'BASE', name: '선택' }, ...(steelTypeInfoId?.data ?? [])]
 
+  const steelCancel = () => {
+    router.push('/managementSteel')
+  }
   return {
     createSteelMutation,
     SteelDeleteMutation,
@@ -207,7 +210,7 @@ export function useManagementSteel() {
     SteelListQuery,
     SteelReleaseMutation,
     SteelModifyMutation,
-
+    steelCancel,
     SteelTypeMethodOptions,
 
     useSteelHistoryDataQuery,

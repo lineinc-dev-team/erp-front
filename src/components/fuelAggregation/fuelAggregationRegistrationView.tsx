@@ -243,7 +243,6 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
         modifyDate: `${getTodayDateString(item.createdAt)} / ${getTodayDateString(item.updatedAt)}`,
       }))
 
-      console.log('formattedDetailsformattedDetails', formattedDetails)
       setField('fuelInfos', formattedDetails)
 
       // 각 필드에 값 세팅

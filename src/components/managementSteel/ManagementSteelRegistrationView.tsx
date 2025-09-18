@@ -90,6 +90,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     SteelModifyMutation,
     SteelApproveMutation,
     SteelReleaseMutation,
+    steelCancel,
   } = useManagementSteel()
 
   // 체크 박스에 활용
@@ -240,11 +241,6 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
   useEffect(() => {
     if (data && isEditMode === true) {
       const client = data.data
-
-      console.log(
-        '발주처 데이터발주처 데이터 확인발주처 데이터 확인발주처 데이터 확인44 확인',
-        client,
-      )
 
       // // 상세 항목 가공
       const formattedDetails = (client.details ?? []).map((c: DetailItem) => ({
@@ -1308,12 +1304,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
       )}
 
       <div className="flex justify-center gap-10 mt-10">
-        <CommonButton
-          label="취소"
-          variant="reset"
-          className="px-10"
-          onClick={() => console.log('취소')}
-        />
+        <CommonButton label="취소" variant="reset" className="px-10" onClick={steelCancel} />
 
         <CommonButton
           label={isEditMode ? '+ 수정' : '+ 등록'}

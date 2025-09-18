@@ -45,8 +45,6 @@ export default function OrderingView() {
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
-  console.log('ClientCompanyListClientCompanyList', ClientCompanyList)
-
   const updateClientList = ClientCompanyList.map((user: ClientCompany) => {
     const mainContact = user.contacts?.find((contact) => contact.isMain === true)
 

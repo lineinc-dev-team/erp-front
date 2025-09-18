@@ -77,13 +77,9 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
 
   const historyList = useAccountFormStore((state) => state.form.changeHistories)
 
-  console.log('historyList', historyList)
-
   useEffect(() => {
     if (data && isEditMode) {
       const client = data.data
-
-      console.log('clientclient', client)
 
       // 기존 값과 다르면 업데이트 (방어 코드)
       if (client.loginId !== form.loginId) setField('loginId', client.loginId ?? '')

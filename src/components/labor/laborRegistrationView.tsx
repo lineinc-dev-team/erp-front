@@ -136,8 +136,6 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     if (laborDetailData && isEditMode === true) {
       const client = laborDetailData.data
 
-      console.log('clientclientclient', client)
-
       // 첨부파일 데이터 가공
       const formattedFiles = (client.files ?? [])
         .map((item: AttachedFile) => ({
@@ -402,8 +400,6 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
     return null
   }
-
-  console.log('form.outsourcingCompanyIdform.outsourcingCompanyId', form.outsourcingCompanyId)
 
   const handleLaborSubmit = () => {
     const errorMsg = validateClientForm(form)

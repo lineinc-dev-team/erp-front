@@ -153,8 +153,6 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
     if (data && isEditMode === true) {
       const client = data.data
 
-      console.log('23242', client)
-
       function parseLandlineNumber(landline: string) {
         if (!landline) return { managerAreaNumber: '', landlineNumber: '' }
 

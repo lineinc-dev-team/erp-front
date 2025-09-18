@@ -40,6 +40,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
   const {
     LaborSummarytModifyBtn,
     laborExcelModifyBtn,
+    laborStateMentCancel,
     LaborSummaryMemotModifyBtn,
     useLaborStaMentHistoryDataQuery,
   } = useLaborStateMentInfo()
@@ -191,8 +192,6 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
 
   const [updatedSiteOptions, setUpdatedSiteOptions] = useState(sitesOptions)
   const [updatedProcessOptions, setUpdatedProcessOptions] = useState(processOptions)
-
-  console.log('laborSummaryDetail', laborSummaryDetail)
 
   const laborStateMentExcelFieldMap = {
     이름: 'name',
@@ -530,9 +529,6 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
     }
   }, [laborSummaryDetail])
 
-  console.log('123', allRows)
-  console.log('44', form.laborStateMentInfo)
-
   useEffect(() => {
     if (!allRows.length) return // allRows가 없으면 아무 것도 하지 않음
 
@@ -622,10 +618,6 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
   // 수정이력 데이터가 들어옴
   useEffect(() => {
     if (laborContractHistoryList?.pages) {
-      console.log(
-        'outsourcingContractHistoryListoutsourcingContractHistoryList',
-        laborContractHistoryList,
-      )
       const allHistories = laborContractHistoryList.pages.flatMap((page) =>
         page.data.content.map((item: HistoryItem) => ({
           id: item.id,
@@ -639,7 +631,6 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
         })),
       )
       setField('changeHistories', allHistories)
-      console.log('allHistoriesallHistoriesallHistories', allHistories)
     }
   }, [laborContractHistoryList, setField])
 
@@ -696,8 +687,6 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                       keyword: '',
                     })
                     const processes = res.data?.content || []
-
-                    console.log('현재 processesprocesses!', processes)
 
                     if (processes.length > 0) {
                       setField('processId', processes[0].id)
@@ -2638,7 +2627,12 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
       )}
 
       <div className="flex justify-center gap-10 mt-10">
-        {/* <CommonButton label="취소" variant="reset" className="px-10" onClick={outsourcingCancel} /> */}
+        <CommonButton
+          label="취소"
+          variant="reset"
+          className="px-10"
+          onClick={laborStateMentCancel}
+        />
         <CommonButton
           label={'+ 수정'}
           className="px-10 font-bold"

@@ -228,11 +228,7 @@ export default function useOutSourcingContract() {
 
   const [processSearch, setProcessSearch] = useState('')
 
-  // 예: 어떤 페이지인지 구분하는 값
-
   const siteId = useSiteId() // 훅 실행해서 값 받기
-
-  console.log('siteID', siteId)
 
   const {
     data: processInfo,

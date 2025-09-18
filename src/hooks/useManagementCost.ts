@@ -107,8 +107,6 @@ export function useManagementCost() {
         ),
       )
 
-      console.log('검색 파라미터', filteredParams)
-
       return ManagementCostInfoService(filteredParams)
     },
     enabled: pathName === '/managementCost', // 경로 체크
@@ -268,9 +266,13 @@ export function useManagementCost() {
     })
   }
 
+  const costCancel = () => {
+    router.push('/managementCost')
+  }
+
   return {
     CostNameTypeMethodOptions,
-
+    costCancel,
     useCostHistoryDataQuery,
 
     createCostMutation,

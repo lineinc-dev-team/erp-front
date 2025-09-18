@@ -422,8 +422,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     if (contractDetailData && isEditMode === true) {
       const client = contractDetailData.data
 
-      console.log('cleint@@', client)
-
       function parseLandlineNumber(landline: string) {
         if (!landline) return { managerAreaNumber: '', landlineNumber: '' }
 
@@ -641,10 +639,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
             },
           )
 
-          console.log(
-            ' 받아온 값 확인 getArticleItemsgetArticleItemsgetArticleItems',
-            getArticleItems,
-          )
           setField('articleManagers', getArticleItems)
         }
       } else if (client.type === '기타') {
@@ -712,10 +706,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
   // 수정이력 데이터가 들어옴
   useEffect(() => {
     if (outsourcingContractHistoryList?.pages) {
-      console.log(
-        'outsourcingContractHistoryListoutsourcingContractHistoryList',
-        outsourcingContractHistoryList,
-      )
       const allHistories = outsourcingContractHistoryList.pages.flatMap((page) =>
         page.data.content.map((item: HistoryItem) => ({
           id: item.id,

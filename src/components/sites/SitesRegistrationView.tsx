@@ -211,8 +211,6 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     if (data && isEditMode) {
       const client = data.data
 
-      console.log('@@ 데이터 확인', client)
-
       // 기본 필드 설정
       setField('name', client.name)
       setField('address', client.address)
@@ -236,8 +234,6 @@ export default function SitesRegistrationView({ isEditMode = false }) {
         const parts = processPhone.split('-')
         const areaNumber = parts[0] || ''
         const officePhone = parts.slice(1).join('-') || ''
-
-        console.log('officePhoneofficePhone', officePhone)
 
         setProcessField('areaNumber', areaNumber)
         setProcessField('officePhone', officePhone)

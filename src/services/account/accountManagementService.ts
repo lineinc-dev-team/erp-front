@@ -31,7 +31,7 @@ export async function UserInfoService(params = {}) {
 }
 
 // 키워드 - 이름 검색 시 무한 스크롤
-export async function UserInfoNameScroll({ pageParam = 0, size = 3, keyword = '', sort = '' }) {
+export async function UserInfoNameScroll({ pageParam = 0, size = 20, keyword = '', sort = '' }) {
   const resData = await fetch(
     `${API.USER}/search?page=${pageParam}&size=${size}&keyword=${keyword}&sort=${sort}`,
     {

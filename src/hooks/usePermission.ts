@@ -92,15 +92,10 @@ export function usePermission() {
   })
 
   // 조회에서 이름 검색 스크롤
-  const useUserAccountInfiniteScroll = () => {
+  const useUserAccountInfiniteScroll = (loginIdKeyword: string) => {
     return useInfiniteQuery({
-      queryKey: ['userInfo', false], // 키워드가 바뀔 때 쿼리 리패치 되도록
-      queryFn: ({ pageParam = 0 }) =>
-        UserInfoFromPermissionService({
-          hasRole: false,
-          page: pageParam,
-          size: 5,
-        }),
+      queryKey: ['permissionUserInfo', loginIdKeyword], // 키워드가 바뀔 때 쿼리 리패치 되도록
+      queryFn: ({ pageParam = 0 }) => UserInfoFromPermissionService({ pageParam, loginIdKeyword }),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
         const { sliceInfo } = lastPage?.data
@@ -228,8 +223,6 @@ export function usePermission() {
   const permissionForm = usePermissionGroupStore((state) => state.form)
 
   const selectedSiteId = permissionForm.siteProcesses[0]?.siteId
-
-  // console.log('@@~ selectedSiteIdselectedSiteId', selectedSiteId, selectedIndex)
 
   const {
     data: processInfo,

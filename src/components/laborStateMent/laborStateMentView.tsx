@@ -65,8 +65,6 @@ export default function LaborStateMentView() {
 
   const router = useRouter()
 
-  console.log('updateClientListupdateClientList', updateClientList)
-
   // 그리도 라우팅 로직!
   const enhancedColumns = LaborStateMentColumnList.map((col): GridColDef => {
     if (col.field === 'memo') {

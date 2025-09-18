@@ -42,8 +42,6 @@ export default function ManagementCost() {
     CostItemDesLoading,
   } = useManagementCost()
 
-  console.log('costDesOptionscostDesOptions', costDesOptions)
-
   const {
     setSitesSearch,
     sitesOptions,
@@ -74,8 +72,6 @@ export default function ManagementCost() {
   const totalList = CostListQuery.data?.data.pageInfo.totalElements ?? 0
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
-
-  console.log('CostDataListCostDataListCostDataList45', CostDataList)
 
   const updateCostList = CostDataList.map((cost: CostList) => {
     return {

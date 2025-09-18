@@ -18,25 +18,20 @@ export function useDebouncedValue<T>(value: T, delay: number): T {
 }
 
 // useDebouncedValues 훅 (위에서 제안한 예시)
-export function useDebouncedArrayValue(keywords: string[], delay: number): string[] {
-  const [debouncedValues, setDebouncedValues] = useState<string[]>(keywords)
+export function useDebouncedArrayValue(keywords: string[], delay: number): string {
+  const [debouncedValue, setDebouncedValue] = useState(() => keywords[keywords.length - 1] || '')
 
   useEffect(() => {
-    const handlers = keywords.map((keyword, idx) =>
-      setTimeout(() => {
-        setDebouncedValues((prev) => {
-          if (prev[idx] === keyword) return prev
-          const newValues = [...prev]
-          newValues[idx] = keyword
-          return newValues
-        })
-      }, delay),
-    )
+    if (keywords.length === 0) return
 
-    return () => {
-      handlers.forEach(clearTimeout)
-    }
+    // 마지막 keyword를 기준으로 debounce
+    const lastKeyword = keywords[keywords.length - 1]
+    const handler = setTimeout(() => {
+      setDebouncedValue(lastKeyword)
+    }, delay)
+
+    return () => clearTimeout(handler)
   }, [keywords, delay])
 
-  return debouncedValues
+  return debouncedValue
 }

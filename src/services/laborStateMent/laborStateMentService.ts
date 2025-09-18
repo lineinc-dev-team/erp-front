@@ -177,8 +177,6 @@ export async function LaborExcelModifyMutation() {
   const { updateLaborSummary } = useLaborSummaryFormStore.getState()
   const payload = updateLaborSummary()
 
-  console.log('해당 명세서 수정 콘솔!!', payload)
-
   const res = await fetch(`${API.LABORPAY}`, {
     method: 'PATCH',
     headers: {

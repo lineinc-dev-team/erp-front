@@ -197,10 +197,6 @@ export default function PermissionManagementUI({ isEditMode = false }) {
     }
   }, [isEditMode, addSiteProcess, form.siteProcesses.length])
 
-  // const { data, fetchNextPage, hasNextPage, isFetching, isLoading } = useUserInfiniteScroll(
-  //   debouncedLoginIds[] ?? '',
-  // )
-
   // 유저 선택 시 처리
 
   const handleSelectUser = (selectedUser: RoleUser, targetUserId: number) => {
@@ -210,35 +206,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
     updateUserField(targetUserId, 'userId', selectedUser.userId)
   }
 
-  // const debouncedUsername = useDebouncedValue(users.map((u) => u.loginId).join(','), 300)
-
-  // const loginIdKeywords = form.users.map((u) => u.loginId ?? '')
-  // const debouncedLoginIds = useDebouncedArrayValue(loginIdKeywords, 300)
-
   const [focusedUserId, setFocusedUserId] = useState<number | null>(null)
-
-  // const { data, fetchNextPage, hasNextPage, isFetching, isLoading } = useUserAccountInfiniteScroll()
-
-  // const loginIdKeywords = form.users.map((u) => u.loginId ?? '')
-  // const debouncedLoginIds = useDebouncedArrayValue(loginIdKeywords, 300)
-
-  // // 1. 이미 선택된 userId 목록 추출
-  // const selectedUserIds = form.users
-  //   .map((u) => u.userId)
-  //   .filter((id): id is number => typeof id === 'number')
-
-  // const rawList = data?.pages[0].data.content ?? []
-
-  // const loginIds = rawList
-  //   .map((user: RoleUser) => ({
-  //     userId: user.id,
-  //     loginId: user.loginId,
-  //     username: user.username,
-  //     department: user.department,
-  //   }))
-  //   .filter((user: RoleUser) => !selectedUserIds.includes(user.userId))
-
-  const { data, fetchNextPage, hasNextPage, isFetching, isLoading } = useUserAccountInfiniteScroll()
 
   const loginIdKeywords = form.users.map((u) => u.loginId ?? '')
   const debouncedLoginIds = useDebouncedArrayValue(loginIdKeywords, 300)
@@ -246,6 +214,9 @@ export default function PermissionManagementUI({ isEditMode = false }) {
   const selectedUserIds = form.users
     .map((u) => u.userId)
     .filter((id): id is number => typeof id === 'number')
+
+  const { data, fetchNextPage, hasNextPage, isFetching, isLoading } =
+    useUserAccountInfiniteScroll(debouncedLoginIds)
 
   const rawList = data?.pages.flatMap((page) => page.data.content) ?? []
 
@@ -278,8 +249,6 @@ export default function PermissionManagementUI({ isEditMode = false }) {
     setCheckedAllByType((prev) => ({ ...prev, [type]: allChecked }))
   }
 
-  console.log('useMenuListQueryuseMenuListQueryuseMenuListQuery', sideMenuList)
-
   useEffect(() => {
     if (!sideMenuList) return
 
@@ -288,8 +257,6 @@ export default function PermissionManagementUI({ isEditMode = false }) {
       setCheckedPermissionIds(new Set())
     }
   }, [sideMenuList, isEditMode])
-
-  console.log('checkedPermissionIdscheckedPermissionIds', checkedPermissionIds)
 
   useEffect(() => {
     setPermissionIds(Array.from(checkedPermissionIds))
@@ -572,7 +539,11 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                             updateUserField(user.userId, 'userId', 0) // 선택된 userId도 초기화
                           }
                         }}
-                        items={loginIds}
+                        items={
+                          !user.loginId || user.loginId === ''
+                            ? loginIds // 키워드 없으면 전체
+                            : loginIds.filter((u) => u.loginId.includes(user.loginId))
+                        }
                         hasNextPage={hasNextPage ?? false}
                         fetchNextPage={fetchNextPage}
                         renderItem={(item, isHighlighted) => (
@@ -580,11 +551,10 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                             <div className="text-xs">{item.loginId}</div>
                           </div>
                         )}
-                        shouldShowList={focusedUserId === user.userId}
+                        shouldShowList={focusedUserId === user.userId && loginIds.length > 0}
                         onSelect={(selectedUser) => handleSelectUser(selectedUser, user.userId)}
-                        // shouldShowList={focusedUserId === user.userId} // 포커스된 인풋에만 목록 표시
                         isLoading={isLoading || isFetching}
-                        debouncedKeyword={debouncedLoginIds[index]}
+                        debouncedKeyword={debouncedLoginIds}
                         onFocus={() => setFocusedUserId(user.userId)} // 포커스 진입 시 해당 userId 설정
                         onBlur={() => setFocusedUserId(null)}
                       />
