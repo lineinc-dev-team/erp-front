@@ -421,6 +421,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
   const { data: StatementHistoryList } = useQuery({
     queryKey: ['steelTypeInfo', laborDataId],
     queryFn: () => LaborHistoreyService(laborDataId),
+    enabled: !!laborDataId, // laborDataId가 존재할 때만 실행
   })
 
   // const laborList = StatementHistoryList?.data.content ?? []
