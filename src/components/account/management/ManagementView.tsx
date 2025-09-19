@@ -255,6 +255,7 @@ export default function ManagementView() {
                 value={search.positionId}
                 onChange={(value) => search.setField('positionId', value)}
                 options={positionOptions}
+                disabled
               />
             </div>
           </div>
