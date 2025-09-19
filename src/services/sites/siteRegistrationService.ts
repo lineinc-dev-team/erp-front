@@ -55,7 +55,7 @@ export async function CreateSiteInfo() {
 }
 // 발주처에 담당자 리스트 조회
 
-export async function OrderingPersonScroll({ pageParam = 0, size = 200, keyword = '', sort = '' }) {
+export async function OrderingPersonScroll({ pageParam = 0, size = 20, keyword = '', sort = '' }) {
   const resData = await fetch(
     `${API.CLIENTCOMPANY}/search?page=${pageParam}&size=${size}&keyword=${keyword}&sort=${sort}`,
     {

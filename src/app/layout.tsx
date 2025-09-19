@@ -20,6 +20,8 @@ export default function RootLayout({
   const pathname = usePathname()
   const isLoginPage = pathname === '/' || pathname === '/resetPassword' || pathname === '/dashboard'
 
+  // 다른 브라우저로 이동 시 쿠키에 세션값이 있으면 유저의 정보를 세션스토리지에 넣기
+
   return (
     <html lang="ko">
       <body>

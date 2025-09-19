@@ -97,9 +97,9 @@ export async function CreateClientCompany() {
 
 export async function OrderingInfoNameScroll({
   pageParam = 0,
-  size = 200,
+  size = 20,
   keyword = '',
-  sort = '',
+  sort = 'id,asc',
 }) {
   const resData = await fetch(
     `${API.USER}/search?page=${pageParam}&size=${size}&keyword=${keyword}&sort=${sort}`,

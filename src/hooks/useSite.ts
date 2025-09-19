@@ -12,7 +12,7 @@ import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { getTodayDateString } from '@/utils/formatters'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 
 export default function useSite() {
   const { showSnackbar } = useSnackbarStore()
@@ -151,8 +151,6 @@ export default function useSite() {
     })
   }
 
-  const [orderSearch, setOrderSearch] = useState('')
-
   const {
     data: orderPersonInfo,
     fetchNextPage: orderPersonFetchNextPage,
@@ -160,8 +158,8 @@ export default function useSite() {
     isFetching: orderPersonIsFetching,
     isLoading: orderPersonIsLoading,
   } = useInfiniteQuery({
-    queryKey: ['orderInfo', orderSearch],
-    queryFn: ({ pageParam }) => OrderingPersonScroll({ pageParam, keyword: orderSearch }),
+    queryKey: ['orderInfo'],
+    queryFn: ({ pageParam = 0 }) => OrderingPersonScroll({ pageParam }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
       const { sliceInfo } = lastPage.data
@@ -215,8 +213,6 @@ export default function useSite() {
 
     //발주처 담당자 관련
     useOrderingPersonInfiniteScroll,
-    orderSearch,
-    setOrderSearch,
     orderOptions,
     orderPersonFetchNextPage,
     orderPersonHasNextPage,

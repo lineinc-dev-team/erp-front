@@ -50,7 +50,6 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
   const {
     createClientMutation,
     ClientModifyMutation,
-    setUserSearch,
     userOptions,
     fetchNextPage,
     hasNextPage,
@@ -629,7 +628,6 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                 onScrollToBottom={() => {
                   if (hasNextPage && !isFetching) fetchNextPage()
                 }}
-                onInputChange={(value) => setUserSearch(value)}
                 loading={isLoading}
               />
             </div>

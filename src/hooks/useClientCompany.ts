@@ -10,7 +10,7 @@ import {
   PayIdInfoService,
 } from '@/services/ordering/orderingRegistrationService'
 import { ClientCompanyInfoService, ClientRemoveService } from '@/services/ordering/orderingService'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import { getTodayDateString } from '@/utils/formatters'
 
 export function useClientCompany() {
@@ -134,10 +134,6 @@ export function useClientCompany() {
     },
   })
 
-  const [userSearch, setUserSearch] = useState('')
-
-  const isRegisterPage = pathName.includes('/ordering/registration')
-
   const {
     data: userData,
     fetchNextPage,
@@ -145,15 +141,14 @@ export function useClientCompany() {
     isFetching,
     isLoading,
   } = useInfiniteQuery({
-    queryKey: ['userInfo', userSearch],
-    queryFn: ({ pageParam }) => OrderingInfoNameScroll({ pageParam, keyword: userSearch }),
+    queryKey: ['userInfo'],
+    queryFn: ({ pageParam = 0 }) => OrderingInfoNameScroll({ pageParam }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
       const { sliceInfo } = lastPage.data
       const nextPage = sliceInfo.page + 1
       return sliceInfo.hasNext ? nextPage : undefined
     },
-    staleTime: 0,
   })
 
   const userOptions = useMemo(() => {
@@ -176,7 +171,6 @@ export function useClientCompany() {
   const { data: payInfoId } = useQuery({
     queryKey: ['positionInfo'],
     queryFn: PayIdInfoService,
-    enabled: isRegisterPage, // 등록 페이지일 때만 실행
   })
 
   const payMethodOptions = [{ code: 'BASE', name: '선택' }, ...(payInfoId?.data ?? [])]
@@ -209,8 +203,7 @@ export function useClientCompany() {
     // 이력
     useClientHistoryDataQuery,
     // 본사 담당자 관련
-    userSearch,
-    setUserSearch,
+
     userOptions,
     fetchNextPage,
     hasNextPage,

@@ -140,7 +140,7 @@ export default function CommonSelect<T extends string | number>({
         onChange={(e) => onChange(e.target.value as T)}
         MenuProps={{
           PaperProps: {
-            sx: { maxHeight: 200, overflow: 'auto' },
+            sx: { maxHeight: 140, overflow: 'auto' },
             onScroll: (e: React.UIEvent<HTMLDivElement>) => {
               const target = e.currentTarget
               if (

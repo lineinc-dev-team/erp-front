@@ -63,14 +63,12 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     setContracts,
   } = useSiteFormStore()
 
-  const { setUserSearch, userOptions, fetchNextPage, hasNextPage, isFetching, isLoading } =
-    useClientCompany()
+  const { userOptions, fetchNextPage, hasNextPage, isFetching, isLoading } = useClientCompany()
 
   const {
     createSiteMutation,
     ModifySiteMutation,
     //본사 담당자
-    setOrderSearch,
     orderOptions,
     orderPersonFetchNextPage,
     orderPersonHasNextPage,
@@ -687,7 +685,6 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                 onScrollToBottom={() => {
                   if (orderPersonHasNextPage && !orderPersonIsFetching) orderPersonFetchNextPage()
                 }}
-                onInputChange={(value) => setOrderSearch(value)}
                 loading={orderPersonIsLoading}
               />
             </div>
@@ -745,7 +742,6 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                 onScrollToBottom={() => {
                   if (hasNextPage && !isFetching) fetchNextPage()
                 }}
-                onInputChange={(value) => setUserSearch(value)}
                 loading={isLoading}
               />
             </div>
@@ -813,7 +809,6 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                 onScrollToBottom={() => {
                   if (hasNextPage && !isFetching) fetchNextPage()
                 }}
-                onInputChange={(value) => setUserSearch(value)}
                 loading={isLoading}
               />
             </div>

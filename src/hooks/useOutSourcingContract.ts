@@ -230,8 +230,6 @@ export default function useOutSourcingContract() {
 
   const isSearchPage = pathName.includes('/outsourcingContract')
 
-  const isRegisterPage = pathName.includes('/outsourcingContract/registration')
-
   const siteId = useSiteId() // 훅 실행해서 값 받기
 
   const {
@@ -282,7 +280,6 @@ export default function useOutSourcingContract() {
   const { data: taxInfoId } = useQuery({
     queryKey: ['ContractTaxInfo'],
     queryFn: OutsourcingContractTaxIdInfoService,
-    enabled: isRegisterPage, // 등록 페이지일 때만 실행
   })
 
   const taxMethodOptions = [{ code: 'BASE', name: '선택' }, ...(taxInfoId?.data ?? [])]
@@ -290,7 +287,6 @@ export default function useOutSourcingContract() {
   const { data: daduInfoId } = useQuery({
     queryKey: ['ContractdaduInfo'],
     queryFn: OutsourcingContractDeductionIdInfoService,
-    enabled: isRegisterPage, // 등록 페이지일 때만 실행
   })
 
   const deduMethodOptions = [...(daduInfoId?.data ?? [])]
@@ -307,7 +303,6 @@ export default function useOutSourcingContract() {
   const { data: categoryInfoId } = useQuery({
     queryKey: ['CategoryInfoIdStatusInfo'],
     queryFn: OutsourcingContractCategoryTypeInfoService,
-    enabled: isRegisterPage, // 등록 페이지일 때만 실행
   })
 
   const categoryMethodOptions = [{ code: 'BASE', name: '선택' }, ...(categoryInfoId?.data ?? [])]
@@ -323,7 +318,6 @@ export default function useOutSourcingContract() {
   } = useInfiniteQuery({
     queryKey: ['compnayInfo'],
     queryFn: ({ pageParam = 0 }) => GetCompanyNameInfoService({ pageParam }),
-    enabled: isRegisterPage, // 등록 페이지일 때만 실행
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
       const { sliceInfo } = lastPage.data
