@@ -187,6 +187,10 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
       return '개인 휴대폰 번호를 xxx-xxxx-xxxx 형식으로 입력하세요.'
     }
 
+    if (form.landlineNumber && !/^(0\d{1,2})-(\d{3,4})-(\d{4})$/.test(form.landlineNumber)) {
+      return '전화번호를 올바른 형식(지역번호-국번-번호)으로 입력하세요.'
+    }
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       return '유효한 이메일을 입력하세요.'
     }
