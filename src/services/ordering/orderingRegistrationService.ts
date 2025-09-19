@@ -95,7 +95,12 @@ export async function CreateClientCompany() {
 
 // 발주처에 본사 담당자
 
-export async function OrderingInfoNameScroll({ pageParam = 0, size = 5, keyword = '', sort = '' }) {
+export async function OrderingInfoNameScroll({
+  pageParam = 0,
+  size = 200,
+  keyword = '',
+  sort = '',
+}) {
   const resData = await fetch(
     `${API.USER}/search?page=${pageParam}&size=${size}&keyword=${keyword}&sort=${sort}`,
     {
