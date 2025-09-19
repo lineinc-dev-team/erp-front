@@ -136,6 +136,8 @@ export function useClientCompany() {
 
   const [userSearch, setUserSearch] = useState('')
 
+  const isRegisterPage = pathName.includes('/ordering/registration')
+
   const {
     data: userData,
     fetchNextPage,
@@ -174,6 +176,7 @@ export function useClientCompany() {
   const { data: payInfoId } = useQuery({
     queryKey: ['positionInfo'],
     queryFn: PayIdInfoService,
+    enabled: isRegisterPage, // 등록 페이지일 때만 실행
   })
 
   const payMethodOptions = [{ code: 'BASE', name: '선택' }, ...(payInfoId?.data ?? [])]
