@@ -117,9 +117,9 @@ export const usePermissionGroupStore = create<PermissionFormState>((set, get) =>
   addUser: () =>
     set((state) => {
       const currentUsers = state.form.users
-      const lastUserId =
-        currentUsers.length > 0 ? Math.max(...currentUsers.map((u) => u.userId)) : 0
-      const newUserId = lastUserId + 1
+      // const lastUserId =
+      //   currentUsers.length > 0 ? Math.max(...currentUsers.map((u) => u.userId)) : 0
+      // const newUserId = lastUserId + 1
 
       return {
         form: {
@@ -127,7 +127,8 @@ export const usePermissionGroupStore = create<PermissionFormState>((set, get) =>
           users: [
             ...currentUsers,
             {
-              userId: newUserId,
+              // userId: newUserId,
+              userId: Date.now(),
               loginId: '',
               createdAt: null,
               username: '',
