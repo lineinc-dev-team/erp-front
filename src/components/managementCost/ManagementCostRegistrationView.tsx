@@ -714,7 +714,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                 onChange={async (value) => {
                   setField('outsourcingCompanyId', value)
                   if (value === -2) {
-                    // 직접입력 선택 시, OutsourcingCompanyInfo 초기화
+                    // 직접입력 선택 시, OutsourcingCompanyInfo 초기화(2)
                     setField('outsourcingCompanyInfo', {
                       name: '',
                       businessNumber: '',
