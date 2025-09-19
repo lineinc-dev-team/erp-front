@@ -59,7 +59,6 @@ export default function SitesView() {
   const {
     SiteListQuery,
     SiteDeleteMutation,
-    setOrderSearch,
     orderPersonFetchNextPage,
     orderPersonHasNextPage,
     orderPersonIsFetching,
@@ -448,7 +447,6 @@ export default function SitesView() {
                 onScrollToBottom={() => {
                   if (orderPersonHasNextPage && !orderPersonIsFetching) orderPersonFetchNextPage()
                 }}
-                onInputChange={(value) => setOrderSearch(value)}
                 loading={orderPersonIsLoading}
               />
             </div>

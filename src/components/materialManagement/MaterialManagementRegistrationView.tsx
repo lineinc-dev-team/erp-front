@@ -21,10 +21,7 @@ import {
 import CommonDatePicker from '../common/DatePicker'
 import { formatDateTime, formatNumber, unformatNumber } from '@/utils/formatters'
 import { useManagementMaterial } from '@/hooks/useMaterialManagement'
-import {
-  MaterialTypeLabelToValue,
-  useManagementMaterialFormStore,
-} from '@/stores/materialManagementStore'
+import { useManagementMaterialFormStore } from '@/stores/materialManagementStore'
 import { MaterialDetailService } from '@/services/materialManagement/materialManagementRegistrationService'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
@@ -335,7 +332,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
         ],
       }))
 
-      const mappedItemType = MaterialTypeLabelToValue[client.inputType ?? '']
+      // const mappedItemType = MaterialTypeLabelToValue[client.inputType ?? '']
 
       setField('attachedFiles', formattedFiles)
 
@@ -345,7 +342,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
       setField('outsourcingCompanyId', client.company?.id ?? '')
 
       setField('deliveryDate', client.deliveryDate ? new Date(client.deliveryDate) : null)
-      setField('inputType', mappedItemType)
+      setField('inputType', client.inputTypeCode)
       setField('inputTypeDescription', client.inputTypeDescription)
       setField('memo', client.memo ?? '')
     } else {
