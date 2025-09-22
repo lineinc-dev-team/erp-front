@@ -304,7 +304,7 @@ export default function LaborStateMentView() {
               <ExcelModal
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
-                title="노무 관리 - 엑셀 항목 선택"
+                title="노무명세서 관리 - 엑셀 항목 선택"
                 fieldMap={fieldMapArray}
                 onDownload={handleDownloadExcel}
               />

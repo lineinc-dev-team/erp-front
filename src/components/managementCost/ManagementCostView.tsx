@@ -461,7 +461,7 @@ export default function ManagementCost() {
               <ExcelModal
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
-                title="현장 관리 - 엑셀 항목 선택"
+                title="관리비 관리 - 엑셀 항목 선택"
                 fieldMap={fieldMapArray}
                 onDownload={handleDownloadExcel}
               />

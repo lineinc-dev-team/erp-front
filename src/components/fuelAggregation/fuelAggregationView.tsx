@@ -504,7 +504,7 @@ export default function FuelAggregationView() {
               <ExcelModal
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
-                title="자재 관리 - 엑셀 항목 선택"
+                title="유류집계 관리 - 엑셀 항목 선택"
                 fieldMap={fieldMapArray}
                 onDownload={handleDownloadExcel}
               />

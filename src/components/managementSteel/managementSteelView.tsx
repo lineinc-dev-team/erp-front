@@ -556,7 +556,7 @@ export default function ManagementSteel() {
               <ExcelModal
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
-                title="강재수불부 - 엑셀 항목 선택"
+                title="강재수불부 관리 - 엑셀 항목 선택"
                 fieldMap={fieldMapArray}
                 onDownload={handleDownloadExcel}
               />

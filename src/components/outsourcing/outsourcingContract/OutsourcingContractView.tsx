@@ -499,7 +499,7 @@ export default function OutsourcingContractView() {
               <ExcelModal
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
-                title="발주처 관리 - 엑셀 항목 선택"
+                title="외주계약 관리 - 엑셀 항목 선택"
                 fieldMap={fieldMapArray}
                 onDownload={handleDownloadExcel}
               />
