@@ -195,6 +195,84 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
 
   const [updatedProcessOptions, setUpdatedProcessOptions] = useState(processOptions)
 
+  // useEffect(() => {
+  //   if (isEditMode && data) {
+  //     const client = data.data
+
+  //     const newProcessOptions = [...processOptions]
+
+  //     if (client.process) {
+  //       const isDeleted = client.process.deleted
+  //       const processName = client.process.name + (isDeleted ? ' (삭제됨)' : '')
+
+  //       if (!newProcessOptions.some((p) => p.id === client.process.id)) {
+  //         newProcessOptions.push({
+  //           id: client.process.id,
+  //           name: processName,
+  //           deleted: isDeleted,
+  //         })
+  //       }
+
+  //       if (!form.siteProcessId) {
+  //         setField('siteProcessId', client.process.id)
+  //         setField('siteProcessName', processName)
+  //       }
+  //     }
+
+  //     // 삭제된 공정 / 일반 공정 분리
+  //     const deletedProcesses = newProcessOptions.filter((p) => p.deleted)
+  //     const normalProcesses = newProcessOptions.filter((p) => !p.deleted && p.id !== 0)
+
+  //     setUpdatedProcessOptions([
+  //       newProcessOptions.find((s) => s.id === 0) ?? { id: 0, name: '선택', deleted: false },
+  //       ...deletedProcesses,
+  //       ...normalProcesses,
+  //     ])
+  //   } else if (!isEditMode) {
+  //     // 등록 모드에서는 항상 processOptions로 초기화
+  //     setUpdatedProcessOptions(processOptions)
+  //   }
+  // }, [data, isEditMode, processOptions, setField])
+
+  useEffect(() => {
+    if (isEditMode && data) {
+      const client = data.data
+
+      const newProcessOptions = [...processOptions]
+
+      if (client.process) {
+        const isDeleted = client.process.deleted
+        const processName = client.process.name + (isDeleted ? ' (삭제됨)' : '')
+
+        if (!newProcessOptions.some((p) => p.id === client.process.id)) {
+          newProcessOptions.push({
+            id: client.process.id,
+            name: processName,
+            deleted: isDeleted,
+          })
+        }
+
+        if (!form.siteProcessId) {
+          setField('siteProcessId', client.process.id)
+          setField('siteProcessName', processName)
+        }
+      }
+
+      // 삭제된 공정 / 일반 공정 분리
+      const deletedProcesses = newProcessOptions.filter((p) => p.deleted)
+      const normalProcesses = newProcessOptions.filter((p) => !p.deleted && p.id !== 0)
+
+      setUpdatedProcessOptions([
+        newProcessOptions.find((s) => s.id === 0) ?? { id: 0, name: '선택', deleted: false },
+        ...deletedProcesses,
+        ...normalProcesses,
+      ])
+    } else if (!isEditMode) {
+      // 등록 모드에서는 항상 processOptions로 초기화
+      setUpdatedProcessOptions(processOptions)
+    }
+  }, [data, isEditMode, processOptions, setField])
+
   useEffect(() => {
     if (isEditMode && data) {
       const client = data.data

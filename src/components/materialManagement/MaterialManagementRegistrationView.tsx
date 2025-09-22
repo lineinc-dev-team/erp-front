@@ -211,25 +211,21 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     if (isEditMode && data) {
       const client = data.data
 
-      // 이전 상태 기반으로 새 배열 생성
-
-      const newProcessOptions = [...processOptions, ...updatedProcessOptions]
-        .filter((p, index, self) => index === self.findIndex((el) => el.id === p.id)) // id 중복 제거
-        .filter((p) => p.id === 0 || p.deleted || (!p.deleted && p.id !== 0)) // 조건 필터링
+      const newProcessOptions = [...processOptions]
 
       if (client.process) {
-        const isDeleted = client.process.deleted || client.site?.deleted
+        const isDeleted = client.process.deleted
         const processName = client.process.name + (isDeleted ? ' (삭제됨)' : '')
 
-        if (!form.siteProcessId) {
-          if (!newProcessOptions.some((p) => p.id === client.process.id)) {
-            newProcessOptions.push({
-              id: client.process.id,
-              name: processName,
-              deleted: isDeleted,
-            })
-          }
+        if (!newProcessOptions.some((p) => p.id === client.process.id)) {
+          newProcessOptions.push({
+            id: client.process.id,
+            name: processName,
+            deleted: isDeleted,
+          })
+        }
 
+        if (!form.siteProcessId) {
           setField('siteProcessId', client.process.id)
           setField('siteProcessName', processName)
         }
@@ -245,7 +241,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
         ...normalProcesses,
       ])
     } else if (!isEditMode) {
-      // 등록 모드
+      // 등록 모드에서는 항상 processOptions로 초기화
       setUpdatedProcessOptions(processOptions)
     }
   }, [data, isEditMode, processOptions, setField])
