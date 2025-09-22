@@ -459,8 +459,6 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
   })
 
-  console.log('fuelEquipmentfuelEquipment', selectId)
-
   // 상세페이지 들어올떄 기사명, 차량번호  데이터 호출
 
   useEffect(() => {
@@ -475,8 +473,6 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
         category: user.category,
         deleted: user.deleted,
       }))
-
-    console.log('해당 차량 옵션', options)
 
     setCarNumberOptionsByCompany((prev) => ({
       ...prev,
@@ -868,7 +864,11 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                           selectedCarNumber.category || '-', // type 없으면 '-'
                         )
                       }}
-                      options={carNumberOptionsByCompany[m.outsourcingCompanyId] ?? []}
+                      options={
+                        carNumberOptionsByCompany[m.outsourcingCompanyId] ?? [
+                          { id: 0, name: '선택', category: '' },
+                        ]
+                      }
                       onScrollToBottom={() => {
                         if (fuelEquipmentHasNextPage && !fuelEquipmentIsFetching)
                           fuelEquipmentFetchNextPage()
