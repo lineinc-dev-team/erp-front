@@ -168,6 +168,7 @@ export const useManagementMaterialFormStore = create<MaterialFormStore>((set, ge
       } else {
         const newFile: AttachedFile = {
           id,
+          name: '',
           memo: '',
           files: [],
         }
@@ -319,6 +320,7 @@ export const useManagementMaterialFormStore = create<MaterialFormStore>((set, ge
           return [
             {
               id: f.id || Date.now(),
+              name: f.name,
               fileUrl: '',
               originalFileName: '',
               memo: f.memo || '',
@@ -329,6 +331,7 @@ export const useManagementMaterialFormStore = create<MaterialFormStore>((set, ge
         // 파일이 있을 경우
         return f.files.map((fileObj: FileUploadInfo) => ({
           id: f.id || Date.now(),
+          name: f.name,
           fileUrl: fileObj.fileUrl || '',
           originalFileName: fileObj.name || fileObj.originalFileName,
           memo: f.memo || '',

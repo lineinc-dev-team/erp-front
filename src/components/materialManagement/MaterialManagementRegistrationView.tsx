@@ -965,7 +965,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                     sx={{ color: 'black' }}
                   />
                 </TableCell>
-                {['첨부', '비고'].map((label) => (
+                {['문서명', '첨부', '비고'].map((label) => (
                   <TableCell
                     key={label}
                     align="center"
@@ -992,6 +992,18 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                     <Checkbox
                       checked={fileCheckIds.includes(m.id)}
                       onChange={(e) => toggleCheckItem('attachedFile', m.id, e.target.checked)}
+                    />
+                  </TableCell>
+
+                  <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
+                    <TextField
+                      size="small"
+                      placeholder="텍스트 입력"
+                      sx={{ width: '100%' }}
+                      value={m.name}
+                      onChange={(e) =>
+                        updateItemField('attachedFile', m.id, 'name', e.target.value)
+                      }
                     />
                   </TableCell>
 

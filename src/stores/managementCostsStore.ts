@@ -157,6 +157,7 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
       if (type === 'attachedFile') {
         const newFile: AttachedFile = {
           id,
+          name: '',
           memo: '',
           files: [],
         }
@@ -474,6 +475,7 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
           ? [
               {
                 id: f.id || Date.now(),
+                name: f.name,
                 memo: f.memo,
                 fileUrl: '',
                 originalFileName: '',
@@ -481,6 +483,7 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
             ]
           : f.files.map((fileObj) => ({
               id: f.id || Date.now(),
+              name: f.name,
               memo: f.memo,
               fileUrl: fileObj.fileUrl,
               originalFileName: fileObj.name || fileObj.originalFileName,

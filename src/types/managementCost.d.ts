@@ -125,6 +125,7 @@ export type MealFeeDetail = {
 
 export type AttachedFile = {
   id: number
+  name: string
   memo: string
   fileUrl?: string
   originalFileName?: string
