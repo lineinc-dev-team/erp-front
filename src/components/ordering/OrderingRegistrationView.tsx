@@ -105,6 +105,8 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
 
   const historyList = useOrderingFormStore((state) => state.form.changeHistories)
 
+  console.log('historyListhistoryList', historyList)
+
   const { data } = useQuery({
     queryKey: ['ClientDetailInfo'],
     queryFn: () => ClientDetailService(clientCompanyId),
@@ -328,9 +330,12 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
       const allHistories = clientHistoryList.pages.flatMap((page) =>
         page.data.content.map((item: HistoryItem) => ({
           id: item.id,
-          type: item.type,
+          type: item.type || '-',
           typeCode: item.typeCode,
-          content: formatChangeDetail(item.getChanges, item.typeCode), // 여기 변경
+          content:
+            formatChangeDetail(item.getChanges, item.typeCode) === '-'
+              ? item?.description
+              : formatChangeDetail(item.getChanges, item.typeCode), // 여기 변경
           createdAt: item.createdAt,
           updatedAt: item.updatedAt,
           updatedBy: item.updatedBy,

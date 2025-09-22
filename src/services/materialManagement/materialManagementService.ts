@@ -76,35 +76,32 @@ export async function MaterialRemoveService(materialManagementIds: number[]) {
 // 자재 엑셀 다운로드
 export async function MaterialExcelDownload({
   sort = '',
-  username = '',
-  roleId,
-  isActive,
-  createdStartDate,
-  createdEndDate,
-  lastLoginStartDate,
-  lastLoginEndDate,
+  siteName = '',
+  processName = '',
+  outsourcingCompanyName = '',
+  materialName = '',
+  deliveryStartDate,
+  deliveryEndDate,
   fields,
 }: {
   sort?: string
-  username?: string
-  roleId?: number
-  isActive?: boolean
-  createdStartDate?: string
-  createdEndDate?: string
-  lastLoginStartDate?: string
-  lastLoginEndDate?: string
+  siteName?: string
+  processName?: string
+  outsourcingCompanyName?: string
+  materialName?: string
+  deliveryStartDate?: string
+  deliveryEndDate?: string
   fields?: string[]
 }) {
   const queryParams = new URLSearchParams()
 
   queryParams.append('sort', sort)
-  if (username) queryParams.append('username', username)
-  if (roleId !== undefined) queryParams.append('roleId', String(roleId))
-  if (isActive !== undefined) queryParams.append('isActive', String(isActive))
-  if (createdStartDate) queryParams.append('createdStartDate', createdStartDate)
-  if (createdEndDate) queryParams.append('createdEndDate', createdEndDate)
-  if (lastLoginStartDate) queryParams.append('lastLoginStartDate', lastLoginStartDate)
-  if (lastLoginEndDate) queryParams.append('lastLoginEndDate', lastLoginEndDate)
+  if (siteName) queryParams.append('siteName', siteName)
+  if (processName) queryParams.append('processName', processName)
+  if (outsourcingCompanyName) queryParams.append('outsourcingCompanyName', outsourcingCompanyName)
+  if (materialName) queryParams.append('materialName', materialName)
+  if (deliveryStartDate) queryParams.append('deliveryStartDate', deliveryStartDate)
+  if (deliveryEndDate) queryParams.append('deliveryEndDate', deliveryEndDate)
 
   if (fields && fields.length > 0) {
     queryParams.append('fields', fields.join(','))

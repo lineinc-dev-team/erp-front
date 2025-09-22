@@ -116,6 +116,10 @@ export type ManagementSteelFormState = {
   usage: string // 구분
   type: string // 용도
   typeCode: string
+  orderDate?: Date | null
+  approvalDate?: Date | null
+  releaseDate?: Date | null
+  previousTypeCode: string
 
   startDate: Date | null // 일자 (YYYY-MM-DD)
   endDate: Date | null // 일자 (YYYY-MM-DD)

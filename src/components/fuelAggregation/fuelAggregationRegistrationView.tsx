@@ -17,7 +17,12 @@ import {
   Typography,
 } from '@mui/material'
 import CommonDatePicker from '../common/DatePicker'
-import { formatDateTime, getTodayDateString, unformatNumber } from '@/utils/formatters'
+import {
+  formatDateTime,
+  formatNumber,
+  getTodayDateString,
+  unformatNumber,
+} from '@/utils/formatters'
 import { useParams } from 'next/navigation'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -179,49 +184,6 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
   }, [data, isEditMode, sitesOptions])
 
   const [updatedProcessOptions, setUpdatedProcessOptions] = useState(processOptions)
-
-  // useEffect(() => {
-  //   if (isEditMode && data) {
-  //     const client = data.data
-
-  //     // 이전 상태 기반으로 새 배열 생성
-
-  //     const newProcessOptions = [...processOptions, ...updatedProcessOptions]
-  //       .filter((p, index, self) => index === self.findIndex((el) => el.id === p.id)) // id 중복 제거
-  //       .filter((p) => p.id === 0 || p.deleted || (!p.deleted && p.id !== 0)) // 조건 필터링
-
-  //     if (client.process) {
-  //       const isDeleted = client.process.deleted || client.site?.deleted
-  //       const processName = client.process.name + (isDeleted ? ' (삭제됨)' : '')
-
-  //       if (!form.siteProcessId) {
-  //         if (!newProcessOptions.some((p) => p.id === client.process.id)) {
-  //           newProcessOptions.push({
-  //             id: client.process.id,
-  //             name: processName,
-  //             deleted: isDeleted,
-  //           })
-  //         }
-
-  //         setField('siteProcessId', client.process.id)
-  //         setField('siteProcessName', processName)
-  //       }
-  //     }
-
-  //     // 삭제된 공정 / 일반 공정 분리
-  //     const deletedProcesses = newProcessOptions.filter((p) => p.deleted)
-  //     const normalProcesses = newProcessOptions.filter((p) => !p.deleted && p.id !== 0)
-
-  //     setUpdatedProcessOptions([
-  //       newProcessOptions.find((s) => s.id === 0) ?? { id: 0, name: '선택', deleted: false },
-  //       ...deletedProcesses,
-  //       ...normalProcesses,
-  //     ])
-  //   } else if (!isEditMode) {
-  //     // 등록 모드
-  //     setUpdatedProcessOptions(processOptions)
-  //   }
-  // }, [data, isEditMode, processOptions, setField])
 
   useEffect(() => {
     if (isEditMode && data) {
@@ -497,6 +459,8 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
   })
 
+  console.log('fuelEquipmentfuelEquipment', selectId)
+
   // 상세페이지 들어올떄 기사명, 차량번호  데이터 호출
 
   useEffect(() => {
@@ -507,14 +471,17 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
       .map((user) => ({
         id: user.id,
         specification: user.specification,
-        vehicleNumber: user.vehicleNumber,
+        vehicleNumber: user.vehicleNumber + (user.deleted ? ' (삭제됨)' : ''),
         category: user.category,
+        deleted: user.deleted,
       }))
+
+    console.log('해당 차량 옵션', options)
 
     setCarNumberOptionsByCompany((prev) => ({
       ...prev,
       [selectedCompanyIds[selectId]]: [
-        { id: 0, specification: '', vehicleNumber: '선택', category: '' },
+        { id: 0, specification: '', vehicleNumber: '선택', category: '', deleted: false },
         ...options,
       ],
     }))
@@ -901,11 +868,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                           selectedCarNumber.category || '-', // type 없으면 '-'
                         )
                       }}
-                      options={
-                        carNumberOptionsByCompany[m.outsourcingCompanyId] ?? [
-                          { id: 0, name: '선택', category: '' },
-                        ]
-                      }
+                      options={carNumberOptionsByCompany[m.outsourcingCompanyId] ?? []}
                       onScrollToBottom={() => {
                         if (fuelEquipmentHasNextPage && !fuelEquipmentIsFetching)
                           fuelEquipmentFetchNextPage()
@@ -942,7 +905,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                     <TextField
                       size="small"
                       placeholder="'-'없이 숫자만 입력"
-                      value={m.fuelAmount}
+                      value={formatNumber(m.fuelAmount)}
                       onChange={(e) => {
                         const formatted = unformatNumber(e.target.value)
                         updateItemField('FuelInfo', m.id, 'fuelAmount', formatted)

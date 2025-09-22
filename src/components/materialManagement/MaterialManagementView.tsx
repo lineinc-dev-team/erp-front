@@ -7,7 +7,7 @@ import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { Pagination, Tooltip } from '@mui/material'
 import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
-import { ArrayStatusOptions, MaterialColumnList, PageCount } from '@/config/erp.confing'
+import { LaborArrayStatusOptions, MaterialColumnList, PageCount } from '@/config/erp.confing'
 import { useEffect, useState } from 'react'
 import ExcelModal from '../common/ExcelModal'
 import { MaterialExcelFieldMap } from '@/utils/userExcelField'
@@ -233,7 +233,16 @@ export default function MaterialManagementView() {
   }))
 
   const handleDownloadExcel = async (fields: string[]) => {
-    await MaterialExcelDownload({ fields })
+    await MaterialExcelDownload({
+      sort: search.arraySort === '최신순' ? 'id,desc' : 'id,asc',
+      siteName: search.siteName,
+      processName: search.processName,
+      outsourcingCompanyName: search.outsourcingCompanyName,
+      materialName: search.materialName,
+      deliveryStartDate: getTodayDateString(search.deliveryStartDate),
+      deliveryEndDate: getTodayDateString(search.deliveryEndDate),
+      fields,
+    })
   }
 
   // 권한에 따른 버튼 활성화
@@ -427,7 +436,7 @@ export default function MaterialManagementView() {
                   search.setField('arraySort', value)
                   search.setField('currentPage', 1)
                 }}
-                options={ArrayStatusOptions}
+                options={LaborArrayStatusOptions}
               />
             </div>
 

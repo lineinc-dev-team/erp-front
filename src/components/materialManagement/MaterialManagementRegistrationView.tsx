@@ -321,6 +321,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
       // // 첨부 파일 가공
       const formattedFiles = (client.files ?? []).map((item: AttachedFile) => ({
         id: item.id,
+        name: item.name,
         memo: item.memo,
         files: [
           {
@@ -586,15 +587,23 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                 className="text-2xl"
                 value={form.inputType || 'BASE'} //  값
                 displayLabel
-                onChange={(value) => setField('inputType', value)}
+                onChange={(value) => {
+                  setField('inputType', value)
+
+                  // 직접입력이 아닌 다른 타입으로 바꾸면 설명 초기화
+                  if (value !== 'DIRECT_INPUT') {
+                    setField('inputTypeDescription', '')
+                  }
+                }}
                 options={InputTypeMethodOptions}
               />
 
               <CommonInput
-                placeholder="텍스트 입력"
                 value={form.inputTypeDescription}
                 onChange={(value) => setField('inputTypeDescription', value)}
                 className=" flex-1"
+                disabled={form.inputType !== 'DIRECT_INPUT'}
+                placeholder={form.inputType === 'DIRECT_INPUT' ? '기타 내용을 입력하세요' : ''}
               />
             </div>
           </div>
@@ -1014,7 +1023,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                       size="small"
                       placeholder="텍스트 입력"
                       sx={{ width: '100%' }}
-                      value={m.name}
+                      value={m.name ?? ''}
                       onChange={(e) =>
                         updateItemField('attachedFile', m.id, 'name', e.target.value)
                       }

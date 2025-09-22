@@ -17,7 +17,7 @@ import { useEffect, useState } from 'react'
 import ExcelModal from '../common/ExcelModal'
 import { fuelExcelFieldMap } from '@/utils/userExcelField'
 import { useManagementMaterial } from '@/hooks/useMaterialManagement'
-import { getTodayDateString } from '@/utils/formatters'
+import { formatNumber, getTodayDateString } from '@/utils/formatters'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import CommonSelectByName from '../common/CommonSelectByName'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
@@ -99,7 +99,7 @@ export default function FuelAggregationView() {
         driverName: fuelInfo?.driver.name ?? '-',
         vehicleNumber: fuelInfo?.equipment.vehicleNumber ?? '-',
         fuelType: fuelInfo?.fuelType ?? '-',
-        fuelAmount: fuelInfo?.fuelAmount ?? '-',
+        fuelAmount: formatNumber(fuelInfo?.fuelAmount) ?? '-',
         specification: fuelInfo?.equipment.specification ?? '-',
       },
     ]

@@ -49,7 +49,6 @@ interface MenuItem {
 }
 
 const menuNameToBasePath: Record<string, string> = {
-  '계정 관리': '/account',
   '권한 관리': '/permissionGroup',
   '발주처 관리': '/ordering',
   '현장 관리': '/sites',
@@ -63,10 +62,10 @@ const menuNameToBasePath: Record<string, string> = {
   '노무 관리': '/labors',
   출역일보: '/dailyReport/registration',
   '노무명세서 관리': '/laborStatement',
+  '계정 관리': '/account',
 }
 
 const menuNameToIcon: Record<string, React.ReactNode> = {
-  '계정 관리': <AccountCircle />, // 사용자 계정 → 프로필 아이콘
   '권한 관리': <ManageAccounts />, // 권한 설정 → 계정 관리 아이콘
   '발주처 관리': <Business />, // 회사/거래처 → 건물 아이콘
   '현장 관리': <Apartment />, // 현장/프로젝트 → 아파트 아이콘
@@ -78,6 +77,7 @@ const menuNameToIcon: Record<string, React.ReactNode> = {
   '외주업체 계약 관리': <Description />, // 계약 문서 → 문서 아이콘
   '노무 관리': <AccessTimeIcon />, // 근무/노무 → 출퇴근 기록 아이콘
   '노무명세서 관리': <WorkHistory />, // 근무/노무 → 출퇴근 기록 아이콘
+  '계정 관리': <AccountCircle />, // 사용자 계정 → 프로필 아이콘
 
   출역일보: <Today />,
 }

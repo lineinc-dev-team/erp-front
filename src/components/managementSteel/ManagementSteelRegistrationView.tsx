@@ -36,7 +36,7 @@ import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import { GetCompanyNameInfoService } from '@/services/outsourcingContract/outsourcingContractRegistrationService'
 import { CompanyInfo } from '@/types/outsourcingContract'
-import { formatDateTime, unformatNumber } from '@/utils/formatters'
+import { formatDateTime, getTodayDateString, unformatNumber } from '@/utils/formatters'
 import { WithoutApprovalAndRemovalOptions } from '@/config/erp.confing'
 
 export default function ManagementSteelRegistrationView({ isEditMode = false }) {
@@ -273,6 +273,46 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     }
   }, [data, isEditMode, processOptions, setField])
 
+  const [updatedCompanyOptions, setUpdatedCompanyOptions] = useState(companyOptions)
+
+  useEffect(() => {
+    if (data && isEditMode) {
+      const client = data.data
+
+      const newCompanyOptions = [...companyOptions]
+
+      if (client.outsourcingCompany) {
+        const companyName =
+          client.outsourcingCompany.name + (client.outsourcingCompany.deleted ? ' (삭제됨)' : '')
+
+        // 이미 options에 있는지 체크
+        const exists = newCompanyOptions.some((c) => c.id === client.outsourcingCompany.id)
+        if (!exists) {
+          newCompanyOptions.push({
+            id: client.outsourcingCompany.id,
+            name: companyName,
+            businessNumber: client.outsourcingCompany.businessNumber ?? '',
+            ceoName: client.outsourcingCompany.ceoName ?? '',
+            bankName: client.outsourcingCompany.bankName ?? '',
+            accountNumber: client.outsourcingCompany.accountNumber ?? '',
+            accountHolder: client.outsourcingCompany.accountHolder ?? '',
+            deleted: client.outsourcingCompany.deleted,
+          })
+        }
+      }
+
+      const deletedCompanies = newCompanyOptions.filter((c) => c.deleted)
+      const normalCompanies = newCompanyOptions.filter((c) => !c.deleted && c.id !== 0)
+
+      setUpdatedCompanyOptions([...deletedCompanies, ...normalCompanies])
+
+      setField('outsourcingCompanyId', client.outsourcingCompany?.id ?? 0)
+    } else if (!isEditMode) {
+      setUpdatedCompanyOptions(companyOptions)
+      setField('outsourcingCompanyId', 0) // "선택" 기본값
+    }
+  }, [data, isEditMode, companyOptions])
+
   useEffect(() => {
     if (isEditMode && data) {
       const client = data.data
@@ -356,6 +396,10 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
       setField('startDate', client.startDate ? new Date(client.startDate) : null)
       setField('endDate', client.endDate ? new Date(client.endDate) : null)
 
+      setField('orderDate', client.orderDate ? new Date(client.orderDate) : null)
+      setField('approvalDate', client.approvalDate ? new Date(client.approvalDate) : null)
+      setField('releaseDate', client.releaseDate ? new Date(client.releaseDate) : null)
+
       if (client.typeCode === 'PURCHASE') {
         setField('type', client.type ?? '')
       }
@@ -369,6 +413,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
       setField('usage', client.usage ?? '')
 
       setField('typeCode', client.typeCode)
+      setField('previousTypeCode', client.previousTypeCode)
 
       setField('memo', client.memo ?? '')
 
@@ -477,8 +522,12 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     }
 
     // type이 PURCHASE 또는 LEASE일 경우 거래선 필수
-    if (['PURCHASE', 'LEASE'].includes(form.type)) {
-      if (!form.outsourcingCompanyId) return '업체명을 선택하세요.'
+    if (
+      ['PURCHASE', 'LEASE'].includes(form.type) ||
+      ['PURCHASE', 'LEASE'].includes(form.typeCode)
+    ) {
+      if (!form.outsourcingCompanyId || form.outsourcingCompanyId === 0)
+        return '업체명을 선택하세요.'
       if (!form.businessNumber?.trim()) return '사업자등록번호를 입력하세요.'
     }
 
@@ -724,8 +773,11 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         </div>
       </div>
 
-      {(['PURCHASE', 'LEASE'].includes(form.typeCode) ||
-        ['PURCHASE', 'LEASE'].includes(form.type)) && (
+      {(!isEditMode
+        ? ['PURCHASE', 'LEASE'].includes(form.type)
+        : form.previousTypeCode === null
+        ? ['PURCHASE', 'LEASE', 'APPROVAL'].includes(form.typeCode)
+        : ['PURCHASE', 'LEASE'].includes(form.previousTypeCode)) && (
         <div className="mt-6">
           <span className="font-bold border-b-2 mb-4">거래선</span>
           <div className="grid grid-cols-2 mt-1 ">
@@ -738,7 +790,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                   fullWidth
                   value={form.outsourcingCompanyId || 0}
                   onChange={async (value) => {
-                    const selectedCompany = companyOptions.find((opt) => opt.id === value)
+                    const selectedCompany = updatedCompanyOptions.find((opt) => opt.id === value)
                     if (!selectedCompany) return
 
                     setField('outsourcingCompanyId', selectedCompany.id)
@@ -762,7 +814,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       setField('businessNumber', '')
                     }
                   }}
-                  options={companyOptions}
+                  options={updatedCompanyOptions}
                   onScrollToBottom={() => {
                     if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
                   }}
@@ -789,7 +841,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         </div>
       )}
 
-      {/* {isEditMode && (
+      {isEditMode && (
         <div>
           <div className="flex justify-between items-center mt-10 mb-2">
             <span className="font-bold border-b-2 mb-4">구분</span>
@@ -816,7 +868,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
               </TableHead>
               <TableBody>
                 <TableRow>
-                  {['ORDER', 'APPROVAL', 'OUT'].map((code) => (
+                  {['ORDER', 'APPROVAL', 'RELEASE'].map((code) => (
                     <TableCell
                       key={code}
                       align="center"
@@ -826,10 +878,10 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       }}
                     >
                       {code === 'ORDER'
-                        ? getTodayDateString(form.orderDate)
+                        ? getTodayDateString(form.orderDate) ?? '-'
                         : code === 'APPROVAL'
-                        ? getTodayDateString(form.approvalDate)
-                        : getTodayDateString(form.releaseDate)}
+                        ? getTodayDateString(form.approvalDate) ?? '-'
+                        : getTodayDateString(form.releaseDate) ?? '-'}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -837,7 +889,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
             </Table>
           </TableContainer>
         </div>
-      )} */}
+      )}
 
       <div>
         <div className="flex justify-between items-center mt-10 mb-2">
