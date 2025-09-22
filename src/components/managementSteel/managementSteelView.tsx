@@ -7,7 +7,7 @@ import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { Pagination, Tooltip } from '@mui/material'
 import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
-import { ArrayStatusOptions, PageCount, SteelColumnList } from '@/config/erp.confing'
+import { LaborArrayStatusOptions, PageCount, SteelColumnList } from '@/config/erp.confing'
 import { Fragment, useEffect, useState } from 'react'
 import ExcelModal from '../common/ExcelModal'
 import { SteelExcelFieldMap } from '@/utils/userExcelField'
@@ -33,7 +33,7 @@ export default function ManagementSteel() {
   const { search } = useSteelSearchStore()
 
   const {
-    // SteelDeleteMutation,
+    SteelDeleteMutation,
     SteelListQuery,
     SteelApproveMutation,
     SteelTypeMethodOptions,
@@ -440,7 +440,7 @@ export default function ManagementSteel() {
                   search.setField('arraySort', value)
                   search.setField('currentPage', 1)
                 }}
-                options={ArrayStatusOptions}
+                options={LaborArrayStatusOptions}
               />
             </div>
 
@@ -458,7 +458,7 @@ export default function ManagementSteel() {
             </div>
 
             <div className="flex items-center gap-3">
-              {/* <CommonButton
+              <CommonButton
                 label="삭제"
                 variant="danger"
                 onClick={() => {
@@ -478,7 +478,7 @@ export default function ManagementSteel() {
                   }
                 }}
                 className="px-3"
-              /> */}
+              />
               <CommonButton
                 label="승인"
                 disabled={!hasApproval}

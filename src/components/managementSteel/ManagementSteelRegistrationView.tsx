@@ -382,8 +382,6 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading],
   )
 
-  console.log('form.typeCodeform.typeCode', form.type)
-
   function validateSteelForm(form: ManagementSteelFormState) {
     // 기본 정보
     if (!form.siteId) return '현장명을 선택하세요.'
@@ -452,6 +450,8 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
       createSteelMutation.mutate()
     }
   }
+
+  console.log('타입 확인', form.typeCode)
 
   return (
     <>
@@ -1305,15 +1305,17 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
       <div className="flex justify-center gap-10 mt-10">
         <CommonButton label="취소" variant="reset" className="px-10" onClick={steelCancel} />
 
-        <CommonButton
-          label={isEditMode ? '+ 수정' : '+ 등록'}
-          className="px-10 font-bold"
-          variant="secondary"
-          onClick={handleSteelSubmit}
-        />
+        {!(isEditMode && ['APPROVAL', 'RELEASE'].includes(form.typeCode)) && (
+          <CommonButton
+            label={isEditMode ? '+ 수정' : '+ 등록'}
+            className="px-10 font-bold"
+            variant="secondary"
+            onClick={handleSteelSubmit}
+          />
+        )}
 
         {/* 승인 버튼 */}
-        {isEditMode && ['ORDER', 'PURCHASE', 'LEASE'].includes(form.type) && (
+        {isEditMode && ['ORDER', 'PURCHASE', 'LEASE'].includes(form.typeCode) && (
           <CommonButton
             label="승인"
             className="px-10 font-bold"
@@ -1333,7 +1335,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
           />
         )}
 
-        {isEditMode && form.type === 'APPROVAL' && (
+        {isEditMode && form.typeCode === 'APPROVAL' && (
           <CommonButton
             label="반출"
             className="px-10 font-bold"
