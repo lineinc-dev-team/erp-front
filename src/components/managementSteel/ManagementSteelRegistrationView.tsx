@@ -382,6 +382,8 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading],
   )
 
+  console.log('form.typeCodeform.typeCode', form.type)
+
   function validateSteelForm(form: ManagementSteelFormState) {
     // 기본 정보
     if (!form.siteId) return '현장명을 선택하세요.'
@@ -644,7 +646,8 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         </div>
       </div>
 
-      {['PURCHASE', 'LEASE'].includes(form.typeCode) && (
+      {(['PURCHASE', 'LEASE'].includes(form.typeCode) ||
+        ['PURCHASE', 'LEASE'].includes(form.type)) && (
         <div className="mt-6">
           <span className="font-bold border-b-2 mb-4">거래선</span>
           <div className="grid grid-cols-2 mt-1 ">
