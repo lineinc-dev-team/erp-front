@@ -911,7 +911,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
         <div className="grid grid-cols-2 mt-1">
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              현장명
+              현장명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
               <CommonSelect
@@ -978,7 +978,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
           </div>
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              공정명
+              공정명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
               <CommonSelect
@@ -1004,7 +1004,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
           </div>
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              업체명
+              업체명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 p-2 px-2 w-full">
               <CommonSelect
@@ -1051,7 +1051,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              사업자등록번호
+              사업자등록번호 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -1067,7 +1067,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
-              구분
+              구분 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
               <div className="flex gap-2 items-center">
@@ -1091,8 +1091,8 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
           </div>
 
           <div className="flex">
-            <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              계약기간(시작/종료)
+            <label className="w-36 text-[13px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              계약기간(시작/종료) <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonDatePicker
@@ -1129,7 +1129,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              계약금액(총액)
+              계약금액(총액) <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 p-2 px-2 w-full">
               <AmountInput
@@ -1146,7 +1146,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
           <div className="flex">
             <label className="w-[119px] 2xl:w-[124px] text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              공제 항목 기본값
+              공제 항목 기본값 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="flex border  border-gray-400 flex-wrap px-2 items-center gap-4 flex-1">
               {deduMethodOptions.map((opt) => (
@@ -1170,8 +1170,8 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
           </div>
 
           <div className="flex">
-            <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
-              세금계산서 발행조건
+            <label className="w-36 text-[13px] border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
+              세금계산서 발행조건 <span className="text-red-500 ml-1">*</span>
             </label>
 
             <div className="border flex items-center gap-2 p-2 border-gray-400 px-2 w-full">
@@ -1203,7 +1203,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
           {form.type === 'EQUIPMENT' && (
             <div className="flex">
               <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-                유형
+                유형 <span className="text-red-500 ml-1">*</span>
               </label>
               <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
                 <CommonSelect
@@ -1218,7 +1218,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              상태
+              상태 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
@@ -1298,7 +1298,14 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {label}
+                    {label === '비고' ? (
+                      label
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <span>{label}</span>
+                        <span className="text-red-500 ml-1">*</span>
+                      </div>
+                    )}
                   </TableCell>
                 ))}
               </TableRow>
@@ -1455,7 +1462,14 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       fontWeight: 'bold',
                     }}
                   >
-                    {label}
+                    {label === '비고' || label === '첨부' ? (
+                      label
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <span>{label}</span>
+                        <span className="text-red-500 ml-1">*</span>
+                      </div>
+                    )}
                   </TableCell>
                 ))}
               </TableRow>
@@ -1570,7 +1584,14 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                         fontWeight: 'bold',
                       }}
                     >
-                      {label}
+                      {label === '비고' || label === '관련서류' ? (
+                        label
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          <span>{label}</span>
+                          <span className="text-red-500 ml-1">*</span>
+                        </div>
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -1723,42 +1744,42 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    항목
+                    항목 <span className="text-red-500 ml-1">*</span>
                   </TableCell>
                   <TableCell
                     rowSpan={2}
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    규격
+                    규격 <span className="text-red-500 ml-1">*</span>
                   </TableCell>
                   <TableCell
                     rowSpan={2}
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    단위
+                    단위 <span className="text-red-500 ml-1">*</span>
                   </TableCell>
                   <TableCell
                     rowSpan={2}
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    도급단가
+                    도급단가 <span className="text-red-500 ml-1">*</span>
                   </TableCell>
                   <TableCell
                     colSpan={2}
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    도급금액
+                    도급금액 <span className="text-red-500 ml-1">*</span>
                   </TableCell>
                   <TableCell
                     colSpan={2}
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    외주계약금액
+                    외주계약금액 <span className="text-red-500 ml-1">*</span>
                   </TableCell>
                   <TableCell
                     rowSpan={2}
@@ -1773,25 +1794,25 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    수량
+                    수량 <span className="text-red-500 ml-1">*</span>
                   </TableCell>
                   <TableCell
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    금액
+                    금액 <span className="text-red-500 ml-1">*</span>
                   </TableCell>
                   <TableCell
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    수량
+                    수량 <span className="text-red-500 ml-1">*</span>
                   </TableCell>
                   <TableCell
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    금액
+                    금액 <span className="text-red-500 ml-1">*</span>
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -2052,7 +2073,14 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                         fontWeight: 'bold',
                       }}
                     >
-                      {label}
+                      {label === '비고' || label === '작업내용' ? (
+                        label
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          <span>{label}</span>
+                          <span className="text-red-500 ml-1">*</span>
+                        </div>
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -2258,7 +2286,17 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                         fontWeight: 'bold',
                       }}
                     >
-                      {label}
+                      {label === '비고' ||
+                      label === '기사저격증' ||
+                      label === '안전교육' ||
+                      label === '기타서류' ? (
+                        label
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          <span>{label}</span>
+                          <span className="text-red-500 ml-1">*</span>
+                        </div>
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>

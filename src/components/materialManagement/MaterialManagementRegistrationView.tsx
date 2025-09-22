@@ -486,7 +486,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
         <div className="grid grid-cols-2 mt-1 ">
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              현장명
+              현장명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
               <CommonSelect
@@ -553,7 +553,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
           </div>
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              공정명
+              공정명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
               <CommonSelect
@@ -579,7 +579,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              투입구분
+              투입구분 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center p-2 gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
@@ -601,7 +601,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              납품일자
+              납품일자 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonDatePicker
@@ -613,7 +613,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
 
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              자재업체명
+              자재업체명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 p-2 px-2 w-full">
               <CommonSelect
@@ -694,7 +694,14 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                       fontWeight: 'bold',
                     }}
                   >
-                    {label}
+                    {label === '비고' || label === '부가세' || label === '합계' ? (
+                      label
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <span>{label}</span>
+                        <span className="text-red-500 ml-1">*</span>
+                      </div>
+                    )}
                   </TableCell>
                 ))}
               </TableRow>
@@ -976,7 +983,14 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                       fontWeight: 'bold',
                     }}
                   >
-                    {label}
+                    {label === '비고' || label === '첨부' ? (
+                      label
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <span>{label}</span>
+                        <span className="text-red-500 ml-1">*</span>
+                      </div>
+                    )}
                   </TableCell>
                 ))}
               </TableRow>

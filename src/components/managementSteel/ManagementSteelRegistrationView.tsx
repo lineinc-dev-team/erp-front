@@ -538,7 +538,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         <div className="grid grid-cols-2 mt-1 ">
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              현장명
+              현장명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
               <CommonSelect
@@ -605,7 +605,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
           </div>
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              공정명
+              공정명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
               <CommonSelect
@@ -631,7 +631,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              구분
+              구분 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center p-2 gap-4 border-gray-400 px-2 w-full">
               {isEditMode === false && (
@@ -659,7 +659,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
 
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              용도
+              용도 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex  items-center border-gray-400 px-2 w-full">
               <CommonInput
@@ -673,7 +673,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              기간
+              기간 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonDatePicker
@@ -731,7 +731,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
           <div className="grid grid-cols-2 mt-1 ">
             <div className="flex">
               <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-                업체명
+                업체명 <span className="text-red-500 ml-1">*</span>
               </label>
               <div className="border border-gray-400 p-2 px-2 w-full">
                 <CommonSelect
@@ -874,55 +874,55 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                   align="center"
                   sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                 >
-                  규격
+                  규격 <span className="text-red-500 ml-1">*</span>
                 </TableCell>
                 <TableCell
                   align="center"
                   sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                 >
-                  품명
+                  품명 <span className="text-red-500 ml-1">*</span>
                 </TableCell>
                 <TableCell
                   align="center"
                   sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                 >
-                  단위
+                  단위 <span className="text-red-500 ml-1">*</span>
                 </TableCell>
                 <TableCell
                   align="center"
                   sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                 >
-                  본
+                  본 <span className="text-red-500 ml-1">*</span>
                 </TableCell>
                 <TableCell
                   align="center"
                   sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                 >
-                  길이
+                  길이 <span className="text-red-500 ml-1">*</span>
                 </TableCell>
                 <TableCell
                   align="center"
                   sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                 >
-                  총 길이
+                  총 길이 <span className="text-red-500 ml-1">*</span>
                 </TableCell>
                 <TableCell
                   align="center"
                   sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                 >
-                  단위중량
+                  단위중량 <span className="text-red-500 ml-1">*</span>
                 </TableCell>
                 <TableCell
                   align="center"
                   sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                 >
-                  수량
+                  수량 <span className="text-red-500 ml-1">*</span>
                 </TableCell>
                 <TableCell
                   align="center"
                   sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                 >
-                  단가
+                  단가 <span className="text-red-500 ml-1">*</span>
                 </TableCell>
                 <TableCell
                   align="center"
@@ -933,7 +933,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     color: 'black',
                   }}
                 >
-                  공급가
+                  공급가 <span className="text-red-500 ml-1">*</span>
                 </TableCell>
                 <TableCell
                   align="center"
@@ -1203,7 +1203,14 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       fontWeight: 'bold',
                     }}
                   >
-                    {label}
+                    {label === '비고' || label === '첨부' ? (
+                      label
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <span>{label}</span>
+                        <span className="text-red-500 ml-1">*</span>
+                      </div>
+                    )}
                   </TableCell>
                 ))}
               </TableRow>

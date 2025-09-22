@@ -538,12 +538,21 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     if (mealFeelDetails.length > 0) {
       for (const item of mealFeelDetails) {
         if (!item.workType?.trim()) return '직종을 입력해주세요.'
-        if (item.inputType !== 'manual' && !item.laborId) return '담당자를 선택해주세요.'
+        if (item.inputType !== 'manual' && !item.laborId) return '성명을 선택해주세요.'
         if (!item.inputType?.trim()) return '구분을 선택해주세요.'
         if (!item.name?.trim()) return '성명을 입력해주세요.'
         const mealTotal = (item.breakfastCount ?? 0) + (item.lunchCount ?? 0)
         if (mealTotal === 0) return '조식 또는 중식을 입력해주세요.'
         if (!item.amount && item.amount !== 0) return '금액을 입력해주세요.'
+      }
+    }
+
+    if (attachedFiles.length > 0) {
+      for (const item of attachedFiles) {
+        if (!item.name?.trim()) return '첨부파일의 이름을 입력해주세요.'
+        if (item.memo.length > 500) {
+          return '첨부파일의 비고는 500자 이하로 입력해주세요.'
+        }
       }
     }
 
@@ -573,7 +582,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
         <div className="grid grid-cols-2 mt-1 ">
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              현장명
+              현장명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
               <CommonSelect
@@ -640,7 +649,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              공정명
+              공정명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
               <CommonSelect
@@ -667,7 +676,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              항목
+              항목 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
@@ -694,7 +703,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              일자
+              일자 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonDatePicker
@@ -706,7 +715,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              업체명
+              업체명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
@@ -772,7 +781,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              사업자등록번호
+              사업자등록번호 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -791,7 +800,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              대표자명
+              대표자명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center border-gray-400 px-2 w-full">
               <CommonInput
@@ -809,8 +818,8 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
           </div>
 
           <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              청구계좌 / 예금주명
+            <label className="w-36 text-[13px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+              청구계좌 / 예금주명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
@@ -910,7 +919,16 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                           fontWeight: 'bold',
                         }}
                       >
-                        {label}
+                        {label === '비고' ||
+                        label === '부가세 (체크 시 자동 계산)' ||
+                        label === '합계' ? (
+                          label
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
                       </TableCell>
                     ),
                   )}
@@ -1124,7 +1142,14 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                         fontWeight: 'bold',
                       }}
                     >
-                      {label}
+                      {label === '비고' || label === '계' || label === '단가' ? (
+                        label
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          <span>{label}</span>
+                          <span className="text-red-500 ml-1">*</span>
+                        </div>
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -1471,7 +1496,14 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                         fontWeight: 'bold',
                       }}
                     >
-                      {label}
+                      {label === '비고' ? (
+                        label
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          <span>{label}</span>
+                          <span className="text-red-500 ml-1">*</span>
+                        </div>
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -1688,7 +1720,14 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       fontWeight: 'bold',
                     }}
                   >
-                    {label}
+                    {label === '비고' || label === '첨부' ? (
+                      label
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <span>{label}</span>
+                        <span className="text-red-500 ml-1">*</span>
+                      </div>
+                    )}
                   </TableCell>
                 ))}
               </TableRow>

@@ -502,7 +502,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
         <div className="grid grid-cols-2 mt-1">
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
-              구분
+              구분 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
               <div className="flex gap-2 items-center">
@@ -533,7 +533,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              소속업체
+              소속업체 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
               <div className="flex gap-2 items-center py-2">
@@ -562,7 +562,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              이름
+              이름 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 flex items-center px-2 w-full">
               <CommonInput
@@ -576,7 +576,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
-              주민등록번호
+              주민등록번호 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 flex items-center px-2 w-full">
               <CommonResidentNumberInput
@@ -589,7 +589,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
-              위치(주소)
+              위치(주소) <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
               <div className="flex gap-2">
@@ -639,7 +639,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              개인 휴대폰
+              개인 휴대폰 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 py-6 px-2 w-full">
               <CommonInput
@@ -675,7 +675,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
         <div className="grid grid-cols-2 mt-1">
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
-              공종
+              공종 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
               <div className="flex gap-2 items-center">
@@ -698,7 +698,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              주 작업
+              주 작업 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 flex items-center px-2 w-full">
               <CommonInput
@@ -712,7 +712,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              기준일당
+              기준일당 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex  items-center border-gray-400 px-2 w-full">
               <AmountInput
@@ -729,7 +729,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              계좌정보
+              계좌정보 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
@@ -862,7 +862,14 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                       fontWeight: 'bold',
                     }}
                   >
-                    {label}
+                    {label === '비고' || label === '첨부' ? (
+                      label
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <span>{label}</span>
+                        <span className="text-red-500 ml-1">*</span>
+                      </div>
+                    )}
                   </TableCell>
                 ))}
               </TableRow>

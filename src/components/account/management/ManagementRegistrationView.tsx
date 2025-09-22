@@ -232,7 +232,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
         <div className="grid grid-cols-2 mt-1">
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              ID
+              ID <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -246,7 +246,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              이름
+              이름 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -260,7 +260,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
-              부서(소속)
+              부서(소속) <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
@@ -275,7 +275,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              직급
+              직급 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
               <CommonSelect
@@ -305,7 +305,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              개인 휴대폰
+              개인 휴대폰 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -321,7 +321,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36  text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              전화번호
+              전화번호 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -337,7 +337,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              이메일
+              이메일 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -350,7 +350,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              계정 상태
+              계정 상태 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center gap-4 p-2 border-gray-400 px-2 w-full">
               <CommonSelect
@@ -413,7 +413,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
             </label>
             <div className="border flex items-center gap-4 p-2 border-gray-400 px-2 w-full">
               <CommonInput
-                placeholder="텍스트 입력"
+                placeholder="500자 이하 입력"
                 value={form.memo}
                 onChange={(value) => setField('memo', value)}
                 className=" flex-1"

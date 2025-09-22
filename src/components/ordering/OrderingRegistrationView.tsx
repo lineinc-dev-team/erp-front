@@ -451,7 +451,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
         <div className="grid grid-cols-2 mt-1 ">
           <div className="flex">
             <label className=" w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300 font-bold text-center">
-              발주처명
+              발주처명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -464,7 +464,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              사업자등록번호
+              사업자등록번호 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -480,7 +480,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              본사 주소
+              본사 주소 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
               <div className="flex gap-2">
@@ -528,7 +528,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              대표자명
+              대표자명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex  items-center border-gray-400 px-2 w-full">
               <CommonInput
@@ -541,7 +541,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              전화번호
+              전화번호 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
@@ -565,7 +565,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              개인 휴대폰
+              개인 휴대폰 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonInput
@@ -581,7 +581,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              이메일(대표)
+              이메일(대표) <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -594,7 +594,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              결제정보
+              결제정보 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
@@ -615,7 +615,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              본사 담당자명
+              본사 담당자명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
               <CommonSelect
@@ -635,7 +635,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              사용 여부
+              사용 여부 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 w-full flex items-center">
               <CommonSelect
@@ -730,7 +730,14 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {label}
+                    {label === '비고' ? (
+                      label
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <span>{label}</span>
+                        <span className="text-red-500 ml-1">*</span>
+                      </div>
+                    )}
                   </TableCell>
                 ))}
               </TableRow>
@@ -887,7 +894,14 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       fontWeight: 'bold',
                     }}
                   >
-                    {label}
+                    {label === '비고' || label === '첨부' ? (
+                      label
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <span>{label}</span>
+                        <span className="text-red-500 ml-1">*</span>
+                      </div>
+                    )}
                   </TableCell>
                 ))}
               </TableRow>

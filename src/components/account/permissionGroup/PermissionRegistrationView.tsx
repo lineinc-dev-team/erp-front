@@ -318,6 +318,11 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                             </label>
                           </div>
                         </div>
+                      ) : label === '그룹명' ? (
+                        <div className="flex items-center justify-center">
+                          <span>{label}</span>
+                          <span className="text-red-500 ml-1">*</span>
+                        </div>
                       ) : (
                         label
                       )}

@@ -295,7 +295,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
   const renderInputRow = (label: string, children: React.ReactNode) => (
     <div className="flex">
       <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
-        {label}
+        {label} <span className="text-red-500 ml-1">*</span>
       </label>
       <div className="flex-1 border border-gray-400 px-2 py-2 flex items-center">{children}</div>
     </div>
@@ -590,7 +590,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
         <div className="grid grid-cols-2 mt-1">
           <div className="flex">
             <label className="w-36 text-[14px]  flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              현장명
+              현장명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex  items-center border-gray-400 px-2 w-full">
               <CommonInput
@@ -604,7 +604,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
-              위치(주소)
+              위치(주소) <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
               <div className="flex gap-2">
@@ -656,7 +656,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36  text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              현장 유형
+              현장 유형 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
               <CommonSelect
@@ -672,7 +672,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              발주처
+              발주처 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
               <CommonSelect
@@ -692,7 +692,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              사업시작 / 종료일
+              사업시작 / 종료일 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonDatePicker
@@ -729,7 +729,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              본사 담당자명
+              본사 담당자명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
               <CommonSelect
@@ -748,7 +748,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              도급금액
+              도급금액 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex  items-center border-gray-400 px-2 w-full">
               <AmountInput
@@ -783,7 +783,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
         <div className="grid grid-cols-2 mt-1">
           <div className="flex">
             <label className="w-36 text-[14px]  flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              공정명
+              공정명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex  items-center border-gray-400 px-2 w-full">
               <CommonInput
@@ -796,7 +796,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px]  flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              공정소장
+              공정소장 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex  items-center border-gray-400 px-2 w-full">
               <CommonSelect
@@ -816,7 +816,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px]  flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              사무실 연락처
+              사무실 연락처 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex  items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
@@ -840,7 +840,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              진행상태
+              진행상태 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center gap-2.5 items-center">
               <CommonSelect

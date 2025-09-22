@@ -450,7 +450,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
         <div className="grid grid-cols-2 mt-1">
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              업체명
+              업체명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -462,7 +462,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              사업자등록번호
+              사업자등록번호 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -478,7 +478,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
 
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
-              구분
+              구분 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
               <div className="flex gap-2 items-center">
@@ -503,7 +503,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
 
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              대표자명
+              대표자명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 flex items-center px-2 w-full">
               <CommonInput
@@ -516,7 +516,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
-              위치(주소)
+              위치(주소) <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
               <div className="flex gap-2">
@@ -566,7 +566,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              전화번호
+              전화번호 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
@@ -590,7 +590,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              이메일(대표)
+              이메일(대표) <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -603,7 +603,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              사용 여부
+              사용 여부 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
@@ -617,7 +617,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
 
           <div className="flex">
             <label className="w-[119px] 2xl:w-[124px] text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
-              공제 항목 기본값
+              공제 항목 기본값 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="flex border  border-gray-400 flex-wrap px-2 items-center gap-4 flex-1">
               {deductionMethodOptions.map((opt) => (
@@ -641,7 +641,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              계좌정보
+              계좌정보 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
@@ -733,7 +733,14 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {label}
+                    {label === '비고' ? (
+                      label
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <span>{label}</span>
+                        <span className="text-red-500 ml-1">*</span>
+                      </div>
+                    )}
                   </TableCell>
                 ))}
               </TableRow>
@@ -890,7 +897,14 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                       fontWeight: 'bold',
                     }}
                   >
-                    {label}
+                    {label === '비고' || label === '첨부' ? (
+                      label
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <span>{label}</span>
+                        <span className="text-red-500 ml-1">*</span>
+                      </div>
+                    )}
                   </TableCell>
                 ))}
               </TableRow>

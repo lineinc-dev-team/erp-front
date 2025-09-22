@@ -1115,7 +1115,7 @@ export default function DailyReportRegistrationView() {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              날씨
+              날씨 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
@@ -1233,7 +1233,14 @@ export default function DailyReportRegistrationView() {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {label}
+                      {label === '비고' || label === '등록/수정일' ? (
+                        label
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          <span>{label}</span>
+                          <span className="text-red-500 ml-1">*</span>
+                        </div>
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -1449,7 +1456,14 @@ export default function DailyReportRegistrationView() {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {label}
+                      {label === '비고' || label === '등록/수정일' ? (
+                        label
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          <span>{label}</span>
+                          <span className="text-red-500 ml-1">*</span>
+                        </div>
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -1850,7 +1864,14 @@ export default function DailyReportRegistrationView() {
                           whiteSpace: 'nowrap',
                         }}
                       >
-                        {label}
+                        {label === '비고' || label === '등록/수정일' ? (
+                          label
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
                       </TableCell>
                     ),
                   )}
@@ -2136,7 +2157,14 @@ export default function DailyReportRegistrationView() {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {label}
+                      {label === '비고' || label === '등록/수정일' ? (
+                        label
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          <span>{label}</span>
+                          <span className="text-red-500 ml-1">*</span>
+                        </div>
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -2488,7 +2516,14 @@ export default function DailyReportRegistrationView() {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {label}
+                      {label === '비고' || label === '등록/수정일' ? (
+                        label
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          <span>{label}</span>
+                          <span className="text-red-500 ml-1">*</span>
+                        </div>
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -2772,7 +2807,14 @@ export default function DailyReportRegistrationView() {
                         fontWeight: 'bold',
                       }}
                     >
-                      {label}
+                      {label === '비고' || label === '첨부' ? (
+                        label
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          <span>{label}</span>
+                          <span className="text-red-500 ml-1">*</span>
+                        </div>
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
