@@ -16,6 +16,7 @@ import { useFuelFormStore, useFuelSearchStore } from '@/stores/fuelAggregationSt
 import { useOutSourcingClientId } from './useOutsourcingClientIdNumber'
 import {
   FuelAggregationInfoService,
+  FuelAggregationRemoveService,
   FuelCarNumberTypeService,
 } from '@/services/fuelAggregation/fuelAggregationService'
 
@@ -208,24 +209,25 @@ export function useFuelAggregation() {
     enabled: pathName === '/fuelAggregation', // 경로 체크
   })
 
-  //자재데이터 삭제!
-  // const MaterialDeleteMutation = useMutation({
-  //   mutationFn: ({ materialManagementIds }: { materialManagementIds: number[] }) =>
-  //     MaterialRemoveService(materialManagementIds),
+  //유류 데이터 삭제!
+  const FuelDeleteMutation = useMutation({
+    mutationFn: ({ fuelAggregationIds }: { fuelAggregationIds: number[] }) =>
+      FuelAggregationRemoveService(fuelAggregationIds),
 
-  //   onSuccess: () => {
-  //     if (window.confirm('정말 삭제하시겠습니까?')) {
-  //       showSnackbar('자재 관리가 삭제되었습니다.', 'success')
-  //       queryClient.invalidateQueries({ queryKey: ['MaterialInfo'] })
-  //     }
-  //   },
+    onSuccess: () => {
+      if (window.confirm('정말 삭제하시겠습니까?')) {
+        showSnackbar('유류집계가 삭제되었습니다.', 'success')
+        queryClient.invalidateQueries({ queryKey: ['FuelAggregationInfo'] })
+      }
+      router.push('/fuelAggregation')
+    },
 
-  //   onError: () => {
-  //     showSnackbar('자재 관리 삭제에 실패했습니다.', 'error')
-  //   },
-  // })
+    onError: () => {
+      showSnackbar('유류집계 삭제에 실패했습니다.', 'error')
+    },
+  })
 
-  // 자재데이터 수정
+  // 유류 수정
 
   const FuelModifyMutation = useMutation({
     mutationFn: (fuelId: number) => ModifyFuel(fuelId),
@@ -317,6 +319,8 @@ export function useFuelAggregation() {
   return {
     createFuelMutation,
     FuelModifyMutation,
+
+    FuelDeleteMutation,
 
     FuelListQuery,
     FuelCancel,

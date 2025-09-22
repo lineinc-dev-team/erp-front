@@ -125,6 +125,7 @@ export function useManagementMaterial() {
         showSnackbar('자재 관리가 삭제되었습니다.', 'success')
         queryClient.invalidateQueries({ queryKey: ['MaterialInfo'] })
       }
+      router.push('/materialManagement')
     },
 
     onError: (error: unknown) => {

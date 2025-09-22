@@ -55,26 +55,26 @@ export async function FuelCarNumberTypeService({
 }
 
 // 유류 삭제
-// export async function MaterialRemoveService(materialManagementIds: number[]) {
-//   const res = await fetch(API.MATERIAL, {
-//     method: 'DELETE',
-//     headers: {
-//       'Content-Type': 'application/json',
-//     },
-//     body: JSON.stringify({ materialManagementIds }),
-//     credentials: 'include',
-//   })
-//   if (!res.ok) {
-//     if (res.status === 401) {
-//       // 로그인 페이지로 이동
-//       window.location.href = '/'
-//       return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
-//     }
-//     throw new Error(`서버 에러: ${res.status}`)
-//   }
+export async function FuelAggregationRemoveService(fuelAggregationIds: number[]) {
+  const res = await fetch(API.FUELAGGRE, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ fuelAggregationIds }),
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
+  }
 
-//   return await res.status
-// }
+  return await res.status
+}
 
 // 강재수불부 엑셀 다운로드
 export async function FuelExcelDownload({

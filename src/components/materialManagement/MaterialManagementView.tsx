@@ -445,27 +445,6 @@ export default function MaterialManagementView() {
             </div>
 
             <div className="flex items-center gap-2">
-              {/* <CommonButton
-                label="삭제"
-                variant="danger"
-                onClick={() => {
-                  if (!selectedIds || !(selectedIds.ids instanceof Set)) {
-                    alert('체크박스를 선택해주세요.')
-                    return
-                  }
-
-                  const idsArray = [...selectedIds.ids]
-                  if (idsArray.length === 0) {
-                    alert('체크박스를 선택해주세요.')
-                    return
-                  }
-
-                  MaterialDeleteMutation.mutate({
-                    materialManagementIds: idsArray,
-                  })
-                }}
-                className="px-3"
-              /> */}
               <CommonButton
                 label="엑셀 다운로드"
                 variant="reset"

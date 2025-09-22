@@ -99,6 +99,8 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     productNamehasNextPage,
     productNameFetching,
     productNameLoading,
+
+    MaterialDeleteMutation,
   } = useManagementMaterial()
 
   const textFieldStyle = {
@@ -1145,6 +1147,17 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
       )}
 
       <div className="flex justify-center gap-10 mt-10">
+        <CommonButton
+          label="삭제"
+          variant="danger"
+          onClick={() => {
+            MaterialDeleteMutation.mutate({
+              materialManagementIds: [materialDetailId],
+            })
+          }}
+          className="px-4 font-bold"
+        />
+
         <CommonButton label="취소" variant="reset" className="px-10" onClick={materialCancel} />
 
         <CommonButton
