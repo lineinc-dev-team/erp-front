@@ -1040,16 +1040,18 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
       )}
 
       <div className="flex justify-center gap-10 mt-10">
-        <CommonButton
-          label="삭제"
-          variant="danger"
-          onClick={() => {
-            FuelDeleteMutation.mutate({
-              fuelAggregationIds: [fuelDetailId],
-            })
-          }}
-          className="px-3"
-        />
+        {isEditMode && (
+          <CommonButton
+            label="삭제"
+            variant="danger"
+            onClick={() => {
+              FuelDeleteMutation.mutate({
+                fuelAggregationIds: [fuelDetailId],
+              })
+            }}
+            className="px-3"
+          />
+        )}
 
         <CommonButton label="취소" variant="reset" className="px-10" onClick={FuelCancel} />
 
