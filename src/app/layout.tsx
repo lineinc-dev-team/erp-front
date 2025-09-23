@@ -32,15 +32,22 @@ export default function RootLayout({
 
           <Snackbar
             open={open}
-            autoHideDuration={4000} // 필요 없으면 제거 가능
+            autoHideDuration={3000} // 필요 없으면 제거 가능
             onClose={(event, reason) => {
               if (reason !== 'clickaway') closeSnackbar() // 바깥 클릭은 무시
             }}
-            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            sx={{
+              position: 'fixed',
+              top: '-10%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              width: '100%', // 전체 넓이 확보
+            }}
           >
             <Alert
               severity={severity}
-              sx={{ width: '100%', fontSize: '17px' }}
+              sx={{ fontSize: '17px', minWidth: '300px' }} // 가운데 보이도록 최소폭
               action={
                 <IconButton
                   aria-label="close"
