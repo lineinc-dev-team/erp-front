@@ -409,13 +409,18 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
         if (!item.position?.trim()) return '담당자의 부서를 입력해주세요.'
         if (!item.department?.trim()) return '담당자의 직급(직책)을 입력해주세요.'
         if (!item.landlineNumber?.trim()) return '담당자의 전화번호를 입력해주세요.'
-        // if (!item.phoneNumber?.trim()) return '담당자의 개인 휴대폰을 입력해주세요.'
+        if (!item.phoneNumber?.trim()) return '담당자의 개인 휴대폰을 입력해주세요.'
         if (!item.email?.trim()) return '담당자의 이메일을 입력해주세요.'
         if (item.memo.length > 500) {
           return '담당자의 비고는 500자 이하로 입력해주세요.'
         }
         if (!/^\d{3,4}-\d{4}$/.test(item.landlineNumber)) {
           return '담당자의 전화번호를 02-123-4567 형식으로 입력하세요.'
+        }
+
+        // 필요시 형식 체크
+        if (!/^\d{2,3}-\d{3,4}-\d{4}$/.test(item.phoneNumber)) {
+          return '담당자의 휴대폰 번호를 010-1234-5678 형식으로 입력하세요.'
         }
 
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item.email)) {
@@ -778,7 +783,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {label === '비고' || label === '개인 휴대폰' ? (
+                    {label === '비고' ? (
                       label
                     ) : (
                       <div className="flex items-center justify-center">
