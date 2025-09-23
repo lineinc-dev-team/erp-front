@@ -26,7 +26,9 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: kyoungholee/docker-example:latest
+          tags: |
+            kyoungholee/docker-example:latest
+            kyoungholee/docker-example:${{ github.sha }}
           platforms: linux/amd64
           build-args: |
             NEXT_PUBLIC_API_URL=https://dev-erp-api.dooson.it/api/v1
