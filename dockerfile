@@ -22,7 +22,7 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install --frozen-lockfile        # 전체 설치 (devDependencies 포함)
+RUN npm install --frozen-lockfile        
 COPY . .
 
 ARG NEXT_PUBLIC_API_URL
@@ -41,7 +41,7 @@ RUN npm ci --only=production
 # build 결과물만 복사
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.js ./next.config.js
+COPY --from=builder /app/next.config.ts ./next.config.ts
 COPY --from=builder /app/node_modules ./node_modules
 
 EXPOSE 3000
