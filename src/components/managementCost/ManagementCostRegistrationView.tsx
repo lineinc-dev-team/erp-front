@@ -362,6 +362,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
       // 첨부 파일 가공
       const formattedFiles = (client.files ?? []).map((item: AttachedFile) => ({
         id: item.id,
+        name: item.name,
         memo: item.memo,
         files: [
           {
@@ -673,6 +674,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                 }}
                 onInputChange={(value) => setProcessSearch(value)}
                 loading={processInfoLoading}
+                disabled
               />
             </div>
           </div>

@@ -1098,6 +1098,7 @@ export default function DailyReportRegistrationView() {
                 }}
                 // onInputChange={(value) => setProcessSearch(value)}
                 loading={processInfoLoading}
+                disabled
               />
             </div>
           </div>

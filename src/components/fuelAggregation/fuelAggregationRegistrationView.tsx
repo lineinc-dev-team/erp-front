@@ -662,6 +662,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                 }}
                 onInputChange={(value) => setProcessSearch(value)}
                 loading={processInfoLoading}
+                disabled
               />
             </div>
           </div>

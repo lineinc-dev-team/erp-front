@@ -581,6 +581,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                 }}
                 onInputChange={(value) => setProcessSearch(value)}
                 loading={processInfoLoading}
+                disabled
               />
             </div>
           </div>

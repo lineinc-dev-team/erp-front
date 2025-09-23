@@ -417,7 +417,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                         }}
                         onInputChange={(value) => setProcessSearch(value)}
                         loading={processInfoLoading}
-                        disabled={form.hasGlobalSiteProcessAccess}
+                        disabled
                       />
                       <CommonButton
                         label="삭제"

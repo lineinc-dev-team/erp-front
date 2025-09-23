@@ -678,6 +678,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                 }}
                 onInputChange={(value) => setProcessSearch(value)}
                 loading={processInfoLoading}
+                disabled
               />
             </div>
           </div>

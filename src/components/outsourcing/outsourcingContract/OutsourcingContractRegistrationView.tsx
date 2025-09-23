@@ -1002,6 +1002,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                 }}
                 onInputChange={(value) => setProcessSearch(value)}
                 loading={processInfoLoading}
+                disabled
               />
             </div>
           </div>
