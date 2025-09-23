@@ -403,9 +403,9 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
           type: item.type || '-',
           typeCode: item.typeCode,
           content:
-            formatChangeDetail(item.getChanges, item.typeCode) === '-'
+            formatChangeDetail(item.getChanges) === '-'
               ? item?.description
-              : formatChangeDetail(item.getChanges, item.typeCode), // 여기 변경
+              : formatChangeDetail(item.getChanges), // 여기 변경
           createdAt: item.createdAt,
           updatedAt: item.updatedAt,
           updatedBy: item.updatedBy,
