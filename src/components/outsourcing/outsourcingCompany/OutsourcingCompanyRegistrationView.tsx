@@ -376,9 +376,9 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     if (form.isActive === '0') return '사용 여부를 선택하세요.'
 
     // 기본공제 항목 체크 (선택된 값이 없으면 안내)
-    if (!(form.defaultDeductions?.split(',').filter(Boolean)?.length > 0)) {
-      return '기본공제 항목을 선택해주세요.'
-    }
+    // if (!(form.defaultDeductions?.split(',').filter(Boolean)?.length > 0)) {
+    //   return '기본공제 항목을 선택해주세요.'
+    // }
 
     // 계좌정보 체크
     if (!form.bankName?.trim() || form.bankName === '0') return '은행명을 선택하세요.'
@@ -620,7 +620,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
 
           <div className="flex">
             <label className="w-[119px] 2xl:w-[124px] text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
-              공제 항목 기본값 <span className="text-red-500 ml-1">*</span>
+              공제 항목 기본값
             </label>
             <div className="flex border  border-gray-400 flex-wrap px-2 items-center gap-4 flex-1">
               {deductionMethodOptions.map((opt) => (

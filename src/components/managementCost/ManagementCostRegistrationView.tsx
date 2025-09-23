@@ -823,7 +823,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
           </div>
 
           <div className="flex">
-            <label className="w-36 text-[13px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+            <label className="w-36 text-[13px]  flex items-center  whitespace-nowrap border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               청구계좌 / 예금주명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">

@@ -530,7 +530,7 @@ export default function OutsourcingCompanyView() {
           </div>
         </div>
       </div>
-      <div style={{ height: 500, width: '100%' }}>
+      <div style={{ width: '100%' }}>
         <DataGrid
           rows={updateOutsourcingList}
           columns={enhancedColumns.map((col) => ({
@@ -538,7 +538,6 @@ export default function OutsourcingCompanyView() {
             sortable: false,
             headerAlign: 'center',
             align: 'center',
-            flex: 1,
           }))}
           checkboxSelection
           disableRowSelectionOnClick

@@ -563,7 +563,7 @@ export default function OrderingView() {
           </div>
         </div>
       </div>
-      <div style={{ height: 500, width: '100%' }}>
+      <div style={{ width: '100%' }}>
         <DataGrid
           rows={updateClientList}
           columns={enhancedColumns.map((col) => ({

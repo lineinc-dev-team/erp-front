@@ -86,7 +86,7 @@ export const EquipmentType = [
 ]
 
 export const SiteColumnList: GridColDef[] = [
-  { field: 'no', headerName: 'No', width: 70 },
+  { field: 'no', headerName: 'No', width: 10 },
   // { field: 'id', headerName: 'No', width: 70 },
   { field: 'name', headerName: '현장명', width: 130 },
   { field: 'processName', headerName: '공정명', width: 130 },
@@ -104,7 +104,7 @@ export const SiteColumnList: GridColDef[] = [
 ]
 
 export const CostColumnList: GridColDef[] = [
-  { field: 'no', headerName: 'No', width: 70 },
+  { field: 'no', headerName: 'No', width: 10 },
   // { field: 'id', headerName: 'No', width: 70 },
   { field: 'site', headerName: '현장명', width: 130 },
   { field: 'process', headerName: '공정명', width: 130 },
@@ -123,7 +123,7 @@ export const CostColumnList: GridColDef[] = [
 ]
 
 export const SteelColumnList: GridColDef[] = [
-  { field: 'no', headerName: 'No', width: 70 },
+  { field: 'no', headerName: 'No', width: 10 },
   // { field: 'id', headerName: 'No', width: 70 },
   { field: 'site', headerName: '현장명', width: 130 },
   { field: 'process', headerName: '공정명', width: 130 },
@@ -139,7 +139,7 @@ export const SteelColumnList: GridColDef[] = [
 ]
 
 export const MaterialColumnList: GridColDef[] = [
-  { field: 'no', headerName: 'No', width: 70 },
+  { field: 'no', headerName: 'No', width: 10 },
   // { field: 'backendId', headerName: 'No', width: 70 },
   { field: 'site', headerName: '현장명', width: 130 },
   { field: 'process', headerName: '공정명', width: 130 },
@@ -159,7 +159,7 @@ export const MaterialColumnList: GridColDef[] = [
 ]
 
 export const FuelColumnList: GridColDef[] = [
-  { field: 'no', headerName: 'No', width: 70 },
+  { field: 'no', headerName: 'No', width: 10 },
   // { field: 'backendId', headerName: 'No', width: 70 },
   { field: 'site', headerName: '현장명', width: 130 },
   { field: 'process', headerName: '공정명', width: 130 },
@@ -175,7 +175,7 @@ export const FuelColumnList: GridColDef[] = [
 ]
 
 export const UserDataList: GridColDef[] = [
-  { field: 'no', headerName: 'No', width: 70 },
+  { field: 'no', headerName: 'No', width: 10 },
   // { field: 'backendId', headerName: 'No', width: 70 },
   { field: 'loginId', headerName: '사용자 ID', width: 130 },
   { field: 'username', headerName: '사용자 이름', width: 130 },
@@ -192,7 +192,7 @@ export const UserDataList: GridColDef[] = [
 ]
 
 export const PermissionDataList: GridColDef[] = [
-  { field: 'no', headerName: 'No', width: 70 },
+  { field: 'no', headerName: 'No', width: 10 },
   // { field: 'id', headerName: 'No', width: 70 },
   { field: 'name', headerName: '그룹명', width: 130 },
   { field: 'sites', headerName: '현장/공정', width: 130 },
@@ -201,9 +201,8 @@ export const PermissionDataList: GridColDef[] = [
 ]
 
 export const clientCompanyList: GridColDef[] = [
-  { field: 'no', headerName: 'No', width: 20 },
-  // { field: 'id', headerName: 'No', width: 70 },
-  { field: 'businessNumber', headerName: '사업자등록번호', width: 130 },
+  { field: 'id', headerName: 'No', width: 20 },
+  { field: 'businessNumber', headerName: '사업자등록번호', width: 400 },
   { field: 'name', headerName: '발주처명', width: 130 },
   { field: 'ceoName', headerName: '대표자명', width: 130 },
   { field: 'email', headerName: '이메일', width: 130 },
@@ -220,7 +219,7 @@ export const clientCompanyList: GridColDef[] = [
 ]
 
 export const LaborColumnList: GridColDef[] = [
-  { field: 'no', headerName: 'No', width: 70 },
+  { field: 'no', headerName: 'No', width: 10 },
   // { field: 'id', headerName: 'No', width: 70 },
   { field: 'type', headerName: '구분', width: 130 },
   { field: 'name', headerName: '이름', width: 130 },
@@ -241,7 +240,7 @@ export const LaborColumnList: GridColDef[] = [
 ]
 
 export const outsourcingCompanyList: GridColDef[] = [
-  { field: 'no', headerName: 'No', width: 70 },
+  { field: 'no', headerName: 'No', width: 10 },
   // { field: 'id', headerName: 'No', width: 70 },
   { field: 'name', headerName: '업체명', width: 130 },
   { field: 'businessNumber', headerName: '사업자등록번호', width: 130 },
@@ -261,7 +260,7 @@ export const outsourcingCompanyList: GridColDef[] = [
 ]
 
 export const outsourcingContractListData: GridColDef[] = [
-  { field: 'no', headerName: 'No', width: 70 },
+  { field: 'no', headerName: 'No', width: 10 },
   // { field: 'id', headerName: 'No', width: 70 },
   { field: 'siteName', headerName: '현장명', width: 130 },
   { field: 'processName', headerName: '공정명', width: 130 },
@@ -480,7 +479,7 @@ export const WithoutApprovalAndRemovalOptions = [
 // 노무 명세서
 
 export const LaborStateMentColumnList: GridColDef[] = [
-  { field: 'no', headerName: 'No', width: 70 },
+  { field: 'no', headerName: 'No', width: 10 },
   // { field: 'id', headerName: 'No', width: 70 },
   { field: 'siteName', headerName: '현장', width: 130 },
   { field: 'processName', headerName: '공정', width: 130 },

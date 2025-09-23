@@ -21,7 +21,6 @@ import {
 } from '@/utils/formatters'
 import { useClientCompany } from '@/hooks/useClientCompany'
 import { Contract, ContractFile, ContractFileType, HistoryItem, SiteForm } from '@/types/site'
-import CommonFileInput from '../common/FileInput'
 import { formatPersonNumber } from '@/utils/formatPhoneNumber'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
@@ -39,6 +38,7 @@ import {
   Typography,
 } from '@mui/material'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
+import CommonMultiFileInput from '../common/CommonMultiFileInput'
 
 export default function SitesRegistrationView({ isEditMode = false }) {
   const FILE_TYPE_LABELS: Record<ContractFileType, string> = {
@@ -350,20 +350,6 @@ export default function SitesRegistrationView({ isEditMode = false }) {
               />,
             )}
 
-            <div className="flex col-span-2">
-              <label className="w-36 text-[14px] border border-gray-400 bg-gray-300 flex items-center justify-center font-bold">
-                비고
-              </label>
-              <div className="flex-1 border border-gray-400 px-2 py-1">
-                <CommonInput
-                  placeholder="500자 이하 텍스트 입력"
-                  className="flex-1"
-                  value={contract.memo}
-                  onChange={(v) => updateContractField(idx, 'memo', v)}
-                />
-              </div>
-            </div>
-
             {(['CONTRACT', 'DRAWING', 'WARRANTY', 'PERMIT', 'ETC'] as ContractFileType[]).map(
               (type) => (
                 <div key={type} className="flex">
@@ -371,12 +357,12 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                     {FILE_TYPE_LABELS[type]}
                   </label>
                   <div className="flex-1 border border-gray-400 px-2 py-2 flex flex-col gap-2">
-                    <CommonFileInput
+                    <CommonMultiFileInput
                       // label={FILE_TYPE_LABELS[type]}
                       uploadTarget="SITE"
                       acceptedExtensions={
                         type === 'ETC'
-                          ? ['zip', 'xlsx', 'doc']
+                          ? ['zip', 'xlsx', 'doc', 'pdf', 'hwp', 'png', 'jpg', 'ppt']
                           : ['pdf', 'hwp', 'png', 'jpg', 'ppt']
                       }
                       files={contract.files
@@ -411,6 +397,19 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                 </div>
               ),
             )}
+            <div className="flex col-span-2">
+              <label className="w-36 text-[14px] border border-gray-400 bg-gray-300 flex items-center justify-center font-bold">
+                비고
+              </label>
+              <div className="flex-1 border border-gray-400 px-2 py-1">
+                <CommonInput
+                  placeholder="500자 이하 텍스트 입력"
+                  className="flex-1"
+                  value={contract.memo}
+                  onChange={(v) => updateContractField(idx, 'memo', v)}
+                />
+              </div>
+            </div>
             {isEditMode &&
               renderInputRow(
                 '첨부일자 / 등록자',
@@ -694,8 +693,8 @@ export default function SitesRegistrationView({ isEditMode = false }) {
           </div>
 
           <div className="flex">
-            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              사업시작 / 종료일 <span className="text-red-500 ml-1">*</span>
+            <label className="w-36 text-[14px]  border border-gray-400 whitespace-nowrap  flex items-center justify-center bg-gray-300  font-bold text-center">
+              착공일 / 준공일 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonDatePicker

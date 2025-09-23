@@ -571,7 +571,7 @@ export default function ManagementSteel() {
           </div>
         </div>
       </div>
-      <div style={{ height: 500, width: '100%' }}>
+      <div style={{ width: '100%' }}>
         <DataGrid
           rows={updateSteelList}
           columns={enhancedColumns.map((col) => ({
@@ -579,7 +579,6 @@ export default function ManagementSteel() {
             sortable: false,
             headerAlign: 'center',
             align: 'center',
-            flex: 1,
           }))}
           checkboxSelection
           disableRowSelectionOnClick

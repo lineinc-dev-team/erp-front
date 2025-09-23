@@ -20,6 +20,16 @@ export default function CommonMultiFileInput({
 
     const newFiles = Array.from(e.target.files)
 
+    const existingFilesCount = files?.filter((f) => f.fileUrl || f.file?.name).length ?? 0
+
+    const totalFiles = existingFilesCount + newFiles.length
+
+    // 10개 이상 제한
+    if (totalFiles > 10) {
+      showSnackbar('파일은 최대 10개까지만 업로드할 수 있습니다.', 'warning')
+      return
+    }
+
     // 확장자 체크
     const validFiles = newFiles.filter((file) => {
       const ext = file.name.split('.').pop()?.toLowerCase() || ''
@@ -66,6 +76,26 @@ export default function CommonMultiFileInput({
     }
   }
 
+  const handleDownload = async (fileUrl: string, fileName: string) => {
+    try {
+      const response = await fetch(fileUrl)
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fileName
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+
+      window.URL.revokeObjectURL(url) // 메모리 해제
+    } catch (error) {
+      console.error('파일 다운로드 실패:', error)
+      alert('파일 다운로드에 실패했습니다.')
+    }
+  }
+
   return (
     <div className="flex w-full">
       <div className="flex flex-col gap-2 w-full">
@@ -77,7 +107,12 @@ export default function CommonMultiFileInput({
 
             return (
               <li key={index} className="flex items-center gap-2 mb-1">
-                <span className={className}>{fileName}</span>
+                <span
+                  onClick={() => handleDownload(file.fileUrl, fileName)}
+                  className={`${className} text-blue-600 underline cursor-pointer`}
+                >
+                  {fileName}
+                </span>
                 <button
                   onClick={() => removeFile(index)}
                   className="text-red-500 border cursor-pointer border-gray-400 rounded px-2"

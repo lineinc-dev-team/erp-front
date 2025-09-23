@@ -519,7 +519,7 @@ export default function FuelAggregationView() {
           </div>
         </div>
       </div>
-      <div style={{ height: 500, width: '100%' }}>
+      <div style={{ width: '100%' }}>
         <DataGrid
           rows={updateFuelList}
           columns={enhancedColumns.map((col) => ({
@@ -527,7 +527,6 @@ export default function FuelAggregationView() {
             sortable: false,
             headerAlign: 'center',
             align: 'center',
-            flex: 1,
           }))}
           getRowId={(row) => row.rowId} // DataGrid에는 rowId를 유니크 키로 사용
           checkboxSelection

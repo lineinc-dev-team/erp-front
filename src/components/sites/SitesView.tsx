@@ -658,7 +658,7 @@ export default function SitesView() {
           </div>
         </div>
       </div>
-      <div style={{ height: 500, width: '100%' }}>
+      <div style={{ width: '100%' }}>
         <DataGrid
           rows={updateSiteList}
           columns={enhancedColumns.map((col) => ({
@@ -666,7 +666,6 @@ export default function SitesView() {
             sortable: false,
             headerAlign: 'center',
             align: 'center',
-            flex: 1,
           }))}
           checkboxSelection
           disableRowSelectionOnClick

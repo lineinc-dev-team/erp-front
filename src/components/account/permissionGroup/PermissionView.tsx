@@ -246,7 +246,7 @@ export default function PermissionView() {
             </div>
           </div>
 
-          <div style={{ height: 500, width: '100%' }}>
+          <div style={{ width: '100%' }}>
             <DataGrid
               rows={updatedPermissionList}
               columns={enhancedColumns.map((col) => ({
@@ -254,7 +254,6 @@ export default function PermissionView() {
                 sortable: false,
                 headerAlign: 'center',
                 align: 'center',
-                flex: 1,
                 headerClassName: 'bg-gray-200',
               }))}
               checkboxSelection

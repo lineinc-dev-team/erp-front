@@ -312,7 +312,7 @@ export default function LaborStateMentView() {
           </div>
         </div>
       </div>
-      <div style={{ height: 500, width: '100%' }}>
+      <div style={{ width: '100%' }}>
         <DataGrid
           rows={updateClientList}
           columns={enhancedColumns.map((col) => ({
@@ -320,7 +320,6 @@ export default function LaborStateMentView() {
             sortable: false,
             headerAlign: 'center',
             align: 'center',
-            flex: 1,
           }))}
           checkboxSelection
           disableRowSelectionOnClick
