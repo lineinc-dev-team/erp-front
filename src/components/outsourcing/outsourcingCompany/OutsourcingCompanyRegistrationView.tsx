@@ -331,8 +331,11 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
       const allHistories = outsourcingHistoryList.pages.flatMap((page) =>
         page.data.content.map((item: HistoryItem) => ({
           id: item.id,
-          type: item.type,
-          content: formatChangeDetail(item.getChanges), // 여기 변경
+          type: item.type || '-',
+          content:
+            formatChangeDetail(item.getChanges) === '-'
+              ? item?.description
+              : formatChangeDetail(item.getChanges), // 여기 변경
           createdAt: item.createdAt,
           updatedAt: item.updatedAt,
           updatedBy: item.updatedBy,

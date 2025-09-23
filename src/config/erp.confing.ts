@@ -201,7 +201,7 @@ export const PermissionDataList: GridColDef[] = [
 ]
 
 export const clientCompanyList: GridColDef[] = [
-  { field: 'no', headerName: 'No', width: 70 },
+  { field: 'no', headerName: 'No', width: 20 },
   // { field: 'id', headerName: 'No', width: 70 },
   { field: 'businessNumber', headerName: '사업자등록번호', width: 130 },
   { field: 'name', headerName: '발주처명', width: 130 },

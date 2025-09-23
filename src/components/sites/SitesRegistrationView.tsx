@@ -486,9 +486,12 @@ export default function SitesRegistrationView({ isEditMode = false }) {
       const allHistories = siteHistoryList.pages.flatMap((page) =>
         page.data.content.map((item: HistoryItem) => ({
           id: item.id,
-          type: item.type,
+          type: item.type || '-',
           typeCode: item.typeCode,
-          content: formatChangeDetail(item.getChanges, item.typeCode), // 여기 변경
+          content:
+            formatChangeDetail(item.getChanges, item.typeCode) === '-'
+              ? item?.description
+              : formatChangeDetail(item.getChanges, item.typeCode), // 여기 변경
           createdAt: item.createdAt,
           updatedAt: item.updatedAt,
           updatedBy: item.updatedBy,

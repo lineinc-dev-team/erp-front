@@ -102,6 +102,7 @@ type HistoryItem = {
   createdAt: string // or Date
   updatedAt: string
   content: string // 수정항목
+  description: string
   updatedBy: string
   memo: string
   type: string

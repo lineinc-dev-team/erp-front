@@ -621,8 +621,11 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
       const allHistories = laborContractHistoryList.pages.flatMap((page) =>
         page.data.content.map((item: HistoryItem) => ({
           id: item.id,
-          type: item.type,
-          content: formatChangeDetail(item.getChanges), // 여기 변경
+          type: item.type || '-',
+          content:
+            formatChangeDetail(item.getChanges) === '-'
+              ? item?.description
+              : formatChangeDetail(item.getChanges), // 여기 변경
           createdAt: item.createdAt,
           description: item.description,
           updatedAt: item.updatedAt,

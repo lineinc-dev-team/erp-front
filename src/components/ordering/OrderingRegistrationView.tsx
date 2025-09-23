@@ -954,7 +954,6 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                         files={m.files} // 각 항목별 files
                         onChange={(newFiles) => {
                           updateItemField('attachedFile', m.id, 'files', newFiles.slice(0, 1))
-                          // updateItemField('attachedFile', m.id, 'files', newFiles)
                         }}
                         uploadTarget="CLIENT_COMPANY"
                       />

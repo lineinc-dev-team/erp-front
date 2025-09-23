@@ -308,8 +308,11 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
       const allHistories = materialHistoryList.pages.flatMap((page) =>
         page.data.content.map((item: HistoryItem) => ({
           id: item.id,
-          type: item.type,
-          content: formatChangeDetail(item.getChanges), // 여기 변경
+          type: item.type || '-',
+          content:
+            formatChangeDetail(item.getChanges) === '-'
+              ? item?.description
+              : formatChangeDetail(item.getChanges), // 여기 변경
           createdAt: item.createdAt,
           updatedAt: item.updatedAt,
           updatedBy: item.updatedBy,
@@ -422,12 +425,13 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
       .flatMap((page) => page.data.content)
       .map((user) => ({
         id: user.id,
-        name: user.name,
+        name: user.name + (user.deleted ? ' (삭제됨)' : ''),
+        deleted: user.deleted,
       }))
 
     setDriverOptionsByCompany((prev) => ({
       ...prev,
-      [selectedCompanyIds[selectId]]: [{ id: 0, name: '선택' }, ...options],
+      [selectedCompanyIds[selectId]]: [{ id: 0, name: '선택', deleted: false }, , ...options],
     }))
   }, [fuelDriver, selectedCompanyIds, selectId])
 
@@ -503,7 +507,8 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
 
         const options = res.data.content.map((user: any) => ({
           id: user.id,
-          name: user.name,
+          name: user.name + (user.deleted ? ' (삭제됨)' : ''),
+          deleted: user.deleted,
         }))
 
         setDriverOptionsByCompany((prev) => {
@@ -512,10 +517,10 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
           return {
             ...prev,
             [companyId]: [
-              { id: 0, name: '선택' },
+              { id: 0, name: '선택', deleted: false },
               ...options,
               // 만약 선택된 worker가 목록에 없으면 추가
-              ...(driverData && !exists ? [{ id: driverData, name: '' }] : []),
+              ...(driverData && !exists ? [{ id: driverData, name: '', deleted: true }] : []),
             ],
           }
         })
@@ -529,7 +534,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
         const carOptions = carNumberRes.data.content.map((user: any) => ({
           id: user.id,
           specification: user.specification,
-          vehicleNumber: user.vehicleNumber,
+          vehicleNumber: user.vehicleNumber + (user.deleted ? ' (삭제됨)' : ''),
           category: user.category,
         }))
 
@@ -539,7 +544,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
           return {
             ...prev,
             [companyId]: [
-              { id: 0, name: '선택' },
+              { id: 0, specification: '', vehicleNumber: '선택', category: '', deleted: false },
               ...carOptions,
               // 만약 선택된 worker가 목록에 없으면 추가
               ...(carNumberId && !exists
@@ -549,6 +554,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                       specification: '',
                       vehicleNumber: '',
                       category: '',
+                      deleted: true,
                     },
                   ]
                 : []),

@@ -89,12 +89,14 @@ type HistoryItem = {
   id: number
   no: number
   getChanges: string
+  description: string
   createdAt: string // or Date
   updatedAt: string
   content: string // 수정항목
   updatedBy: string
   memo: string
   type: string
+  typeCode: string
 }
 
 export type AttachedFile = {

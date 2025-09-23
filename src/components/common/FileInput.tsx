@@ -77,6 +77,26 @@ export default function CommonFileInput({
 
   // const validFiles = files?.filter((f) => f.file?.name) ?? []
 
+  const handleDownload = async (fileUrl: string, fileName: string) => {
+    try {
+      const response = await fetch(fileUrl)
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fileName
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+
+      window.URL.revokeObjectURL(url) // 메모리 해제
+    } catch (error) {
+      console.error('파일 다운로드 실패:', error)
+      alert('파일 다운로드에 실패했습니다.')
+    }
+  }
+
   return (
     <div className="flex w-full">
       <div className="flex items-center gap-2 justify-between w-full">
@@ -103,7 +123,13 @@ export default function CommonFileInput({
 
             return (
               <li key={index} className="flex items-center gap-2 mb-1">
-                <span className={className}>{fileName}</span>
+                <span
+                  onClick={() => handleDownload(file.fileUrl, fileName)}
+                  className={`${className} text-blue-600 underline cursor-pointer`}
+                >
+                  {fileName}
+                </span>
+
                 <button
                   onClick={() => removeFile(index)}
                   className="text-red-500 border cursor-pointer border-gray-400 rounded px-2"
