@@ -37,17 +37,18 @@ export default function RootLayout({
               if (reason !== 'clickaway') closeSnackbar() // 바깥 클릭은 무시
             }}
             sx={{
-              position: 'fixed',
-              top: '-10%',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              width: '100%', // 전체 넓이 확보
+              '& .MuiPaper-root': {
+                position: 'fixed !important', // 기존 position 무시
+                top: '50% !important', // 화면 세로 중앙
+                left: '50% !important', // 화면 가로 중앙
+                transform: 'translate(-50%, -50%) !important', // 정확히 중앙
+                margin: '0 !important', // 기존 margin 무시
+              },
             }}
           >
             <Alert
               severity={severity}
-              sx={{ fontSize: '17px', minWidth: '300px' }} // 가운데 보이도록 최소폭
+              sx={{ fontSize: '17px' }} // 가운데 보이도록 최소폭
               action={
                 <IconButton
                   aria-label="close"
