@@ -402,7 +402,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
         if (!item.position?.trim()) return '담당자의 부서를 입력해주세요.'
         if (!item.department?.trim()) return '담당자의 직급(직책)을 입력해주세요.'
         if (!item.landlineNumber?.trim()) return '담당자의 전화번호를 입력해주세요.'
-        if (!item.phoneNumber?.trim()) return '담당자의 개인 휴대폰을 입력해주세요.'
+        // if (!item.phoneNumber?.trim()) return '담당자의 개인 휴대폰을 입력해주세요.'
         if (!item.email?.trim()) return '담당자의 이메일을 입력해주세요.'
         if (item.memo.length > 500) {
           return '담당자의 비고는 500자 이하로 입력해주세요.'
@@ -735,7 +735,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {label === '비고' ? (
+                    {label === '비고' || label === '개인 휴대폰' ? (
                       label
                     ) : (
                       <div className="flex items-center justify-center">

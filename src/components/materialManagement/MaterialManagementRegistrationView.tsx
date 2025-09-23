@@ -433,7 +433,9 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     if (!form.siteId) return '현장을 선택해주세요.'
     if (!form.siteProcessId) return '공정을 선택해주세요.'
     if (!form.inputType?.trim()) return '투입구분을 선택해주세요.'
-    if (!form.inputTypeDescription?.trim()) return '투입구분 설명을 입력해주세요.'
+    if (form.inputType === 'DIRECT_INPUT' && !form.inputTypeDescription?.trim()) {
+      return '투입구분 설명을 입력해주세요.'
+    }
     if (!form.deliveryDate) return '납품일자를 선택해주세요.'
     if (!form.outsourcingCompanyId) return '자재업체를 선택해주세요.'
 
