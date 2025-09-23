@@ -123,6 +123,10 @@ export type FormState = {
   isActive: string
   userId: number
 
+  homepageUrl: string
+  homepageLoginId: string
+  homepagePassword: string
+
   // 담당자 배열
   headManagers: Manager[]
 

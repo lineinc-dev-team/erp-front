@@ -81,6 +81,9 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
     memo: '',
     isActive: '1',
     userId: 0,
+    homepageUrl: '',
+    homepageLoginId: '',
+    homepagePassword: '',
     headManagers: [],
     checkedManagerIds: [],
     attachedFiles: [
@@ -114,6 +117,9 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
         paymentPeriod: '',
         memo: '',
         isActive: '1',
+        homepageUrl: '',
+        homepageLoginId: '',
+        homepagePassword: '',
         headManagers: [],
         checkedManagerIds: [],
         attachedFiles: [
@@ -311,6 +317,9 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
       memo: form.memo,
       isActive: form.isActive === '1' ? true : false,
       userId: form.userId,
+      homepageUrl: form.homepageUrl,
+      homepageLoginId: form.homepageLoginId,
+      homepagePassword: form.homepagePassword,
       contacts: form.headManagers.map((m) => ({
         id: m.id,
         name: m.name,

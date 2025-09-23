@@ -32,7 +32,7 @@ export default function RootLayout({
 
           <Snackbar
             open={open}
-            autoHideDuration={3000} // 필요 없으면 제거 가능
+            autoHideDuration={2000} // 필요 없으면 제거 가능
             onClose={(event, reason) => {
               if (reason !== 'clickaway') closeSnackbar() // 바깥 클릭은 무시
             }}

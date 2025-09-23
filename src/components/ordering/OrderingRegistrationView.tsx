@@ -93,6 +93,9 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
     memo: '비고',
     isMain: '대표담당자',
     originalFileName: '파일 추가',
+    homepageUrl: '홈페이지 URL',
+    homepageLoginId: '로그인 아이디',
+    homepagePassword: '패스워드',
   }
 
   const {
@@ -265,6 +268,10 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
       setField('updatedAt', getTodayDateString(client.updatedAt))
 
       setField('memo', client.memo)
+      setField('homepageUrl', client.homepageUrl)
+      setField('homepageLoginId', client.homepageLoginId)
+      setField('homepagePassword', client.homepagePassword)
+
       setField('headManagers', formattedContacts)
       setField('attachedFiles', formattedFiles)
     } else {
@@ -411,10 +418,6 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
           return '담당자의 전화번호를 02-123-4567 형식으로 입력하세요.'
         }
 
-        // 필요시 형식 체크
-        if (!/^\d{2,3}-\d{3,4}-\d{4}$/.test(item.phoneNumber)) {
-          return '담당자의 휴대폰 번호를 010-1234-5678 형식으로 입력하세요.'
-        }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item.email)) {
           return '담당자의 이메일 형식이 올바르지 않습니다.'
         }
@@ -649,6 +652,46 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                 value={form.isActive}
                 onChange={(value) => setField('isActive', value)}
                 options={UseORnotOptions}
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+              홈페이지URL
+            </label>
+            <div className="border border-gray-400 px-2 w-full">
+              <CommonInput
+                value={form.homepageUrl ?? ''}
+                placeholder="텍스트 입력"
+                onChange={(value) => setField('homepageUrl', value)}
+                className="flex-1"
+              />
+            </div>
+          </div>
+          <div className="flex">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+              로그인 아이디
+            </label>
+            <div className="border border-gray-400 px-2 w-full">
+              <CommonInput
+                value={form.homepageLoginId ?? ''}
+                placeholder=" 텍스트 입력"
+                onChange={(value) => setField('homepageLoginId', value)}
+                className="flex-1"
+              />
+            </div>
+          </div>
+          <div className="flex">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+              패스워드
+            </label>
+            <div className="border border-gray-400 px-2 w-full">
+              <CommonInput
+                value={form.homepagePassword ?? ''}
+                placeholder="텍스트 입력"
+                onChange={(value) => setField('homepagePassword', value)}
+                className="flex-1"
               />
             </div>
           </div>
