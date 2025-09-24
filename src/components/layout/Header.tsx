@@ -162,8 +162,6 @@ export default function Header() {
 
   const { data, isLoading, isError } = useHeaderMenuListQuery(roleId, enabled)
 
-  sessionStorage.setItem('menuName', JSON.stringify(data))
-
   // (3) data가 있으면 변환해서 메뉴 생성
   const menuItemsFromApi = data ? convertApiMenusToMenuItems(data.data) : []
 
