@@ -272,6 +272,9 @@ export default function SitesRegistrationView({ isEditMode = false }) {
           id: contract.id,
           name: contract.name || '',
           amount: contract.amount || 0,
+          supplyPrice: contract.supplyPrice || 0,
+          vat: contract.vat || 0,
+          purchaseTax: contract.purchaseTax || 0,
           memo: contract.memo || '',
           createdBy: contract.createdBy,
           createdAt: getTodayDateString(contract.createdAt),
@@ -292,10 +295,16 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
   const { handleCancelData } = SiteRegistrationService()
 
-  const renderInputRow = (label: string, children: React.ReactNode) => (
+  const renderInputRow = (label: string, state: boolean, children: React.ReactNode) => (
     <div className="flex">
       <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
-        {label} <span className="text-red-500 ml-1">*</span>
+        {state === true ? (
+          <span>
+            {label} <span className="text-red-500 ml-1">*</span>
+          </span>
+        ) : (
+          <span>{label}</span>
+        )}
       </label>
       <div className="flex-1 border border-gray-400 px-2 py-2 flex items-center">{children}</div>
     </div>
@@ -328,6 +337,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
           <div className="grid grid-cols-2 ">
             {renderInputRow(
               '계약명',
+              true,
               <CommonInput
                 value={contract.name}
                 onChange={(v) => updateContractField(idx, 'name', v)}
@@ -338,15 +348,52 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
             {renderInputRow(
               '계약금액',
-
+              false,
               <AmountInput
                 className="w-full"
                 value={formatNumber(contract.amount)}
+                onChange={() => {}}
+                placeholder="0"
+                disabled
+              />,
+            )}
+            {renderInputRow(
+              '공급가',
+              false,
+              <AmountInput
+                className="w-full"
+                value={formatNumber(contract.supplyPrice)}
                 onChange={(val) => {
                   const numericValue = unformatNumber(val)
-                  updateContractField(idx, 'amount', numericValue)
+                  updateContractField(idx, 'supplyPrice', numericValue)
                 }}
-                placeholder="금액을 입력하세요"
+                placeholder="0"
+              />,
+            )}
+            {renderInputRow(
+              '부가세',
+              false,
+              <AmountInput
+                className="w-full"
+                value={formatNumber(contract.vat)}
+                onChange={(val) => {
+                  const numericValue = unformatNumber(val)
+                  updateContractField(idx, 'vat', numericValue)
+                }}
+                placeholder="0"
+              />,
+            )}
+            {renderInputRow(
+              '매입세',
+              false,
+              <AmountInput
+                className="w-full"
+                value={formatNumber(contract.purchaseTax)}
+                onChange={(val) => {
+                  const numericValue = unformatNumber(val)
+                  updateContractField(idx, 'purchaseTax', numericValue)
+                }}
+                placeholder="0"
               />,
             )}
 
@@ -413,6 +460,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
             {isEditMode &&
               renderInputRow(
                 '첨부일자 / 등록자',
+                false,
                 <CommonInput
                   placeholder="텍스트 입력"
                   className="flex-1"
@@ -525,13 +573,11 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
   function validateSiteForm(form: SiteForm) {
     if (!form.name?.trim()) return '현장명을 입력하세요.'
-    if (!form.address?.trim()) return '주소를 입력하세요.'
     if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
     if (!form.clientCompanyId || String(form.clientCompanyId) === '0') return '발주처를 선택하세요.'
     if (!form.startedAt) return '사업 시작일을 선택하세요.'
     if (!form.endedAt) return '사업 종료일을 선택하세요.'
     if (!form.userId || String(form.userId) === '0') return '본사 담당자를 선택하세요.'
-    if (!form.contractAmount || form.contractAmount <= 0) return '도급금액을 입력하세요.'
     if (form.memo.length > 500) {
       return '비고는 500자 이하로 입력해주세요.'
     }
@@ -559,8 +605,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
     if (form.contracts.length > 0) {
       for (const item of form.contracts) {
-        if (!item.name?.trim()) return '계약서의 이름을 입력해주세요.'
-        if (!item.amount) return '계약서의 계약금액을 입력해주세요.'
+        if (!item.name.trim()) return '계약명을 입력해주세요.'
         if (item.memo.length > 500) return '계약서의 비고는 500자 이하로 입력해주세요.'
       }
     }
@@ -605,12 +650,12 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
-              위치(주소) <span className="text-red-500 ml-1">*</span>
+              위치(주소)
             </label>
             <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
               <div className="flex gap-2">
                 <input
-                  value={form.address}
+                  value={form.address ?? ''}
                   readOnly
                   placeholder="주소를 검색해 주세요."
                   className="flex-1 border px-3 py-2 rounded"
@@ -623,7 +668,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                 />
               </div>
               <input
-                value={form.detailAddress}
+                value={form.detailAddress ?? ''}
                 onChange={(e) => setField('detailAddress', e.target.value)}
                 placeholder="상세주소"
                 className="w-full border px-3 py-2 rounded"
@@ -750,17 +795,15 @@ export default function SitesRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              도급금액 <span className="text-red-500 ml-1">*</span>
+              도급금액
             </label>
             <div className="border flex  items-center border-gray-400 px-2 w-full">
               <AmountInput
                 className="w-full"
                 value={formatNumber(form.contractAmount)}
-                onChange={(val) => {
-                  const numericValue = unformatNumber(val)
-                  setField('contractAmount', numericValue)
-                }}
-                placeholder="금액을 입력하세요"
+                onChange={() => {}}
+                placeholder="0"
+                disabled
               />
             </div>
           </div>

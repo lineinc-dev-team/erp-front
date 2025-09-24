@@ -154,8 +154,27 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
   updateContractField: (index, field, value) =>
     set((state) => {
       const updated = [...state.form.contracts]
+
+      // 1️⃣ 해당 계약서 필드 업데이트
       updated[index] = { ...updated[index], [field]: value }
-      return { form: { ...state.form, contracts: updated } }
+
+      // 2️⃣ 개별 contract.amount 계산
+      updated[index].amount =
+        (updated[index].supplyPrice || 0) +
+        (updated[index].vat || 0) +
+        (updated[index].purchaseTax || 0)
+
+      // 3️⃣ 전체 합계 계산
+      const totalAmount = updated.reduce((sum, contract) => sum + (contract.amount || 0), 0)
+
+      // 4️⃣ 상태 업데이트: contracts + contractAmount
+      return {
+        form: {
+          ...state.form,
+          contracts: updated,
+          contractAmount: totalAmount,
+        },
+      }
     }),
 
   addContract: () =>
@@ -165,9 +184,12 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
         contracts: [
           ...state.form.contracts,
           {
-            id: 0,
+            id: Date.now(),
             name: '',
             amount: 0,
+            supplyPrice: 0,
+            vat: 0,
+            purchaseTax: 0,
             memo: '',
             files: [],
           },

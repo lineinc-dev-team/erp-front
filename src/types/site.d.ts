@@ -21,6 +21,9 @@ export type Contract = {
   id: number
   name: string
   amount: number
+  supplyPrice: number
+  vat: number
+  purchaseTax: number
   memo: string
   createdBy?: string
   createdAt?: string
