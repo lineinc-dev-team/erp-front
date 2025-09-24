@@ -527,7 +527,6 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     if (!form.name?.trim()) return '현장명을 입력하세요.'
     if (!form.address?.trim()) return '주소를 입력하세요.'
     if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
-    if (!form.type?.trim()) return '현장 유형을 선택하세요.'
     if (!form.clientCompanyId || String(form.clientCompanyId) === '0') return '발주처를 선택하세요.'
     if (!form.startedAt) return '사업 시작일을 선택하세요.'
     if (!form.endedAt) return '사업 종료일을 선택하세요.'
@@ -539,7 +538,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     if (!form.process?.name?.trim()) return '공정명을 입력하세요.'
     if (!form.process?.managerId || String(form.process.managerId) === '0')
       return '공정소장을 입력하세요.'
-    if (!form.process?.officePhone?.trim()) return '사무실 연락처를 입력하세요.'
+    // if (!form.process?.officePhone?.trim()) return '사무실 연락처를 입력하세요.'
     if (!form.process.status || String(form.process.status) === '선택')
       return '진행상태를 입력하세요.'
 
@@ -547,9 +546,9 @@ export default function SitesRegistrationView({ isEditMode = false }) {
       return '비고는 500자 이하로 입력해주세요.'
     }
 
-    if (!/^\d{3,4}-\d{4}$/.test(form.process?.officePhone)) {
-      return '공정정보의 사무실 연락처를 02-123-4567 형식으로 입력하세요.'
-    }
+    // if (!/^\d{3,4}-\d{4}$/.test(form.process?.officePhone)) {
+    //   return '공정정보의 사무실 연락처를 02-123-4567 형식으로 입력하세요.'
+    // }
 
     // 날짜 유효성 검사
     if (form.startedAt && form.endedAt) {
@@ -668,6 +667,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                 displayLabel
                 onChange={(value) => setField('type', value)}
                 options={siteTypeOptions}
+                disabled
               />
             </div>
           </div>
@@ -818,7 +818,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px]  flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              사무실 연락처 <span className="text-red-500 ml-1">*</span>
+              사무실 연락처
             </label>
             <div className="border flex  items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect

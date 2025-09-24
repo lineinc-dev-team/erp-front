@@ -56,7 +56,7 @@ type SiteForm = {
   isModalOpen: boolean
   city: string
   district: string
-  type: string
+  type: string | null
   clientCompanyId: number
   startedAt: Date | null
   endedAt: Date | null
