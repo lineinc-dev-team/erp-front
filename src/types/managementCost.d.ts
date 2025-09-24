@@ -1,6 +1,7 @@
 export interface DetailItem {
   id: number
   name: string
+  quantity: number
   unitPrice: number
   supplyPrice: number
   vat: number
@@ -75,6 +76,7 @@ export type CostSearchState = {
 export type CostItem = {
   id: number
   name: string
+  quantity: number
   unitPrice: number
   supplyPrice: number
   vat: number
@@ -212,6 +214,7 @@ type CostFormStore = {
   removeCheckedItems: (type: 'costItem' | 'attachedFile' | 'mealListData' | 'keyMoneyList') => void
 
   // 그외에 계산 함수값
+  getQuantityTotal: () => number
   getPriceTotal: () => number
   getSupplyTotal: () => number
   getVatTotal: () => number

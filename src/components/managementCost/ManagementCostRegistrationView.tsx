@@ -56,6 +56,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     getPersonTotal,
     getAmountTotal,
     getPriceTotal,
+    getQuantityTotal,
     getSupplyTotal,
     getVatTotal,
     getTotalCount,
@@ -187,6 +188,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     personnelCount: '인원수',
     purpose: '사용목적',
     isDeductible: '공제여부',
+    quantity: '수량',
   }
 
   const {
@@ -331,6 +333,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
       const formattedDetails = (client.details ?? []).map((c: DetailItem) => ({
         id: c.id,
         name: c.name,
+        quantity: c.quantity,
         unitPrice: c.unitPrice,
         supplyPrice: c.supplyPrice,
         vat: c.vat,
@@ -918,6 +921,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                   {[
                     '품명',
                     '공제여부',
+                    '수량',
                     '단가',
                     '공급가',
                     '부가세 (체크 시 자동 계산)',
@@ -938,6 +942,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       {label === '비고' ||
                       label === '부가세 (체크 시 자동 계산)' ||
                       label === '공제여부' ||
+                      label === '수량' ||
                       label === '합계' ? (
                         label
                       ) : (
@@ -1001,6 +1006,32 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                         size="small"
                       />
                     </TableCell>
+
+                    <TableCell align="right" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        size="small"
+                        inputMode="numeric"
+                        placeholder="숫자 입력"
+                        value={m.quantity === 0 || m.quantity === null ? '' : m.quantity}
+                        onChange={(e) => {
+                          const quantity =
+                            e.target.value === '' ? 0 : unformatNumber(e.target.value)
+
+                          const supplyPrice = quantity * (m.unitPrice || 0)
+                          const vat = Math.floor(supplyPrice * 0.1)
+                          const total = supplyPrice + vat
+
+                          updateItemField('costItem', m.id, 'quantity', quantity)
+                          updateItemField('costItem', m.id, 'supplyPrice', supplyPrice)
+                          updateItemField('costItem', m.id, 'vat', vat)
+                          updateItemField('costItem', m.id, 'total', total)
+                        }}
+                        variant="outlined"
+                        sx={textFieldStyle}
+                        inputProps={{ style: { textAlign: 'right' } }}
+                      />
+                    </TableCell>
+
                     <TableCell align="right" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
                         size="small"
@@ -1009,19 +1040,22 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                         value={
                           m.unitPrice === 0 || m.unitPrice === null ? '' : formatNumber(m.unitPrice)
                         }
-                        // formatNumber(m.unitPrice) || 0}
                         onChange={(e) => {
-                          const numericValue =
-                            e.target.value === '' || 0 ? '' : unformatNumber(e.target.value)
-                          updateItemField('costItem', m.id, 'unitPrice', numericValue)
+                          const unitPrice =
+                            e.target.value === '' ? 0 : unformatNumber(e.target.value)
+
+                          const supplyPrice = (m.quantity || 0) * unitPrice
+                          const vat = Math.floor(supplyPrice * 0.1)
+                          const total = supplyPrice + vat
+
+                          updateItemField('costItem', m.id, 'unitPrice', unitPrice)
+                          updateItemField('costItem', m.id, 'supplyPrice', supplyPrice)
+                          updateItemField('costItem', m.id, 'vat', vat)
+                          updateItemField('costItem', m.id, 'total', total)
                         }}
                         variant="outlined"
                         sx={textFieldStyle}
-                        inputProps={{
-                          style: {
-                            textAlign: 'right',
-                          },
-                        }}
+                        inputProps={{ style: { textAlign: 'right' } }}
                       />
                     </TableCell>
 
@@ -1040,8 +1074,6 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       />
                     </TableCell>
 
-                    {/* 부가세 */}
-                    {/* 부가세 */}
                     <TableCell align="right" sx={{ border: '1px solid #9CA3AF' }}>
                       <VatInput
                         supplyPrice={m.supplyPrice}
@@ -1100,6 +1132,12 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                     소계
                   </TableCell>
                   <TableCell sx={{ border: '1px solid #9CA3AF' }} />
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  >
+                    {getQuantityTotal().toLocaleString()}
+                  </TableCell>
                   <TableCell
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}

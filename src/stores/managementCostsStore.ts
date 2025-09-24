@@ -146,6 +146,7 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
         const newItem: CostItem = {
           id: Date.now(),
           name: '',
+          quantity: 0,
           unitPrice: 0,
           supplyPrice: 0,
           vat: 0,
@@ -316,6 +317,14 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
       }
       return state
     }),
+
+  getQuantityTotal: () => {
+    const { details } = get().form
+    return details.reduce((sum, item) => {
+      const amount = Number(item.quantity)
+      return sum + (isNaN(amount) ? 0 : amount)
+    }, 0)
+  },
 
   getPriceTotal: () => {
     const { details } = get().form

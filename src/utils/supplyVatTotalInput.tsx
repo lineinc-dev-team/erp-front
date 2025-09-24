@@ -20,6 +20,7 @@ export function SupplyPriceInput({ value, onChange }: SupplyPriceInputProps) {
     <TextField
       size="small"
       placeholder="숫자 입력"
+      disabled
       value={formatNumber(value) || ''}
       onChange={(e) => {
         const numericValue = e.target.value === '' ? '' : unformatNumber(e.target.value)
