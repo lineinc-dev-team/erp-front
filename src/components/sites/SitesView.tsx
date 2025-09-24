@@ -79,6 +79,7 @@ export default function SitesView() {
     ...site,
     processName: site.process?.name || '-', // 공정명
     managerName: site.manager?.username || '-', // 공정소장 이름
+    type: site.type || '-',
     contractAmount: formatNumber(site.contractAmount) || '-',
     hasFile: site.hasFile === true ? 'Y' : 'N',
     processStatuses: site.process?.status || '-', // 진행상태
