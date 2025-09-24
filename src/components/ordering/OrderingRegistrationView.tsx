@@ -372,9 +372,9 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
 
   function validateClientForm(form: FormState) {
     if (!form.name?.trim()) return '발주처명을 입력하세요.'
-    if (!form.businessNumber?.trim()) return '사업자등록번호를 입력하세요.'
-    if (!form.address?.trim()) return '본사 주소를 입력하세요.'
-    if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
+    // if (!form.businessNumber?.trim()) return '사업자등록번호를 입력하세요.'
+    // if (!form.address?.trim()) return '본사 주소를 입력하세요.'
+    // if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
     if (!form.ceoName?.trim()) return '대표자명을 입력하세요.'
     if (!form.landlineNumber?.trim()) return '전화번호를 입력하세요.'
     if (!form.email?.trim()) return '이메일을 입력하세요.'
@@ -464,7 +464,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              사업자등록번호 <span className="text-red-500 ml-1">*</span>
+              사업자등록번호
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -480,7 +480,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              본사 주소 <span className="text-red-500 ml-1">*</span>
+              본사 주소
             </label>
             <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
               <div className="flex gap-2">

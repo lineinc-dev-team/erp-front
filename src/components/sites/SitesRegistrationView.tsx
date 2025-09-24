@@ -573,7 +573,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
   function validateSiteForm(form: SiteForm) {
     if (!form.name?.trim()) return '현장명을 입력하세요.'
-    if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
+    // if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
     if (!form.clientCompanyId || String(form.clientCompanyId) === '0') return '발주처를 선택하세요.'
     if (!form.startedAt) return '사업 시작일을 선택하세요.'
     if (!form.endedAt) return '사업 종료일을 선택하세요.'

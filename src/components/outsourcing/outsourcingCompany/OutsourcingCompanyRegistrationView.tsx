@@ -369,8 +369,8 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     if (!form.businessNumber?.trim()) return '사업자등록번호를 입력하세요.'
     if (!form.type?.trim()) return '구분을 입력하세요.'
     if (!form.ceoName?.trim()) return '대표자명을 입력하세요.'
-    if (!form.address?.trim()) return '본사 주소를 입력하세요.'
-    if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
+    // if (!form.address?.trim()) return '본사 주소를 입력하세요.'
+    // if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
     if (!form.landlineNumber?.trim()) return '전화번호를 입력하세요.'
     if (!form.email?.trim()) return '이메일을 입력하세요.'
     if (form.isActive === '0') return '사용 여부를 선택하세요.'
@@ -519,7 +519,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
-              위치(주소) <span className="text-red-500 ml-1">*</span>
+              위치(주소)
             </label>
             <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
               <div className="flex gap-2">
