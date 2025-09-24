@@ -5,6 +5,7 @@ export interface DetailItem {
   supplyPrice: number
   vat: number
   total: number
+  isDeductible: boolean
   memo: string
 }
 
@@ -39,6 +40,8 @@ export interface CostList {
   supplyPrice: number
   vat: number
   total: number
+  mealFeeAmountTotal: number
+  keyMoneyAmountTotal: number
   site: Site
   process: Process
   outsourcingCompany: OutsourcingCompany
@@ -76,6 +79,7 @@ export type CostItem = {
   supplyPrice: number
   vat: number
   total: number
+  isDeductible: boolean
   memo: string
 }
 
@@ -99,6 +103,7 @@ export type KeyMoneyDetail = {
   purpose: string
   personnelCount: number
   amount: number
+  isDeductible: boolean
   memo: string
 }
 

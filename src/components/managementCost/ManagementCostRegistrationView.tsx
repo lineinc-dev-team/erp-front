@@ -186,6 +186,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     account: '계정',
     personnelCount: '인원수',
     purpose: '사용목적',
+    isDeductible: '공제여부',
   }
 
   const {
@@ -334,6 +335,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
         supplyPrice: c.supplyPrice,
         vat: c.vat,
         total: c.total,
+        isDeductible: c.isDeductible,
         memo: c.memo,
       }))
 
@@ -343,6 +345,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
         purpose: item.purpose,
         personnelCount: item.personnelCount,
         amount: item.amount,
+        isDeductible: item.isDeductible,
         memo: item.memo,
       }))
 
@@ -912,31 +915,39 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       sx={{ color: 'black' }}
                     />
                   </TableCell>
-                  {['품명', '단가', '공급가', '부가세 (체크 시 자동 계산)', '합계', '비고'].map(
-                    (label) => (
-                      <TableCell
-                        key={label}
-                        align="center"
-                        sx={{
-                          backgroundColor: '#D1D5DB',
-                          border: '1px solid  #9CA3AF',
-                          color: 'black',
-                          fontWeight: 'bold',
-                        }}
-                      >
-                        {label === '비고' ||
-                        label === '부가세 (체크 시 자동 계산)' ||
-                        label === '합계' ? (
-                          label
-                        ) : (
-                          <div className="flex items-center justify-center">
-                            <span>{label}</span>
-                            <span className="text-red-500 ml-1">*</span>
-                          </div>
-                        )}
-                      </TableCell>
-                    ),
-                  )}
+                  {[
+                    '품명',
+                    '공제여부',
+                    '단가',
+                    '공급가',
+                    '부가세 (체크 시 자동 계산)',
+                    '합계',
+                    '비고',
+                  ].map((label) => (
+                    <TableCell
+                      key={label}
+                      align="center"
+                      sx={{
+                        backgroundColor: '#D1D5DB',
+                        border: '1px solid  #9CA3AF',
+                        color: 'black',
+                        fontWeight: 'bold',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {label === '비고' ||
+                      label === '부가세 (체크 시 자동 계산)' ||
+                      label === '공제여부' ||
+                      label === '합계' ? (
+                        label
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          <span>{label}</span>
+                          <span className="text-red-500 ml-1">*</span>
+                        </div>
+                      )}
+                    </TableCell>
+                  ))}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -973,6 +984,21 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                             },
                           },
                         }}
+                      />
+                    </TableCell>
+
+                    <TableCell
+                      align="center"
+                      sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'nowrap' }}
+                    >
+                      <Checkbox
+                        checked={m.isDeductible ?? ''} // 초기값은 false라서 체크 안됨
+                        onChange={(e) => {
+                          const checked = e.target.checked
+                          // isDeductible 업데이트
+                          updateItemField('costItem', m.id, 'isDeductible', checked)
+                        }}
+                        size="small"
                       />
                     </TableCell>
                     <TableCell align="right" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -1073,6 +1099,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                   >
                     소계
                   </TableCell>
+                  <TableCell sx={{ border: '1px solid #9CA3AF' }} />
                   <TableCell
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
@@ -1490,7 +1517,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       sx={{ color: 'black' }}
                     />
                   </TableCell>
-                  {['계정', '사용목적', '인원수', '금액', '비고'].map((label) => (
+                  {['계정', '공제여부', '사용목적', '인원수', '금액', '비고'].map((label) => (
                     <TableCell
                       key={label}
                       align="center"
@@ -1499,6 +1526,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                         border: '1px solid  #9CA3AF',
                         color: 'black',
                         fontWeight: 'bold',
+                        whiteSpace: 'nowrap',
                       }}
                     >
                       {label === '비고' ? (
@@ -1549,6 +1577,17 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                             },
                           },
                         }}
+                      />
+                    </TableCell>
+
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <Checkbox
+                        checked={m.isDeductible ?? ''} // 초기값은 false라서 체크 안됨
+                        onChange={(e) => {
+                          const checked = e.target.checked
+                          updateItemField('keyMoneyList', m.id, 'isDeductible', checked)
+                        }}
+                        size="small"
                       />
                     </TableCell>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -1660,6 +1699,10 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                   >
                     소계
                   </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  ></TableCell>
                   <TableCell
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}

@@ -150,6 +150,7 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
           supplyPrice: 0,
           vat: 0,
           total: 0,
+          isDeductible: false,
           memo: '',
         }
         return { form: { ...state.form, details: [...state.form.details, newItem] } }
@@ -185,6 +186,7 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
           purpose: '',
           personnelCount: 0,
           amount: 0,
+          isDeductible: false,
           memo: '',
         }
         return {

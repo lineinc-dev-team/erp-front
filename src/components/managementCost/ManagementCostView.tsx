@@ -88,7 +88,11 @@ export default function ManagementCost() {
       accountHolder: cost.outsourcingCompany?.accountHolder ?? '-',
       supplyPrice: formatNumber(cost.supplyPrice) || '-',
       vat: formatNumber(cost.vat) || '-',
-      total: formatNumber(cost.total) || '-',
+      total:
+        formatNumber(cost.total) ||
+        formatNumber(cost.mealFeeAmountTotal) ||
+        formatNumber(cost.keyMoneyAmountTotal) ||
+        '-',
       paymentDate: getTodayDateString(cost.paymentDate),
     }
   })
