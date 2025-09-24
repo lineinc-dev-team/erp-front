@@ -2571,7 +2571,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                 {historyList.map((item: HistoryItem) => (
                   <TableRow key={item.id}>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {formatDateTime(item.createdAt)}({formatDateTime(item.updatedAt)})
+                      {formatDateTime(item.updatedAt)}
                     </TableCell>
                     <TableCell
                       align="left"
