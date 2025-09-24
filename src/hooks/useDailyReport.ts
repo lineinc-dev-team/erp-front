@@ -8,10 +8,11 @@ import {
   GetEmployeeInfoService,
   GetWithEquipmentService,
   ModifyContractReport,
+  ModifyDailyFuel,
   ModifyEmployeesReport,
   ModifyEquipmentReport,
   ModifyFileReport,
-  ModifyFuelReport,
+  // ModifyFuelReport,
   ModifyOutsourcingReport,
 } from '@/services/dailyReport/dailyReportRegistrationService'
 import { useDailyFormStore } from '@/stores/dailyReportStore'
@@ -186,31 +187,48 @@ export function useDailyReport() {
     },
   })
 
-  // 유류 수정
   const FuelModifyMutation = useMutation({
-    mutationFn: ({
-      siteId,
-      siteProcessId,
-      reportDate,
-    }: {
-      siteId: number
-      siteProcessId: number
-      reportDate: string
-    }) => ModifyFuelReport({ siteId, siteProcessId, reportDate }),
+    mutationFn: (fuelId: number) => ModifyDailyFuel(fuelId),
 
     onSuccess: () => {
-      showSnackbar('출역일보(유류)가 수정 되었습니다.', 'success')
-      queryClient.invalidateQueries({ queryKey: ['DailyFuel'] })
+      showSnackbar('출역일보(유류집계)가 수정 되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['FuelAggregationInfo'] })
     },
 
     onError: (error: unknown) => {
       if (error instanceof Error) {
         showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
       } else {
-        showSnackbar('출역일보(유류) 수정에 실패했습니다.', 'error')
+        showSnackbar('출역일보(유류집계) 수정에 실패했습니다.', 'error')
       }
     },
   })
+
+  // 유류 수정
+  // const FuelModifyMutation = useMutation({
+  //   mutationFn: ({
+  //     siteId,
+  //     siteProcessId,
+  //     reportDate,
+  //   }: {
+  //     siteId: number
+  //     siteProcessId: number
+  //     reportDate: string
+  //   }) => ModifyFuelReport({ siteId, siteProcessId, reportDate }),
+
+  //   onSuccess: () => {
+  //     showSnackbar('출역일보(유류)가 수정 되었습니다.', 'success')
+  //     queryClient.invalidateQueries({ queryKey: ['DailyFuel'] })
+  //   },
+
+  //   onError: (error: unknown) => {
+  //     if (error instanceof Error) {
+  //       showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+  //     } else {
+  //       showSnackbar('출역일보(유류) 수정에 실패했습니다.', 'error')
+  //     }
+  //   },
+  // })
 
   // 파일 수정
 

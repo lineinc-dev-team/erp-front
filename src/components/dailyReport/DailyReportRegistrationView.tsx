@@ -34,7 +34,6 @@ import {
   ModifyWeatherReport,
   OutsourcingWorkerNameScroll,
 } from '@/services/dailyReport/dailyReportRegistrationService'
-import CommonSelectByName from '../common/CommonSelectByName'
 import CommonFileInput from '../common/FileInput'
 import CommonInput from '../common/Input'
 import {
@@ -141,6 +140,8 @@ export default function DailyReportRegistrationView() {
   // 옵션에 따른 상태값
 
   const [workerOptionsByCompany, setWorkerOptionsByCompany] = useState<Record<number, any[]>>({})
+
+  const [modifyFuelNumber, setModifyFuelNumber] = useState(0)
 
   // 체크 박스에 활용
   //   const employees = form.employees
@@ -475,21 +476,22 @@ export default function DailyReportRegistrationView() {
     }
 
     const fetched = allFuels.map((item: any) => ({
-      id: item.id,
+      id: item.fuelInfoId,
       outsourcingCompanyId: item.outsourcingCompany?.id ?? 0,
-      outsourcingCompanyContractDriverId: item.outsourcingCompanyDriver.id ?? 0,
-      outsourcingCompanyContractEquipmentId: item.outsourcingCompanyEquipment?.id ?? '',
+      driverId: item.outsourcingCompanyDriver.id ?? 0,
+      equipmentId: item.outsourcingCompanyEquipment?.id ?? '',
       specificationName: item.outsourcingCompanyEquipment.specification ?? '',
-      fuelType: item.fuelType ?? '',
+      fuelType: item.fuelTypeCode ?? '',
       fuelAmount: item.fuelAmount,
       memo: item.memo,
       modifyDate: `${getTodayDateString(item.createdAt)} / ${getTodayDateString(item.updatedAt)}`,
     }))
 
     setIsEditMode(true)
-    setField('fuels', fetched)
+    setField('fuelInfos', fetched)
+    setModifyFuelNumber(allFuels[0]?.fuelAggregationId)
   }
-  const fuelData = useMemo(() => form.fuels, [form.fuels])
+  const fuelData = useMemo(() => form.fuelInfos, [form.fuelInfos])
 
   const checkedFuelIds = form.checkedFuelsIds
   const isFuelAllChecked = fuelData.length > 0 && checkedFuelIds.length === fuelData.length
@@ -831,6 +833,86 @@ export default function DailyReportRegistrationView() {
     }))
   }, [fuelEquipment, selectedCompanyIds, selectId])
 
+  const outsourcingfuel = fuelData
+
+  useEffect(() => {
+    if (!outsourcingfuel.length) return
+
+    outsourcingfuel.forEach(async (row) => {
+      const companyId = row.outsourcingCompanyId
+      const driverData = row.driverId
+      const carNumberId = row.equipmentId
+      if (!companyId) return
+
+      try {
+        const res = await FuelDriverNameScroll({
+          pageParam: 0,
+          id: companyId,
+          size: 200,
+        })
+
+        const options = res.data.content.map((user: any) => ({
+          id: user.id,
+          name: user.name + (user.deleted ? ' (삭제됨)' : ''),
+          deleted: user.deleted,
+        }))
+
+        setDriverOptionsByCompany((prev) => {
+          const exists = options.some((opt: any) => opt.id === driverData)
+
+          return {
+            ...prev,
+            [companyId]: [
+              { id: 0, name: '선택', deleted: false },
+              ...options,
+              // 만약 선택된 worker가 목록에 없으면 추가
+              ...(driverData && !exists ? [{ id: driverData, name: '', deleted: true }] : []),
+            ],
+          }
+        })
+
+        const carNumberRes = await FuelEquipmentNameScroll({
+          pageParam: 0,
+          id: companyId,
+          size: 200,
+        })
+
+        const carOptions = carNumberRes.data.content.map((user: any) => ({
+          id: user.id,
+          specification: user.specification,
+          vehicleNumber: user.vehicleNumber + (user.deleted ? ' (삭제됨)' : ''),
+          category: user.category,
+        }))
+
+        setCarNumberOptionsByCompany((prev) => {
+          const exists = carOptions.some((opt: any) => opt.id === carNumberId)
+
+          return {
+            ...prev,
+            [companyId]: [
+              { id: 0, specification: '', vehicleNumber: '선택', category: '', deleted: false },
+              ...carOptions,
+              // 만약 선택된 worker가 목록에 없으면 추가
+              ...(carNumberId && !exists
+                ? [
+                    {
+                      id: carNumberId,
+                      specification: '',
+                      vehicleNumber: '',
+                      category: '',
+                      deleted: true,
+                    },
+                  ]
+                : []),
+            ],
+          }
+        })
+      } catch (err) {
+        console.error('업체별 인력 조회 실패', err)
+      }
+    })
+  }, [outsourcingfuel])
+
   // 유효성 검사
 
   // 유효성 검사 함수
@@ -980,13 +1062,10 @@ export default function DailyReportRegistrationView() {
       if (!f.outsourcingCompanyId || f.outsourcingCompanyId === 0) {
         return showSnackbar('유류의 업체명을 선택해주세요.', 'warning')
       }
-      if (!f.outsourcingCompanyContractDriverId || f.outsourcingCompanyContractDriverId === 0) {
+      if (!f.driverId || f.driverId === 0) {
         return showSnackbar('유류의 기사명을 선택해주세요.', 'warning')
       }
-      if (
-        !f.outsourcingCompanyContractEquipmentId ||
-        f.outsourcingCompanyContractEquipmentId === 0
-      ) {
+      if (!f.equipmentId || f.equipmentId === 0) {
         return showSnackbar('유류의 차량번호를 선택해주세요.', 'warning')
       }
       if (!f.specificationName || f.specificationName.trim() === '') {
@@ -2602,9 +2681,7 @@ export default function DailyReportRegistrationView() {
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <CommonSelect
                           fullWidth
-                          value={
-                            selectedDriverIds[m.id] || m.outsourcingCompanyContractDriverId || 0
-                          }
+                          value={selectedDriverIds[m.id] || m.driverId || 0}
                           onChange={async (value) => {
                             const selectedDriver = (
                               driverOptionsByCompany[m.outsourcingCompanyId] ?? []
@@ -2612,12 +2689,7 @@ export default function DailyReportRegistrationView() {
 
                             if (!selectedDriver) return
 
-                            updateItemField(
-                              'fuel',
-                              m.id,
-                              'outsourcingCompanyContractDriverId',
-                              selectedDriver.id,
-                            )
+                            updateItemField('fuel', m.id, 'driverId', selectedDriver.id)
                           }}
                           options={
                             driverOptionsByCompany[m.outsourcingCompanyId] ?? [
@@ -2635,11 +2707,7 @@ export default function DailyReportRegistrationView() {
                       <TableCell>
                         <CommonSelect
                           fullWidth
-                          value={
-                            selectedCarNumberIds[m.id] ||
-                            m.outsourcingCompanyContractEquipmentId ||
-                            0
-                          }
+                          value={selectedCarNumberIds[m.id] || m.equipmentId || 0}
                           onChange={async (value) => {
                             const selectedCarNumber = (
                               carNumberOptionsByCompany[m.outsourcingCompanyId] ?? []
@@ -2647,12 +2715,7 @@ export default function DailyReportRegistrationView() {
 
                             if (!selectedCarNumber) return
 
-                            updateItemField(
-                              'fuel',
-                              m.id,
-                              'outsourcingCompanyContractEquipmentId',
-                              selectedCarNumber.id,
-                            )
+                            updateItemField('fuel', m.id, 'equipmentId', selectedCarNumber.id)
 
                             updateItemField(
                               'fuel',
@@ -2680,9 +2743,9 @@ export default function DailyReportRegistrationView() {
                       </TableCell>
 
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        <CommonSelectByName
+                        <CommonSelect
                           fullWidth={true}
-                          value={m.fuelType || '선택'}
+                          value={m.fuelType || 'BASE'}
                           onChange={async (value) => {
                             updateItemField('fuel', m.id, 'fuelType', value)
                           }}
@@ -2697,7 +2760,7 @@ export default function DailyReportRegistrationView() {
                         <TextField
                           size="small"
                           placeholder="숫자만"
-                          value={m.fuelAmount}
+                          value={formatNumber(m.fuelAmount)}
                           onChange={(e) => {
                             const numericValue = unformatNumber(e.target.value)
                             updateItemField('fuel', m.id, 'fuelAmount', numericValue)
@@ -3056,37 +3119,30 @@ export default function DailyReportRegistrationView() {
               } else if (activeTab === '유류') {
                 if (!validateFuel()) return
 
-                FuelModifyMutation.mutate(
-                  {
-                    siteId: form.siteId || 0,
-                    siteProcessId: form.siteProcessId || 0,
-                    reportDate: getTodayDateString(form.reportDate) || '',
-                  },
-                  {
-                    onSuccess: async () => {
-                      handleFuelRefetch() // 직원 데이터 재조회
+                FuelModifyMutation.mutate(modifyFuelNumber, {
+                  onSuccess: async () => {
+                    handleFuelRefetch() // 직원 데이터 재조회
 
-                      // 날씨가 바뀌었을 경우만 호출
-                      if (previousWeatherRef.current !== form.weather) {
-                        try {
-                          await ModifyWeatherReport({
-                            siteId: form.siteId || 0,
-                            siteProcessId: form.siteProcessId || 0,
-                            reportDate: getTodayDateString(form.reportDate) || '',
-                          })
-                          // 성공 후 현재 form.weather를 previousWeatherRef에 업데이트
-                          previousWeatherRef.current = form.weather
-                        } catch (error: unknown) {
-                          if (error instanceof Error) {
-                            showSnackbar(error.message, 'error')
-                          } else {
-                            showSnackbar('날씨 수정에 실패했습니다.', 'error')
-                          }
+                    // 날씨가 바뀌었을 경우만 호출
+                    if (previousWeatherRef.current !== form.weather) {
+                      try {
+                        await ModifyWeatherReport({
+                          siteId: form.siteId || 0,
+                          siteProcessId: form.siteProcessId || 0,
+                          reportDate: getTodayDateString(form.reportDate) || '',
+                        })
+                        // 성공 후 현재 form.weather를 previousWeatherRef에 업데이트
+                        previousWeatherRef.current = form.weather
+                      } catch (error: unknown) {
+                        if (error instanceof Error) {
+                          showSnackbar(error.message, 'error')
+                        } else {
+                          showSnackbar('날씨 수정에 실패했습니다.', 'error')
                         }
                       }
-                    },
+                    }
                   },
-                )
+                })
               } else if (activeTab === '현장 사진 등록') {
                 if (!validateFile()) return
 

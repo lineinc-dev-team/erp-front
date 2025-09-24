@@ -130,8 +130,8 @@ export type EquipmentsItem = {
 export type FuelsItem = {
   id: number
   outsourcingCompanyId: number
-  outsourcingCompanyContractDriverId: number
-  outsourcingCompanyContractEquipmentId: number
+  driverId: number
+  equipmentId: number
   specificationName?: string
   fuelType: string
   fuelAmount: number
@@ -160,7 +160,7 @@ export type DailyFormState = {
   outsourcingEquipments: EquipmentsItem[]
   checkedEquipmentIds: number[]
 
-  fuels: FuelsItem[]
+  fuelInfos: FuelsItem[]
   checkedFuelsIds: number[]
 
   // 파일첨부, 수정이력

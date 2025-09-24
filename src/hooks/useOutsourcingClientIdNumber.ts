@@ -15,8 +15,8 @@ export const useOutSourcingClientId = () => {
       return dailyForm.outsourcings[0].outsourcingCompanyId
     } else if (dailyForm.outsourcingEquipments.length > 0) {
       return dailyForm.outsourcingEquipments[0].outsourcingCompanyId
-    } else if (dailyForm.fuels.length > 0) {
-      return dailyForm.fuels[0].outsourcingCompanyId
+    } else if (dailyForm.fuelInfos.length > 0) {
+      return dailyForm.fuelInfos[0].outsourcingCompanyId
     }
     return 0
   }
@@ -46,7 +46,7 @@ export const useOutSourcingInfoClientId = (
     const matched =
       dailyForm.outsourcings.find((item) => item.id === Number(rowId)) ||
       dailyForm.outsourcingEquipments.find((item) => item.id === Number(rowId)) ||
-      dailyForm.fuels.find((item) => item.id === Number(rowId))
+      dailyForm.fuelInfos.find((item) => item.id === Number(rowId))
 
     return matched?.outsourcingCompanyId ?? selectedCompanyId
   }

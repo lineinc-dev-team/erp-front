@@ -104,6 +104,12 @@ function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {
       )
     }
 
+    if (menu.name === '유류집계 관리') {
+      filteredPermissions = filteredPermissions.filter(
+        (perm: ApiPermission) => perm.action !== '등록',
+      )
+    }
+
     const children = filteredPermissions.map((perm: ApiPermission) => {
       let path = basePath
       if (perm.action === '등록') path = `${basePath}/registration`

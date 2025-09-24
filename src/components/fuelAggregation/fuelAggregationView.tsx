@@ -21,7 +21,6 @@ import { formatNumber, getTodayDateString } from '@/utils/formatters'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import CommonSelectByName from '../common/CommonSelectByName'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
-import { useTabOpener } from '@/utils/openTab'
 import { useFuelAggregation } from '@/hooks/useFuelAggregation'
 import { FuelDataList, fuelStatuses } from '@/types/fuelAggregation'
 import { useFuelSearchStore } from '@/stores/fuelAggregationStore'
@@ -31,7 +30,6 @@ import { useMenuPermission } from '../common/MenuPermissionView'
 import { CustomNoRowsOverlay } from '../common/NoData'
 
 export default function FuelAggregationView() {
-  const openTab = useTabOpener()
   const { search } = useFuelSearchStore()
 
   const {
@@ -227,7 +225,7 @@ export default function FuelAggregationView() {
   const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
 
   // "계정 관리" 메뉴에 대한 권한
-  const { hasCreate, hasModify } = useMenuPermission(roleId, '유류집계 관리', enabled)
+  const { hasModify } = useMenuPermission(roleId, '유류집계 관리', enabled)
 
   return (
     <>
@@ -508,13 +506,13 @@ export default function FuelAggregationView() {
                 fieldMap={fieldMapArray}
                 onDownload={handleDownloadExcel}
               />
-              <CommonButton
+              {/* <CommonButton
                 label="+ 신규등록"
                 disabled={!hasCreate}
                 variant="secondary"
                 onClick={() => openTab('/fuelAggregation/registration', '유류집계 관리 - 등록')}
                 className="px-3"
-              />
+              /> */}
             </div>
           </div>
         </div>

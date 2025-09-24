@@ -161,7 +161,7 @@ export async function FuelDetailService(fuelDetailId: number) {
   return await res.json()
 }
 
-//자재 수정
+//유류 수정
 export async function ModifyFuel(fuelId: number) {
   const { newFuelData } = useFuelFormStore.getState()
 

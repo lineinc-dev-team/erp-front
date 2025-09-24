@@ -23,7 +23,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
     checkedOutsourcingIds: [],
     outsourcingEquipments: [],
     checkedEquipmentIds: [],
-    fuels: [],
+    fuelInfos: [],
     checkedFuelsIds: [],
     files: [],
     checkedAttachedFileIds: [],
@@ -44,7 +44,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         checkedOutsourcingIds: [],
         outsourcingEquipments: [],
         checkedEquipmentIds: [],
-        fuels: [],
+        fuelInfos: [],
         checkedFuelsIds: [],
         files: [],
         checkedAttachedFileIds: [],
@@ -95,7 +95,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
     set((state) => ({
       form: {
         ...state.form,
-        FuelsItem: [],
+        fuelInfos: [],
       },
     })),
 
@@ -168,8 +168,8 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         const newItem: FuelsItem = {
           id: Date.now(),
           outsourcingCompanyId: 0,
-          outsourcingCompanyContractDriverId: 0,
-          outsourcingCompanyContractEquipmentId: 0,
+          driverId: 0,
+          equipmentId: 0,
           specificationName: '',
           fuelType: '',
           fuelAmount: 0,
@@ -178,7 +178,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         return {
           form: {
             ...state.form,
-            fuels: [...state.form.fuels, newItem],
+            fuelInfos: [...state.form.fuelInfos, newItem],
           },
         }
       } else {
@@ -258,7 +258,9 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         return {
           form: {
             ...state.form,
-            fuels: state.form.fuels.map((m) => (m.id === id ? { ...m, [field]: value } : m)),
+            fuelInfos: state.form.fuelInfos.map((m) =>
+              m.id === id ? { ...m, [field]: value } : m,
+            ),
           },
         }
       } else {
@@ -366,7 +368,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         return {
           form: {
             ...state.form,
-            checkedFuelsIds: checked ? state.form.fuels.map((m) => m.id) : [],
+            checkedFuelsIds: checked ? state.form.fuelInfos.map((m) => m.id) : [],
           },
         }
       } else {
@@ -425,7 +427,9 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         return {
           form: {
             ...state.form,
-            fuels: state.form.fuels.filter((m) => !state.form.checkedFuelsIds.includes(m.id)),
+            fuelInfos: state.form.fuelInfos.filter(
+              (m) => !state.form.checkedFuelsIds.includes(m.id),
+            ),
             checkedFuelsIds: [],
           },
         }
@@ -476,7 +480,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       directContracts: form.directContracts,
       outsourcings: form.outsourcings,
       outsourcingEquipments: form.outsourcingEquipments,
-      fuels: form.fuels,
+      fuelInfos: form.fuelInfos,
     }
   },
 
@@ -491,7 +495,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       employees: form.employees,
       outsourcings: undefined,
       outsourcingEquipments: undefined,
-      fuels: undefined,
+      fuelInfos: undefined,
     }
   },
 
@@ -507,7 +511,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       directContracts: form.directContracts,
       outsourcings: undefined,
       outsourcingEquipments: undefined,
-      fuels: undefined,
+      fuelInfos: undefined,
     }
   },
 
@@ -522,7 +526,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       employees: undefined,
       outsourcings: form.outsourcings,
       outsourcingEquipments: undefined,
-      fuels: undefined,
+      fuelInfos: undefined,
     }
   },
 
@@ -537,7 +541,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       employees: undefined,
       outsourcings: undefined,
       outsourcingEquipments: form.outsourcingEquipments,
-      fuels: undefined,
+      fuelInfos: undefined,
     }
   },
 
@@ -545,14 +549,14 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
     const form = get().form
     return {
       files: undefined,
-      siteId: undefined,
-      siteProcessId: undefined,
-      reportDate: undefined,
-      weather: undefined,
+      siteId: form.siteId,
+      siteProcessId: form.siteProcessId,
+      date: form.reportDate,
+      weather: form.weather,
       employees: undefined,
       outsourcings: undefined,
       outsourcingEquipments: undefined,
-      fuels: form.fuels,
+      fuelInfos: form.fuelInfos,
     }
   },
 
@@ -567,7 +571,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       employees: undefined,
       outsourcings: undefined,
       outsourcingEquipments: undefined,
-      fuels: undefined,
+      fuelInfos: undefined,
     }
   },
 
@@ -604,7 +608,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       employees: undefined,
       outsourcings: undefined,
       outsourcingEquipments: undefined,
-      fuels: undefined,
+      fuelInfos: undefined,
     }
   },
 }))
