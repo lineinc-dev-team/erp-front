@@ -64,6 +64,8 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     useContractHistoryDataQuery,
   } = useOutSourcingCompany()
 
+  console.log('typeMethodOptionstypeMethodOptions', typeMethodOptions)
+
   const { showSnackbar } = useSnackbarStore()
 
   const managers = form.headManagers
@@ -230,12 +232,18 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
       setField('businessNumber', client.businessNumber)
       setField('type', client.type)
 
-      if (client.type === '용역') {
+      if (client.type === '노무') {
         setField('type', 'SERVICE')
       } else if (client.type === '장비') {
         setField('type', 'EQUIPMENT')
-      } else if (client.type === '식당') {
-        setField('type', 'CATERING')
+      } else if (client.type === '외주') {
+        setField('type', 'CONSTRUCTION')
+      } else if (client.type === '재료') {
+        setField('type', 'MATERIAL')
+      } else if (client.type === '유류') {
+        setField('type', 'FUEL')
+      } else if (client.type === '관리') {
+        setField('type', 'MANAGEMENT')
       } else if (client.type === '기타') {
         setField('type', 'ETC')
       }
