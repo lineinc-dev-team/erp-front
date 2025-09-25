@@ -23,12 +23,11 @@ export default function AmountInput({
       placeholder={placeholder}
       disabled={disabled}
       className={`
-        text-end border rounded p-2
-        focus:outline-none focus:ring-0 focus:border-black
-        ${disabled ? 'bg-[#dadada] text-gray-400 cursor-not-allowed' : ''}
-        
-        ${className}
-      `}
+  text-end border rounded p-2
+  focus:outline-none focus:ring-0 focus:border-black
+  ${disabled ? 'bg-gray-100 text-black cursor-not-allowed' : ''}
+  ${className}
+`}
     />
   )
 }
