@@ -1,3 +1,5 @@
+import { HistoryItem } from './ordering'
+
 export type selectType = {
   id: number
   name: string
@@ -150,20 +152,6 @@ export type OutsourcingContractSearchState = {
   ) => void
 
   handleSearch: () => void
-}
-
-// 수정에 사용 할 타입
-type HistoryItem = {
-  id: number
-  no: number
-  description?: string
-  getChanges: string
-  createdAt: string // or Date
-  updatedAt: string
-  content: string // 수정항목
-  updatedBy: string
-  memo: string
-  type: string
 }
 
 export type CompanyInfo = {

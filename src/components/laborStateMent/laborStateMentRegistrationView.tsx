@@ -30,9 +30,9 @@ import { formatDateTime, formatNumber, unformatNumber } from '@/utils/formatters
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import ExcelModal from '../common/ExcelModal'
-import { HistoryItem } from '@/types/outsourcingContract'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import IdNumberModal from '../common/IdNumberModal'
+import { HistoryItem } from '@/types/ordering'
 
 export default function LaborStateMentRegistrationView({ isEditMode = true }) {
   const { setField, form, updateItemField, updateMemo } = useLaborSummaryFormStore()
@@ -622,6 +622,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
         page.data.content.map((item: HistoryItem) => ({
           id: item.id,
           type: item.type || '-',
+          isEditable: item.isEditable,
           content:
             formatChangeDetail(item.getChanges) === '-'
               ? item?.description
@@ -2601,15 +2602,23 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                     >
                       {item.updatedBy}
                     </TableCell>
+
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
                         fullWidth
                         size="small"
                         value={item.memo ?? ''}
-                        placeholder="메모 입력"
+                        placeholder="500자 이하 텍스트 입력"
                         onChange={(e) => updateMemo(item.id, e.target.value)}
                         multiline
                         inputProps={{ maxLength: 500 }}
+                        disabled={!item.isEditable}
+                        sx={{
+                          '& .MuiInputBase-root': {
+                            backgroundColor: item.isEditable ? 'white' : '#e4e4e4', // 비활성화 시 연한 배경
+                            color: item.isEditable ? 'inherit' : 'gray', // 비활성화 시 글자색
+                          },
+                        }}
                       />
                     </TableCell>
                   </TableRow>

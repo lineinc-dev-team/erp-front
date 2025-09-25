@@ -1,3 +1,5 @@
+import { HistoryItem } from './ordering'
+
 export type OutsourcingManager = {
   id: number
   name: string
@@ -82,20 +84,6 @@ export type OutsourcingSearchState = {
   ) => void
 
   handleSearch: () => void
-}
-
-// 수정에 사용 할 타입
-type HistoryItem = {
-  id: number
-  no: number
-  getChanges: string
-  description?: string
-  createdAt: string // or Date
-  updatedAt: string
-  content: string // 수정항목
-  updatedBy: string
-  memo: string
-  type: string
 }
 
 // 외주업체 계약에서 계약이 생성 시 이력이 쌓이는 로직

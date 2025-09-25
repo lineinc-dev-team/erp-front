@@ -34,7 +34,6 @@ import {
 import {
   AttachedFile,
   DetailItem,
-  HistoryItem,
   KeyMoneyDetail,
   ManagementCostFormState,
   MealFeeDetail,
@@ -43,6 +42,7 @@ import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { SupplyPriceInput, TotalInput, VatInput } from '@/utils/supplyVatTotalInput'
 import CommonSelectByName from '../common/CommonSelectByName'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
+import { HistoryItem } from '@/types/ordering'
 
 export default function ManagementCostRegistrationView({ isEditMode = false }) {
   const {
@@ -469,6 +469,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
         page.data.content.map((item: HistoryItem) => ({
           id: item.id,
           type: item.type || '-',
+          isEditable: item.isEditable,
           content:
             formatChangeDetail(item.getChanges, item.typeCode) === '-'
               ? item?.description
@@ -1952,6 +1953,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                     >
                       {item.updatedBy}
                     </TableCell>
+
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
                         fullWidth
@@ -1961,6 +1963,13 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                         onChange={(e) => updateMemo(item.id, e.target.value)}
                         multiline
                         inputProps={{ maxLength: 500 }}
+                        disabled={!item.isEditable}
+                        sx={{
+                          '& .MuiInputBase-root': {
+                            backgroundColor: item.isEditable ? 'white' : '#e4e4e4', // 비활성화 시 연한 배경
+                            color: item.isEditable ? 'inherit' : 'gray', // 비활성화 시 글자색
+                          },
+                        }}
                       />
                     </TableCell>
                   </TableRow>

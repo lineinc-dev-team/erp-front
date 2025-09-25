@@ -1,3 +1,5 @@
+import { HistoryItem } from './ordering'
+
 export interface Site {
   id: number
   name: string
@@ -92,19 +94,6 @@ export type fuelDetailItem = {
   fuelAmount: number
   memo: string
   modifyDate?: string
-}
-
-type HistoryItem = {
-  id: number
-  no: number
-  getChanges: string
-  description: string
-  createdAt: string // or Date
-  updatedAt: string
-  content: string // 수정항목
-  updatedBy: string
-  memo: string
-  type: string
 }
 
 export type FuelInfo = {

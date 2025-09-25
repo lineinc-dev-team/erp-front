@@ -26,17 +26,13 @@ import { MaterialDetailService } from '@/services/materialManagement/materialMan
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  AttachedFile,
-  DetailItem,
-  HistoryItem,
-  ManagementMaterialFormState,
-} from '@/types/materialManagement'
+import { AttachedFile, DetailItem, ManagementMaterialFormState } from '@/types/materialManagement'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import { SupplyPriceInput, TotalInput, VatInput } from '@/utils/supplyVatTotalInput'
 import CommonSelectByName from '../common/CommonSelectByName'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
+import { HistoryItem } from '@/types/ordering'
 // import { useEffect } from 'react'
 // import { AttachedFile, DetailItem } from '@/types/managementSteel'
 
@@ -402,6 +398,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
           id: item.id,
           type: item.type || '-',
           typeCode: item.typeCode,
+          isEditable: item.isEditable,
           content:
             formatChangeDetail(item.getChanges) === '-'
               ? item?.description
@@ -1174,6 +1171,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                     >
                       {item.updatedBy}
                     </TableCell>
+
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
                         fullWidth
@@ -1183,6 +1181,13 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                         onChange={(e) => updateMemo(item.id, e.target.value)}
                         multiline
                         inputProps={{ maxLength: 500 }}
+                        disabled={!item.isEditable}
+                        sx={{
+                          '& .MuiInputBase-root': {
+                            backgroundColor: item.isEditable ? 'white' : '#e4e4e4', // 비활성화 시 연한 배경
+                            color: item.isEditable ? 'inherit' : 'gray', // 비활성화 시 글자색
+                          },
+                        }}
                       />
                     </TableCell>
                   </TableRow>

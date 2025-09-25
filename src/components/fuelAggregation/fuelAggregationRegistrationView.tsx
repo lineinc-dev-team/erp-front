@@ -37,8 +37,9 @@ import {
   FuelDriverNameScroll,
   FuelEquipmentNameScroll,
 } from '@/services/fuelAggregation/fuelAggregationRegistrationService'
-import { FuelInfo, FuelListInfoData, HistoryItem } from '@/types/fuelAggregation'
+import { FuelInfo, FuelListInfoData } from '@/types/fuelAggregation'
 import { useDailyReport } from '@/hooks/useDailyReport'
+import { HistoryItem } from '@/types/ordering'
 // import { useEffect } from 'react'
 // import { AttachedFile, DetailItem } from '@/types/managementSteel'
 
@@ -309,6 +310,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
         page.data.content.map((item: HistoryItem) => ({
           id: item.id,
           type: item.type || '-',
+          isEditable: item.isEditable,
           content:
             formatChangeDetail(item.getChanges) === '-'
               ? item?.description
@@ -1039,6 +1041,13 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                         onChange={(e) => updateMemo(item.id, e.target.value)}
                         multiline
                         inputProps={{ maxLength: 500 }}
+                        disabled={!item.isEditable}
+                        sx={{
+                          '& .MuiInputBase-root': {
+                            backgroundColor: item.isEditable ? 'white' : '#e4e4e4', // 비활성화 시 연한 배경
+                            color: item.isEditable ? 'inherit' : 'gray', // 비활성화 시 글자색
+                          },
+                        }}
                       />
                     </TableCell>
                   </TableRow>

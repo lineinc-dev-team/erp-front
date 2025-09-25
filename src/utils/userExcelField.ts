@@ -51,7 +51,7 @@ export const SiteExcelFieldMap = {
   공정명: 'processName',
   위치: 'address',
   발주처명: 'clientCompanyName',
-  도급금액: 'contractAmount',
+  계약금액: 'contractAmount',
   공정소장: 'managerName',
   사업기간: 'period',
   진행상태: 'processStatuses',

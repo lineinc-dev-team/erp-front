@@ -1,3 +1,5 @@
+import { HistoryItem } from './ordering'
+
 export interface DetailItem {
   id: number
   standard: string
@@ -83,20 +85,6 @@ export type MaterialItem = {
   vat: number
   total: number
   memo: string
-}
-
-type HistoryItem = {
-  id: number
-  no: number
-  getChanges: string
-  description: string
-  createdAt: string // or Date
-  updatedAt: string
-  content: string // 수정항목
-  updatedBy: string
-  memo: string
-  type: string
-  typeCode: string
 }
 
 export type AttachedFile = {

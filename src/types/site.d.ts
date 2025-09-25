@@ -1,3 +1,5 @@
+import { HistoryItem } from './ordering'
+
 type SiteProcess = {
   id?: number
   name: string
@@ -37,20 +39,6 @@ type ContractState = {
   setContracts: (contracts: Contract[]) => void
 }
 
-// 수정에 사용 할 타입
-type HistoryItem = {
-  id: number
-  no: number
-  getChanges: string
-  description: string
-  createdAt: string // or Date
-  updatedAt: string
-  content: string // 수정항목
-  updatedBy: string
-  memo: string
-  type: string
-  typeCode: string
-}
 // 등록에 필요한 타입
 
 type SiteForm = {

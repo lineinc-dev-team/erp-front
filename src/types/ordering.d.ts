@@ -101,6 +101,7 @@ type HistoryItem = {
   memo: string
   type: string
   typeCode: string
+  isEditable: boolean
 }
 
 export type FormState = {

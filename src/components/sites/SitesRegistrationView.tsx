@@ -20,7 +20,7 @@ import {
   unformatNumber,
 } from '@/utils/formatters'
 import { useClientCompany } from '@/hooks/useClientCompany'
-import { Contract, ContractFile, ContractFileType, HistoryItem, SiteForm } from '@/types/site'
+import { Contract, ContractFile, ContractFileType, SiteForm } from '@/types/site'
 import { formatPersonNumber } from '@/utils/formatPhoneNumber'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
@@ -42,6 +42,7 @@ import CommonMultiFileInput from '../common/CommonMultiFileInput'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 import { UserInfoProps } from '@/types/accountManagement'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
+import { HistoryItem } from '@/types/ordering'
 
 export default function SitesRegistrationView({ isEditMode = false }) {
   const FILE_TYPE_LABELS: Record<ContractFileType, string> = {
@@ -97,7 +98,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     userName: '본사 담당자명',
     managerName: '공정 소장',
     statusName: '진행상태',
-    contractAmount: '도급금액',
+    contractAmount: '계약금액',
     officePhone: '사무실 연락처',
     amount: '계약금액',
     memo: '비고',
@@ -544,6 +545,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
           id: item.id,
           type: item.type || '-',
           typeCode: item.typeCode,
+          isEditable: item.isEditable,
           content:
             formatChangeDetail(item.getChanges, item.typeCode) === '-'
               ? item?.description
@@ -809,7 +811,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              도급금액
+              계약금액
             </label>
             <div className="border flex  items-center border-gray-400 px-2 w-full">
               <AmountInput
@@ -1026,6 +1028,13 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                         onChange={(e) => updateMemo(item.id, e.target.value)}
                         multiline
                         inputProps={{ maxLength: 500 }}
+                        disabled={!item.isEditable}
+                        sx={{
+                          '& .MuiInputBase-root': {
+                            backgroundColor: item.isEditable ? 'white' : '#e4e4e4', // 비활성화 시 연한 배경
+                            color: item.isEditable ? 'inherit' : 'gray', // 비활성화 시 글자색
+                          },
+                        }}
                       />
                     </TableCell>
                   </TableRow>

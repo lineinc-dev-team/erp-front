@@ -13,7 +13,7 @@ import { useParams } from 'next/navigation'
 import { UserDetailService } from '@/services/account/accountManagementService'
 import { useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef } from 'react'
-import { FormState, HistoryItem } from '@/types/accountManagement'
+import { FormState } from '@/types/accountManagement'
 import {
   Paper,
   Table,
@@ -26,6 +26,7 @@ import {
 } from '@mui/material'
 import { formatDateTime } from '@/utils/formatters'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
+import { HistoryItem } from '@/types/ordering'
 
 export default function ManagementRegistrationView({ isEditMode = false }) {
   const {
@@ -147,6 +148,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
         page.data.content.map((item: HistoryItem) => ({
           id: item.id,
           description: item.description,
+          isEditable: item.isEditable,
           content: formatChangeDetail(item.getChanges), // 여기 변경
           createdAt: item.createdAt,
           updatedAt: item.updatedAt,
@@ -491,6 +493,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
                       >
                         {item.updatedBy}
                       </TableCell>
+
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <TextField
                           fullWidth
@@ -500,6 +503,13 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
                           onChange={(e) => updateMemo(item.id, e.target.value)}
                           multiline
                           inputProps={{ maxLength: 500 }}
+                          disabled={!item.isEditable}
+                          sx={{
+                            '& .MuiInputBase-root': {
+                              backgroundColor: item.isEditable ? 'white' : '#e4e4e4', // 비활성화 시 연한 배경
+                              color: item.isEditable ? 'inherit' : 'gray', // 비활성화 시 글자색
+                            },
+                          }}
                         />
                       </TableCell>
                     </TableRow>

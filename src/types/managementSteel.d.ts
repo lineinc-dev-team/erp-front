@@ -1,3 +1,5 @@
+import { HistoryItem } from './ordering'
+
 export interface DetailItem {
   id: number
   standard: string
@@ -93,19 +95,6 @@ export type AttachedFile = {
   fileUrl?: string
   originalFileName?: string
   files: FileUploadInfo[]
-}
-
-type HistoryItem = {
-  id: number
-  no: number
-  getChanges: string
-  createdAt: string // or Date
-  updatedAt: string
-  content: string // 수정항목
-  description: string
-  updatedBy: string
-  memo: string
-  type: string
 }
 
 export type ManagementSteelFormState = {

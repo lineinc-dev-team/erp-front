@@ -25,12 +25,7 @@ import { useManagementSteelFormStore } from '@/stores/managementSteelStore'
 import { useManagementSteel } from '@/hooks/useManagementSteel'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { SteelDetailService } from '@/services/managementSteel/managementSteelRegistrationService'
-import {
-  AttachedFile,
-  DetailItem,
-  HistoryItem,
-  ManagementSteelFormState,
-} from '@/types/managementSteel'
+import { AttachedFile, DetailItem, ManagementSteelFormState } from '@/types/managementSteel'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
@@ -38,6 +33,7 @@ import { GetCompanyNameInfoService } from '@/services/outsourcingContract/outsou
 import { CompanyInfo } from '@/types/outsourcingContract'
 import { formatDateTime, getTodayDateString, unformatNumber } from '@/utils/formatters'
 import { WithoutApprovalAndRemovalOptions } from '@/config/erp.confing'
+import { HistoryItem } from '@/types/ordering'
 
 export default function ManagementSteelRegistrationView({ isEditMode = false }) {
   const { showSnackbar } = useSnackbarStore()
@@ -477,6 +473,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         page.data.content.map((item: HistoryItem) => ({
           id: item.id,
           type: item.type || '-',
+          isEditable: item.isEditable,
           content:
             formatChangeDetail(item.getChanges) === '-'
               ? item?.description
@@ -1415,6 +1412,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     >
                       {item.updatedBy}
                     </TableCell>
+
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
                         fullWidth
@@ -1424,6 +1422,13 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         onChange={(e) => updateMemo(item.id, e.target.value)}
                         multiline
                         inputProps={{ maxLength: 500 }}
+                        disabled={!item.isEditable}
+                        sx={{
+                          '& .MuiInputBase-root': {
+                            backgroundColor: item.isEditable ? 'white' : '#e4e4e4', // 비활성화 시 연한 배경
+                            color: item.isEditable ? 'inherit' : 'gray', // 비활성화 시 글자색
+                          },
+                        }}
                       />
                     </TableCell>
                   </TableRow>

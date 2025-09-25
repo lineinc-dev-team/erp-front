@@ -1,3 +1,5 @@
+import { HistoryItem } from './ordering'
+
 export interface LaborDataList {
   id: number
   type: string
@@ -54,18 +56,6 @@ export type LaborSearchState = {
   ) => void
 
   handleSearch: () => void
-}
-
-type HistoryItem = {
-  id: number
-  no: number
-  getChanges: string
-  createdAt: string // or Date
-  updatedAt: string
-  content: string // 수정항목
-  updatedBy: string
-  memo: string
-  type: string
 }
 
 export type AttachedFile = {

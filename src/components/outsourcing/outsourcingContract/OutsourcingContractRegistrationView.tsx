@@ -24,11 +24,7 @@ import { formatPersonNumber, formatPhoneNumber } from '@/utils/formatPhoneNumber
 import CommonFileInput from '@/components/common/FileInput'
 import { useParams } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  HistoryItem,
-  // OutsourcingAttachedFile,
-  // OutsourcingManager,
-} from '@/types/outsourcingCompany'
+
 import { formatDateTime, formatNumber, unformatNumber } from '@/utils/formatters'
 import { useContractFormStore } from '@/stores/outsourcingContractStore'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
@@ -56,6 +52,7 @@ import CommonDatePicker from '@/components/common/DatePicker'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { useQuery } from '@tanstack/react-query'
 import CommonMultiFileInput from '@/components/common/CommonMultiFileInput'
+import { HistoryItem } from '@/types/ordering'
 
 export default function OutsourcingContractRegistrationView({ isEditMode = false }) {
   const {
@@ -259,7 +256,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     item: '단위',
     unit: '단가',
     outsourcingContractQuantity: '외주계약금액의 수량',
-    contractPrice: '도급금액의 금액',
+    contractPrice: '계약금액의 금액',
     processName: '업체명',
   }
 
@@ -869,8 +866,8 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
         if (!item.specification?.trim()) return '공사의 규격을 입력해주세요.'
         if (!item.unit?.trim()) return '공사의 단가를 입력해주세요.'
         if (!item.unitPrice) return '공사의 도급단가를 입력해주세요.'
-        if (!item.contractQuantity) return '공사의 도급금액의 수량을 입력해주세요.'
-        if (!item.contractPrice) return '공사의 도급금액의 금액을 입력해주세요.'
+        if (!item.contractQuantity) return '공사의 계약금액의 수량을 입력해주세요.'
+        if (!item.contractPrice) return '공사의 계약금액의 금액을 입력해주세요.'
         if (!item.outsourcingContractQuantity) return '공사의 외주계약금액의 수량을 입력해주세요.'
         if (!item.outsourcingContractPrice) return '공사의 외주계약금액의 금액을 입력해주세요.'
         if (item.memo.length > 500) {
@@ -1776,7 +1773,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    도급금액 <span className="text-red-500 ml-1">*</span>
+                    계약금액 <span className="text-red-500 ml-1">*</span>
                   </TableCell>
                   <TableCell
                     colSpan={2}
@@ -2481,6 +2478,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     >
                       {item.updatedBy}
                     </TableCell>
+
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
                         fullWidth
@@ -2490,6 +2488,13 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                         onChange={(e) => updateMemo(item.id, e.target.value)}
                         multiline
                         inputProps={{ maxLength: 500 }}
+                        disabled={!item.isEditable}
+                        sx={{
+                          '& .MuiInputBase-root': {
+                            backgroundColor: item.isEditable ? 'white' : '#e4e4e4', // 비활성화 시 연한 배경
+                            color: item.isEditable ? 'inherit' : 'gray', // 비활성화 시 글자색
+                          },
+                        }}
                       />
                     </TableCell>
                   </TableRow>
