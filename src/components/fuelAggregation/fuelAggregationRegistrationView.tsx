@@ -343,7 +343,6 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
   function validateFuelForm(form: FuelInfo) {
     if (!form.siteId) return '현장명을 선택하세요.'
     if (!form.siteProcessId) return '공정명을 선택하세요.'
-    if (!form.date) return '일자를 입력하세요.'
     if (form.weather === 'BASE') return '날씨를 선택하세요.'
 
     // 담당자 유효성 체크
@@ -672,7 +671,11 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
               일자 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
-              <CommonDatePicker value={form.date} onChange={(value) => setField('date', value)} />
+              <CommonDatePicker
+                value={form.date}
+                onChange={(value) => setField('date', value)}
+                disabled
+              />
             </div>
           </div>
 
