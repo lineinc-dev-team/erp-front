@@ -22,7 +22,7 @@ import {
 } from '@mui/material'
 import { AreaCode, UseORnotOptions } from '@/config/erp.confing'
 import { useClientCompany } from '@/hooks/useClientCompany'
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Typography } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
@@ -105,6 +105,8 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
   } = useClientHistoryDataQuery(clientCompanyId, isEditMode)
 
   const historyList = useOrderingFormStore((state) => state.form.changeHistories)
+
+  const [isUserFocused, setIsUserFocused] = useState(false)
 
   const { data } = useQuery({
     queryKey: ['ClientDetailInfo'],
@@ -615,7 +617,9 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
                   </div>
                 )}
                 onSelect={handleSelectUser}
-                shouldShowList={true}
+                shouldShowList={isUserFocused}
+                onFocus={() => setIsUserFocused(true)}
+                onBlur={() => setIsUserFocused(false)}
                 isLoading={isLoading || isFetching}
                 debouncedKeyword={debouncedKeyword}
               />

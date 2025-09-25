@@ -1,5 +1,11 @@
 import { HistoryItem } from './ordering'
 
+export type OrderInfoProps = {
+  id: number
+  name: string
+  deleted: boolean
+}
+
 type SiteProcess = {
   id?: number
   name: string
@@ -50,6 +56,7 @@ type SiteForm = {
   district: string
   // type: string | null
   clientCompanyId: number
+  clientCompanyName: string
   startedAt: Date | null
   endedAt: Date | null
   initialStartedAt: string // 'yyyy-MM-dd'

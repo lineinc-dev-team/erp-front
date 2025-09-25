@@ -20,7 +20,7 @@ import {
   unformatNumber,
 } from '@/utils/formatters'
 import { useClientCompany } from '@/hooks/useClientCompany'
-import { Contract, ContractFile, ContractFileType, SiteForm } from '@/types/site'
+import { Contract, ContractFile, ContractFileType, OrderInfoProps, SiteForm } from '@/types/site'
 import { formatPersonNumber } from '@/utils/formatPhoneNumber'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
@@ -70,17 +70,16 @@ export default function SitesRegistrationView({ isEditMode = false }) {
   const {
     createSiteMutation,
     ModifySiteMutation,
-    //본사 담당자
-    orderOptions,
-    orderPersonFetchNextPage,
-    orderPersonHasNextPage,
-    orderPersonIsFetching,
-    orderPersonIsLoading,
 
     useSiteHistoryDataQuery,
+    useOrderingNameListInfiniteScroll,
   } = useSite()
 
   // 상세페이지 로직
+
+  const [isOrderFocused, setIsOrderFocused] = useState(false)
+  const [isUserFocused, setIsUserFocused] = useState(false)
+  const [isManagerFocused, setIsManagerFocused] = useState(false)
 
   const params = useParams()
   const siteId = Number(params?.id)
@@ -124,47 +123,47 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     enabled: isEditMode && !!siteId, // 수정 모드일 때만 fetch
   })
 
-  const [updatedOrderOptions, setUpdatedOrderOptions] = useState(orderOptions)
+  // const [updatedOrderOptions, setUpdatedOrderOptions] = useState(orderOptions)
 
-  useEffect(() => {
-    if (data && isEditMode) {
-      const client = data.data
+  // useEffect(() => {
+  //   if (data && isEditMode) {
+  //     const client = data.data
 
-      const newOrderOptions = [...orderOptions]
+  //     const newOrderOptions = [...orderOptions]
 
-      if (client.clientCompany) {
-        const clientName =
-          client.clientCompany.name + (client.clientCompany.deleted ? ' (삭제됨)' : '')
+  //     if (client.clientCompany) {
+  //       const clientName =
+  //         client.clientCompany.name + (client.clientCompany.deleted ? ' (삭제됨)' : '')
 
-        // 이미 options에 있는지 체크
-        const exists = orderOptions.some((u) => u.id === client.clientCompany.id)
-        if (!exists) {
-          newOrderOptions.push({
-            id: client.clientCompany.id,
-            name: clientName,
-            deleted: client.clientCompany.deleted,
-          })
-        }
+  //       // 이미 options에 있는지 체크
+  //       const exists = orderOptions.some((u) => u.id === client.clientCompany.id)
+  //       if (!exists) {
+  //         newOrderOptions.push({
+  //           id: client.clientCompany.id,
+  //           name: clientName,
+  //           deleted: client.clientCompany.deleted,
+  //         })
+  //       }
 
-        // 삭제된 유저 분리
-        const deletedOrders = newOrderOptions.filter((u) => u.deleted)
-        const normalOrders = newOrderOptions.filter((u) => !u.deleted && u.id !== '0')
+  //       // 삭제된 유저 분리
+  //       const deletedOrders = newOrderOptions.filter((u) => u.deleted)
+  //       const normalOrders = newOrderOptions.filter((u) => !u.deleted && u.id !== '0')
 
-        setUpdatedOrderOptions([
-          newOrderOptions.find((u) => u.id === '0')!, // 선택 옵션
-          ...deletedOrders,
-          ...normalOrders,
-        ])
+  //       setUpdatedOrderOptions([
+  //         newOrderOptions.find((u) => u.id === '0')!, // 선택 옵션
+  //         ...deletedOrders,
+  //         ...normalOrders,
+  //       ])
 
-        // 선택된 유저 id 세팅
-        setField('clientCompanyId', client.clientCompany?.id ?? '0')
-      }
-    } else if (!isEditMode) {
-      // 등록 모드일 경우
-      setUpdatedOrderOptions(orderOptions)
-      setField('clientCompanyId', 0) // "선택" 기본값
-    }
-  }, [data, isEditMode, orderOptions])
+  //       // 선택된 유저 id 세팅
+  //       setField('clientCompanyId', client.clientCompany?.id ?? '0')
+  //     }
+  //   } else if (!isEditMode) {
+  //     // 등록 모드일 경우
+  //     setUpdatedOrderOptions(orderOptions)
+  //     setField('clientCompanyId', 0) // "선택" 기본값
+  //   }
+  // }, [data, isEditMode, orderOptions])
 
   useEffect(() => {
     if (data && isEditMode) {
@@ -179,6 +178,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
       setField('district', client.district)
 
       setField('clientCompanyId', client.clientCompany?.id ?? '0')
+      setField('clientCompanyName', client.clientCompany?.name ?? '')
       setField('startedAt', client.startedAt ? new Date(client.startedAt) : null)
       setField('endedAt', client.endedAt ? new Date(client.endedAt) : null)
       setField('userId', client.user?.id ?? '0')
@@ -485,6 +485,28 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     new Map(rawManagerList.map((user) => [user.username, user])).values(),
   )
 
+  // 발주처명 무한 스크롤 인풋박스
+
+  // 유저 선택 시 처리
+  const handleSelectOrdering = (selectedUser: OrderInfoProps) => {
+    // 예: username 필드에 선택한 유저 이름 넣기
+    setField('clientCompanyName', selectedUser.name)
+    setField('clientCompanyId', selectedUser.id)
+  }
+
+  const debouncedOrderingKeyword = useDebouncedValue(form.clientCompanyName, 300)
+
+  const {
+    data: OrderNameData,
+    fetchNextPage: OrderNameFetchNextPage,
+    hasNextPage: OrderNameHasNextPage,
+    isFetching: OrderNameIsFetching,
+    isLoading: OrderNameIsLoading,
+  } = useOrderingNameListInfiniteScroll(debouncedOrderingKeyword)
+
+  const OrderRawList = OrderNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const orderList = Array.from(new Map(OrderRawList.map((user) => [user.name, user])).values())
+
   const formatChangeDetail = (getChanges: string, typeCode: string) => {
     try {
       const parsed = JSON.parse(getChanges)
@@ -711,39 +733,30 @@ export default function SitesRegistrationView({ isEditMode = false }) {
             </div>
           </div>
 
-          {/* <div className="flex">
-            <label className="w-36  text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              현장 유형 <span className="text-red-500 ml-1">*</span>
-            </label>
-            <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
-              <CommonSelect
-                fullWidth={true}
-                className="text-xl"
-                value={form.type || 'BASE'}
-                displayLabel
-                onChange={(value) => setField('type', value)}
-                options={siteTypeOptions}
-                disabled
-              />
-            </div>
-          </div> */}
-
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               발주처 <span className="text-red-500 ml-1">*</span>
             </label>
-            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelect
-                fullWidth
-                className="text-xl"
-                value={form.clientCompanyId}
-                onChange={(value) => setField('clientCompanyId', value)}
-                options={updatedOrderOptions}
-                displayLabel
-                onScrollToBottom={() => {
-                  if (orderPersonHasNextPage && !orderPersonIsFetching) orderPersonFetchNextPage()
-                }}
-                loading={orderPersonIsLoading}
+            <div className="border w-full  border-gray-400">
+              <InfiniteScrollSelect
+                placeholder="발주처명을 입력하세요"
+                keyword={form.clientCompanyName}
+                onChangeKeyword={(newKeyword) => setField('clientCompanyName', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                items={orderList}
+                hasNextPage={OrderNameHasNextPage ?? false}
+                fetchNextPage={OrderNameFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                onSelect={handleSelectOrdering}
+                // shouldShowList={true}
+                isLoading={OrderNameIsLoading || OrderNameIsFetching}
+                debouncedKeyword={debouncedOrderingKeyword}
+                shouldShowList={isOrderFocused}
+                onFocus={() => setIsOrderFocused(true)}
+                onBlur={() => setIsOrderFocused(false)}
               />
             </div>
           </div>
@@ -803,9 +816,12 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                   </div>
                 )}
                 onSelect={handleSelectUser}
-                shouldShowList={true}
+                // shouldShowList={true}
                 isLoading={isLoading || isFetching}
                 debouncedKeyword={debouncedKeyword}
+                shouldShowList={isUserFocused}
+                onFocus={() => setIsUserFocused(true)}
+                onBlur={() => setIsUserFocused(false)}
               />
             </div>
           </div>
@@ -873,7 +889,9 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                   </div>
                 )}
                 onSelect={handleSelectManager}
-                shouldShowList={true}
+                shouldShowList={isManagerFocused}
+                onFocus={() => setIsManagerFocused(true)}
+                onBlur={() => setIsManagerFocused(false)}
                 isLoading={managerIsLoading || managerIsFetching}
                 debouncedKeyword={debouncedManagerKeyword}
               />

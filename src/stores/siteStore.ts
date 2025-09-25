@@ -90,6 +90,7 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
     district: '',
     // type: null,
     clientCompanyId: 0,
+    clientCompanyName: '',
     startedAt: null,
     endedAt: null,
     initialStartedAt: '', // 'yyyy-MM-dd'
@@ -232,6 +233,7 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
         district: '',
         // type: null,
         clientCompanyId: 0,
+        clientCompanyName: '',
         startedAt: null,
         endedAt: null,
         initialStartedAt: '', // 'yyyy-MM-dd'
