@@ -27,14 +27,7 @@ import { InfiniteScrollSelect } from '@/components/common/InfiniteScrollSelect'
 export default function ManagementView() {
   const { search } = useAccountManagementStore()
 
-  const {
-    userQuery,
-    deleteMutation,
-    departmentOptions,
-    positionOptions,
-    gradeOptions,
-    roleOptions,
-  } = useUserMg()
+  const { userQuery, deleteMutation, departmentOptions, gradeOptions, roleOptions } = useUserMg()
 
   const openTab = useTabOpener()
 
@@ -246,20 +239,20 @@ export default function ManagementView() {
             </div>
           </div>
 
-          <div className="flex">
+          {/* <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               직책
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
-              <CommonSelect
+              <CommonInput
+                className="flex-1/2"
                 fullWidth={true}
-                value={search.positionId}
-                onChange={(value) => search.setField('positionId', value)}
-                options={positionOptions}
+                value={'미선택'}
+                onChange={(value) => search.setField('username', value)}
                 disabled
               />
             </div>
-          </div>
+          </div> */}
 
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">

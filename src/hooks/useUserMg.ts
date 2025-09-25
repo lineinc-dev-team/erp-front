@@ -59,7 +59,7 @@ export function useUserMg() {
         departmentId: search.departmentId === 0 ? '' : search.departmentId,
         gradeId: search.gradeId === 0 ? '' : search.gradeId,
         // positionId: search.positionId === 0 ? '' : search.positionId,
-        positionId: search.positionId === -1 ? '' : search.positionId,
+        // positionId: search.positionId === 0 ? undefined : search.positionId,
         page: search.currentPage - 1,
         size: Number(search.pageCount) || 10,
         sort:
