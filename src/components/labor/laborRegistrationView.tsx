@@ -394,10 +394,25 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
     if (attachedFiles.length > 0) {
       for (const item of attachedFiles) {
-        if (!item.name?.trim()) return '첨부파일의 이름을 입력해주세요.'
+        if (!item.name?.trim()) {
+          return '첨부파일의 이름을 입력해주세요.'
+        }
+
         if (item.memo.length > 500) {
           return '첨부파일의 비고는 500자 이하로 입력해주세요.'
         }
+      }
+
+      // 필수 첨부파일 체크
+      const idCard = attachedFiles.find((f) => f.type === 'ID_CARD')
+      const bankbook = attachedFiles.find((f) => f.type === 'BANKBOOK')
+
+      if (!idCard || idCard.files.length === 0) {
+        return '신분증 사본 파일을 첨부해주세요.'
+      }
+
+      if (!bankbook || bankbook.files.length === 0) {
+        return '통장 사본 파일을 첨부해주세요.'
       }
     }
 
