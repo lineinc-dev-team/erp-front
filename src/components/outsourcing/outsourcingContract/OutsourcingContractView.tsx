@@ -211,8 +211,6 @@ export default function OutsourcingContractView() {
     })
   }
 
-  // 권한에 따른 버튼 활성화
-
   const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
 
   useEffect(() => {
