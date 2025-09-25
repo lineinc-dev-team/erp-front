@@ -362,7 +362,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
     if (!form.residentNumber?.trim()) return '주민등록번호를 입력하세요.'
 
-    // if (!form.address?.trim()) return '주소를 입력하세요.'
+    if (!form.address?.trim()) return '주소를 입력하세요.'
     // if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
 
     if (!form.phoneNumber?.trim()) return '개인 휴대폰 번호를 입력하세요.'
@@ -592,7 +592,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
-              위치(주소)
+              위치(주소) <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
               <div className="flex gap-2">
