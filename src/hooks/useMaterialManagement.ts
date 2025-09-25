@@ -145,8 +145,8 @@ export function useManagementMaterial() {
     onSuccess: () => {
       showSnackbar('자재비가 수정 되었습니다.', 'success')
       queryClient.invalidateQueries({ queryKey: ['MaterialInfo'] })
-      reset()
-      router.push('/materialManagement')
+      // reset()
+      // router.push('/materialManagement')
     },
 
     onError: (error: unknown) => {

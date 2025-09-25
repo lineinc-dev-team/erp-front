@@ -121,8 +121,8 @@ export function useClientCompany() {
     onSuccess: () => {
       showSnackbar('발주처가 수정 되었습니다.', 'success')
       queryClient.invalidateQueries({ queryKey: ['ClientInfo'] })
-      reset()
-      router.push('/ordering')
+      // reset()
+      // router.push('/ordering')
     },
 
     onError: (error: unknown) => {

@@ -131,8 +131,8 @@ export default function useOutSourcingCompany() {
     onSuccess: () => {
       showSnackbar('외주업체가 수정 되었습니다.', 'success')
       queryClient.invalidateQueries({ queryKey: ['OutsourcingInfo'] })
-      reset()
-      router.push('/outsourcingCompany')
+      // reset()
+      // router.push('/outsourcingCompany')
     },
 
     onError: (error: unknown) => {

@@ -124,7 +124,7 @@ export function useUserMg() {
     onSuccess: () => {
       showSnackbar('계정이 수정되었습니다.', 'success')
       queryClient.invalidateQueries({ queryKey: ['UserInfo'] })
-      router.push('/account')
+      // router.push('/account')
     },
     onError: (error: unknown) => {
       if (error instanceof Error) {

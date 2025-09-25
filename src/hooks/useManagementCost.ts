@@ -135,8 +135,8 @@ export function useManagementCost() {
     onSuccess: () => {
       showSnackbar('관리비가 수정 되었습니다.', 'success')
       queryClient.invalidateQueries({ queryKey: ['CostInfo'] })
-      reset()
-      router.push('/managementCost')
+      // reset()
+      // router.push('/managementCost')
     },
 
     onError: () => {

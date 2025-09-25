@@ -125,8 +125,8 @@ export default function useSite() {
     onSuccess: () => {
       showSnackbar('현장이 수정 되었습니다.', 'success')
       queryClient.invalidateQueries({ queryKey: ['siteInfo'] })
-      resetForm()
-      router.push('/sites')
+      // resetForm()
+      // router.push('/sites')
     },
 
     onError: () => {

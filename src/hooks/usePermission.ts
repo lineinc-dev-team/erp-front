@@ -165,8 +165,8 @@ export function usePermission() {
     onSuccess: () => {
       showSnackbar('권한 그룹이 수정 되었습니다.', 'success')
       queryClient.invalidateQueries({ queryKey: ['permissionInfo'] })
-      reset()
-      router.push('/permissionGroup')
+      // reset()
+      // router.push('/permissionGroup')
     },
     onError: (error: unknown) => {
       if (error instanceof Error) {

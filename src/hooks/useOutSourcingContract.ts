@@ -123,8 +123,8 @@ export default function useOutSourcingContract() {
     onSuccess: async () => {
       showSnackbar('외주업체 계약이 수정 되었습니다.', 'success')
       queryClient.invalidateQueries({ queryKey: ['modifyContractInfo'] })
-      reset()
-      router.push('/outsourcingContract')
+      // reset()
+      // router.push('/outsourcingContract')
     },
 
     onError: (error: unknown) => {

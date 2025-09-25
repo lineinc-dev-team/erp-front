@@ -152,8 +152,8 @@ export function useLaborInfo() {
     onSuccess: () => {
       showSnackbar('인력정보가 수정 되었습니다.', 'success')
       queryClient.invalidateQueries({ queryKey: ['LaborInfo'] })
-      reset()
-      router.push('/labors')
+      // reset()
+      // router.push('/labors')
     },
 
     onError: (error: unknown) => {

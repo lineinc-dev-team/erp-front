@@ -235,8 +235,8 @@ export function useFuelAggregation() {
     onSuccess: () => {
       showSnackbar('유류집계가 수정 되었습니다.', 'success')
       queryClient.invalidateQueries({ queryKey: ['FuelAggregationInfo'] })
-      reset()
-      router.push('/fuelAggregation')
+      // reset()
+      // router.push('/fuelAggregation')
     },
 
     onError: (error: unknown) => {

@@ -160,8 +160,8 @@ export function useManagementSteel() {
     onSuccess: () => {
       showSnackbar('강재수불부가 수정 되었습니다.', 'success')
       queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
-      reset()
-      router.push('/managementSteel')
+      // reset()
+      // router.push('/managementSteel')
     },
 
     onError: (error: unknown) => {
