@@ -12,7 +12,7 @@ import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { getTodayDateString } from '@/utils/formatters'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 
 export default function useSite() {
   const { showSnackbar } = useSnackbarStore()
@@ -187,6 +187,36 @@ export default function useSite() {
     })
   }
 
+  const {
+    data: orderPersonInfo,
+    fetchNextPage: orderPersonFetchNextPage,
+    hasNextPage: orderPersonHasNextPage,
+    isFetching: orderPersonIsFetching,
+    isLoading: orderPersonIsLoading,
+  } = useInfiniteQuery({
+    queryKey: ['orderInfo'],
+    queryFn: ({ pageParam = 0 }) => OrderingPersonScroll({ pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      const nextPage = sliceInfo.page + 1
+      return sliceInfo.hasNext ? nextPage : undefined
+    },
+  })
+
+  const orderOptions = useMemo(() => {
+    const defaultOption = { id: '0', name: '선택', deleted: false }
+    const options = (orderPersonInfo?.pages || [])
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+        deleted: false,
+      }))
+
+    return [defaultOption, ...options]
+  }, [orderPersonInfo])
+
   return {
     createSiteMutation,
     SiteListQuery,
@@ -197,6 +227,12 @@ export default function useSite() {
     //발주처 담당자 관련
     useOrderingPersonInfiniteScroll,
     useOrderingNameListInfiniteScroll,
+
+    orderPersonFetchNextPage,
+    orderPersonHasNextPage,
+    orderPersonIsFetching,
+    orderPersonIsLoading,
+    orderOptions,
 
     // 현장 수정이력조회
     useSiteHistoryDataQuery,
