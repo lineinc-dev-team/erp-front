@@ -95,11 +95,13 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
     initialStartedAt: '', // 'yyyy-MM-dd'
     initialEndedAt: '', // 'yyyy-MM-dd'
     userId: 0,
+    userName: '',
     contractAmount: 0,
     memo: '',
     process: {
       name: '',
       managerId: 0,
+      managerName: '',
       areaNumber: '지역번호',
       officePhone: '',
       status: '선택',
@@ -235,11 +237,13 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
         initialStartedAt: '', // 'yyyy-MM-dd'
         initialEndedAt: '', // 'yyyy-MM-dd'
         userId: 0,
+        userName: '',
         contractAmount: 0,
         memo: '',
         process: {
           name: '',
           managerId: 0,
+          managerName: '',
           areaNumber: '지역번호',
           officePhone: '',
           status: '선택',

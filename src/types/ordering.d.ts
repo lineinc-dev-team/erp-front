@@ -122,6 +122,7 @@ export type FormState = {
   memo: string
   isActive: string
   userId: number
+  userName: string
 
   homepageUrl: string
   homepageLoginId: string

@@ -2,6 +2,7 @@ type SiteProcess = {
   id?: number
   name: string
   managerId: number
+  managerName: string
   areaNumber: string
   officePhone: string
   status: '선택' | 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED'
@@ -66,6 +67,7 @@ type SiteForm = {
   initialStartedAt: string // 'yyyy-MM-dd'
   initialEndedAt: string // 'yyyy-MM-dd'
   userId: number
+  userName: string
   contractAmount: number
   memo: string
   process: SiteProcess

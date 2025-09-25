@@ -22,7 +22,7 @@ import {
 } from '@mui/material'
 import { AreaCode, UseORnotOptions } from '@/config/erp.confing'
 import { useClientCompany } from '@/hooks/useClientCompany'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { Typography } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
@@ -32,6 +32,9 @@ import CommonInputnumber from '@/utils/formatBusinessNumber'
 import { formatPersonNumber, formatPhoneNumber } from '@/utils/formatPhoneNumber'
 import { formatDateTime, getTodayDateString } from '@/utils/formatters'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
+import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
+import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
+import { UserInfoProps } from '@/types/accountManagement'
 
 export default function OrderingRegistrationView({ isEditMode = false }) {
   const {
@@ -50,12 +53,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
   const {
     createClientMutation,
     ClientModifyMutation,
-    userOptions,
-    fetchNextPage,
-    hasNextPage,
-    isFetching,
     orderingCancel,
-    isLoading,
     payMethodOptions,
     useClientHistoryDataQuery,
   } = useClientCompany()
@@ -113,43 +111,6 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
     queryFn: () => ClientDetailService(clientCompanyId),
     enabled: isEditMode && !!clientCompanyId, // 수정 모드일 때만 fetch
   })
-
-  const [updatedUserOptions, setUpdatedUserOptions] = useState(userOptions)
-
-  useEffect(() => {
-    if (data && isEditMode) {
-      const client = data.data
-      const newUserOptions = [...userOptions]
-
-      if (client.user) {
-        const userName = client.user.username + (client.user.deleted ? ' (삭제됨)' : '')
-
-        const exists = newUserOptions.some((u) => u.id === client.user.id)
-        if (!exists) {
-          newUserOptions.push({
-            id: client.user.id,
-            name: userName,
-            deleted: client.user.deleted,
-          })
-        }
-      }
-
-      const deletedUsers = newUserOptions.filter((u) => u.deleted)
-      const normalUsers = newUserOptions.filter((u) => !u.deleted && u.id !== '0')
-
-      setUpdatedUserOptions([
-        newUserOptions.find((u) => u.id === '0')!,
-        ...deletedUsers,
-        ...normalUsers,
-      ])
-
-      setField('userId', client.user?.id ?? '0')
-    } else if (!isEditMode) {
-      // 등록 모드일 경우
-      setUpdatedUserOptions(userOptions)
-      setField('userId', 0) // "선택" 기본값
-    }
-  }, [data, isEditMode, userOptions])
 
   useEffect(() => {
     if (data && isEditMode === true) {
@@ -260,6 +221,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
       setField('isActive', client.isActive ? '1' : '2')
 
       setField('userId', client.user?.id ?? '0')
+      setField('userName', client.user?.username ?? '0')
 
       setField('createdAt', getTodayDateString(client.createdAt))
       setField('updatedAt', getTodayDateString(client.updatedAt))
@@ -275,6 +237,30 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
       reset()
     }
   }, [data, isEditMode, reset, setField])
+
+  // 발주처 무한 스크롤 기능
+
+  const { useUserNameListInfiniteScroll } = useClientCompany()
+
+  // 유저 선택 시 처리
+  const handleSelectUser = (selectedUser: UserInfoProps) => {
+    // 예: username 필드에 선택한 유저 이름 넣기
+    setField('userName', selectedUser.username)
+    setField('userId', selectedUser.id)
+  }
+
+  const debouncedKeyword = useDebouncedValue(form.userName, 300)
+
+  const {
+    data: userNameListData,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isLoading,
+  } = useUserNameListInfiniteScroll(debouncedKeyword)
+
+  const rawList = userNameListData?.pages.flatMap((page) => page.data.content) ?? []
+  const userList = Array.from(new Map(rawList.map((user) => [user.username, user])).values())
 
   const formatChangeDetail = (getChanges: string, typeCode: string) => {
     try {
@@ -614,18 +600,23 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               본사 담당자명
             </label>
-            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelect
-                fullWidth
-                className="text-xl"
-                value={form.userId}
-                onChange={(value) => setField('userId', value)}
-                options={updatedUserOptions}
-                displayLabel
-                onScrollToBottom={() => {
-                  if (hasNextPage && !isFetching) fetchNextPage()
-                }}
-                loading={isLoading}
+            <div className="border w-full  border-gray-400">
+              <InfiniteScrollSelect
+                placeholder="이름을 입력하세요"
+                keyword={form.userName}
+                onChangeKeyword={(newKeyword) => setField('userName', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                items={userList}
+                hasNextPage={hasNextPage ?? false}
+                fetchNextPage={fetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.username}
+                  </div>
+                )}
+                onSelect={handleSelectUser}
+                shouldShowList={true}
+                isLoading={isLoading || isFetching}
+                debouncedKeyword={debouncedKeyword}
               />
             </div>
           </div>
@@ -660,6 +651,19 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+              비고
+            </label>
+            <div className="border border-gray-400 px-2 w-full">
+              <CommonInput
+                value={form.memo ?? ''}
+                placeholder="500자 이하 텍스트 입력"
+                onChange={(value) => setField('memo', value)}
+                className="flex-1"
+              />
+            </div>
+          </div>
+          <div className="flex">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               로그인 아이디
             </label>
             <div className="border border-gray-400 px-2 w-full">
@@ -684,19 +688,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
               />
             </div>
           </div>
-          <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              비고
-            </label>
-            <div className="border border-gray-400 px-2 w-full">
-              <CommonInput
-                value={form.memo ?? ''}
-                placeholder="500자 이하 텍스트 입력"
-                onChange={(value) => setField('memo', value)}
-                className="flex-1"
-              />
-            </div>
-          </div>
+
           {isEditMode && (
             <div className="flex">
               <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">

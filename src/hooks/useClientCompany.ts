@@ -10,7 +10,7 @@ import {
   PayIdInfoService,
 } from '@/services/ordering/orderingRegistrationService'
 import { ClientCompanyInfoService, ClientRemoveService } from '@/services/ordering/orderingService'
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import { getTodayDateString } from '@/utils/formatters'
 
 export function useClientCompany() {
@@ -134,35 +134,18 @@ export function useClientCompany() {
     },
   })
 
-  const {
-    data: userData,
-    fetchNextPage,
-    hasNextPage,
-    isFetching,
-    isLoading,
-  } = useInfiniteQuery({
-    queryKey: ['userInfo'],
-    queryFn: ({ pageParam = 0 }) => OrderingInfoNameScroll({ pageParam }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
-      const { sliceInfo } = lastPage.data
-      const nextPage = sliceInfo.page + 1
-      return sliceInfo.hasNext ? nextPage : undefined
-    },
-  })
-
-  const userOptions = useMemo(() => {
-    const defaultOption = { id: '0', name: '선택', deleted: false }
-    const options = (userData?.pages || [])
-      .flatMap((page) => page.data.content)
-      .map((user) => ({
-        id: user.id,
-        name: user.username,
-        deleted: false,
-      }))
-
-    return [defaultOption, ...options]
-  }, [userData])
+  const useUserNameListInfiniteScroll = (keyword: string) => {
+    return useInfiniteQuery({
+      queryKey: ['userInfo', keyword],
+      queryFn: ({ pageParam }) => OrderingInfoNameScroll({ pageParam, keyword }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        const nextPage = sliceInfo.page + 1
+        return sliceInfo.hasNext ? nextPage : undefined
+      },
+    })
+  }
 
   const orderingCancel = () => {
     router.push('/ordering')
@@ -204,10 +187,6 @@ export function useClientCompany() {
     useClientHistoryDataQuery,
     // 본사 담당자 관련
 
-    userOptions,
-    fetchNextPage,
-    hasNextPage,
-    isFetching,
-    isLoading,
+    useUserNameListInfiniteScroll,
   }
 }

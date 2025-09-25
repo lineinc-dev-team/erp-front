@@ -39,6 +39,9 @@ import {
 } from '@mui/material'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import CommonMultiFileInput from '../common/CommonMultiFileInput'
+import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
+import { UserInfoProps } from '@/types/accountManagement'
+import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 
 export default function SitesRegistrationView({ isEditMode = false }) {
   const FILE_TYPE_LABELS: Record<ContractFileType, string> = {
@@ -62,8 +65,6 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     removeContractFile,
     setContracts,
   } = useSiteFormStore()
-
-  const { userOptions, fetchNextPage, hasNextPage, isFetching, isLoading } = useClientCompany()
 
   const {
     createSiteMutation,
@@ -101,6 +102,9 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     amount: '계약금액',
     memo: '비고',
     originalFileName: '파일 추가',
+    supplyPrice: '공급가',
+    vat: '부가세',
+    purchaseTax: '매입세',
   }
 
   const {
@@ -119,49 +123,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     enabled: isEditMode && !!siteId, // 수정 모드일 때만 fetch
   })
 
-  const [updatedUserOptions, setUpdatedUserOptions] = useState(userOptions)
-
   const [updatedOrderOptions, setUpdatedOrderOptions] = useState(orderOptions)
-
-  useEffect(() => {
-    if (data && isEditMode) {
-      const client = data.data
-
-      // 기존 userOptions 복사
-      const newUserOptions = [...userOptions]
-
-      if (client.user) {
-        const userName = client.user.username + (client.user.deleted ? ' (삭제됨)' : '')
-
-        // 이미 options에 있는지 체크
-        const exists = newUserOptions.some((u) => u.id === client.user.id)
-        if (!exists) {
-          newUserOptions.push({
-            id: client.user.id,
-            name: userName,
-            deleted: client.user.deleted,
-          })
-        }
-      }
-
-      // 삭제된 유저 분리
-      const deletedUsers = newUserOptions.filter((u) => u.deleted)
-      const normalUsers = newUserOptions.filter((u) => !u.deleted && u.id !== '0')
-
-      setUpdatedUserOptions([
-        newUserOptions.find((u) => u.id === '0')!, // 선택 옵션
-        ...deletedUsers,
-        ...normalUsers,
-      ])
-
-      // 선택된 유저 id 세팅
-      setField('userId', client.user?.id ?? '0')
-    } else if (!isEditMode) {
-      // 등록 모드일 경우
-      setUpdatedUserOptions(userOptions)
-      setField('userId', 0) // "선택" 기본값
-    }
-  }, [data, isEditMode, userOptions])
 
   useEffect(() => {
     if (data && isEditMode) {
@@ -219,6 +181,8 @@ export default function SitesRegistrationView({ isEditMode = false }) {
       setField('startedAt', client.startedAt ? new Date(client.startedAt) : null)
       setField('endedAt', client.endedAt ? new Date(client.endedAt) : null)
       setField('userId', client.user?.id ?? '0')
+      setField('userName', client.user?.username || '')
+
       setField('contractAmount', client.contractAmount)
       setField('memo', client.memo)
 
@@ -240,6 +204,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
       setProcessField('name', client.process?.name || '')
       setProcessField('managerId', client.manager?.id || '0')
+      setProcessField('managerName', client.manager?.username || '')
 
       setProcessField('status', client.process.statusCode)
 
@@ -471,6 +436,52 @@ export default function SitesRegistrationView({ isEditMode = false }) {
         </div>
       ))}
     </>
+  )
+
+  // 발주처 무한 스크롤 기능
+
+  const { useUserNameListInfiniteScroll } = useClientCompany()
+
+  // 유저 선택 시 처리
+  const handleSelectUser = (selectedUser: UserInfoProps) => {
+    // 예: username 필드에 선택한 유저 이름 넣기
+    setField('userName', selectedUser.username)
+    setField('userId', selectedUser.id)
+  }
+
+  const debouncedKeyword = useDebouncedValue(form.userName, 300)
+
+  const {
+    data: userNameListData,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isLoading,
+  } = useUserNameListInfiniteScroll(debouncedKeyword)
+
+  const rawList = userNameListData?.pages.flatMap((page) => page.data.content) ?? []
+  const userList = Array.from(new Map(rawList.map((user) => [user.username, user])).values())
+
+  const handleSelectManager = (selectedUser: UserInfoProps) => {
+    // 예: username 필드에 선택한 유저 이름 넣기
+
+    setProcessField('managerId', selectedUser.id)
+    setProcessField('managerName', selectedUser.username)
+  }
+
+  const debouncedManagerKeyword = useDebouncedValue(form.process.managerName, 300)
+
+  const {
+    data: ManagerNameListData,
+    fetchNextPage: managerFetchNextPage,
+    hasNextPage: managerHasNextPage,
+    isFetching: managerIsFetching,
+    isLoading: managerIsLoading,
+  } = useUserNameListInfiniteScroll(debouncedManagerKeyword)
+
+  const rawManagerList = ManagerNameListData?.pages.flatMap((page) => page.data.content) ?? []
+  const ManagerList = Array.from(
+    new Map(rawManagerList.map((user) => [user.username, user])).values(),
   )
 
   const formatChangeDetail = (getChanges: string, typeCode: string) => {
@@ -776,18 +787,23 @@ export default function SitesRegistrationView({ isEditMode = false }) {
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               본사 담당자명 <span className="text-red-500 ml-1">*</span>
             </label>
-            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelect
-                fullWidth
-                className="text-xl"
-                value={form.userId}
-                onChange={(value) => setField('userId', value)}
-                options={updatedUserOptions}
-                displayLabel
-                onScrollToBottom={() => {
-                  if (hasNextPage && !isFetching) fetchNextPage()
-                }}
-                loading={isLoading}
+            <div className="border w-full  border-gray-400">
+              <InfiniteScrollSelect
+                placeholder="이름을 입력하세요"
+                keyword={form.userName}
+                onChangeKeyword={(newKeyword) => setField('userName', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                items={userList}
+                hasNextPage={hasNextPage ?? false}
+                fetchNextPage={fetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.username}
+                  </div>
+                )}
+                onSelect={handleSelectUser}
+                shouldShowList={true}
+                isLoading={isLoading || isFetching}
+                debouncedKeyword={debouncedKeyword}
               />
             </div>
           </div>
@@ -841,18 +857,23 @@ export default function SitesRegistrationView({ isEditMode = false }) {
             <label className="w-36 text-[14px]  flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               공정소장 <span className="text-red-500 ml-1">*</span>
             </label>
-            <div className="border flex  items-center border-gray-400 px-2 w-full">
-              <CommonSelect
-                fullWidth
-                className="text-xl"
-                value={form.process.managerId}
-                onChange={(value) => setProcessField('managerId', value)}
-                options={updatedUserOptions}
-                displayLabel
-                onScrollToBottom={() => {
-                  if (hasNextPage && !isFetching) fetchNextPage()
-                }}
-                loading={isLoading}
+            <div className="border w-full  border-gray-400">
+              <InfiniteScrollSelect
+                placeholder="공정소장을 입력하세요"
+                keyword={form.process.managerName}
+                onChangeKeyword={(newKeyword) => setProcessField('managerName', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                items={ManagerList}
+                hasNextPage={managerHasNextPage ?? false}
+                fetchNextPage={managerFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.username}
+                  </div>
+                )}
+                onSelect={handleSelectManager}
+                shouldShowList={true}
+                isLoading={managerIsLoading || managerIsFetching}
+                debouncedKeyword={debouncedManagerKeyword}
               />
             </div>
           </div>
