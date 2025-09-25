@@ -50,7 +50,6 @@ export const SiteExcelFieldMap = {
   현장명: 'name',
   공정명: 'processName',
   위치: 'address',
-  현장유형: 'type',
   발주처명: 'clientCompanyName',
   도급금액: 'contractAmount',
   공정소장: 'managerName',

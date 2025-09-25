@@ -59,7 +59,7 @@ type SiteForm = {
   isModalOpen: boolean
   city: string
   district: string
-  type: string | null
+  // type: string | null
   clientCompanyId: number
   startedAt: Date | null
   endedAt: Date | null
@@ -82,7 +82,7 @@ export type SiteSearchState = {
   searchTrigger: number // 검색 실행 시마다 증가시켜 query 갱신 트리거
   nameId: number
   name: string // 현장명
-  type: string
+  // type: string
   processId: number
   processName: string // 공정명
   city: string // 시
@@ -118,7 +118,7 @@ export interface SiteListProps {
   detailAddress: string
   city: string
   district: string
-  type: string
+  // type: string
   startedAt: string // ISO Date string
   endedAt: string // ISO Date string
   contractAmount: number

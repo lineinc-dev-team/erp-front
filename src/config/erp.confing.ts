@@ -91,7 +91,6 @@ export const SiteColumnList: GridColDef[] = [
   { field: 'name', headerName: '현장명', width: 130 },
   { field: 'processName', headerName: '공정명', width: 130 },
   { field: 'address', headerName: '위치', width: 130 },
-  { field: 'type', headerName: '현장유형', width: 180 },
   { field: 'clientCompanyName', headerName: '발주처명', width: 100 },
   { field: 'contractAmount', headerName: '도급금액', width: 100 },
   { field: 'managerName', headerName: '공정소장', width: 100 },

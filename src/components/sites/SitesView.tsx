@@ -64,7 +64,6 @@ export default function SitesView() {
     orderPersonIsFetching,
     orderPersonIsLoading,
     orderOptions,
-    siteTypeOptions,
   } = useSite()
 
   const { showSnackbar } = useSnackbarStore()
@@ -79,7 +78,7 @@ export default function SitesView() {
     ...site,
     processName: site.process?.name || '-', // 공정명
     managerName: site.manager?.username || '-', // 공정소장 이름
-    type: site.type || '-',
+    // type: site.type || '-',
     contractAmount: formatNumber(site.contractAmount) || '-',
     hasFile: site.hasFile === true ? 'Y' : 'N',
     processStatuses: site.process?.status || '-', // 진행상태
@@ -229,7 +228,7 @@ export default function SitesView() {
       processName: search.processName,
       city: search.city,
       district: search.district,
-      type: search.type,
+      // type: search.type,
       processStatuses: search.processStatuses,
       clientCompanyName: search.clientCompanyName,
       // managerName: search.managerName,
@@ -365,7 +364,7 @@ export default function SitesView() {
             </div>
           </div>
 
-          <div className="flex">
+          {/* <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               현장유형
             </label>
@@ -379,7 +378,7 @@ export default function SitesView() {
                 options={siteTypeOptions}
               />
             </div>
-          </div>
+          </div> */}
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               진행상태

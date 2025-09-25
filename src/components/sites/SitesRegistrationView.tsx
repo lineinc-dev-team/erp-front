@@ -74,7 +74,6 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     orderPersonHasNextPage,
     orderPersonIsFetching,
     orderPersonIsLoading,
-    siteTypeOptions,
 
     useSiteHistoryDataQuery,
   } = useSite()
@@ -91,7 +90,6 @@ export default function SitesRegistrationView({ isEditMode = false }) {
   const PROPERTY_NAME_MAP: Record<string, string> = {
     address: '본사 주소',
     detailAddress: '상세 주소',
-    typeName: '현장 유형',
     clientCompanyName: '발주처명',
     startedAtFormat: '사업시작',
     endedAtFormat: '사업종료',
@@ -213,7 +211,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
       setField('name', client.name)
       setField('address', client.address)
       setField('detailAddress', client.detailAddress)
-      setField('type', client.typeCode)
+      // setField('type', client.typeCode)
       setField('city', client.city)
       setField('district', client.district)
 
@@ -700,7 +698,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
             </div>
           </div>
 
-          <div className="flex">
+          {/* <div className="flex">
             <label className="w-36  text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
               현장 유형 <span className="text-red-500 ml-1">*</span>
             </label>
@@ -715,7 +713,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                 disabled
               />
             </div>
-          </div>
+          </div> */}
 
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">

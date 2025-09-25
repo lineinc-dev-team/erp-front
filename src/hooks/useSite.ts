@@ -49,7 +49,7 @@ export default function useSite() {
     queryFn: () => {
       const rawParams = {
         name: search.name === '선택' ? '' : search.name,
-        type: search.type === '선택' ? '' : search.type,
+        // type: search.type === '선택' ? '' : search.type,
         processName: search.processName || '',
         city: search.city === '0' ? '' : CityOptions.find((c) => c.id === search.city)?.name || '',
         district:
