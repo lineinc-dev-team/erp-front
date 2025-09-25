@@ -195,7 +195,8 @@ export function useLaborInfo() {
     isLoading: comPanyNameLoading,
   } = useInfiniteQuery({
     queryKey: ['compnayInfo', CompanySearch],
-    queryFn: ({ pageParam }) => GetCompanyNameInfoService({ pageParam, keyword: CompanySearch }),
+    queryFn: ({ pageParam }) =>
+      GetCompanyNameInfoService({ pageParam, keyword: CompanySearch, type: 'SERVICE' }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
       const { sliceInfo } = lastPage.data

@@ -136,9 +136,10 @@ export async function GetCompanyNameInfoService({
   size = 200,
   keyword = '',
   sort = '',
+  type = '',
 }) {
   const resData = await fetch(
-    `${API.OUTSOURCINGCOMPANY}/search?page=${pageParam}&size=${size}&keyword=${keyword}&sort=${sort}`,
+    `${API.OUTSOURCINGCOMPANY}/search?page=${pageParam}&size=${size}&keyword=${keyword}&sort=${sort}&type=${type}`,
     {
       method: 'GET',
       headers: {
