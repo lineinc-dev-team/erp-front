@@ -224,7 +224,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
         }
       } else {
         setField('landlineNumber', '')
-        setField('areaNumber', '')
+        setField('areaNumber', '지역번호')
       }
 
       // 각 필드에 set
@@ -502,7 +502,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                 />
 
                 <CommonInput
-                  value={form.typeDescription}
+                  value={form.typeDescription ?? ''}
                   onChange={(value) => setField('typeDescription', value)}
                   className="flex-1"
                   disabled={isEditMode || form.type !== 'ETC'}
@@ -582,7 +582,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
                 className="text-2xl"
-                value={form.areaNumber}
+                value={form.areaNumber ?? '지역번호'}
                 onChange={(value) => setField('areaNumber', value)}
                 options={AreaCode}
               />
@@ -608,6 +608,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                 value={form.email ?? ''}
                 onChange={(value) => setField('email', value)}
                 className=" flex-1"
+                placeholder="텍스트 입력"
               />
             </div>
           </div>
@@ -619,7 +620,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
                 className="text-2xl"
-                value={form.isActive}
+                value={form.isActive ?? '0'}
                 onChange={(value) => setField('isActive', value)}
                 options={UseORnotOptions}
               />
@@ -657,7 +658,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
                 className="text-2xl"
-                value={form.bankName}
+                value={form.bankName ?? ''}
                 onChange={(value) => setField('bankName', value)}
                 options={bankOptions}
               />
