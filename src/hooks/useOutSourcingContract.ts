@@ -122,7 +122,7 @@ export default function useOutSourcingContract() {
 
     onSuccess: async () => {
       showSnackbar('외주업체 계약이 수정 되었습니다.', 'success')
-      queryClient.invalidateQueries({ queryKey: ['modifyContractInfo'] })
+      queryClient.invalidateQueries({ queryKey: ['OutsourcingContractInfo'] })
       // reset()
       // router.push('/outsourcingContract')
     },
@@ -158,7 +158,7 @@ export default function useOutSourcingContract() {
   // 수정이력 조회 쿼리
   const useOutsourcingContractHistoryDataQuery = (historyId: number, enabled: boolean) => {
     return useInfiniteQuery({
-      queryKey: ['ContracthistoryList', historyId],
+      queryKey: ['OutsourcingContractInfo', historyId],
       queryFn: ({ pageParam = 0 }) =>
         OutsourcingContractInfoHistoryService(historyId, pageParam, 4, 'id,desc'),
       initialPageParam: 0,

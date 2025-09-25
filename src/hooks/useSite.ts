@@ -190,7 +190,7 @@ export default function useSite() {
 
   const useSiteHistoryDataQuery = (historyId: number, enabled: boolean) => {
     return useInfiniteQuery({
-      queryKey: ['SiteHistoryList', historyId],
+      queryKey: ['siteInfo', historyId],
       queryFn: ({ pageParam = 0 }) =>
         SiteInfoHistoryService(historyId, pageParam, 4, 'updatedAt,desc'),
       initialPageParam: 0,

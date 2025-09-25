@@ -168,7 +168,7 @@ export function useLaborInfo() {
   // 인력정보 조회 쿼리
   const useLaborHistoryDataQuery = (historyId: number, enabled: boolean) => {
     return useInfiniteQuery({
-      queryKey: ['LaborHistoryList', historyId],
+      queryKey: ['LaborInfo', historyId],
       queryFn: ({ pageParam = 0 }) => LaborInfoHistoryService(historyId, pageParam, 4, 'id,desc'),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {

@@ -178,7 +178,7 @@ export function useManagementSteel() {
   // 수정이력 조회 쿼리
   const useSteelHistoryDataQuery = (historyId: number, enabled: boolean) => {
     return useInfiniteQuery({
-      queryKey: ['SteelHistoryList', historyId],
+      queryKey: ['SteelInfo', historyId],
       queryFn: ({ pageParam = 0 }) => SteelInfoHistoryService(historyId, pageParam, 4, 'id,desc'),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {

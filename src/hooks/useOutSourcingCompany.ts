@@ -167,7 +167,7 @@ export default function useOutSourcingCompany() {
 
   const useOutsourcingCompanyHistoryDataQuery = (historyId: number, enabled: boolean) => {
     return useInfiniteQuery({
-      queryKey: ['historyList', historyId],
+      queryKey: ['OutsourcingInfo', historyId],
       queryFn: ({ pageParam = 0 }) =>
         OutsourcingCompanyInfoHistoryService(historyId, pageParam, 4, 'id,desc'),
       initialPageParam: 0,

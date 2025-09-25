@@ -161,7 +161,7 @@ export function useManagementMaterial() {
   // 수정이력 조회 쿼리
   const useMaterialHistoryDataQuery = (historyId: number, enabled: boolean) => {
     return useInfiniteQuery({
-      queryKey: ['MaterialHistoryList', historyId],
+      queryKey: ['MaterialInfo', historyId],
       queryFn: ({ pageParam = 0 }) =>
         MaterialInfoHistoryService(historyId, pageParam, 4, 'id,desc'),
       initialPageParam: 0,

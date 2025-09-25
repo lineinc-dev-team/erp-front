@@ -108,8 +108,6 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
 
   const historyList = useOrderingFormStore((state) => state.form.changeHistories)
 
-  console.log('historyListhistoryList', historyList)
-
   const { data } = useQuery({
     queryKey: ['ClientDetailInfo'],
     queryFn: () => ClientDetailService(clientCompanyId),

@@ -196,7 +196,7 @@ export function useUserMg() {
 
   const useHistoryDataQuery = (historyId: number, enabled: boolean) => {
     return useInfiniteQuery({
-      queryKey: ['historyList', historyId],
+      queryKey: ['UserInfo', historyId],
       queryFn: ({ pageParam = 0 }) =>
         UserInfoHistoryService(historyId, pageParam, 4, 'updatedAt,desc'),
       initialPageParam: 0,

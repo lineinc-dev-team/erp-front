@@ -279,7 +279,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
 
       setField('accountHolder', client.accountHolder)
 
-      setField('memo', client.memo)
+      setField('memo', client.memo || '')
       setField('headManagers', formattedContacts)
       setField('attachedFiles', formattedFiles)
     } else {

@@ -251,7 +251,7 @@ export function useFuelAggregation() {
   // 유류쪽 !! 수정이력 조회 쿼리
   const useFuelHistoryDataQuery = (historyId: number, enabled: boolean) => {
     return useInfiniteQuery({
-      queryKey: ['FuelHistoryList', historyId],
+      queryKey: ['FuelAggregationInfo', historyId],
       queryFn: ({ pageParam = 0 }) => FuelInfoHistoryService(historyId, pageParam, 4, 'id,desc'),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
