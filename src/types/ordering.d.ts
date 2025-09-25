@@ -106,7 +106,7 @@ type HistoryItem = {
 export type FormState = {
   // 기존 필드들
   name: string
-  businessNumber: string
+  businessNumber: string | null
   ceoName: string
   address: string
   detailAddress: string

@@ -67,7 +67,7 @@ export const useOrderingSearchStore = create<{ search: OrderingSearchState }>((s
 export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) => ({
   form: {
     name: '',
-    businessNumber: '',
+    businessNumber: null,
     ceoName: '',
     address: '',
     detailAddress: '',
@@ -103,7 +103,7 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
     set(() => ({
       form: {
         name: '',
-        businessNumber: '',
+        businessNumber: null,
         ceoName: '',
         address: '',
         userId: 0,
@@ -316,7 +316,7 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
       paymentPeriod: form.paymentPeriod,
       memo: form.memo,
       isActive: form.isActive === '1' ? true : false,
-      userId: form.userId,
+      userId: form.userId === 0 ? null : form.userId,
       homepageUrl: form.homepageUrl,
       homepageLoginId: form.homepageLoginId,
       homepagePassword: form.homepagePassword,
