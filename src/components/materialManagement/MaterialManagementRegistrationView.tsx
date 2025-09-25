@@ -455,7 +455,6 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
         if (!item.usage?.trim()) return '자재의 사용용도를 입력해주세요.'
         if (!item.quantity) return '자재의 수량을 입력해주세요.'
         if (!item.unitPrice) return '자재의 단가를 입력해주세요.'
-        if (!item.supplyPrice) return '자재의 공급가를 입력해주세요.'
         if (item.memo.length > 500) {
           return '자재의 비고는 500자 이하로 입력해주세요.'
         }
@@ -802,18 +801,28 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                     />
                   </TableCell>
                   {/* 수량 */}
+                  {/* 수량 */}
                   <TableCell sx={{ border: '1px solid  #9CA3AF', width: '90px' }}>
                     <TextField
                       size="small"
                       placeholder="수량"
                       value={m.quantity || ''}
                       onChange={(e) => {
-                        const numericValue = e.target.value === '' ? '' : Number(e.target.value)
-                        updateItemField('MaterialItem', m.id, 'quantity', numericValue)
+                        const quantity = e.target.value === '' ? '' : Number(e.target.value)
+
+                        // 공급가 계산 (수량 * 단가)
+                        const supplyPrice = quantity && m.unitPrice ? quantity * m.unitPrice : 0
+                        const vat = Math.floor(supplyPrice * 0.1)
+                        const total = supplyPrice + vat
+
+                        updateItemField('MaterialItem', m.id, 'quantity', quantity)
+                        updateItemField('MaterialItem', m.id, 'supplyPrice', supplyPrice)
+                        updateItemField('MaterialItem', m.id, 'vat', vat)
+                        updateItemField('MaterialItem', m.id, 'total', total)
                       }}
                       variant="outlined"
                       sx={textFieldStyle}
-                      inputProps={{ style: { textAlign: 'right' } }} // 오른쪽 정렬
+                      inputProps={{ style: { textAlign: 'right' } }}
                     />
                   </TableCell>
 
@@ -825,9 +834,18 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                       placeholder="숫자 입력"
                       value={formatNumber(m.unitPrice) || ''}
                       onChange={(e) => {
-                        const numericValue =
+                        const unitPrice =
                           e.target.value === '' ? '' : unformatNumber(e.target.value)
-                        updateItemField('MaterialItem', m.id, 'unitPrice', numericValue)
+
+                        // 공급가 계산 (수량 * 단가)
+                        const supplyPrice = m.quantity && unitPrice ? m.quantity * unitPrice : 0
+                        const vat = Math.floor(supplyPrice * 0.1)
+                        const total = supplyPrice + vat
+
+                        updateItemField('MaterialItem', m.id, 'unitPrice', unitPrice)
+                        updateItemField('MaterialItem', m.id, 'supplyPrice', supplyPrice)
+                        updateItemField('MaterialItem', m.id, 'vat', vat)
+                        updateItemField('MaterialItem', m.id, 'total', total)
                       }}
                       variant="outlined"
                       sx={textFieldStyle}
