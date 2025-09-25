@@ -14,6 +14,7 @@ import { useTabOpener } from '@/utils/openTab'
 import { Pagination, Tooltip } from '@mui/material'
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 
 export default function PermissionView() {
   const { search } = usePermissionSearchStore()
@@ -150,6 +151,10 @@ export default function PermissionView() {
       flex: 1,
     }
   })
+
+  useEffect(() => {
+    search.reset()
+  }, [])
 
   return (
     <>

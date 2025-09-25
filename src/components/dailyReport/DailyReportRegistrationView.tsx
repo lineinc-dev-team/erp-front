@@ -53,6 +53,7 @@ import {
 export default function DailyReportRegistrationView() {
   const {
     form,
+    reset,
     setField,
     updateItemField,
     removeCheckedItems,
@@ -635,6 +636,8 @@ export default function DailyReportRegistrationView() {
 
   useEffect(() => {
     const headerData = sessionStorage.getItem('myInfo')
+    reset()
+
     if (headerData) {
       setMyInfo(JSON.parse(headerData))
     }

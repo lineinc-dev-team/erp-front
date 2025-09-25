@@ -146,6 +146,7 @@ export default function LaborStateMentView() {
       fields, // 필수 필드: ["id", "name", "businessNumber", ...]
     })
   }
+
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
