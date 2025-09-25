@@ -511,12 +511,16 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     if (!form.paymentDate) return '일자를 선택하세요.'
     if (!form.outsourcingCompanyInfo) return '업체 정보를 입력하세요.'
 
-    if (
-      form.outsourcingCompanyInfo?.businessNumber.replace(/\D/g, '').length !== 10 ||
-      form.outsourcingCompanyInfo?.businessNumber.replace(/\D/g, '').length > 10
-    ) {
-      return '사업자등록번호를 정확히 입력해주세요.'
-    }
+    if (!form.outsourcingCompanyInfo?.name) return '업체명을 입력해주세요.'
+
+    // if (form.outsourcingCompanyId !== -2) {
+    //   const businessNumberDigits =
+    //     form.outsourcingCompanyInfo?.businessNumber.replace(/\D/g, '') ?? ''
+
+    //   if (businessNumberDigits.length !== 10) {
+    //     return '사업자등록번호를 정확히 입력해주세요.'
+    //   }
+    // }
 
     if (!form.outsourcingCompanyInfo?.ceoName) return '대표자명을 입력해주세요.'
     if (form.outsourcingCompanyInfo?.bankName == '선택') return '은행을 선택해주세요.'
@@ -792,7 +796,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              사업자등록번호 <span className="text-red-500 ml-1">*</span>
+              사업자등록번호
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -801,7 +805,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                 onChange={(value) =>
                   setField('outsourcingCompanyInfo', {
                     ...form.outsourcingCompanyInfo,
-                    businessNumber: value,
+                    businessNumber: CommonInputnumber(value),
                   })
                 }
                 className="flex-1"

@@ -253,7 +253,7 @@ export function useManagementCost() {
 
   const useCostHistoryDataQuery = (historyId: number, enabled: boolean) => {
     return useInfiniteQuery({
-      queryKey: ['CostHistoryList', historyId],
+      queryKey: ['CostInfo', historyId],
       queryFn: ({ pageParam = 0 }) => CostInfoHistoryService(historyId, pageParam, 4, 'id,desc'),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
