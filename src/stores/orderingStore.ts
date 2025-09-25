@@ -87,13 +87,13 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
     headManagers: [],
     checkedManagerIds: [],
     attachedFiles: [
-      {
-        id: Date.now(),
-        name: '사업자등록증',
-        memo: '',
-        files: [],
-        type: 'BUSINESS_LICENSE',
-      },
+      // {
+      //   id: Date.now(),
+      //   name: '사업자등록증',
+      //   memo: '',
+      //   files: [],
+      //   type: 'BUSINESS_LICENSE',
+      // },
     ],
     checkedAttachedFileIds: [],
     modificationHistory: [],
@@ -123,13 +123,13 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
         headManagers: [],
         checkedManagerIds: [],
         attachedFiles: [
-          {
-            id: Date.now(),
-            name: '사업자등록증',
-            memo: '',
-            files: [],
-            type: 'BUSINESS_LICENSE',
-          },
+          // {
+          //   id: Date.now(),
+          //   name: '사업자등록증',
+          //   memo: '',
+          //   files: [],
+          //   type: 'BUSINESS_LICENSE',
+          // },
         ],
         checkedAttachedFileIds: [],
         modificationHistory: [],
