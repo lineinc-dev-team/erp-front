@@ -381,6 +381,16 @@ export default function DailyReportRegistrationView() {
       workContent: item.workContent,
       workQuantity: item.workQuantity,
       memo: item.memo,
+      files:
+        item.fileUrl && item.originalFileName
+          ? [
+              {
+                fileUrl: item.fileUrl,
+                originalFileName: item.originalFileName,
+              },
+            ]
+          : [],
+
       modifyDate: `${getTodayDateString(item.createdAt)} / ${getTodayDateString(item.updatedAt)}`,
     }))
 
@@ -444,6 +454,16 @@ export default function DailyReportRegistrationView() {
       unitPrice: item.unitPrice,
       workHours: item.workHours,
       memo: item.memo,
+      files:
+        item.fileUrl && item.originalFileName
+          ? [
+              {
+                fileUrl: item.fileUrl,
+                originalFileName: item.originalFileName,
+              },
+            ]
+          : [],
+
       modifyDate: `${getTodayDateString(item.createdAt)} / ${getTodayDateString(item.updatedAt)}`,
     }))
 
@@ -1400,9 +1420,7 @@ export default function DailyReportRegistrationView() {
                           type="number" // type을 number로 변경
                           placeholder="숫자를 입력해주세요."
                           inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
-                          value={
-                            m.workQuantity === 0 || m.workQuantity === null ? '' : m.workQuantity
-                          }
+                          value={m.workQuantity ?? ''}
                           onChange={(e) => {
                             const value = e.target.value
                             const numericValue = value === '' ? null : parseFloat(value)
@@ -1852,9 +1870,7 @@ export default function DailyReportRegistrationView() {
                           type="number" // type을 number로 변경
                           placeholder="숫자를 입력해주세요."
                           inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
-                          value={
-                            m.workQuantity === 0 || m.workQuantity === null ? '' : m.workQuantity
-                          }
+                          value={m.workQuantity ?? ''}
                           onChange={(e) => {
                             const value = e.target.value
                             const numericValue = value === '' ? null : parseFloat(value)
@@ -2002,30 +2018,37 @@ export default function DailyReportRegistrationView() {
                       sx={{ color: 'black' }}
                     />
                   </TableCell>
-                  {['업체명', '이름', '구분', '작업내용', '공수', '비고', '등록/수정일'].map(
-                    (label) => (
-                      <TableCell
-                        key={label}
-                        align="center"
-                        sx={{
-                          backgroundColor: '#D1D5DB',
-                          border: '1px solid  #9CA3AF',
-                          color: 'black',
-                          fontWeight: 'bold',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {label === '비고' || label === '등록/수정일' ? (
-                          label
-                        ) : (
-                          <div className="flex items-center justify-center">
-                            <span>{label}</span>
-                            <span className="text-red-500 ml-1">*</span>
-                          </div>
-                        )}
-                      </TableCell>
-                    ),
-                  )}
+                  {[
+                    '업체명',
+                    '이름',
+                    '구분',
+                    '작업내용',
+                    '공수',
+                    '첨부파일',
+                    '비고',
+                    '등록/수정일',
+                  ].map((label) => (
+                    <TableCell
+                      key={label}
+                      align="center"
+                      sx={{
+                        backgroundColor: '#D1D5DB',
+                        border: '1px solid  #9CA3AF',
+                        color: 'black',
+                        fontWeight: 'bold',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
+                        label
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          <span>{label}</span>
+                          <span className="text-red-500 ml-1">*</span>
+                        </div>
+                      )}
+                    </TableCell>
+                  ))}
                 </TableRow>
               </TableHead>
 
@@ -2160,9 +2183,7 @@ export default function DailyReportRegistrationView() {
                           type="number" // type을 number로 변경
                           placeholder="숫자를 입력해주세요."
                           inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
-                          value={
-                            m.workQuantity === 0 || m.workQuantity === null ? '' : m.workQuantity
-                          }
+                          value={m.workQuantity ?? ''}
                           onChange={(e) => {
                             const value = e.target.value
                             const numericValue = value === '' ? null : parseFloat(value)
@@ -2193,6 +2214,29 @@ export default function DailyReportRegistrationView() {
                             },
                           }}
                         />
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                          <CommonFileInput
+                            acceptedExtensions={[
+                              'pdf',
+                              'jpg',
+                              'png',
+                              'hwp',
+                              'xlsx',
+                              'zip',
+                              'jpeg',
+                              'ppt',
+                            ]}
+                            multiple={false}
+                            files={m.files} // 각 항목별 files
+                            onChange={(newFiles) => {
+                              updateItemField('outsourcings', m.id, 'files', newFiles.slice(0, 1))
+                            }}
+                            uploadTarget="WORK_DAILY_REPORT"
+                          />
+                        </div>
                       </TableCell>
 
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>

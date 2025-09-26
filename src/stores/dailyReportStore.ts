@@ -144,7 +144,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           category: '',
           workContent: '',
           workQuantity: 0,
-
+          files: [],
           memo: '',
         }
         return { form: { ...state.form, outsourcings: [...state.form.outsourcings, newItem] } }
@@ -159,6 +159,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           workContent: '',
           unitPrice: 0,
           workHours: 0,
+          files: [],
           memo: '',
         }
         return {
@@ -508,7 +509,20 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           temporaryLaborName: item.temporaryLaborName === '' ? null : item.temporaryLaborName,
         }
       }),
-      outsourcings: form.outsourcings,
+      outsourcings: form.outsourcings.map((item) => {
+        const file = item.files[0]
+
+        return {
+          outsourcingCompanyId: item.outsourcingCompanyId,
+          outsourcingCompanyContractWorkerId: item.outsourcingCompanyContractWorkerId,
+          category: item.category,
+          workContent: item.workContent,
+          workQuantity: item.workContent,
+          fileUrl: file?.fileUrl || null,
+          originalFileName: file?.originalFileName || null,
+          memo: item.memo,
+        }
+      }),
       outsourcingEquipments: form.outsourcingEquipments,
       fuelInfos: form.fuelInfos,
     }
@@ -574,6 +588,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
 
   modifyOutsourcing: () => {
     const form = get().form
+
     return {
       files: undefined,
       siteId: undefined,
@@ -581,7 +596,20 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       reportDate: undefined,
       weather: undefined,
       employees: undefined,
-      outsourcings: form.outsourcings,
+
+      outsourcings: form.outsourcings.map((item: OutsourcingsItem) => ({
+        id: item.id, // 수정이면 기존 id, 신규면 0 또는 undefined
+        outsourcingCompanyId: item.outsourcingCompanyId,
+        outsourcingCompanyContractWorkerId: item.outsourcingCompanyContractWorkerId,
+        category: item.category,
+        workContent: item.workContent,
+        workQuantity: item.workQuantity,
+        memo: item.memo,
+
+        fileUrl: item.files?.[0]?.fileUrl ?? null,
+        originalFileName: item.files?.[0]?.originalFileName ?? null,
+      })),
+
       outsourcingEquipments: undefined,
       fuelInfos: undefined,
     }

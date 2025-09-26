@@ -115,6 +115,9 @@ export type OutsourcingsItem = {
   category?: string
   workContent: string
   workQuantity: number
+  fileUrl?: string
+  originalFileName?: string
+  files: FileUploadInfo[]
   memo: string
   modifyDate?: string
 }
@@ -130,6 +133,9 @@ export type EquipmentsItem = {
   unitPrice: number
   workHours: number
   memo: string
+  fileUrl?: string
+  originalFileName?: string
+  files: FileUploadInfo[]
   modifyDate?: string
 }
 
