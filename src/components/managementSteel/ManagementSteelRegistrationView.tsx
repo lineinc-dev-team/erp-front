@@ -1028,12 +1028,15 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                   <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder="입력"
+                      placeholder="숫자만"
                       value={m.count || ''}
-                      onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'count', e.target.value)
-                      }
-                      inputProps={{ maxLength: 10 }}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        updateItemField('MaterialItem', m.id, 'count', formatted)
+                      }}
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
                       fullWidth
                       disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />
@@ -1043,12 +1046,15 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                   <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder="입력"
+                      placeholder="숫자만"
                       value={m.length || ''}
-                      onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'length', e.target.value)
-                      }
-                      inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        updateItemField('MaterialItem', m.id, 'length', formatted)
+                      }}
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
                       fullWidth
                       disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />
@@ -1058,12 +1064,15 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                   <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder="입력"
+                      placeholder="숫자만"
                       value={m.totalLength || ''}
-                      onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'totalLength', e.target.value)
-                      }
-                      inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        updateItemField('MaterialItem', m.id, 'totalLength', formatted)
+                      }}
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
                       fullWidth
                       disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />
@@ -1073,12 +1082,15 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                   <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder="입력"
+                      placeholder="숫자만"
                       value={m.unitWeight || ''}
-                      onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'unitWeight', e.target.value)
-                      }
-                      inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        updateItemField('MaterialItem', m.id, 'unitWeight', formatted)
+                      }}
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
                       fullWidth
                       disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />

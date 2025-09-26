@@ -35,6 +35,8 @@ export default function useOutSourcingContract() {
   // 외주업체 조회
   const search = useContractSearchStore((state) => state.search)
 
+  const form = useContractFormStore((state) => state.form)
+
   const pathName = usePathname()
 
   // 초기 화면에 들어왔을 때 currentPage 1로 세팅 (예: useEffect 등에서)
@@ -122,9 +124,18 @@ export default function useOutSourcingContract() {
 
     onSuccess: async () => {
       showSnackbar('외주업체 계약이 수정 되었습니다.', 'success')
-      queryClient.invalidateQueries({ queryKey: ['OutsourcingContractInfo'] })
-      // reset()
-      // router.push('/outsourcingContract')
+
+      if (form.type === 'SERVICE') {
+        queryClient.invalidateQueries({ queryKey: ['OutsourcingContractInfo'] })
+        queryClient.invalidateQueries({ queryKey: ['OutsourcingPersonDetailInfo'] })
+      } else if (form.type === 'CONSTRUCTION') {
+        queryClient.invalidateQueries({ queryKey: ['OutsourcingContractInfo'] })
+        queryClient.invalidateQueries({ queryKey: ['OutsourcingConstructionDetailInfo'] })
+      } else if (form.type === 'EQUIPMENT') {
+        queryClient.invalidateQueries({ queryKey: ['OutsourcingContractInfo'] })
+        queryClient.invalidateQueries({ queryKey: ['OutsourcingEqDetailInfo'] })
+        queryClient.invalidateQueries({ queryKey: ['OutsourcingDrDetailInfo'] })
+      }
     },
 
     onError: (error: unknown) => {

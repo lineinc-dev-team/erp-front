@@ -195,14 +195,14 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
   const { data: outsourcingPersonList } = useQuery({
     queryKey: ['OutsourcingPersonDetailInfo'],
     queryFn: () => ContractPersonDetailService(outsourcingContractId),
-    enabled: isEditMode && !!outsourcingContractId && contractDetailData?.data?.type === '용역', // 타입이 장비일 때만
+    enabled: isEditMode && !!outsourcingContractId && contractDetailData?.data?.type === '노무', // 타입이 장비일 때만
   })
 
-  // 공사데이터
+  // 외주 데이터
   const { data: contractConstructionDetailData } = useQuery({
     queryKey: ['OutsourcingConstructionDetailInfo'],
     queryFn: () => OutsourcingConstructionDetailService(outsourcingContractId),
-    enabled: isEditMode && !!outsourcingContractId && contractDetailData?.data?.type === '공사', // 타입이 장비일 때만
+    enabled: isEditMode && !!outsourcingContractId && contractDetailData?.data?.type === '외주', // 타입이 장비일 때만
   })
 
   // 장비 데이터
@@ -212,7 +212,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     enabled: isEditMode && !!outsourcingContractId && contractDetailData?.data?.type === '장비', // 타입이 장비일 때만
   })
 
-  // 기사 데이터
+  // 장비 데이터
 
   const { data: contractDriverDetailData } = useQuery({
     queryKey: ['OutsourcingDrDetailInfo'],
@@ -521,7 +521,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       setField('headManagers', formattedContacts)
       setField('attachedFiles', formattedFiles)
 
-      if (client.type === '용역') {
+      if (client.type === '노무') {
         const getContractItems =
           outsourcingPersonList?.data?.content?.map(
             (item: OutsourcingContractPersonAttachedFile) => ({
@@ -539,7 +539,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
           ) ?? []
 
         setField('personManagers', getContractItems)
-      } else if (client.type === '공사') {
+      } else if (client.type === '외주') {
         const contractData = contractConstructionDetailData?.data
 
         if (contractData) {
@@ -637,7 +637,29 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
           setField('articleManagers', getArticleItems)
         }
-      } else if (client.type === '기타') {
+      } else if (
+        client.type === '기타' ||
+        client.type === '재료' ||
+        client.type === '유류' ||
+        client.type === '관리'
+      ) {
+        const etcFiles = (client.files ?? []).map((item: OutsourcingContractAttachedFile) => ({
+          id: item.id,
+          name: item.name,
+          memo: item.memo,
+          type: item.typeCode,
+          files: [
+            {
+              fileUrl: item.fileUrl && item.fileUrl.trim() !== '' ? item.fileUrl : null,
+              originalFileName:
+                item.originalFileName && item.originalFileName.trim() !== ''
+                  ? item.originalFileName
+                  : null,
+            },
+          ],
+        }))
+
+        setField('attachedFiles', etcFiles) // ✅ 누락된 부분
       }
     } else {
       reset()
@@ -706,6 +728,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
         page.data.content.map((item: HistoryItem) => ({
           id: item.id,
           type: item.type || '-',
+          isEditable: item.isEditable,
           content:
             formatChangeDetail(item.getChanges) === '-'
               ? item?.description
