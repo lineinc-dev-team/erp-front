@@ -757,7 +757,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                         updateItemField('MaterialItem', m.id, 'inputType', 'select')
                         updateItemField('MaterialItem', m.id, 'name', selectedProduct.name)
                       }}
-                      options={[...productOptions, { id: -1, name: '직접입력' }]}
+                      options={[{ id: -1, name: '직접입력' }, ...productOptions]}
                       onScrollToBottom={() => {
                         if (productNamehasNextPage && !productNameFetching)
                           productNameFetchNextPage()
