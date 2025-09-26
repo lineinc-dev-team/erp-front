@@ -116,6 +116,7 @@ export const CostColumnList: GridColDef[] = [
   // { field: 'accountHolder', headerName: '예금주명', width: 100 },
   { field: 'supplyPrice', headerName: '공급가', width: 100 },
   { field: 'vat', headerName: '부가세', width: 100 },
+  { field: 'deductibleAmount', headerName: '공제액', width: 100 },
   { field: 'total', headerName: '합계', width: 100 },
   { field: 'hasFile', headerName: '첨부파일', width: 100 },
   { field: 'memo', headerName: '비고', width: 100 },

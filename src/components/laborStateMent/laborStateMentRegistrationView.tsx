@@ -2589,7 +2589,6 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                       sx={{
                         border: '1px solid #9CA3AF',
                         whiteSpace: 'pre-line',
-                        verticalAlign: 'top',
                       }}
                     >
                       <span style={{ fontWeight: 600, color: '#377be8' }}>{item.description}</span>

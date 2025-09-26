@@ -126,6 +126,25 @@ export function usePermission() {
     },
   })
 
+  // 권한 수정
+  const PermissionModifyMutation = useMutation({
+    mutationFn: (permissionModifyId: number) => ModifyPermissionService(permissionModifyId),
+
+    onSuccess: () => {
+      showSnackbar('권한 그룹이 수정 되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['permissionInfo'] })
+      // reset()
+      // router.push('/permissionGroup')
+    },
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar(' 권한 그룹 수정에 실패했습니다.', 'error')
+      }
+    },
+  })
+
   // 메뉴조회
   const useMenuListQuery = () => {
     return useQuery({
@@ -145,7 +164,7 @@ export function usePermission() {
 
   const useSinglepermissionUserListQuery = (singleId: number, enabled: boolean) => {
     return useQuery({
-      queryKey: ['menuInfoUsers', singleId],
+      queryKey: ['permissionInfo', singleId],
       queryFn: () => SinglepermissionUserService(singleId),
       enabled: enabled && !!singleId && !isNaN(singleId), // id가 유효할 때만 호출
     })
@@ -157,25 +176,6 @@ export function usePermission() {
       enabled: enabled && !!singleId && !isNaN(singleId), // id가 유효할 때만 호출
     })
   }
-
-  // 권한 수정
-  const PermissionModifyMutation = useMutation({
-    mutationFn: (permissionModifyId: number) => ModifyPermissionService(permissionModifyId),
-
-    onSuccess: () => {
-      showSnackbar('권한 그룹이 수정 되었습니다.', 'success')
-      queryClient.invalidateQueries({ queryKey: ['permissionInfo'] })
-      // reset()
-      // router.push('/permissionGroup')
-    },
-    onError: (error: unknown) => {
-      if (error instanceof Error) {
-        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
-      } else {
-        showSnackbar(' 권한 그룹 수정에 실패했습니다.', 'error')
-      }
-    },
-  })
 
   // 권한 그룹에서 사용하는 현장/공정 데이터 가져오기
 

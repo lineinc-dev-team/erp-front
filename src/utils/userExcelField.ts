@@ -80,6 +80,7 @@ export const CostExcelFieldMap = {
   공급가: 'supplyPrice',
   부가세: 'vat',
   합계: 'total',
+  공제액: 'deductibleAmount',
   첨부파일: 'hasFile',
   비고: 'memo',
 } as const

@@ -48,6 +48,8 @@ export interface CostList {
   site: Site
   process: Process
   outsourcingCompany: OutsourcingCompany
+  keyMoneyDeductAmountTotal: number
+  detailDeductAmountTotal: number
 }
 
 export type CostSearchState = {

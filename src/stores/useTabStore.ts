@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { useSnackbarStore } from './useSnackbarStore'
 
 type TabItem = {
   label: string
@@ -22,7 +21,6 @@ export const useTabStore = create<TabStore>()(
   persist(
     (set, get) => ({
       tabs: [{ label: '대쉬보드 - 조회', path: '/dashboard' }],
-      // tabs: [{ label: '출역일보 - 조회', path: '/dailyReport/registration' }],
 
       addTab: (tab) => {
         const tabs = get().tabs
@@ -30,10 +28,10 @@ export const useTabStore = create<TabStore>()(
 
         if (!exists) {
           if (tabs.length < 10) {
-            set({ tabs: [...tabs, tab] })
+            set({ tabs: [tab, ...tabs] })
           } else {
-            const { showSnackbar } = useSnackbarStore.getState()
-            showSnackbar('탭은 최대 10개까지 열 수 있습니다.', 'warning')
+            const newTabs = [tab, ...tabs.slice(0, -1)]
+            set({ tabs: newTabs })
           }
         }
       },
