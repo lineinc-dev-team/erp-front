@@ -458,6 +458,15 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
       }
     }
 
+    if (attachedFiles.length > 0) {
+      for (const item of attachedFiles) {
+        if (!item.name?.trim()) return '첨부파일의 이름을 입력해주세요.'
+        if (item.memo.length > 500) {
+          return '첨부파일의 비고는 500자 이하로 입력해주세요.'
+        }
+      }
+    }
+
     return null
   }
 
