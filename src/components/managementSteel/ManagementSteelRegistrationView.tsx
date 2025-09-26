@@ -31,9 +31,15 @@ import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import { GetCompanyNameInfoService } from '@/services/outsourcingContract/outsourcingContractRegistrationService'
 import { CompanyInfo } from '@/types/outsourcingContract'
-import { formatDateTime, getTodayDateString, unformatNumber } from '@/utils/formatters'
+import {
+  formatDateTime,
+  formatNumber,
+  getTodayDateString,
+  unformatNumber,
+} from '@/utils/formatters'
 import { WithoutApprovalAndRemovalOptions } from '@/config/erp.confing'
 import { HistoryItem } from '@/types/ordering'
+import { SupplyPriceInput } from '@/utils/supplyVatTotalInput'
 
 export default function ManagementSteelRegistrationView({ isEditMode = false }) {
   const { showSnackbar } = useSnackbarStore()
@@ -1097,62 +1103,73 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                   </TableCell>
 
                   {/* 외주계약금액 금액 */}
-                  <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                  {/* 수량 */}
+                  <TableCell sx={{ border: '1px solid  #9CA3AF', width: '90px' }}>
                     <TextField
                       size="small"
-                      placeholder="'-'없이 숫자만 입력"
-                      value={m.quantity}
+                      placeholder="수량"
+                      value={m.quantity || ''}
                       onChange={(e) => {
-                        const formatted = unformatNumber(e.target.value)
-                        updateItemField('MaterialItem', m.id, 'quantity', formatted)
+                        const quantity = e.target.value === '' ? '' : Number(e.target.value)
+
+                        // 공급가 계산 (수량 * 단가)
+                        const supplyPrice = quantity && m.unitPrice ? quantity * m.unitPrice : 0
+                        const vat = Math.floor(supplyPrice * 0.1)
+                        const total = supplyPrice + vat
+
+                        updateItemField('MaterialItem', m.id, 'quantity', quantity)
+                        updateItemField('MaterialItem', m.id, 'supplyPrice', supplyPrice)
+                        updateItemField('MaterialItem', m.id, 'vat', vat)
+                        updateItemField('MaterialItem', m.id, 'total', total)
                       }}
-                      inputProps={{
-                        style: { textAlign: 'right' },
-                      }}
-                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
+                      variant="outlined"
+                      inputProps={{ style: { textAlign: 'right' } }}
                     />
                   </TableCell>
 
-                  <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                  {/* 단가 */}
+                  <TableCell align="right" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       size="small"
-                      placeholder="숫자만"
-                      value={m.unitPrice ? m.unitPrice.toLocaleString() : ''}
+                      inputMode="numeric"
+                      placeholder="숫자 입력"
+                      value={formatNumber(m.unitPrice) || ''}
                       onChange={(e) => {
-                        const onlyNums = e.target.value.replace(/,/g, '')
-                        const num = Number(onlyNums)
+                        const unitPrice =
+                          e.target.value === '' ? '' : unformatNumber(e.target.value)
 
-                        updateItemField('MaterialItem', m.id, 'unitPrice', isNaN(num) ? 0 : num)
+                        // 공급가 계산 (수량 * 단가)
+                        const supplyPrice = m.quantity && unitPrice ? m.quantity * unitPrice : 0
+                        const vat = Math.floor(supplyPrice * 0.1)
+                        const total = supplyPrice + vat
+
+                        updateItemField('MaterialItem', m.id, 'unitPrice', unitPrice)
+                        updateItemField('MaterialItem', m.id, 'supplyPrice', supplyPrice)
+                        updateItemField('MaterialItem', m.id, 'vat', vat)
+                        updateItemField('MaterialItem', m.id, 'total', total)
                       }}
+                      variant="outlined"
                       inputProps={{
-                        sx: { textAlign: 'right' },
-
-                        inputMode: 'numeric',
-                        pattern: '[0-9]*',
+                        style: {
+                          textAlign: 'right',
+                        },
                       }}
-                      fullWidth
-                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />
                   </TableCell>
 
-                  <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      placeholder="숫자만"
-                      value={m.supplyPrice ? m.supplyPrice.toLocaleString() : ''}
-                      onChange={(e) => {
-                        const onlyNums = e.target.value.replace(/,/g, '')
-                        const num = Number(onlyNums)
+                  {/* 공급가 */}
+                  <TableCell align="right" sx={{ border: '1px solid #9CA3AF' }}>
+                    <SupplyPriceInput
+                      value={m.supplyPrice}
+                      onChange={(supply) => {
+                        const vat = Math.floor(supply * 0.1)
+                        const total = supply + vat
 
-                        updateItemField('MaterialItem', m.id, 'supplyPrice', isNaN(num) ? 0 : num)
+                        // MaterialItem 객체 업데이트
+                        updateItemField('MaterialItem', m.id, 'supplyPrice', supply)
+                        updateItemField('MaterialItem', m.id, 'vat', vat)
+                        updateItemField('MaterialItem', m.id, 'total', total)
                       }}
-                      inputProps={{
-                        sx: { textAlign: 'right' },
-                        inputMode: 'numeric',
-                        pattern: '[0-9]*',
-                      }}
-                      fullWidth
-                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />
                   </TableCell>
 
