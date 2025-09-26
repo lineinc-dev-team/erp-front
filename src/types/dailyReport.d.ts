@@ -83,6 +83,9 @@ export type EmployeesItem = {
   workContent: string
   workQuantity: number
   memo: string
+  fileUrl?: string
+  originalFileName?: string
+  files: FileUploadInfo[]
   modifyDate?: string
 }
 
@@ -97,6 +100,9 @@ export type directContractsItem = {
   unitPrice: number
   workQuantity: number
   memo: string
+  fileUrl?: string
+  originalFileName?: string
+  files: FileUploadInfo[]
   isTemporary: boolean
   temporaryLaborName: string
   modifyDate?: string

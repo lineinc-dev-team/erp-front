@@ -112,6 +112,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           laborId: 0,
           workContent: '',
           workQuantity: 0,
+          files: [],
           memo: '',
         }
         return { form: { ...state.form, employees: [...state.form.employees, newItem] } }
@@ -127,6 +128,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           previousPrice: 0,
           unitPrice: 0,
           workQuantity: 0,
+          files: [],
           memo: '',
           isTemporary: false,
           temporaryLaborName: '',
@@ -142,6 +144,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           category: '',
           workContent: '',
           workQuantity: 0,
+
           memo: '',
         }
         return { form: { ...state.form, outsourcings: [...state.form.outsourcings, newItem] } }
@@ -205,6 +208,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           previousPrice: 0,
           unitPrice: 0,
           workQuantity: 0,
+          files: [],
           memo: '',
           isTemporary: true,
           temporaryLaborName: '',
@@ -476,8 +480,34 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       siteProcessId: form.siteProcessId,
       reportDate: form.reportDate,
       weather: form.weather,
-      employees: form.employees,
-      directContracts: form.directContracts,
+      employees: form.employees.map((emp) => {
+        const file = emp.files?.[0] // 1개만 허용
+        return {
+          laborId: emp.laborId,
+          workContent: emp.workContent,
+          workQuantity: emp.workQuantity,
+          fileUrl: file?.fileUrl || null,
+          originalFileName: file?.originalFileName || null,
+          memo: emp.memo,
+        }
+      }),
+      directContracts: form.directContracts.map((item) => {
+        const file = item.files[0]
+
+        return {
+          outsourcingCompanyId: item.outsourcingCompanyId,
+          laborId: item.laborId,
+          position: item.position,
+          workContent: item.workContent,
+          unitPrice: item.unitPrice,
+          workQuantity: item.workQuantity,
+          fileUrl: file?.fileUrl || null,
+          originalFileName: file?.originalFileName || null,
+          memo: item.memo,
+          isTemporary: item.isTemporary,
+          temporaryLaborName: item.temporaryLaborName === '' ? null : item.temporaryLaborName,
+        }
+      }),
       outsourcings: form.outsourcings,
       outsourcingEquipments: form.outsourcingEquipments,
       fuelInfos: form.fuelInfos,
@@ -486,13 +516,25 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
 
   modifyEmployees: () => {
     const form = get().form
+
     return {
       files: undefined,
       siteId: undefined,
       siteProcessId: undefined,
       reportDate: undefined,
       weather: undefined,
-      employees: form.employees,
+
+      employees: form.employees.map((emp: EmployeesItem) => ({
+        id: emp.id,
+        laborId: emp.laborId,
+        workContent: emp.workContent,
+        workQuantity: emp.workQuantity,
+        memo: emp.memo,
+
+        fileUrl: emp.files?.[0]?.fileUrl ?? null,
+        originalFileName: emp.files?.[0]?.originalFileName ?? null,
+      })),
+
       outsourcings: undefined,
       outsourcingEquipments: undefined,
       fuelInfos: undefined,
@@ -508,7 +550,22 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       reportDate: undefined,
       weather: undefined,
       employees: undefined,
-      directContracts: form.directContracts,
+      directContracts: form.directContracts.map((item: directContractsItem) => ({
+        id: item.id, // 신규면 0 or undefined, 수정이면 기존 id
+        outsourcingCompanyId: item.outsourcingCompanyId, // 선택된 외주업체 id
+        laborId: item.laborId, // 선택된 근로자 id
+        position: item.position, // 직종
+        workContent: item.workContent, // 작업 내용
+        unitPrice: item.unitPrice, // 단가
+        workQuantity: item.workQuantity, // 수량
+        memo: item.memo, // 메모
+        isTemporary: item.isTemporary ?? false, // 임시 근로자 여부
+        temporaryLaborName: item.temporaryLaborName === '' ? null : item.temporaryLaborName,
+
+        fileUrl: item.files?.[0]?.fileUrl ?? null,
+        originalFileName: item.files?.[0]?.originalFileName ?? null,
+      })),
+
       outsourcings: undefined,
       outsourcingEquipments: undefined,
       fuelInfos: undefined,

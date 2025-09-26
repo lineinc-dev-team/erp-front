@@ -232,6 +232,15 @@ export default function DailyReportRegistrationView() {
       workContent: item.workContent,
       workQuantity: item.workQuantity,
       memo: item.memo,
+      files:
+        item.fileUrl && item.originalFileName
+          ? [
+              {
+                fileUrl: item.fileUrl,
+                originalFileName: item.originalFileName,
+              },
+            ]
+          : [],
       modifyDate: `${getTodayDateString(item.createdAt)} / ${getTodayDateString(item.updatedAt)}`,
     }))
 
@@ -300,6 +309,17 @@ export default function DailyReportRegistrationView() {
       memo: item.memo,
       isTemporary: item.labor.isTemporary,
       temporaryLaborName: item.labor.name,
+
+      files:
+        item.fileUrl && item.originalFileName
+          ? [
+              {
+                fileUrl: item.fileUrl,
+                originalFileName: item.originalFileName,
+              },
+            ]
+          : [],
+
       modifyDate: `${getTodayDateString(item.createdAt)} / ${getTodayDateString(item.updatedAt)}`,
     }))
 
@@ -1304,7 +1324,7 @@ export default function DailyReportRegistrationView() {
                       sx={{ color: 'black' }}
                     />
                   </TableCell>
-                  {['이름', '작업내용', '공수', '비고', '등록/수정일'].map((label) => (
+                  {['이름', '작업내용', '공수', '첨부파일', '비고', '등록/수정일'].map((label) => (
                     <TableCell
                       key={label}
                       align="center"
@@ -1316,7 +1336,7 @@ export default function DailyReportRegistrationView() {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {label === '비고' || label === '등록/수정일' ? (
+                      {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
                         label
                       ) : (
                         <div className="flex items-center justify-center">
@@ -1414,6 +1434,30 @@ export default function DailyReportRegistrationView() {
                           }}
                         />
                       </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                          <CommonFileInput
+                            acceptedExtensions={[
+                              'pdf',
+                              'jpg',
+                              'png',
+                              'hwp',
+                              'xlsx',
+                              'zip',
+                              'jpeg',
+                              'ppt',
+                            ]}
+                            multiple={false}
+                            files={m.files} // 각 항목별 files
+                            onChange={(newFiles) => {
+                              updateItemField('Employees', m.id, 'files', newFiles.slice(0, 1))
+                            }}
+                            uploadTarget="WORK_DAILY_REPORT"
+                          />
+                        </div>
+                      </TableCell>
+
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <TextField
                           size="small"
@@ -1525,6 +1569,7 @@ export default function DailyReportRegistrationView() {
                     '이전(기준)단가',
                     '단가',
                     '공수',
+                    '첨부파일',
                     '비고',
                     '등록/수정일',
                   ].map((label) => (
@@ -1539,7 +1584,7 @@ export default function DailyReportRegistrationView() {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {label === '비고' || label === '등록/수정일' ? (
+                      {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
                         label
                       ) : (
                         <div className="flex items-center justify-center">
@@ -1846,6 +1891,29 @@ export default function DailyReportRegistrationView() {
                           }}
                         />
                       </TableCell>
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                          <CommonFileInput
+                            acceptedExtensions={[
+                              'pdf',
+                              'jpg',
+                              'png',
+                              'hwp',
+                              'xlsx',
+                              'zip',
+                              'jpeg',
+                              'ppt',
+                            ]}
+                            multiple={false}
+                            files={m.files} // 각 항목별 files
+                            onChange={(newFiles) =>
+                              updateItemField('directContracts', m.checkId, 'files', newFiles)
+                            }
+                            uploadTarget="WORK_DAILY_REPORT"
+                          />
+                        </div>
+                      </TableCell>
+
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <TextField
                           size="small"

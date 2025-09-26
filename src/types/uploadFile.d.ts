@@ -1,5 +1,5 @@
 type FileUploadInfo = {
-  id: number
+  id?: number
   file?: File
   name?: string
   documentTypeCode?: string
