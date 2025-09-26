@@ -373,7 +373,34 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                       uploadTarget="SITE"
                       acceptedExtensions={
                         type === 'ETC'
-                          ? ['zip', 'xlsx', 'doc', 'pdf', 'hwp', 'png', 'jpg', 'ppt']
+                          ? [
+                              'zip',
+                              'pdf',
+                              'txt',
+                              'rtf',
+                              'docx',
+                              'hwp',
+                              'xlsx',
+                              'csv',
+                              'ods',
+                              'pptx',
+                              'odp',
+                              'jpg',
+                              'jpeg',
+                              'png',
+                              'gif',
+                              'tif',
+                              'tiff',
+                              'bmp',
+                              '7z',
+                              'mp3',
+                              'wav',
+                              'mp4',
+                              'mov',
+                              'avi',
+                              'wmv',
+                              'dwg',
+                            ]
                           : ['pdf', 'hwp', 'png', 'jpg', 'ppt']
                       }
                       files={contract.files
