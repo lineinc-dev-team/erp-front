@@ -84,10 +84,11 @@ export function useManagementMaterial() {
     ],
     queryFn: () => {
       const rawParams = {
-        siteName: search.siteName,
-        processName: search.processName,
-        materialName: search.materialName,
-        outsourcingCompanyName: search.outsourcingCompanyName,
+        siteName: search.siteName === '선택' ? null : search.siteName,
+        processName: search.processName === '선택' ? null : search.processName,
+        materialName: search.materialName === '선택' ? null : search.materialName,
+        outsourcingCompanyName:
+          search.outsourcingCompanyName === '선택' ? null : search.outsourcingCompanyName,
         deliveryStartDate: getTodayDateString(search.deliveryStartDate),
         deliveryEndDate: getTodayDateString(search.deliveryEndDate),
         page: search.currentPage - 1,
