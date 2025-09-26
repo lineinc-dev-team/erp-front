@@ -106,7 +106,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
   const steelDetailId = Number(params?.id)
 
   const { data } = useQuery({
-    queryKey: ['SteelDetailInfo'],
+    queryKey: ['SteelInfo'],
     queryFn: () => SteelDetailService(steelDetailId),
     enabled: isEditMode && !!steelDetailId, // 수정 모드일 때만 fetch
   })
@@ -190,45 +190,6 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
   }, [data, isEditMode, sitesOptions])
 
   const [updatedProcessOptions, setUpdatedProcessOptions] = useState(processOptions)
-
-  // useEffect(() => {
-  //   if (isEditMode && data) {
-  //     const client = data.data
-
-  //     const newProcessOptions = [...processOptions]
-
-  //     if (client.process) {
-  //       const isDeleted = client.process.deleted
-  //       const processName = client.process.name + (isDeleted ? ' (삭제됨)' : '')
-
-  //       if (!newProcessOptions.some((p) => p.id === client.process.id)) {
-  //         newProcessOptions.push({
-  //           id: client.process.id,
-  //           name: processName,
-  //           deleted: isDeleted,
-  //         })
-  //       }
-
-  //       if (!form.siteProcessId) {
-  //         setField('siteProcessId', client.process.id)
-  //         setField('siteProcessName', processName)
-  //       }
-  //     }
-
-  //     // 삭제된 공정 / 일반 공정 분리
-  //     const deletedProcesses = newProcessOptions.filter((p) => p.deleted)
-  //     const normalProcesses = newProcessOptions.filter((p) => !p.deleted && p.id !== 0)
-
-  //     setUpdatedProcessOptions([
-  //       newProcessOptions.find((s) => s.id === 0) ?? { id: 0, name: '선택', deleted: false },
-  //       ...deletedProcesses,
-  //       ...normalProcesses,
-  //     ])
-  //   } else if (!isEditMode) {
-  //     // 등록 모드에서는 항상 processOptions로 초기화
-  //     setUpdatedProcessOptions(processOptions)
-  //   }
-  // }, [data, isEditMode, processOptions, setField])
 
   useEffect(() => {
     if (isEditMode && data) {
@@ -569,6 +530,11 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
       return
     }
 
+    if (!form.details || form.details.length === 0) {
+      showSnackbar('품목 상세를 1개 이상 입력해주세요.', 'warning')
+      return
+    }
+
     if (isEditMode) {
       if (window.confirm('수정하시겠습니까?')) {
         SteelModifyMutation.mutate(steelDetailId)
@@ -577,8 +543,6 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
       createSteelMutation.mutate()
     }
   }
-
-  console.log('타입 확인', form.typeCode)
 
   return (
     <>
@@ -649,6 +613,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                 }}
                 onInputChange={(value) => setSitesSearch(value)}
                 loading={siteNameLoading}
+                disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
               />
             </div>
           </div>
@@ -717,6 +682,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                 value={form.usage}
                 onChange={(value) => setField('usage', value)}
                 className="flex-1"
+                disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
               />
             </div>
           </div>
@@ -739,6 +705,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     setField('endDate', value)
                   }
                 }}
+                disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
               />
               ~
               <CommonDatePicker
@@ -754,6 +721,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                   }
                   setField('endDate', value)
                 }}
+                disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
               />
             </div>
           </div>
@@ -768,6 +736,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                 value={form.memo}
                 onChange={(value) => setField('memo', value)}
                 className="flex-1"
+                disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
               />
             </div>
           </div>
@@ -820,6 +789,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
                   }}
                   loading={comPanyNameLoading}
+                  disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                 />
               </div>
             </div>
@@ -901,11 +871,13 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
               className="px-7"
               variant="danger"
               onClick={() => removeCheckedItems('MaterialItem')}
+              disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
             />
             <CommonButton
               label="추가"
               className="px-7"
               variant="secondary"
+              disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
               onClick={() => addItem('MaterialItem')}
             />
           </div>
@@ -920,6 +892,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     indeterminate={contractCheckIds.length > 0 && !isContractAllChecked}
                     onChange={(e) => toggleCheckAllItems('MaterialItem', e.target.checked)}
                     sx={{ color: 'black' }}
+                    disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                   />
                 </TableCell>
 
@@ -1009,6 +982,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     <Checkbox
                       checked={contractCheckIds.includes(m.id)}
                       onChange={(e) => toggleCheckItem('MaterialItem', m.id, e.target.checked)}
+                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />
                   </TableCell>
 
@@ -1022,6 +996,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       }
                       inputProps={{ maxLength: 50 }}
                       fullWidth
+                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
@@ -1034,6 +1009,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       }
                       inputProps={{ maxLength: 50 }}
                       fullWidth
+                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
@@ -1046,6 +1022,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       }
                       inputProps={{ maxLength: 10 }}
                       fullWidth
+                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
@@ -1058,6 +1035,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       }
                       inputProps={{ maxLength: 10 }}
                       fullWidth
+                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />
                   </TableCell>
 
@@ -1072,6 +1050,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       }
                       inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
                       fullWidth
+                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />
                   </TableCell>
 
@@ -1086,6 +1065,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       }
                       inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
                       fullWidth
+                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />
                   </TableCell>
 
@@ -1100,6 +1080,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       }
                       inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
                       fullWidth
+                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />
                   </TableCell>
 
@@ -1116,6 +1097,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       inputProps={{
                         style: { textAlign: 'right' },
                       }}
+                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />
                   </TableCell>
 
@@ -1137,6 +1119,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         pattern: '[0-9]*',
                       }}
                       fullWidth
+                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />
                   </TableCell>
 
@@ -1157,6 +1140,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         pattern: '[0-9]*',
                       }}
                       fullWidth
+                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />
                   </TableCell>
 
@@ -1171,6 +1155,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       }
                       inputProps={{ maxLength: 500 }}
                       fullWidth
+                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />
                   </TableCell>
                 </TableRow>
@@ -1224,12 +1209,14 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
               className="px-7"
               variant="danger"
               onClick={() => removeCheckedItems('attachedFile')}
+              disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
             />
             <CommonButton
               label="추가"
               className="px-7"
               variant="secondary"
               onClick={() => addItem('attachedFile')}
+              disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
             />
           </div>
         </div>
@@ -1243,6 +1230,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     indeterminate={fileCheckIds.length > 0 && !isFilesAllChecked}
                     onChange={(e) => toggleCheckAllItems('attachedFile', e.target.checked)}
                     sx={{ color: 'black' }}
+                    disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                   />
                 </TableCell>
                 {['문서명', '첨부', '비고'].map((label) => (
@@ -1279,6 +1267,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     <Checkbox
                       checked={fileCheckIds.includes(m.id)}
                       onChange={(e) => toggleCheckItem('attachedFile', m.id, e.target.checked)}
+                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />
                   </TableCell>
                   <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
@@ -1290,6 +1279,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       onChange={(e) =>
                         updateItemField('attachedFile', m.id, 'name', e.target.value)
                       }
+                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />
                   </TableCell>
 
@@ -1313,6 +1303,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           // updateItemField('attachedFile', m.id, 'files', newFiles)
                         }}
                         uploadTarget="CLIENT_COMPANY"
+                        disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                       />
                     </div>
                   </TableCell>
@@ -1325,6 +1316,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       onChange={(e) =>
                         updateItemField('attachedFile', m.id, 'memo', e.target.value)
                       }
+                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
                     />
                   </TableCell>
                 </TableRow>

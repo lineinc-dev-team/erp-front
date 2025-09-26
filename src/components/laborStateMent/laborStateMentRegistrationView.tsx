@@ -67,7 +67,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
   const laborSummaryId = Number(params?.id)
 
   const { data: laborSummaryDetail } = useQuery({
-    queryKey: ['LaborSummaryInfo'],
+    queryKey: ['LaborStateInfo'],
     queryFn: () => LaborSummaryDetailService(laborSummaryId),
     enabled: isEditMode && !!laborSummaryId, // 수정 모드일 때만 fetch
   })

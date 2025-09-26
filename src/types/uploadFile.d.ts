@@ -15,6 +15,7 @@ type FileUploadProps = {
   files?: FileUploadInfo[]
   className?: string
   multiple?: boolean
+  disabled?: boolean
   onChange: (files: FileUploadInfo[]) => void
   uploadTarget: string
 }

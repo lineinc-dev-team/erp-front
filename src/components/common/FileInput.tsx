@@ -10,6 +10,7 @@ export default function CommonFileInput({
   className,
   multiple,
   onChange,
+  disabled = false,
   uploadTarget,
 }: FileUploadProps) {
   const [loading, setLoading] = useState(false)
@@ -131,7 +132,8 @@ export default function CommonFileInput({
                 </span>
 
                 <button
-                  onClick={() => removeFile(index)}
+                  onClick={() => !disabled && removeFile(index)}
+                  disabled={disabled}
                   className="text-red-500 border cursor-pointer border-gray-400 rounded px-2"
                 >
                   X
@@ -148,6 +150,7 @@ export default function CommonFileInput({
             accept={acceptedExtensions.map((ext) => `.${ext}`).join(',')}
             className="hidden"
             onChange={handleChange}
+            disabled={disabled}
             ref={(el) => {
               if (el) {
                 el.value = '' // 매번 change 후 초기화

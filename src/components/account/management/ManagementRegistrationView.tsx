@@ -50,7 +50,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
   const userDetailId = Number(params?.id)
 
   const { data } = useQuery({
-    queryKey: ['UserDetailInfo'],
+    queryKey: ['UserInfo'],
     queryFn: () => UserDetailService(userDetailId),
     enabled: isEditMode && !!userDetailId, // 수정 모드일 때만 fetch
   })

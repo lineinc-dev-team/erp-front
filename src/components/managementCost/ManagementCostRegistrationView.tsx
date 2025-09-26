@@ -149,7 +149,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
   const costDetailId = Number(params?.id)
 
   const { data } = useQuery({
-    queryKey: ['CostDetailInfo'],
+    queryKey: ['CostInfo'],
     queryFn: () => CostDetailService(costDetailId),
     enabled: isEditMode && !!costDetailId, // 수정 모드일 때만 fetch
   })

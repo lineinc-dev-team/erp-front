@@ -109,7 +109,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
   const [isUserFocused, setIsUserFocused] = useState(false)
 
   const { data } = useQuery({
-    queryKey: ['ClientDetailInfo'],
+    queryKey: ['ClientInfo'],
     queryFn: () => ClientDetailService(clientCompanyId),
     enabled: isEditMode && !!clientCompanyId, // 수정 모드일 때만 fetch
   })
@@ -222,8 +222,8 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
       setField('paymentPeriod', client.paymentPeriod)
       setField('isActive', client.isActive ? '1' : '2')
 
-      setField('userId', client.user?.id ?? '0')
-      setField('userName', client.user?.username ?? '0')
+      setField('userId', client.user?.id ?? null)
+      setField('userName', client.user?.username ?? '')
 
       setField('createdAt', getTodayDateString(client.createdAt))
       setField('updatedAt', getTodayDateString(client.updatedAt))

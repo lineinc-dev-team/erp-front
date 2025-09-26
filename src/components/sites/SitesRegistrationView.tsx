@@ -118,7 +118,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
   const historyList = useSiteFormStore((state) => state.form.changeHistories)
 
   const { data } = useQuery({
-    queryKey: ['SiteDetailInfo'],
+    queryKey: ['siteInfo'],
     queryFn: () => SiteDetailService(siteId),
     enabled: isEditMode && !!siteId, // 수정 모드일 때만 fetch
   })

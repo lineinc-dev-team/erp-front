@@ -93,7 +93,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
   }
 
   const { data: outsourcingDetailData } = useQuery({
-    queryKey: ['OutsourcingDetailInfo'],
+    queryKey: ['OutsourcingInfo'],
     queryFn: () => OutsourcingDetailService(outsourcingCompanyId),
     enabled: isEditMode && !!outsourcingCompanyId, // 수정 모드일 때만 fetch
   })

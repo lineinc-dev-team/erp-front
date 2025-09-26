@@ -112,7 +112,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
   const fuelDetailId = Number(params?.id)
 
   const { data } = useQuery({
-    queryKey: ['FuelDetailInfo'],
+    queryKey: ['FuelAggregationInfo'],
     queryFn: () => FuelDetailService(fuelDetailId),
     enabled: isEditMode && !!fuelDetailId, // 수정 모드일 때만 fetch
   })

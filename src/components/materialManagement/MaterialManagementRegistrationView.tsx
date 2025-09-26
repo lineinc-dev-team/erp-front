@@ -122,7 +122,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
   const materialDetailId = Number(params?.id)
 
   const { data } = useQuery({
-    queryKey: ['MaterialDetailInfo'],
+    queryKey: ['MaterialInfo'],
     queryFn: () => MaterialDetailService(materialDetailId),
     enabled: isEditMode && !!materialDetailId, // 수정 모드일 때만 fetch
   })

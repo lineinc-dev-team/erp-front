@@ -187,28 +187,28 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
   // 상세 데이터 넣기
 
   const { data: contractDetailData } = useQuery({
-    queryKey: ['OutsourcingDetailInfo'],
+    queryKey: ['OutsourcingContractInfo'],
     queryFn: () => ContractDetailService(outsourcingContractId),
     enabled: isEditMode && !!outsourcingContractId, // 수정 모드일 때만 fetch
   })
 
   // 인력
   const { data: outsourcingPersonList } = useQuery({
-    queryKey: ['OutsourcingPersonDetailInfo'],
+    queryKey: ['OutsourcingContractInfo'],
     queryFn: () => ContractPersonDetailService(outsourcingContractId),
     enabled: isEditMode && !!outsourcingContractId && contractDetailData?.data?.type === '용역', // 타입이 장비일 때만
   })
 
   // 공사데이터
   const { data: contractConstructionDetailData } = useQuery({
-    queryKey: ['OutsourcingConstructionDetailInfo'],
+    queryKey: ['OutsourcingContractInfo'],
     queryFn: () => OutsourcingConstructionDetailService(outsourcingContractId),
     enabled: isEditMode && !!outsourcingContractId && contractDetailData?.data?.type === '공사', // 타입이 장비일 때만
   })
 
   // 장비 데이터
   const { data: contractEquipmentDetailData } = useQuery({
-    queryKey: ['OutsourcingEqDetailInfo'],
+    queryKey: ['OutsourcingContractInfo'],
     queryFn: () => ContractEquipmentDetailService(outsourcingContractId),
     enabled: isEditMode && !!outsourcingContractId && contractDetailData?.data?.type === '장비', // 타입이 장비일 때만
   })
@@ -216,7 +216,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
   // 기사 데이터
 
   const { data: contractDriverDetailData } = useQuery({
-    queryKey: ['OutsourcingDrDetailInfo'],
+    queryKey: ['OutsourcingContractInfo'],
     queryFn: () => OutsourcingDriverDetailService(outsourcingContractId),
     enabled: isEditMode && !!outsourcingContractId && contractDetailData?.data?.type === '장비', // 타입이 장비일 때만
   })

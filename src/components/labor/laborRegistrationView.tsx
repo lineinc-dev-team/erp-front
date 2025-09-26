@@ -84,7 +84,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
   const laborDataId = Number(params?.id)
 
   const { data: laborDetailData } = useQuery({
-    queryKey: ['LaborDetailInfo'],
+    queryKey: ['LaborInfo'],
     queryFn: () => LaborDetailService(laborDataId),
     enabled: isEditMode && !!laborDataId, // 수정 모드일 때만 fetch
   })

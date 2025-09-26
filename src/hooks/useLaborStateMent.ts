@@ -107,7 +107,7 @@ export function useLaborStateMentInfo() {
   // 수정이력 조회 쿼리
   const useLaborStaMentHistoryDataQuery = (historyId: number, enabled: boolean) => {
     return useInfiniteQuery({
-      queryKey: ['LaborhistoryList', historyId],
+      queryKey: ['LaborStateInfo', historyId],
       queryFn: ({ pageParam = 0 }) =>
         LaborStateMentInfoHistoryService(historyId, pageParam, 4, 'id,desc'),
       initialPageParam: 0,
