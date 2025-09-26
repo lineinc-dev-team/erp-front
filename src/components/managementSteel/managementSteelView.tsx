@@ -72,7 +72,13 @@ export default function ManagementSteel() {
     return {
       id: steel.id, // 고유 ID
       usage: steel.usage,
-      type: steel.type,
+      type:
+        steel.type === '발주'
+          ? steel.type
+          : steel.type === '승인' || steel.type === '반출'
+          ? `${steel.type}(${steel.previousType})`
+          : `발주(${steel.type})`,
+
       typeCode: steel.typeCode,
 
       // 날짜들 (string 변환 처리)
@@ -198,14 +204,14 @@ export default function ManagementSteel() {
         align: 'center',
         flex: 1,
         renderCell: (params: GridRenderCellParams) => {
-          const value = params.value
+          const value = params.value as string
 
-          const className =
-            value === '승인'
-              ? 'text-blue-500 font-bold'
-              : value === '반출'
-              ? 'text-red-500 font-bold'
-              : ''
+          let className = ''
+          if (value.startsWith('승인')) {
+            className = 'text-blue-500 font-bold'
+          } else if (value.startsWith('반출')) {
+            className = 'text-red-500 font-bold'
+          }
 
           return <span className={className}>{value}</span>
         },

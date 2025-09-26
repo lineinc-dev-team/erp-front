@@ -30,6 +30,7 @@ export interface SteelList {
   usage: string
   type: string
   typeCode: string
+  previousType: string
   startDate: Date | null
   endDate: Date | null
   orderDate: Date | null
