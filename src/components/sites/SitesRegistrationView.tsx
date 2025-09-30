@@ -366,6 +366,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                 <div key={type} className="flex">
                   <label className="w-36 text-[14px] border border-gray-400 bg-gray-300 flex items-center justify-center font-bold">
                     {FILE_TYPE_LABELS[type]}
+                    {type === 'CONTRACT' && <span className="text-red-500 ml-1">*</span>}
                   </label>
                   <div className="flex-1 border border-gray-400 px-2 py-2 flex flex-col gap-2">
                     <CommonMultiFileInput
@@ -635,8 +636,8 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     if (!form.name?.trim()) return '현장명을 입력하세요.'
     // if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
     if (!form.clientCompanyId || String(form.clientCompanyId) === '0') return '발주처를 선택하세요.'
-    if (!form.startedAt) return '사업 시작일을 선택하세요.'
-    if (!form.endedAt) return '사업 종료일을 선택하세요.'
+    if (!form.startedAt) return '착공일을 선택하세요.'
+    if (!form.endedAt) return '준공일을 선택하세요.'
     if (!form.userId || String(form.userId) === '0') return '본사 담당자를 선택하세요.'
     if (form.memo.length > 500) {
       return '비고는 500자 이하로 입력해주세요.'
@@ -667,16 +668,28 @@ export default function SitesRegistrationView({ isEditMode = false }) {
       for (const item of form.contracts) {
         if (!item.name.trim()) return '계약명을 입력해주세요.'
         if (item.memo.length > 500) return '계약서의 비고는 500자 이하로 입력해주세요.'
+
+        const hasContractFile = item.files?.some((f) => f.type === 'CONTRACT')
+        if (!hasContractFile) {
+          return '모든 계약에 계약서 파일을 업로드해주세요.'
+        }
       }
     }
 
     return null
   }
 
+  console.log('form.contracts', form.contracts)
+
   const handleSiteSubmit = () => {
     const errorMsg = validateSiteForm(form)
     if (errorMsg) {
       showSnackbar(errorMsg, 'warning')
+      return
+    }
+
+    if (!form.contracts || form.contracts.length === 0) {
+      showSnackbar('계약서를 1개 이상 입력해주세요.', 'warning')
       return
     }
 
