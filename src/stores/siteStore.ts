@@ -168,14 +168,17 @@ export const useSiteFormStore = create<SiteFormState>((set, get) => ({
         (updated[index].purchaseTax || 0)
 
       // 3️⃣ 전체 합계 계산
-      const totalAmount = updated.reduce((sum, contract) => sum + (contract.amount || 0), 0)
+      // const totalAmount = updated.reduce((sum, contract) => sum + (contract.amount || 0), 0)
 
+      // 3️⃣ 마지막 계약서의 계약금액만 반영
+      const lastContract = updated[updated.length - 1]
+      const lastAmount = lastContract?.amount || 0
       // 4️⃣ 상태 업데이트: contracts + contractAmount
       return {
         form: {
           ...state.form,
           contracts: updated,
-          contractAmount: totalAmount,
+          contractAmount: lastAmount,
         },
       }
     }),
