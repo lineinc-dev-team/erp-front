@@ -637,6 +637,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                 }}
                 onInputChange={(value) => setSitesSearch(value)}
                 loading={siteNameLoading}
+                disabled
               />
             </div>
           </div>
@@ -691,6 +692,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                 value={form.weather || 'BASE'}
                 onChange={(value) => setField('weather', value)}
                 options={WeatherTypeMethodOptions}
+                disabled
               />
             </div>
           </div>
