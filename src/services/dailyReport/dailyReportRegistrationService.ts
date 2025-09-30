@@ -401,7 +401,7 @@ export async function GetEquipmentByFilterService({
 
 export async function GetWithEquipmentService({ pageParam = 0, size = 200, sort = '' }) {
   const resData = await fetch(
-    `${API.OUTSOURCINGCOMPANY}/with-equipment?page=${pageParam}&size=${size}&sort=${sort}`,
+    `${API.OUTSOURCINGCOMPANY}/search?page=${pageParam}&size=${size}&sort=${sort}`,
     {
       method: 'GET',
       headers: {
