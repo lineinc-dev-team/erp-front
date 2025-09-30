@@ -1292,7 +1292,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                             updateItemField('mealListData', m.id, 'name', selectedProduct.name)
                             updateItemField('mealListData', m.id, 'laborId', selectedProduct.id)
                           }}
-                          options={[...personDataOptions, { id: -1, name: '직접입력' }]}
+                          options={[{ id: -1, name: '직접입력' }, ...personDataOptions]}
                           onScrollToBottom={() => {
                             if (PersonSearchhasNextPage && !PersonSearchFetching)
                               PersonSearchFetchNextPage()
