@@ -40,6 +40,7 @@ import {
 import { FuelInfo, FuelListInfoData } from '@/types/fuelAggregation'
 import { useDailyReport } from '@/hooks/useDailyReport'
 import { HistoryItem } from '@/types/ordering'
+import CommonFileInput from '../common/FileInput'
 // import { useEffect } from 'react'
 // import { AttachedFile, DetailItem } from '@/types/managementSteel'
 
@@ -129,6 +130,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     fuelTypeName: '유종',
     fuelAmount: '주유량',
     memo: '비고',
+    originalFileName: '파일 이름',
   }
 
   const {
@@ -242,6 +244,15 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
         createdAt: item.createdAt ?? '',
         updatedAt: item.updatedAt ?? '',
         memo: item.memo,
+        files:
+          item.fileUrl && item.originalFileName
+            ? [
+                {
+                  fileUrl: item.fileUrl,
+                  originalFileName: item.originalFileName,
+                },
+              ]
+            : [],
         modifyDate: `${getTodayDateString(item.createdAt)} / ${getTodayDateString(item.updatedAt)}`,
       }))
 
@@ -729,27 +740,29 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                     sx={{ color: 'black' }}
                   />
                 </TableCell>
-                {['업체명', '기사명', '차량번호', '규격', '유종', '주유량', '비고'].map((label) => (
-                  <TableCell
-                    key={label}
-                    align="center"
-                    sx={{
-                      backgroundColor: '#D1D5DB',
-                      border: '1px solid  #9CA3AF',
-                      color: 'black',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    {label === '비고' ? (
-                      label
-                    ) : (
-                      <div className="flex items-center justify-center">
-                        <span>{label}</span>
-                        <span className="text-red-500 ml-1">*</span>
-                      </div>
-                    )}
-                  </TableCell>
-                ))}
+                {['업체명', '기사명', '차량번호', '규격', '유종', '주유량', '첨부파일', '비고'].map(
+                  (label) => (
+                    <TableCell
+                      key={label}
+                      align="center"
+                      sx={{
+                        backgroundColor: '#D1D5DB',
+                        border: '1px solid  #9CA3AF',
+                        color: 'black',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {label === '비고' ? (
+                        label
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          <span>{label}</span>
+                          <span className="text-red-500 ml-1">*</span>
+                        </div>
+                      )}
+                    </TableCell>
+                  ),
+                )}
                 {isEditMode && (
                   <TableCell
                     align="center"
@@ -925,6 +938,29 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                         updateItemField('FuelInfo', m.id, 'fuelAmount', formatted)
                       }}
                     />
+                  </TableCell>
+
+                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                    <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                      <CommonFileInput
+                        acceptedExtensions={[
+                          'pdf',
+                          'jpg',
+                          'png',
+                          'hwp',
+                          'xlsx',
+                          'zip',
+                          'jpeg',
+                          'ppt',
+                        ]}
+                        multiple={false}
+                        files={m.files} // 각 항목별 files
+                        onChange={(newFiles) => {
+                          updateItemField('FuelInfo', m.id, 'files', newFiles.slice(0, 1))
+                        }}
+                        uploadTarget="WORK_DAILY_REPORT"
+                      />
+                    </div>
                   </TableCell>
                   {/* 비고 */}
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>

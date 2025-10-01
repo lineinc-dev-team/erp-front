@@ -125,6 +125,7 @@ export const useFuelFormStore = create<FuelFormStore>((set, get) => ({
           equipmentId: 0,
           fuelType: '',
           fuelAmount: 0,
+          files: [],
           memo: '',
         }
         return {
@@ -199,13 +200,27 @@ export const useFuelFormStore = create<FuelFormStore>((set, get) => ({
   newFuelData: () => {
     const form = get().form
     const { initialDateAt, ...restForm } = form // initialDateAt 제외
-
     const dateStr = getTodayDateString(form.date)
 
     return {
       ...restForm, // initialDateAt 제외한 나머지
       date: dateStr !== initialDateAt ? dateStr : initialDateAt,
       changeHistories: form.editedHistories ?? [],
+      fuelInfos: form.fuelInfos.map((item) => {
+        const file = item.files[0]
+
+        return {
+          id: item.id,
+          outsourcingCompanyId: item.outsourcingCompanyId,
+          driverId: item.driverId,
+          equipmentId: item.equipmentId,
+          fuelType: item.fuelType,
+          fuelAmount: item.fuelAmount,
+          fileUrl: file?.fileUrl || null,
+          originalFileName: file?.originalFileName || null,
+          memo: item.memo,
+        }
+      }),
     }
   },
 }))

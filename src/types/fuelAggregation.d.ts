@@ -32,6 +32,8 @@ export interface FuelListInfoData {
   driver: driverInfoData
   equipment: equipmentInfoData
 
+  fileUrl: string
+  originalFileName: string
   vehicleNumber: string
   specification: string
   fuelType: string
@@ -93,6 +95,9 @@ export type fuelDetailItem = {
   fuelType: string
   fuelAmount: number
   memo: string
+  fileUrl?: string
+  originalFileName?: string
+  files: FileUploadInfo[]
   modifyDate?: string
 }
 
