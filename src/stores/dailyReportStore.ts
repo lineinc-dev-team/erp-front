@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import {
   DailyAttachedFile,
+  DailyDataSearchState,
   DailyProofAttachedFile,
   DailyReportFormStore,
   directContractsItem,
@@ -9,6 +10,58 @@ import {
   FuelsItem,
   OutsourcingsItem,
 } from '@/types/dailyReport'
+
+export const useDailySearchList = create<{ search: DailyDataSearchState }>((set) => ({
+  search: {
+    searchTrigger: 0,
+    siteId: 0,
+    siteName: '',
+    processId: 0,
+    processName: '',
+    startDate: null,
+    endDate: null,
+    isCompleted: '선택',
+    isEvidenceSubmitted: '선택',
+    arraySort: '최신순',
+    currentPage: 1,
+    pageCount: '20',
+
+    setField: (field, value) =>
+      set((state) => ({
+        search: {
+          ...state.search,
+          [field]: value,
+        },
+      })),
+
+    handleSearch: () =>
+      set((state) => ({
+        search: {
+          ...state.search,
+          searchTrigger: state.search.searchTrigger + 1,
+        },
+      })),
+
+    reset: () =>
+      set((state) => ({
+        search: {
+          ...state.search,
+          searchTrigger: 0,
+          siteId: 0,
+          siteName: '',
+          processId: 0,
+          processName: '',
+          startDate: null,
+          endDate: null,
+          isCompleted: '선택',
+          isEvidenceSubmitted: '선택',
+          arraySort: '최신순',
+          currentPage: 1,
+          pageCount: '20',
+        },
+      })),
+  },
+}))
 
 export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
   form: {

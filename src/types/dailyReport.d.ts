@@ -16,70 +16,28 @@ export type DailyProofAttachedFile = {
   files: FileUploadInfo[]
 }
 
-// 발주처 조회 리스트 가져오는 타입들
-
-export interface Contact {
-  id: number
-  name: string
-  phoneNumber: string
-  landlineNumber: string
-  email: string
-  memo?: string
-  position: string
-  department: string
-  isMain?: boolean
-}
-
-export interface User {
-  id: number
-  username: string
-}
-
-// 발주처 조회
-export interface ClientCompany {
-  id: number
-  name: string // 발주처 이름
-  businessNumber: string
-  ceoName: string
-  address: string
-  detailAddress: string
-  landlineNumber: string
-  phoneNumber: string
-  email: string
-  memo: string
-  isActive: boolean
-  hasFile: boolean
-  contacts: Contact[]
-  createdAt: string // ISO 날짜 문자열
-  updatedAt: string
-  user: User
-}
-
-export type OrderingSearchState = {
+export type DailyDataSearchState = {
   searchTrigger: number
-  name: string
-  businessNumber: string
-  ceoName: string
-  currentPage: number
-  contactName: string
-  landlineNumber: string
-  userName: string
-  email: string
+  siteId: number
+  siteName: string
+  processId: number
+  processName: string
   startDate: Date | null
   endDate: Date | null
-  isActive: string
+  isCompleted: T
+  isEvidenceSubmitted: T
   arraySort: string
+  currentPage: number
   pageCount: string
 
   reset: () => void
 
-  setField: <K extends keyof Omit<OrderingSearchState, 'reset' | 'setField'>>(
+  setField: <K extends keyof Omit<DailyDataSearchState, 'reset' | 'setField' | 'handleSearch'>>(
     field: K,
-    value: OrderingSearchState[K],
+    value: DailyDataSearchState[K],
   ) => void
 
   handleSearch: () => void
-  handleOrderingListRemove: () => void
 }
 
 //등록에서 사용 할 직원 데이터 조회

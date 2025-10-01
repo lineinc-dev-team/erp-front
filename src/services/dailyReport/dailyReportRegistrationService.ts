@@ -1,6 +1,31 @@
 import { API } from '@/api/config/env'
 import { useDailyFormStore } from '@/stores/dailyReportStore'
 
+// 출역일보  조회
+export async function DailyListInfoService(params = {}) {
+  const query = new URLSearchParams(params).toString()
+
+  const resData = await fetch(`${API.DAILYREPORT}?${query}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+
 // 출역일보 등록
 export async function CreatedailyReport() {
   const { newDailyReportData } = useDailyFormStore.getState()

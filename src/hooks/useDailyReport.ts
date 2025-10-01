@@ -1,9 +1,10 @@
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import {
   CompleteInfoData,
   CreatedailyReport,
+  DailyListInfoService,
   GetContractNameInfoService,
   GetEmployeeInfoService,
   GetWithEquipmentService,
@@ -15,10 +16,78 @@ import {
   // ModifyFuelReport,
   ModifyOutsourcingReport,
 } from '@/services/dailyReport/dailyReportRegistrationService'
-import { useDailyFormStore } from '@/stores/dailyReportStore'
+import { useDailyFormStore, useDailySearchList } from '@/stores/dailyReportStore'
+import { usePathname } from 'next/navigation'
+import { getTodayDateString } from '@/utils/formatters'
 
 export function useDailyReport() {
   const { showSnackbar } = useSnackbarStore()
+
+  // 출역일보 조회
+
+  const search = useDailySearchList((state) => state.search)
+
+  const pathName = usePathname()
+
+  useEffect(() => {
+    if (search.searchTrigger && search.currentPage !== 0) {
+      search.setField('currentPage', 1)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.searchTrigger])
+
+  // useQuery 쪽 수정
+  const DailyListQuery = useQuery({
+    queryKey: [
+      'DailyInfo',
+      search.searchTrigger,
+      search.currentPage,
+      search.pageCount,
+      search.arraySort,
+      pathName,
+    ],
+    queryFn: () => {
+      const rawParams = {
+        siteName: search.siteName === '선택' ? undefined : search.siteName,
+        processName: search.processName === '선택' ? undefined : search.processName,
+
+        isCompleted:
+          search.isCompleted === '선택' ? undefined : search.isCompleted === 'Y' ? true : false,
+
+        isEvidenceSubmitted:
+          search.isEvidenceSubmitted === '선택'
+            ? undefined
+            : search.isEvidenceSubmitted === 'Y'
+            ? true
+            : false,
+
+        startDate: getTodayDateString(search.startDate),
+        endDate: getTodayDateString(search.endDate),
+
+        page: search.currentPage - 1,
+        size: Number(search.pageCount) || 10,
+        sort:
+          search.arraySort === '최신순'
+            ? 'id,desc '
+            : search.arraySort === '오래된순'
+            ? 'id,asc'
+            : 'username,asc',
+      }
+
+      const filteredParams = Object.fromEntries(
+        Object.entries(rawParams).filter(
+          ([, value]) =>
+            value !== undefined &&
+            value !== null &&
+            value !== '' &&
+            !(typeof value === 'number' && isNaN(value)),
+        ),
+      )
+
+      return DailyListInfoService(filteredParams)
+    },
+    enabled: pathName === '/dailyReport', // 경로 체크
+  })
 
   const {
     // 직원 정보
@@ -418,5 +487,7 @@ export function useDailyReport() {
     withEquipmenthasNextPage,
     withEquipmentFetching,
     withEquipmentLoading,
+
+    DailyListQuery,
   }
 }

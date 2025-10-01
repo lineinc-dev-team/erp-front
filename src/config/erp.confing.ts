@@ -239,6 +239,26 @@ export const LaborColumnList: GridColDef[] = [
   { field: 'hasFile', headerName: '기타첨부', width: 100 },
 ]
 
+export const DailyColumnList: GridColDef[] = [
+  { field: 'no', headerName: 'No', width: 10 },
+  { field: 'site', headerName: '현장', width: 130 },
+  { field: 'siteProcess', headerName: '공정', width: 130 },
+  { field: 'reportDate', headerName: '일자', width: 130 },
+  { field: 'employeeWorkQuantitySum', headerName: '직원(공수)/증빙', width: 180 },
+  { field: 'directContractWorkQuantitySum', headerName: '직영,계약직(공수)/증빙', width: 100 },
+  { field: 'outsourcingWorkQuantitySum', headerName: '외주(공수)/증빙', width: 100 },
+  { field: 'equipmentTotalHours', headerName: '장비(시간)/증빙', width: 120 },
+  { field: 'fuelEvidenceSubmitted', headerName: '유류/증빙', width: 100 },
+  { field: 'gasolineTotalAmount', headerName: '유류(L)/휘발유', width: 100 },
+  { field: 'dieselTotalAmount', headerName: '유류(L)/경유', width: 100 },
+  { field: 'ureaTotalAmount', headerName: '유류(L)/요소수', width: 100 },
+  { field: 'etcTotalAmount', headerName: '유류(L)/기타', width: 100 },
+  // { field: 'accountNumber', headerName: '현장사진', width: 100 },
+  // { field: 'tenureMonths', headerName: '작업내용', width: 100 },
+  { field: 'weather', headerName: '날씨', width: 100 },
+  { field: 'status', headerName: '마감', width: 100 },
+]
+
 export const outsourcingCompanyList: GridColDef[] = [
   { field: 'no', headerName: 'No', width: 10 },
   // { field: 'id', headerName: 'No', width: 70 },
@@ -304,6 +324,12 @@ export const PayInfo = [
   { id: '선택', name: '선택' },
   { id: '어음', name: '어음' },
   { id: '현금', name: '현금' },
+]
+
+export const DeadLineInfo = [
+  { id: '선택', name: '선택' },
+  { id: 'Y', name: 'Y' },
+  { id: 'N', name: 'N' },
 ]
 
 export const GuaranteeInfo = [
