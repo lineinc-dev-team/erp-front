@@ -31,6 +31,7 @@ import {
   GetEquipmentByFilterService,
   GetFuelByFilterService,
   GetOutsoucingByFilterService,
+  GetReportByEvidenceFilterService,
   ModifyWeatherReport,
   OutsourcingWorkerNameScroll,
 } from '@/services/dailyReport/dailyReportRegistrationService'
@@ -64,6 +65,12 @@ export default function DailyReportRegistrationView() {
     resetEquipment,
     resetFuel,
     resetFile,
+    resetEmployeesEvidenceFile,
+    resetContractEvidenceFile,
+    resetOutsourcingEvidenceFile,
+    resetEquipmentEvidenceFile,
+    resetFuelEvidenceFile,
+
     addItem,
     toggleCheckItem,
     toggleCheckAllItems,
@@ -247,8 +254,6 @@ export default function DailyReportRegistrationView() {
     setIsEditMode(true)
     setField('employees', fetched)
   }
-
-  // 직원
 
   const employees = useMemo(() => form.employees, [form.employees])
 
@@ -525,6 +530,15 @@ export default function DailyReportRegistrationView() {
       fuelType: item.fuelTypeCode ?? '',
       fuelAmount: item.fuelAmount,
       memo: item.memo,
+      files:
+        item.fileUrl && item.originalFileName
+          ? [
+              {
+                fileUrl: item.fileUrl,
+                originalFileName: item.originalFileName,
+              },
+            ]
+          : [],
       modifyDate: `${getTodayDateString(item.createdAt)} / ${getTodayDateString(item.updatedAt)}`,
     }))
 
@@ -597,22 +611,29 @@ export default function DailyReportRegistrationView() {
   const fileCheckIds = form.checkedAttachedFileIds
   const isFilesAllChecked = attachedFiles.length > 0 && fileCheckIds.length === attachedFiles.length
 
+  // 직원에서 증빙 서류 체크 박스 순서
+
   useEffect(() => {
     if (!form.siteId || !form.siteProcessId || !form.reportDate) return
 
     const fetchData = async () => {
       if (activeTab === '직원') {
         handleEmployeesRefetch()
+        handleEmployeesEvidenceRefetch()
       }
       if (activeTab === '직영/계약직') {
         handleContractRefetch()
+        handleContractEvidenceRefetch()
       }
       if (activeTab === '외주') {
         handleOutsourcingRefetch()
+        handleOutSourcingEvidenceRefetch()
       } else if (activeTab === '장비') {
         handleEquipmentRefetch()
+        handleEquipmentEvidenceRefetch()
       } else if (activeTab === '유류') {
         handleFuelRefetch()
+        handleFuelEvidenceRefetch()
       } else if (activeTab === '현장 사진 등록') {
         handleFileRefetch()
       }
@@ -654,6 +675,319 @@ export default function DailyReportRegistrationView() {
       if (!isEditMode) setIsEditMode(true) // 최초 로딩 시 editMode 설정
     }
   }, [detailReport])
+
+  // 증빙 서류 조회
+
+  // 직원에 대한 증빙서류 조회
+
+  const { refetch: employeesEvidenceRefetch } = useInfiniteQuery({
+    queryKey: ['employeesEvidence', detailReport?.data?.id],
+    queryFn: ({ pageParam }) => {
+      return GetReportByEvidenceFilterService({
+        pageParam,
+        id: detailReport?.data?.id,
+        fileType: 'EMPLOYEE',
+      })
+    },
+    enabled: !!detailReport?.data?.id, // detailReport.id가 준비될 때만 실행
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.data.sliceInfo.hasNext ? lastPage.data.sliceInfo.page + 1 : undefined,
+  })
+
+  const handleEmployeesEvidenceRefetch = async () => {
+    if (!detailReport?.data?.id) return
+
+    const res = await employeesEvidenceRefetch()
+    if (!res?.data) return
+
+    const allContents = res.data.pages.flatMap((page) => page.data?.content ?? [])
+
+    console.log('resetEmployeesEvidenceFileresetEmployeesEvidenceFile', allContents)
+
+    if (allContents.length === 0) {
+      // setIsEditMode(false)
+      resetEmployeesEvidenceFile()
+      return
+    }
+
+    const fetched = allContents.map((item: any) => ({
+      id: item.id,
+      fileType: item.fileType,
+      name: item.name,
+      files: [
+        {
+          id: item.id,
+          fileUrl: item.fileUrl ?? '',
+          originalFileName: item.originalFileName ?? '',
+        },
+      ],
+      memo: item.memo,
+    }))
+
+    // setIsEditMode(true)
+    setField('employeeFile', fetched)
+  }
+
+  // 직영 계약직의 증빙 서류
+
+  // 직원에 대한 증빙서류 조회
+
+  const { refetch: contractEvidenceRefetch } = useInfiniteQuery({
+    queryKey: ['contractEvidence', detailReport?.data?.id],
+    queryFn: ({ pageParam }) => {
+      return GetReportByEvidenceFilterService({
+        pageParam,
+        id: detailReport?.data?.id,
+        fileType: 'DIRECT_CONTRACT',
+      })
+    },
+    enabled: !!detailReport?.data?.id, // detailReport.id가 준비될 때만 실행
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.data.sliceInfo.hasNext ? lastPage.data.sliceInfo.page + 1 : undefined,
+  })
+
+  const handleContractEvidenceRefetch = async () => {
+    if (!detailReport?.data?.id) return
+
+    const res = await contractEvidenceRefetch()
+    if (!res?.data) return
+
+    const allContents = res.data.pages.flatMap((page) => page.data?.content ?? [])
+
+    if (allContents.length === 0) {
+      // setIsEditMode(false)
+      resetContractEvidenceFile()
+      return
+    }
+
+    const fetched = allContents.map((item: any) => ({
+      id: item.id,
+      fileType: item.fileType,
+      name: item.name,
+      files: [
+        {
+          id: item.id,
+          fileUrl: item.fileUrl ?? '',
+          originalFileName: item.originalFileName ?? '',
+        },
+      ],
+      memo: item.memo,
+    }))
+
+    // setIsEditMode(true)
+    setField('contractProofFile', fetched)
+  }
+
+  // 외주 증빙 서류
+
+  const { refetch: outsourcingEvidenceRefetch } = useInfiniteQuery({
+    queryKey: ['outSourcingEvidence', detailReport?.data?.id],
+    queryFn: ({ pageParam }) => {
+      return GetReportByEvidenceFilterService({
+        pageParam,
+        id: detailReport?.data?.id,
+        fileType: 'OUTSOURCING',
+      })
+    },
+    enabled: !!detailReport?.data?.id, // detailReport.id가 준비될 때만 실행
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.data.sliceInfo.hasNext ? lastPage.data.sliceInfo.page + 1 : undefined,
+  })
+
+  const handleOutSourcingEvidenceRefetch = async () => {
+    if (!detailReport?.data?.id) return
+
+    const res = await outsourcingEvidenceRefetch()
+    if (!res?.data) return
+
+    const allContents = res.data.pages.flatMap((page) => page.data?.content ?? [])
+
+    if (allContents.length === 0) {
+      // setIsEditMode(false)
+      resetOutsourcingEvidenceFile()
+      return
+    }
+
+    const fetched = allContents.map((item: any) => ({
+      id: item.id,
+      fileType: item.fileType,
+      name: item.name,
+      files: [
+        {
+          id: item.id,
+          fileUrl: item.fileUrl ?? '',
+          originalFileName: item.originalFileName ?? '',
+        },
+      ],
+      memo: item.memo,
+    }))
+
+    // setIsEditMode(true)
+    setField('outsourcingProofFile', fetched)
+  }
+
+  // 장비 데이터
+  const { refetch: equipmentEvidenceRefetch } = useInfiniteQuery({
+    queryKey: ['equipmentEvidence', detailReport?.data?.id],
+    queryFn: ({ pageParam }) => {
+      return GetReportByEvidenceFilterService({
+        pageParam,
+        id: detailReport?.data?.id,
+        fileType: 'EQUIPMENT',
+      })
+    },
+    enabled: !!detailReport?.data?.id, // detailReport.id가 준비될 때만 실행
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.data.sliceInfo.hasNext ? lastPage.data.sliceInfo.page + 1 : undefined,
+  })
+
+  const handleEquipmentEvidenceRefetch = async () => {
+    if (!detailReport?.data?.id) return
+
+    const res = await equipmentEvidenceRefetch()
+    if (!res?.data) return
+
+    const allContents = res.data.pages.flatMap((page) => page.data?.content ?? [])
+
+    if (allContents.length === 0) {
+      // setIsEditMode(false)
+      resetEquipmentEvidenceFile()
+      return
+    }
+
+    const fetched = allContents.map((item: any) => ({
+      id: item.id,
+      fileType: item.fileType,
+      name: item.name,
+      files: [
+        {
+          id: item.id,
+          fileUrl: item.fileUrl ?? '',
+          originalFileName: item.originalFileName ?? '',
+        },
+      ],
+      memo: item.memo,
+    }))
+
+    // setIsEditMode(true)
+    setField('equipmentProofFile', fetched)
+  }
+
+  // 장비 데이터
+  const { refetch: fuelEvidenceRefetch } = useInfiniteQuery({
+    queryKey: ['fuelEvidence', detailReport?.data?.id],
+    queryFn: ({ pageParam }) => {
+      return GetReportByEvidenceFilterService({
+        pageParam,
+        id: detailReport?.data?.id,
+        fileType: 'FUEL',
+      })
+    },
+    enabled: !!detailReport?.data?.id, // detailReport.id가 준비될 때만 실행
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.data.sliceInfo.hasNext ? lastPage.data.sliceInfo.page + 1 : undefined,
+  })
+
+  const handleFuelEvidenceRefetch = async () => {
+    if (!detailReport?.data?.id) return
+
+    const res = await fuelEvidenceRefetch()
+    if (!res?.data) return
+
+    const allContents = res.data.pages.flatMap((page) => page.data?.content ?? [])
+
+    if (allContents.length === 0) {
+      // setIsEditMode(false)
+      resetFuelEvidenceFile()
+      return
+    }
+
+    const fetched = allContents.map((item: any) => ({
+      id: item.id,
+      fileType: item.fileType,
+      name: item.name,
+      files: [
+        {
+          id: item.id,
+          fileUrl: item.fileUrl ?? '',
+          originalFileName: item.originalFileName ?? '',
+        },
+      ],
+      memo: item.memo,
+    }))
+
+    // setIsEditMode(true)
+    setField('fuelProofFile', fetched)
+  }
+
+  // 상세페이지 데이터 로딩되면 바로 직원 증빙 조회 실행
+  useEffect(() => {
+    if (detailReport?.status === 200 && detailReport.data?.id) {
+      if (activeTab === '직원') {
+        handleEmployeesEvidenceRefetch()
+      } else if (activeTab === '직영/계약직') {
+        handleContractEvidenceRefetch()
+      } else if (activeTab === '외주') {
+        handleOutSourcingEvidenceRefetch()
+      } else if (activeTab === '장비') {
+        handleEquipmentEvidenceRefetch()
+      } else if (activeTab === '유류') {
+        handleFuelEvidenceRefetch()
+      }
+    } else {
+      resetEmployeesEvidenceFile()
+      resetContractEvidenceFile()
+      resetOutsourcingEvidenceFile()
+      resetEquipmentEvidenceFile()
+      resetFuelEvidenceFile()
+    }
+  }, [detailReport, activeTab])
+
+  const employeeProof = useMemo(() => form.employeeFile, [form.employeeFile])
+
+  const employeeProofCheckIds = form.employeeCheckId
+  const isEmployeeProofAllChecked =
+    employeeProof.length > 0 && employeeProofCheckIds.length === employeeProof.length
+
+  // 직영에서 증빙서류 확인
+
+  const contractFileProof = useMemo(() => form.contractProofFile, [form.contractProofFile])
+
+  const contractProofCheckIds = form.contractProofCheckId
+
+  const isContractProofAllChecked =
+    contractFileProof.length > 0 && contractProofCheckIds.length === contractFileProof.length
+
+  // 외주 증빙서류 확인
+
+  const outSourcingFileProof = useMemo(() => form.outsourcingProofFile, [form.outsourcingProofFile])
+
+  const outSourcingProofCheckIds = form.outsourcingProofCheckId
+
+  const isOutSourcingProofAllChecked =
+    outSourcingFileProof.length > 0 &&
+    outSourcingProofCheckIds.length === outSourcingFileProof.length
+
+  // 장비 증빙 서류
+
+  const equipmentProof = useMemo(() => form.equipmentProofFile, [form.equipmentProofFile])
+
+  const equipmentProofCheckIds = form.equipmentProofCheckId
+  const isEquipmentProofAllChecked =
+    equipmentProof.length > 0 && equipmentProofCheckIds.length === equipmentProof.length
+
+  // 유류 증빙 서류
+
+  const fuelProof = useMemo(() => form.fuelProofFile, [form.fuelProofFile])
+
+  const fuelProofCheckIds = form.fuelProofCheckId
+  const isFuelProofAllChecked =
+    fuelProof.length > 0 && fuelProofCheckIds.length === fuelProof.length
 
   const Deadline = () => {
     CompleteInfoMutation.mutate(
@@ -1155,6 +1489,8 @@ export default function DailyReportRegistrationView() {
 
   const previousWeatherRef = useRef(form.weather)
 
+  console.log('isEditModeisEditMode', isEditMode)
+
   return (
     <>
       <div className="flex gap-10 items-center justify-between">
@@ -1292,167 +1628,306 @@ export default function DailyReportRegistrationView() {
       </div>
 
       {activeTab === '직원' && (
-        <div>
-          <div className="flex justify-between items-center mt-10 mb-2">
-            <span className="font-bold mb-4"> [{activeTab}]</span>
-            <div className="flex gap-4">
-              <CommonButton
-                label="삭제"
-                className="px-7"
-                variant="danger"
-                onClick={() => removeCheckedItems('Employees')}
-                disabled={
-                  isHeadOfficeInfo
-                    ? false // 본사 정보이면 무조건 활성화
-                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
-                }
-              />
-              <CommonButton
-                label="추가"
-                className="px-7"
-                variant="secondary"
-                onClick={() => addItem('Employees')}
-                disabled={
-                  isHeadOfficeInfo
-                    ? false // 본사 정보이면 무조건 활성화
-                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
-                }
-              />
+        <>
+          <div>
+            <div className="flex justify-between items-center mt-10 mb-2">
+              <span className="font-bold mb-4"> [{activeTab}]</span>
+              <div className="flex gap-4">
+                <CommonButton
+                  label="삭제"
+                  className="px-7"
+                  variant="danger"
+                  onClick={() => removeCheckedItems('Employees')}
+                  disabled={
+                    isHeadOfficeInfo
+                      ? false // 본사 정보이면 무조건 활성화
+                      : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                        detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
+                  }
+                />
+                <CommonButton
+                  label="추가"
+                  className="px-7"
+                  variant="secondary"
+                  onClick={() => addItem('Employees')}
+                  disabled={
+                    isHeadOfficeInfo
+                      ? false // 본사 정보이면 무조건 활성화
+                      : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                        detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
+                  }
+                />
+              </div>
             </div>
-          </div>
-          <TableContainer
-            component={Paper}
-            onScroll={(e) => {
-              const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
-              if (scrollHeight - scrollTop <= clientHeight * 1.2) {
-                if (employeesHasNextPage && !employeesFetching) {
-                  employeesFetchNextPage()
+            <TableContainer
+              component={Paper}
+              onScroll={(e) => {
+                const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
+                if (scrollHeight - scrollTop <= clientHeight * 1.2) {
+                  if (employeesHasNextPage && !employeesFetching) {
+                    employeesFetchNextPage()
+                  }
                 }
-              }
-            }}
-          >
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                  <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <Checkbox
-                      checked={isAllChecked}
-                      indeterminate={checkedIds.length > 0 && !isAllChecked}
-                      onChange={(e) => toggleCheckAllItems('Employees', e.target.checked)}
-                      sx={{ color: 'black' }}
-                    />
-                  </TableCell>
-                  {['이름', '작업내용', '공수', '첨부파일', '비고', '등록/수정일'].map((label) => (
-                    <TableCell
-                      key={label}
-                      align="center"
-                      sx={{
-                        backgroundColor: '#D1D5DB',
-                        border: '1px solid  #9CA3AF',
-                        color: 'black',
-                        fontWeight: 'bold',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
-                        label
-                      ) : (
-                        <div className="flex items-center justify-center">
-                          <span>{label}</span>
-                          <span className="text-red-500 ml-1">*</span>
-                        </div>
-                      )}
+              }}
+            >
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <Checkbox
+                        checked={isAllChecked}
+                        indeterminate={checkedIds.length > 0 && !isAllChecked}
+                        onChange={(e) => toggleCheckAllItems('Employees', e.target.checked)}
+                        sx={{ color: 'black' }}
+                      />
                     </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {employees.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                      직원 데이터가 없습니다.
-                    </TableCell>
+                    {['이름', '작업내용', '공수', '첨부파일', '비고', '등록/수정일'].map(
+                      (label) => (
+                        <TableCell
+                          key={label}
+                          align="center"
+                          sx={{
+                            backgroundColor: '#D1D5DB',
+                            border: '1px solid  #9CA3AF',
+                            color: 'black',
+                            fontWeight: 'bold',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
+                            label
+                          ) : (
+                            <div className="flex items-center justify-center">
+                              <span>{label}</span>
+                              <span className="text-red-500 ml-1">*</span>
+                            </div>
+                          )}
+                        </TableCell>
+                      ),
+                    )}
                   </TableRow>
-                ) : (
-                  employees.map((m) => (
-                    <TableRow key={m.id}>
+                </TableHead>
+                <TableBody>
+                  {employees.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                        직원 데이터가 없습니다.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    employees.map((m) => (
+                      <TableRow key={m.id}>
+                        <TableCell
+                          padding="checkbox"
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF' }}
+                        >
+                          <Checkbox
+                            checked={checkedIds.includes(m.id)}
+                            onChange={(e) => toggleCheckItem('Employees', m.id, e.target.checked)}
+                          />
+                        </TableCell>
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <CommonSelect
+                            value={m.laborId || 0}
+                            onChange={async (value) =>
+                              updateItemField('Employees', m.id, 'laborId', value)
+                            }
+                            options={employeeInfoOptions}
+                            onScrollToBottom={() => {
+                              if (employeehasNextPage && !employeeFetching) employeeFetchNextPage()
+                            }}
+                            loading={employeeLoading}
+                          />
+                        </TableCell>
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <TextField
+                            placeholder="텍스트 입력"
+                            size="small"
+                            value={m.workContent}
+                            onChange={(e) =>
+                              updateItemField('Employees', m.id, 'workContent', e.target.value)
+                            }
+                          />
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                        >
+                          <TextField
+                            size="small"
+                            type="number" // type을 number로 변경
+                            placeholder="숫자를 입력해주세요."
+                            inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
+                            value={m.workQuantity ?? ''}
+                            onChange={(e) => {
+                              const value = e.target.value
+                              const numericValue = value === '' ? null : parseFloat(value)
+
+                              // dailyWork 배열 idx 위치 업데이트
+                              updateItemField('Employees', m.id, 'workQuantity', numericValue)
+                            }}
+                            sx={{
+                              height: '100%',
+                              '& .MuiInputBase-root': {
+                                height: '100%',
+                                fontSize: '1rem',
+                              },
+                              '& input': {
+                                textAlign: 'center',
+                                padding: '10px',
+                                MozAppearance: 'textfield', // Firefox
+                                '&::-webkit-outer-spin-button': {
+                                  // Chrome, Safari
+                                  WebkitAppearance: 'none',
+                                  margin: 0,
+                                },
+                                '&::-webkit-inner-spin-button': {
+                                  // Chrome, Safari
+                                  WebkitAppearance: 'none',
+                                  margin: 0,
+                                },
+                              },
+                            }}
+                          />
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                            <CommonFileInput
+                              acceptedExtensions={[
+                                'pdf',
+                                'jpg',
+                                'png',
+                                'hwp',
+                                'xlsx',
+                                'zip',
+                                'jpeg',
+                                'ppt',
+                              ]}
+                              multiple={false}
+                              files={m.files} // 각 항목별 files
+                              onChange={(newFiles) => {
+                                updateItemField('Employees', m.id, 'files', newFiles.slice(0, 1))
+                              }}
+                              uploadTarget="WORK_DAILY_REPORT"
+                            />
+                          </div>
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <TextField
+                            size="small"
+                            placeholder="500자 이하 텍스트 입력"
+                            value={m.memo}
+                            onChange={(e) =>
+                              updateItemField('Employees', m.id, 'memo', e.target.value)
+                            }
+                          />
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', width: '260px' }}
+                        >
+                          <CommonInput
+                            placeholder="-"
+                            value={m.modifyDate ?? ''}
+                            onChange={(value) =>
+                              updateItemField('Employees', m.id, 'modifyDate', value)
+                            }
+                            disabled
+                            className="flex-1"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+
+              {employeesFetching && <div className="p-2 text-center">불러오는 중...</div>}
+            </TableContainer>
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center mt-10 mb-2">
+              <span className="font-bold border-b-2 mb-4">증빙</span>
+              <div className="flex gap-4">
+                <CommonButton
+                  label="삭제"
+                  className="px-7"
+                  variant="danger"
+                  onClick={() => removeCheckedItems('EmployeeFiles')}
+                />
+                <CommonButton
+                  label="추가"
+                  className="px-7"
+                  variant="secondary"
+                  onClick={() => addItem('EmployeeFiles')}
+                />
+              </div>
+            </div>
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <Checkbox
+                        checked={isEmployeeProofAllChecked}
+                        indeterminate={
+                          employeeProofCheckIds.length > 0 && !isEmployeeProofAllChecked
+                        }
+                        onChange={(e) => toggleCheckAllItems('EmployeeFiles', e.target.checked)}
+                        sx={{ color: 'black' }}
+                      />
+                    </TableCell>
+                    {['문서명', '첨부', '비고'].map((label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        {label === '비고' || label === '첨부' || label === '문서명' ? (
+                          label
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {employeeProof.map((m) => (
+                    <TableRow key={m.id} sx={{ border: '1px solid  #9CA3AF' }}>
                       <TableCell
                         padding="checkbox"
                         align="center"
                         sx={{ border: '1px solid  #9CA3AF' }}
                       >
                         <Checkbox
-                          checked={checkedIds.includes(m.id)}
-                          onChange={(e) => toggleCheckItem('Employees', m.id, e.target.checked)}
+                          checked={employeeProofCheckIds.includes(m.id)}
+                          onChange={(e) => toggleCheckItem('EmployeeFiles', m.id, e.target.checked)}
                         />
                       </TableCell>
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        <CommonSelect
-                          value={m.laborId || 0}
-                          onChange={async (value) =>
-                            updateItemField('Employees', m.id, 'laborId', value)
-                          }
-                          options={employeeInfoOptions}
-                          onScrollToBottom={() => {
-                            if (employeehasNextPage && !employeeFetching) employeeFetchNextPage()
-                          }}
-                          loading={employeeLoading}
-                        />
-                      </TableCell>
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
                         <TextField
+                          size="small"
                           placeholder="텍스트 입력"
-                          size="small"
-                          value={m.workContent}
+                          sx={{ width: '100%' }}
+                          value={m.name}
                           onChange={(e) =>
-                            updateItemField('Employees', m.id, 'workContent', e.target.value)
+                            updateItemField('EmployeeFiles', m.id, 'name', e.target.value)
                           }
                         />
                       </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
-                      >
-                        <TextField
-                          size="small"
-                          type="number" // type을 number로 변경
-                          placeholder="숫자를 입력해주세요."
-                          inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
-                          value={m.workQuantity ?? ''}
-                          onChange={(e) => {
-                            const value = e.target.value
-                            const numericValue = value === '' ? null : parseFloat(value)
-
-                            // dailyWork 배열 idx 위치 업데이트
-                            updateItemField('Employees', m.id, 'workQuantity', numericValue)
-                          }}
-                          sx={{
-                            height: '100%',
-                            '& .MuiInputBase-root': {
-                              height: '100%',
-                              fontSize: '1rem',
-                            },
-                            '& input': {
-                              textAlign: 'center',
-                              padding: '10px',
-                              MozAppearance: 'textfield', // Firefox
-                              '&::-webkit-outer-spin-button': {
-                                // Chrome, Safari
-                                WebkitAppearance: 'none',
-                                margin: 0,
-                              },
-                              '&::-webkit-inner-spin-button': {
-                                // Chrome, Safari
-                                WebkitAppearance: 'none',
-                                margin: 0,
-                              },
-                            },
-                          }}
-                        />
-                      </TableCell>
-
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
                           <CommonFileInput
@@ -1469,209 +1944,763 @@ export default function DailyReportRegistrationView() {
                             multiple={false}
                             files={m.files} // 각 항목별 files
                             onChange={(newFiles) => {
-                              updateItemField('Employees', m.id, 'files', newFiles.slice(0, 1))
+                              updateItemField('EmployeeFiles', m.id, 'files', newFiles.slice(0, 1))
                             }}
                             uploadTarget="WORK_DAILY_REPORT"
                           />
                         </div>
                       </TableCell>
-
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <TextField
                           size="small"
                           placeholder="500자 이하 텍스트 입력"
+                          sx={{ width: '100%' }}
                           value={m.memo}
                           onChange={(e) =>
-                            updateItemField('Employees', m.id, 'memo', e.target.value)
+                            updateItemField('EmployeeFiles', m.id, 'memo', e.target.value)
                           }
-                        />
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ border: '1px solid  #9CA3AF', width: '260px' }}
-                      >
-                        <CommonInput
-                          placeholder="-"
-                          value={m.modifyDate ?? ''}
-                          onChange={(value) =>
-                            updateItemField('Employees', m.id, 'modifyDate', value)
-                          }
-                          disabled
-                          className="flex-1"
                         />
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-
-            {employeesFetching && <div className="p-2 text-center">불러오는 중...</div>}
-          </TableContainer>
-        </div>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </div>
+        </>
       )}
 
       {/* 직영/계약직 */}
 
       {activeTab === '직영/계약직' && (
-        <div>
-          <div className="flex justify-between items-center mt-10 mb-2">
-            <span className="font-bold mb-4"> [{activeTab}]</span>
-            <div className="flex gap-4">
-              <CommonButton
-                label="삭제"
-                className="px-7"
-                variant="danger"
-                onClick={() => removeCheckedItems('directContracts')}
-                disabled={
-                  isHeadOfficeInfo
-                    ? false // 본사 정보이면 무조건 활성화
-                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
-                }
-              />
-              <CommonButton
-                label="임시 인력 추가"
-                className="px-7"
-                variant="primary"
-                onClick={() => addTemporaryCheckedItems('directContracts')}
-                disabled={
-                  isHeadOfficeInfo
-                    ? false // 본사 정보이면 무조건 활성화
-                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
-                }
-              />
-              <CommonButton
-                label="추가"
-                className="px-7"
-                variant="secondary"
-                onClick={() => addItem('directContracts')}
-                disabled={
-                  isHeadOfficeInfo
-                    ? false // 본사 정보이면 무조건 활성화
-                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
-                }
-              />
+        <>
+          <div>
+            <div className="flex justify-between items-center mt-10 mb-2">
+              <span className="font-bold mb-4"> [{activeTab}]</span>
+              <div className="flex gap-4">
+                <CommonButton
+                  label="삭제"
+                  className="px-7"
+                  variant="danger"
+                  onClick={() => removeCheckedItems('directContracts')}
+                  disabled={
+                    isHeadOfficeInfo
+                      ? false // 본사 정보이면 무조건 활성화
+                      : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                        detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
+                  }
+                />
+                <CommonButton
+                  label="임시 인력 추가"
+                  className="px-7"
+                  variant="primary"
+                  onClick={() => addTemporaryCheckedItems('directContracts')}
+                  disabled={
+                    isHeadOfficeInfo
+                      ? false // 본사 정보이면 무조건 활성화
+                      : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                        detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
+                  }
+                />
+                <CommonButton
+                  label="추가"
+                  className="px-7"
+                  variant="secondary"
+                  onClick={() => addItem('directContracts')}
+                  disabled={
+                    isHeadOfficeInfo
+                      ? false // 본사 정보이면 무조건 활성화
+                      : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                        detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
+                  }
+                />
+              </div>
             </div>
+
+            <TableContainer
+              component={Paper}
+              onScroll={(e) => {
+                const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
+                if (scrollHeight - scrollTop <= clientHeight * 1.2) {
+                  if (contractHasNextPage && !contractFetching) {
+                    contractFetchNextPage()
+                  }
+                }
+              }}
+            >
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <Checkbox
+                        checked={isContractAllChecked}
+                        indeterminate={ContractCheckedIds.length > 0 && !isContractAllChecked}
+                        onChange={(e) => toggleCheckAllItems('directContracts', e.target.checked)}
+                        sx={{ color: 'black' }}
+                      />
+                    </TableCell>
+                    {[
+                      '업체명',
+                      '이름',
+                      '직급(직책)',
+                      '작업내용',
+                      '이전(기준)단가',
+                      '단가',
+                      '공수',
+                      '첨부파일',
+                      '비고',
+                      '등록/수정일',
+                    ].map((label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
+                          label
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {contractData.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={10} align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                        직영/계약직 데이터가 없습니다.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    contractData.map((m, idx) => (
+                      <TableRow key={`${m.checkId}-${idx}`}>
+                        <TableCell
+                          padding="checkbox"
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF' }}
+                        >
+                          <Checkbox
+                            checked={ContractCheckedIds.includes(m.checkId)}
+                            onChange={(e) =>
+                              toggleCheckItem('directContracts', m.checkId, e.target.checked)
+                            }
+                          />
+                        </TableCell>
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          {m.isTemporary ? (
+                            <TextField
+                              size="small"
+                              fullWidth
+                              value={'라인공영(임시)'}
+                              onChange={(e) =>
+                                updateItemField(
+                                  'directContracts',
+                                  m.checkId,
+                                  'temporaryCompanyName',
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="업체명 입력"
+                              InputProps={{
+                                sx: {
+                                  color: 'red', // 글자색 빨강
+                                  WebkitTextFillColor: 'red', // disabled 상태에서도 빨강 유지
+                                },
+                              }}
+                            />
+                          ) : (
+                            <CommonSelect
+                              fullWidth
+                              value={m.outsourcingCompanyId || 0}
+                              onChange={async (value) => {
+                                const selectedCompany = companyOptions.find(
+                                  (opt) => opt.id === value,
+                                )
+                                if (!selectedCompany) return
+
+                                updateItemField(
+                                  'directContracts',
+                                  m.checkId,
+                                  'outsourcingCompanyId',
+                                  selectedCompany.id,
+                                )
+                              }}
+                              options={companyOptions}
+                              onScrollToBottom={() => {
+                                if (comPanyNamehasNextPage && !comPanyNameFetching)
+                                  comPanyNameFetchNextPage()
+                              }}
+                              loading={comPanyNameLoading}
+                            />
+                          )}
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          {m.isTemporary ? (
+                            <TextField
+                              size="small"
+                              fullWidth
+                              value={m.temporaryLaborName || ''}
+                              onChange={(e) =>
+                                updateItemField(
+                                  'directContracts',
+                                  m.checkId,
+                                  'temporaryLaborName',
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="이름 입력"
+                            />
+                          ) : (
+                            <CommonSelect
+                              value={m.laborId || 0}
+                              onChange={(value) => {
+                                // 선택된 옵션 찾기
+                                const selectedOption = contractNameInfoOptions.find(
+                                  (opt) => opt.id === value,
+                                )
+
+                                if (selectedOption?.isSeverancePayEligible) {
+                                  showSnackbar(
+                                    '해당 직원 근속일이 6개월에 도달했습니다. 퇴직금 발생에 주의하세요.',
+                                    'error',
+                                  )
+                                }
+
+                                updateItemField('directContracts', m.checkId, 'laborId', value)
+                                updateItemField(
+                                  'directContracts',
+                                  m.checkId,
+                                  'previousPrice',
+                                  selectedOption?.previousDailyWage ?? 0, // 선택된 항목의 previousDailyWage 자동 입력
+                                )
+                              }}
+                              options={contractNameInfoOptions}
+                              onScrollToBottom={() => {
+                                if (contractNamehasNextPage && !contractNameFetching)
+                                  contractNameFetchNextPage()
+                              }}
+                              loading={contractNameLoading}
+                            />
+                          )}
+                        </TableCell>
+
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                        >
+                          <TextField
+                            size="small"
+                            placeholder="텍스트 입력"
+                            value={m.position}
+                            onChange={(e) =>
+                              updateItemField(
+                                'directContracts',
+                                m.checkId,
+                                'position',
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                        >
+                          <TextField
+                            size="small"
+                            placeholder="텍스트 입력 "
+                            value={m.workContent}
+                            onChange={(e) =>
+                              updateItemField(
+                                'directContracts',
+                                m.checkId,
+                                'workContent',
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                        >
+                          <TextField
+                            size="small"
+                            value={
+                              m.previousPrice === 0 || m.previousPrice === null
+                                ? ''
+                                : formatNumber(m.previousPrice)
+                            }
+                            onChange={(e) => {
+                              const numericValue =
+                                e.target.value === '' ? null : unformatNumber(e.target.value)
+
+                              updateItemField(
+                                'directContracts',
+                                m.checkId,
+                                'previousPrice',
+                                numericValue,
+                              )
+                            }}
+                            sx={{
+                              height: '100%',
+                              '& .MuiInputBase-root': {
+                                height: '100%',
+                                fontSize: '1rem',
+                              },
+                              '& input': {
+                                backgroundColor: '#E5E7EB', // 연한 회색 (Tailwind gray-200)
+                                color: '#111827', // 진한 글자색 (Tailwind gray-900)
+                                fontWeight: 'bold', // 글자 강조
+                                textAlign: 'center',
+                                padding: '10px',
+                                MozAppearance: 'textfield', // Firefox
+                                '&::-webkit-outer-spin-button': {
+                                  // Chrome, Safari
+                                  WebkitAppearance: 'none',
+                                  margin: 0,
+                                },
+                                '&::-webkit-inner-spin-button': {
+                                  // Chrome, Safari
+                                  WebkitAppearance: 'none',
+                                  margin: 0,
+                                },
+                              },
+                            }}
+                            disabled
+                          />
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                        >
+                          <TextField
+                            size="small"
+                            placeholder="숫자를 입력해주세요."
+                            value={
+                              m.unitPrice === 0 || m.unitPrice === null
+                                ? ''
+                                : formatNumber(m.unitPrice)
+                            }
+                            onChange={(e) => {
+                              const numericValue =
+                                e.target.value === '' ? null : unformatNumber(e.target.value)
+
+                              updateItemField(
+                                'directContracts',
+                                m.checkId,
+                                'unitPrice',
+                                numericValue,
+                              )
+                            }}
+                            sx={{
+                              height: '100%',
+                              '& .MuiInputBase-root': {
+                                height: '100%',
+                                fontSize: '1rem',
+                              },
+                              '& input': {
+                                textAlign: 'center',
+                                padding: '10px',
+                                MozAppearance: 'textfield', // Firefox
+                                '&::-webkit-outer-spin-button': {
+                                  // Chrome, Safari
+                                  WebkitAppearance: 'none',
+                                  margin: 0,
+                                },
+                                '&::-webkit-inner-spin-button': {
+                                  // Chrome, Safari
+                                  WebkitAppearance: 'none',
+                                  margin: 0,
+                                },
+                              },
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                        >
+                          <TextField
+                            size="small"
+                            type="number" // type을 number로 변경
+                            placeholder="숫자를 입력해주세요."
+                            inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
+                            value={m.workQuantity ?? ''}
+                            onChange={(e) => {
+                              const value = e.target.value
+                              const numericValue = value === '' ? null : parseFloat(value)
+
+                              // dailyWork 배열 idx 위치 업데이트
+                              updateItemField(
+                                'directContracts',
+                                m.checkId,
+                                'workQuantity',
+                                numericValue,
+                              )
+                            }}
+                            sx={{
+                              height: '100%',
+                              '& .MuiInputBase-root': {
+                                height: '100%',
+                                fontSize: '1rem',
+                              },
+                              '& input': {
+                                textAlign: 'center',
+                                padding: '10px',
+                                MozAppearance: 'textfield', // Firefox
+                                '&::-webkit-outer-spin-button': {
+                                  // Chrome, Safari
+                                  WebkitAppearance: 'none',
+                                  margin: 0,
+                                },
+                                '&::-webkit-inner-spin-button': {
+                                  // Chrome, Safari
+                                  WebkitAppearance: 'none',
+                                  margin: 0,
+                                },
+                              },
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                            <CommonFileInput
+                              acceptedExtensions={[
+                                'pdf',
+                                'jpg',
+                                'png',
+                                'hwp',
+                                'xlsx',
+                                'zip',
+                                'jpeg',
+                                'ppt',
+                              ]}
+                              multiple={false}
+                              files={m.files} // 각 항목별 files
+                              onChange={(newFiles) =>
+                                updateItemField('directContracts', m.checkId, 'files', newFiles)
+                              }
+                              uploadTarget="WORK_DAILY_REPORT"
+                            />
+                          </div>
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <TextField
+                            size="small"
+                            placeholder="500자 이하 텍스트 입력"
+                            value={m.memo}
+                            onChange={(e) =>
+                              updateItemField('directContracts', m.checkId, 'memo', e.target.value)
+                            }
+                          />
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', width: '260px' }}
+                        >
+                          <CommonInput
+                            placeholder="-"
+                            value={m.modifyDate ?? ''}
+                            onChange={(value) =>
+                              updateItemField('directContracts', m.checkId, 'modifyDate', value)
+                            }
+                            disabled
+                            className="flex-1"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+
+              {employeesFetching && <div className="p-2 text-center">불러오는 중...</div>}
+            </TableContainer>
           </div>
 
-          <TableContainer
-            component={Paper}
-            onScroll={(e) => {
-              const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
-              if (scrollHeight - scrollTop <= clientHeight * 1.2) {
-                if (contractHasNextPage && !contractFetching) {
-                  contractFetchNextPage()
-                }
-              }
-            }}
-          >
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                  <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <Checkbox
-                      checked={isContractAllChecked}
-                      indeterminate={ContractCheckedIds.length > 0 && !isContractAllChecked}
-                      onChange={(e) => toggleCheckAllItems('directContracts', e.target.checked)}
-                      sx={{ color: 'black' }}
-                    />
-                  </TableCell>
-                  {[
-                    '업체명',
-                    '이름',
-                    '직급(직책)',
-                    '작업내용',
-                    '이전(기준)단가',
-                    '단가',
-                    '공수',
-                    '첨부파일',
-                    '비고',
-                    '등록/수정일',
-                  ].map((label) => (
-                    <TableCell
-                      key={label}
-                      align="center"
-                      sx={{
-                        backgroundColor: '#D1D5DB',
-                        border: '1px solid  #9CA3AF',
-                        color: 'black',
-                        fontWeight: 'bold',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
-                        label
-                      ) : (
-                        <div className="flex items-center justify-center">
-                          <span>{label}</span>
-                          <span className="text-red-500 ml-1">*</span>
-                        </div>
-                      )}
+          <div>
+            <div className="flex justify-between items-center mt-10 mb-2">
+              <span className="font-bold border-b-2 mb-4">증빙</span>
+              <div className="flex gap-4">
+                <CommonButton
+                  label="삭제"
+                  className="px-7"
+                  variant="danger"
+                  onClick={() => removeCheckedItems('directContractFiles')}
+                />
+                <CommonButton
+                  label="추가"
+                  className="px-7"
+                  variant="secondary"
+                  onClick={() => addItem('directContractFiles')}
+                />
+              </div>
+            </div>
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <Checkbox
+                        checked={isContractProofAllChecked}
+                        indeterminate={
+                          contractProofCheckIds.length > 0 && !isContractProofAllChecked
+                        }
+                        onChange={(e) =>
+                          toggleCheckAllItems('directContractFiles', e.target.checked)
+                        }
+                        sx={{ color: 'black' }}
+                      />
                     </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {contractData.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={10} align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                      직영/계약직 데이터가 없습니다.
-                    </TableCell>
+                    {['문서명', '첨부', '비고'].map((label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        {label === '비고' || label === '첨부' || label === '문서명' ? (
+                          label
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    ))}
                   </TableRow>
-                ) : (
-                  contractData.map((m, idx) => (
-                    <TableRow key={`${m.checkId}-${idx}`}>
+                </TableHead>
+                <TableBody>
+                  {contractFileProof.map((m) => (
+                    <TableRow key={m.id} sx={{ border: '1px solid  #9CA3AF' }}>
                       <TableCell
                         padding="checkbox"
                         align="center"
                         sx={{ border: '1px solid  #9CA3AF' }}
                       >
                         <Checkbox
-                          checked={ContractCheckedIds.includes(m.checkId)}
+                          checked={contractProofCheckIds.includes(m.id)}
                           onChange={(e) =>
-                            toggleCheckItem('directContracts', m.checkId, e.target.checked)
+                            toggleCheckItem('directContractFiles', m.id, e.target.checked)
+                          }
+                        />
+                      </TableCell>
+                      <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
+                        <TextField
+                          size="small"
+                          placeholder="텍스트 입력"
+                          sx={{ width: '100%' }}
+                          value={m.name}
+                          onChange={(e) =>
+                            updateItemField('directContractFiles', m.id, 'name', e.target.value)
                           }
                         />
                       </TableCell>
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        {m.isTemporary ? (
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={'라인공영(임시)'}
-                            onChange={(e) =>
+                        <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                          <CommonFileInput
+                            acceptedExtensions={[
+                              'pdf',
+                              'jpg',
+                              'png',
+                              'hwp',
+                              'xlsx',
+                              'zip',
+                              'jpeg',
+                              'ppt',
+                            ]}
+                            multiple={false}
+                            files={m.files} // 각 항목별 files
+                            onChange={(newFiles) => {
                               updateItemField(
-                                'directContracts',
-                                m.checkId,
-                                'temporaryCompanyName',
-                                e.target.value,
+                                'directContractFiles',
+                                m.id,
+                                'files',
+                                newFiles.slice(0, 1),
                               )
-                            }
-                            placeholder="업체명 입력"
-                            InputProps={{
-                              sx: {
-                                color: 'red', // 글자색 빨강
-                                WebkitTextFillColor: 'red', // disabled 상태에서도 빨강 유지
-                              },
                             }}
+                            uploadTarget="WORK_DAILY_REPORT"
                           />
+                        </div>
+                      </TableCell>
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="500자 이하 텍스트 입력"
+                          sx={{ width: '100%' }}
+                          value={m.memo}
+                          onChange={(e) =>
+                            updateItemField('directContractFiles', m.id, 'memo', e.target.value)
+                          }
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </div>
+        </>
+      )}
+
+      {activeTab === '외주' && (
+        <>
+          <div>
+            <div className="flex justify-between items-center mt-10 mb-2">
+              <span className="font-bold mb-4"> [{activeTab}]</span>
+              <div className="flex gap-4">
+                <CommonButton
+                  label="삭제"
+                  className="px-7"
+                  variant="danger"
+                  onClick={() => removeCheckedItems('outsourcings')}
+                  disabled={
+                    isHeadOfficeInfo
+                      ? false // 본사 정보이면 무조건 활성화
+                      : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                        detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
+                  }
+                />
+                <CommonButton
+                  label="추가"
+                  className="px-7"
+                  variant="secondary"
+                  onClick={() => addItem('outsourcings')}
+                  disabled={
+                    isHeadOfficeInfo
+                      ? false // 본사 정보이면 무조건 활성화
+                      : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                        detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
+                  }
+                />
+              </div>
+            </div>
+            <TableContainer
+              component={Paper}
+              onScroll={(e) => {
+                const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
+                if (scrollHeight - scrollTop <= clientHeight * 1.2) {
+                  if (outsourcingHasNextPage && !outsourcingFetching) {
+                    outsourcingFetchNextPage()
+                  }
+                }
+              }}
+            >
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <Checkbox
+                        checked={isOutsourcingAllChecked}
+                        indeterminate={checkedOutsourcingIds.length > 0 && !isOutsourcingAllChecked}
+                        onChange={(e) => toggleCheckAllItems('outsourcings', e.target.checked)}
+                        sx={{ color: 'black' }}
+                      />
+                    </TableCell>
+                    {[
+                      '업체명',
+                      '이름',
+                      '구분',
+                      '작업내용',
+                      '공수',
+                      '첨부파일',
+                      '비고',
+                      '등록/수정일',
+                    ].map((label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
+                          label
                         ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+
+                <TableBody>
+                  {resultOutsourcing.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                        외주 데이터가 없습니다.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    resultOutsourcing.map((m) => (
+                      <TableRow key={m.id}>
+                        <TableCell
+                          padding="checkbox"
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF' }}
+                        >
+                          <Checkbox
+                            checked={checkedOutsourcingIds.includes(m.id)}
+                            onChange={(e) =>
+                              toggleCheckItem('outsourcings', m.id, e.target.checked)
+                            }
+                          />
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                           <CommonSelect
                             fullWidth
-                            value={m.outsourcingCompanyId || 0}
+                            value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
                             onChange={async (value) => {
                               const selectedCompany = companyOptions.find((opt) => opt.id === value)
                               if (!selectedCompany) return
 
+                              // 해당 row만 업데이트
+                              setSelectedCompanyIds((prev) => ({
+                                ...prev,
+                                [m.id]: selectedCompany.id,
+                              }))
+
+                              setSelectId(m.id)
+
+                              // 필드 업데이트
                               updateItemField(
-                                'directContracts',
-                                m.checkId,
+                                'outsourcings',
+                                m.id,
                                 'outsourcingCompanyId',
                                 selectedCompany.id,
                               )
+
+                              // 해당 row 워커만 초기화
+                              setSelectedWorkerIds((prev) => ({
+                                ...prev,
+                                [m.id]: 0,
+                              }))
                             }}
                             options={companyOptions}
                             onScrollToBottom={() => {
@@ -1680,542 +2709,251 @@ export default function DailyReportRegistrationView() {
                             }}
                             loading={comPanyNameLoading}
                           />
-                        )}
-                      </TableCell>
+                        </TableCell>
 
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        {m.isTemporary ? (
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <CommonSelect
+                            fullWidth
+                            // value={m.outsourcingCompanyContractWorkerId || 0}
+                            value={
+                              selectedWorkerIds[m.id] || m.outsourcingCompanyContractWorkerId || 0
+                            }
+                            onChange={async (value) => {
+                              const selectedWorker = (
+                                workerOptionsByCompany[m.outsourcingCompanyId] ?? []
+                              ).find((opt) => opt.id === value)
+                              if (!selectedWorker) return
+
+                              updateItemField(
+                                'outsourcings',
+                                m.id,
+                                'outsourcingCompanyContractWorkerId',
+                                selectedWorker.id,
+                              )
+
+                              updateItemField(
+                                'outsourcings',
+                                m.id,
+                                'category',
+                                selectedWorker.category ?? '-', // category 없으면 '-'
+                              )
+                            }}
+                            options={
+                              workerOptionsByCompany[m.outsourcingCompanyId] ?? [
+                                { id: 0, name: '선택', category: '' },
+                              ]
+                            }
+                            onScrollToBottom={() => {
+                              if (workerListHasNextPage && !workerListIsFetching)
+                                workerListFetchNextPage()
+                            }}
+                            loading={workerListLoading}
+                          />
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <TextField
+                            placeholder="텍스트 입력"
+                            size="small"
+                            value={m.category ?? ''}
+                            onChange={(e) =>
+                              updateItemField('outsourcings', m.id, 'category', e.target.value)
+                            }
+                          />
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <TextField
+                            placeholder="텍스트 입력"
+                            size="small"
+                            value={m.workContent}
+                            onChange={(e) =>
+                              updateItemField('outsourcings', m.id, 'workContent', e.target.value)
+                            }
+                          />
+                        </TableCell>
+
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                        >
                           <TextField
                             size="small"
-                            fullWidth
-                            value={m.temporaryLaborName || ''}
+                            type="number" // type을 number로 변경
+                            placeholder="숫자를 입력해주세요."
+                            inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
+                            value={m.workQuantity ?? ''}
+                            onChange={(e) => {
+                              const value = e.target.value
+                              const numericValue = value === '' ? null : parseFloat(value)
+
+                              // dailyWork 배열 idx 위치 업데이트
+                              updateItemField('outsourcings', m.id, 'workQuantity', numericValue)
+                            }}
+                            sx={{
+                              height: '100%',
+                              '& .MuiInputBase-root': {
+                                height: '100%',
+                                fontSize: '1rem',
+                              },
+                              '& input': {
+                                textAlign: 'center',
+                                padding: '10px',
+                                MozAppearance: 'textfield', // Firefox
+                                '&::-webkit-outer-spin-button': {
+                                  // Chrome, Safari
+                                  WebkitAppearance: 'none',
+                                  margin: 0,
+                                },
+                                '&::-webkit-inner-spin-button': {
+                                  // Chrome, Safari
+                                  WebkitAppearance: 'none',
+                                  margin: 0,
+                                },
+                              },
+                            }}
+                          />
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                            <CommonFileInput
+                              acceptedExtensions={[
+                                'pdf',
+                                'jpg',
+                                'png',
+                                'hwp',
+                                'xlsx',
+                                'zip',
+                                'jpeg',
+                                'ppt',
+                              ]}
+                              multiple={false}
+                              files={m.files} // 각 항목별 files
+                              onChange={(newFiles) => {
+                                updateItemField('outsourcings', m.id, 'files', newFiles.slice(0, 1))
+                              }}
+                              uploadTarget="WORK_DAILY_REPORT"
+                            />
+                          </div>
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <TextField
+                            size="small"
+                            placeholder="500자 이하 텍스트 입력"
+                            value={m.memo}
                             onChange={(e) =>
-                              updateItemField(
-                                'directContracts',
-                                m.checkId,
-                                'temporaryLaborName',
-                                e.target.value,
-                              )
+                              updateItemField('outsourcings', m.id, 'memo', e.target.value)
                             }
-                            placeholder="이름 입력"
                           />
+                        </TableCell>
+
+                        {/* 등록/수정일 (임시: Date.now 기준) */}
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', width: '260px' }}
+                        >
+                          <CommonInput
+                            placeholder="-"
+                            value={m.modifyDate ?? ''}
+                            onChange={(value) =>
+                              updateItemField('outsourcings', m.id, 'modifyDate', value)
+                            }
+                            disabled
+                            className="flex-1"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+              {outsourcingFetching && <div className="p-2 text-center">불러오는 중...</div>}
+            </TableContainer>
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center mt-10 mb-2">
+              <span className="font-bold border-b-2 mb-4">증빙</span>
+              <div className="flex gap-4">
+                <CommonButton
+                  label="삭제"
+                  className="px-7"
+                  variant="danger"
+                  onClick={() => removeCheckedItems('outsourcingFiles')}
+                />
+                <CommonButton
+                  label="추가"
+                  className="px-7"
+                  variant="secondary"
+                  onClick={() => addItem('outsourcingFiles')}
+                />
+              </div>
+            </div>
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <Checkbox
+                        checked={isOutSourcingProofAllChecked}
+                        indeterminate={
+                          outSourcingProofCheckIds.length > 0 && !isOutSourcingProofAllChecked
+                        }
+                        onChange={(e) => toggleCheckAllItems('outsourcingFiles', e.target.checked)}
+                        sx={{ color: 'black' }}
+                      />
+                    </TableCell>
+                    {['문서명', '첨부', '비고'].map((label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        {label === '비고' || label === '첨부' || label === '문서명' ? (
+                          label
                         ) : (
-                          <CommonSelect
-                            value={m.laborId || 0}
-                            onChange={(value) => {
-                              // 선택된 옵션 찾기
-                              const selectedOption = contractNameInfoOptions.find(
-                                (opt) => opt.id === value,
-                              )
-
-                              if (selectedOption?.isSeverancePayEligible) {
-                                showSnackbar(
-                                  '해당 직원 근속일이 6개월에 도달했습니다. 퇴직금 발생에 주의하세요.',
-                                  'error',
-                                )
-                              }
-
-                              updateItemField('directContracts', m.checkId, 'laborId', value)
-                              updateItemField(
-                                'directContracts',
-                                m.checkId,
-                                'previousPrice',
-                                selectedOption?.previousDailyWage ?? 0, // 선택된 항목의 previousDailyWage 자동 입력
-                              )
-                            }}
-                            options={contractNameInfoOptions}
-                            onScrollToBottom={() => {
-                              if (contractNamehasNextPage && !contractNameFetching)
-                                contractNameFetchNextPage()
-                            }}
-                            loading={contractNameLoading}
-                          />
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
                         )}
                       </TableCell>
-
-                      <TableCell
-                        align="center"
-                        sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
-                      >
-                        <TextField
-                          size="small"
-                          placeholder="텍스트 입력"
-                          value={m.position}
-                          onChange={(e) =>
-                            updateItemField(
-                              'directContracts',
-                              m.checkId,
-                              'position',
-                              e.target.value,
-                            )
-                          }
-                        />
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
-                      >
-                        <TextField
-                          size="small"
-                          placeholder="텍스트 입력 "
-                          value={m.workContent}
-                          onChange={(e) =>
-                            updateItemField(
-                              'directContracts',
-                              m.checkId,
-                              'workContent',
-                              e.target.value,
-                            )
-                          }
-                        />
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
-                      >
-                        <TextField
-                          size="small"
-                          value={
-                            m.previousPrice === 0 || m.previousPrice === null
-                              ? ''
-                              : formatNumber(m.previousPrice)
-                          }
-                          onChange={(e) => {
-                            const numericValue =
-                              e.target.value === '' ? null : unformatNumber(e.target.value)
-
-                            updateItemField(
-                              'directContracts',
-                              m.checkId,
-                              'previousPrice',
-                              numericValue,
-                            )
-                          }}
-                          sx={{
-                            height: '100%',
-                            '& .MuiInputBase-root': {
-                              height: '100%',
-                              fontSize: '1rem',
-                            },
-                            '& input': {
-                              backgroundColor: '#E5E7EB', // 연한 회색 (Tailwind gray-200)
-                              color: '#111827', // 진한 글자색 (Tailwind gray-900)
-                              fontWeight: 'bold', // 글자 강조
-                              textAlign: 'center',
-                              padding: '10px',
-                              MozAppearance: 'textfield', // Firefox
-                              '&::-webkit-outer-spin-button': {
-                                // Chrome, Safari
-                                WebkitAppearance: 'none',
-                                margin: 0,
-                              },
-                              '&::-webkit-inner-spin-button': {
-                                // Chrome, Safari
-                                WebkitAppearance: 'none',
-                                margin: 0,
-                              },
-                            },
-                          }}
-                          disabled
-                        />
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
-                      >
-                        <TextField
-                          size="small"
-                          placeholder="숫자를 입력해주세요."
-                          value={
-                            m.unitPrice === 0 || m.unitPrice === null
-                              ? ''
-                              : formatNumber(m.unitPrice)
-                          }
-                          onChange={(e) => {
-                            const numericValue =
-                              e.target.value === '' ? null : unformatNumber(e.target.value)
-
-                            updateItemField('directContracts', m.checkId, 'unitPrice', numericValue)
-                          }}
-                          sx={{
-                            height: '100%',
-                            '& .MuiInputBase-root': {
-                              height: '100%',
-                              fontSize: '1rem',
-                            },
-                            '& input': {
-                              textAlign: 'center',
-                              padding: '10px',
-                              MozAppearance: 'textfield', // Firefox
-                              '&::-webkit-outer-spin-button': {
-                                // Chrome, Safari
-                                WebkitAppearance: 'none',
-                                margin: 0,
-                              },
-                              '&::-webkit-inner-spin-button': {
-                                // Chrome, Safari
-                                WebkitAppearance: 'none',
-                                margin: 0,
-                              },
-                            },
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
-                      >
-                        <TextField
-                          size="small"
-                          type="number" // type을 number로 변경
-                          placeholder="숫자를 입력해주세요."
-                          inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
-                          value={m.workQuantity ?? ''}
-                          onChange={(e) => {
-                            const value = e.target.value
-                            const numericValue = value === '' ? null : parseFloat(value)
-
-                            // dailyWork 배열 idx 위치 업데이트
-                            updateItemField(
-                              'directContracts',
-                              m.checkId,
-                              'workQuantity',
-                              numericValue,
-                            )
-                          }}
-                          sx={{
-                            height: '100%',
-                            '& .MuiInputBase-root': {
-                              height: '100%',
-                              fontSize: '1rem',
-                            },
-                            '& input': {
-                              textAlign: 'center',
-                              padding: '10px',
-                              MozAppearance: 'textfield', // Firefox
-                              '&::-webkit-outer-spin-button': {
-                                // Chrome, Safari
-                                WebkitAppearance: 'none',
-                                margin: 0,
-                              },
-                              '&::-webkit-inner-spin-button': {
-                                // Chrome, Safari
-                                WebkitAppearance: 'none',
-                                margin: 0,
-                              },
-                            },
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
-                          <CommonFileInput
-                            acceptedExtensions={[
-                              'pdf',
-                              'jpg',
-                              'png',
-                              'hwp',
-                              'xlsx',
-                              'zip',
-                              'jpeg',
-                              'ppt',
-                            ]}
-                            multiple={false}
-                            files={m.files} // 각 항목별 files
-                            onChange={(newFiles) =>
-                              updateItemField('directContracts', m.checkId, 'files', newFiles)
-                            }
-                            uploadTarget="WORK_DAILY_REPORT"
-                          />
-                        </div>
-                      </TableCell>
-
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        <TextField
-                          size="small"
-                          placeholder="500자 이하 텍스트 입력"
-                          value={m.memo}
-                          onChange={(e) =>
-                            updateItemField('directContracts', m.checkId, 'memo', e.target.value)
-                          }
-                        />
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ border: '1px solid  #9CA3AF', width: '260px' }}
-                      >
-                        <CommonInput
-                          placeholder="-"
-                          value={m.modifyDate ?? ''}
-                          onChange={(value) =>
-                            updateItemField('directContracts', m.checkId, 'modifyDate', value)
-                          }
-                          disabled
-                          className="flex-1"
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-
-            {employeesFetching && <div className="p-2 text-center">불러오는 중...</div>}
-          </TableContainer>
-        </div>
-      )}
-
-      {activeTab === '외주' && (
-        <div>
-          <div className="flex justify-between items-center mt-10 mb-2">
-            <span className="font-bold mb-4"> [{activeTab}]</span>
-            <div className="flex gap-4">
-              <CommonButton
-                label="삭제"
-                className="px-7"
-                variant="danger"
-                onClick={() => removeCheckedItems('outsourcings')}
-                disabled={
-                  isHeadOfficeInfo
-                    ? false // 본사 정보이면 무조건 활성화
-                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
-                }
-              />
-              <CommonButton
-                label="추가"
-                className="px-7"
-                variant="secondary"
-                onClick={() => addItem('outsourcings')}
-                disabled={
-                  isHeadOfficeInfo
-                    ? false // 본사 정보이면 무조건 활성화
-                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
-                }
-              />
-            </div>
-          </div>
-          <TableContainer
-            component={Paper}
-            onScroll={(e) => {
-              const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
-              if (scrollHeight - scrollTop <= clientHeight * 1.2) {
-                if (outsourcingHasNextPage && !outsourcingFetching) {
-                  outsourcingFetchNextPage()
-                }
-              }
-            }}
-          >
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                  <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <Checkbox
-                      checked={isOutsourcingAllChecked}
-                      indeterminate={checkedOutsourcingIds.length > 0 && !isOutsourcingAllChecked}
-                      onChange={(e) => toggleCheckAllItems('outsourcings', e.target.checked)}
-                      sx={{ color: 'black' }}
-                    />
-                  </TableCell>
-                  {[
-                    '업체명',
-                    '이름',
-                    '구분',
-                    '작업내용',
-                    '공수',
-                    '첨부파일',
-                    '비고',
-                    '등록/수정일',
-                  ].map((label) => (
-                    <TableCell
-                      key={label}
-                      align="center"
-                      sx={{
-                        backgroundColor: '#D1D5DB',
-                        border: '1px solid  #9CA3AF',
-                        color: 'black',
-                        fontWeight: 'bold',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
-                        label
-                      ) : (
-                        <div className="flex items-center justify-center">
-                          <span>{label}</span>
-                          <span className="text-red-500 ml-1">*</span>
-                        </div>
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-
-              <TableBody>
-                {resultOutsourcing.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                      외주 데이터가 없습니다.
-                    </TableCell>
+                    ))}
                   </TableRow>
-                ) : (
-                  resultOutsourcing.map((m) => (
-                    <TableRow key={m.id}>
+                </TableHead>
+                <TableBody>
+                  {outSourcingFileProof.map((m) => (
+                    <TableRow key={m.id} sx={{ border: '1px solid  #9CA3AF' }}>
                       <TableCell
                         padding="checkbox"
                         align="center"
                         sx={{ border: '1px solid  #9CA3AF' }}
                       >
                         <Checkbox
-                          checked={checkedOutsourcingIds.includes(m.id)}
-                          onChange={(e) => toggleCheckItem('outsourcings', m.id, e.target.checked)}
-                        />
-                      </TableCell>
-
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        <CommonSelect
-                          fullWidth
-                          value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
-                          onChange={async (value) => {
-                            const selectedCompany = companyOptions.find((opt) => opt.id === value)
-                            if (!selectedCompany) return
-
-                            // 해당 row만 업데이트
-                            setSelectedCompanyIds((prev) => ({
-                              ...prev,
-                              [m.id]: selectedCompany.id,
-                            }))
-
-                            setSelectId(m.id)
-
-                            // 필드 업데이트
-                            updateItemField(
-                              'outsourcings',
-                              m.id,
-                              'outsourcingCompanyId',
-                              selectedCompany.id,
-                            )
-
-                            // 해당 row 워커만 초기화
-                            setSelectedWorkerIds((prev) => ({
-                              ...prev,
-                              [m.id]: 0,
-                            }))
-                          }}
-                          options={companyOptions}
-                          onScrollToBottom={() => {
-                            if (comPanyNamehasNextPage && !comPanyNameFetching)
-                              comPanyNameFetchNextPage()
-                          }}
-                          loading={comPanyNameLoading}
-                        />
-                      </TableCell>
-
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        <CommonSelect
-                          fullWidth
-                          // value={m.outsourcingCompanyContractWorkerId || 0}
-                          value={
-                            selectedWorkerIds[m.id] || m.outsourcingCompanyContractWorkerId || 0
-                          }
-                          onChange={async (value) => {
-                            const selectedWorker = (
-                              workerOptionsByCompany[m.outsourcingCompanyId] ?? []
-                            ).find((opt) => opt.id === value)
-                            if (!selectedWorker) return
-
-                            updateItemField(
-                              'outsourcings',
-                              m.id,
-                              'outsourcingCompanyContractWorkerId',
-                              selectedWorker.id,
-                            )
-
-                            updateItemField(
-                              'outsourcings',
-                              m.id,
-                              'category',
-                              selectedWorker.category ?? '-', // category 없으면 '-'
-                            )
-                          }}
-                          options={
-                            workerOptionsByCompany[m.outsourcingCompanyId] ?? [
-                              { id: 0, name: '선택', category: '' },
-                            ]
-                          }
-                          onScrollToBottom={() => {
-                            if (workerListHasNextPage && !workerListIsFetching)
-                              workerListFetchNextPage()
-                          }}
-                          loading={workerListLoading}
-                        />
-                      </TableCell>
-
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        <TextField
-                          placeholder="텍스트 입력"
-                          size="small"
-                          value={m.category ?? ''}
+                          checked={outSourcingProofCheckIds.includes(m.id)}
                           onChange={(e) =>
-                            updateItemField('outsourcings', m.id, 'category', e.target.value)
+                            toggleCheckItem('outsourcingFiles', m.id, e.target.checked)
                           }
                         />
                       </TableCell>
-
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
                         <TextField
+                          size="small"
                           placeholder="텍스트 입력"
-                          size="small"
-                          value={m.workContent}
+                          sx={{ width: '100%' }}
+                          value={m.name}
                           onChange={(e) =>
-                            updateItemField('outsourcings', m.id, 'workContent', e.target.value)
+                            updateItemField('outsourcingFiles', m.id, 'name', e.target.value)
                           }
                         />
                       </TableCell>
-
-                      <TableCell
-                        align="center"
-                        sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
-                      >
-                        <TextField
-                          size="small"
-                          type="number" // type을 number로 변경
-                          placeholder="숫자를 입력해주세요."
-                          inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
-                          value={m.workQuantity ?? ''}
-                          onChange={(e) => {
-                            const value = e.target.value
-                            const numericValue = value === '' ? null : parseFloat(value)
-
-                            // dailyWork 배열 idx 위치 업데이트
-                            updateItemField('outsourcings', m.id, 'workQuantity', numericValue)
-                          }}
-                          sx={{
-                            height: '100%',
-                            '& .MuiInputBase-root': {
-                              height: '100%',
-                              fontSize: '1rem',
-                            },
-                            '& input': {
-                              textAlign: 'center',
-                              padding: '10px',
-                              MozAppearance: 'textfield', // Firefox
-                              '&::-webkit-outer-spin-button': {
-                                // Chrome, Safari
-                                WebkitAppearance: 'none',
-                                margin: 0,
-                              },
-                              '&::-webkit-inner-spin-button': {
-                                // Chrome, Safari
-                                WebkitAppearance: 'none',
-                                margin: 0,
-                              },
-                            },
-                          }}
-                        />
-                      </TableCell>
-
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
                           <CommonFileInput
@@ -2232,693 +2970,969 @@ export default function DailyReportRegistrationView() {
                             multiple={false}
                             files={m.files} // 각 항목별 files
                             onChange={(newFiles) => {
-                              updateItemField('outsourcings', m.id, 'files', newFiles.slice(0, 1))
+                              updateItemField(
+                                'outsourcingFiles',
+                                m.id,
+                                'files',
+                                newFiles.slice(0, 1),
+                              )
                             }}
                             uploadTarget="WORK_DAILY_REPORT"
                           />
                         </div>
                       </TableCell>
-
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <TextField
                           size="small"
                           placeholder="500자 이하 텍스트 입력"
+                          sx={{ width: '100%' }}
                           value={m.memo}
                           onChange={(e) =>
-                            updateItemField('outsourcings', m.id, 'memo', e.target.value)
+                            updateItemField('outsourcingFiles', m.id, 'memo', e.target.value)
                           }
-                        />
-                      </TableCell>
-
-                      {/* 등록/수정일 (임시: Date.now 기준) */}
-                      <TableCell
-                        align="center"
-                        sx={{ border: '1px solid  #9CA3AF', width: '260px' }}
-                      >
-                        <CommonInput
-                          placeholder="-"
-                          value={m.modifyDate ?? ''}
-                          onChange={(value) =>
-                            updateItemField('outsourcings', m.id, 'modifyDate', value)
-                          }
-                          disabled
-                          className="flex-1"
                         />
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-            {outsourcingFetching && <div className="p-2 text-center">불러오는 중...</div>}
-          </TableContainer>
-        </div>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </div>
+        </>
       )}
 
       {activeTab === '장비' && (
-        <div>
-          <div className="flex justify-between items-center mt-10 mb-2">
-            <span className="font-bold mb-4"> [{activeTab}]</span>
-            <div className="flex gap-4">
-              <CommonButton
-                label="삭제"
-                className="px-7"
-                variant="danger"
-                onClick={() => removeCheckedItems('equipment')}
-                disabled={
-                  isHeadOfficeInfo
-                    ? false // 본사 정보이면 무조건 활성화
-                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
-                }
-              />
-              <CommonButton
-                label="추가"
-                className="px-7"
-                variant="secondary"
-                onClick={() => addItem('equipment')}
-                disabled={
-                  isHeadOfficeInfo
-                    ? false // 본사 정보이면 무조건 활성화
-                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
-                }
-              />
+        <>
+          <div>
+            <div className="flex justify-between items-center mt-10 mb-2">
+              <span className="font-bold mb-4"> [{activeTab}]</span>
+              <div className="flex gap-4">
+                <CommonButton
+                  label="삭제"
+                  className="px-7"
+                  variant="danger"
+                  onClick={() => removeCheckedItems('equipment')}
+                  disabled={
+                    isHeadOfficeInfo
+                      ? false // 본사 정보이면 무조건 활성화
+                      : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                        detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
+                  }
+                />
+                <CommonButton
+                  label="추가"
+                  className="px-7"
+                  variant="secondary"
+                  onClick={() => addItem('equipment')}
+                  disabled={
+                    isHeadOfficeInfo
+                      ? false // 본사 정보이면 무조건 활성화
+                      : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                        detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
+                  }
+                />
+              </div>
             </div>
+
+            <TableContainer
+              component={Paper}
+              onScroll={(e) => {
+                const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
+                if (scrollHeight - scrollTop <= clientHeight * 1.2) {
+                  if (equipmentHasNextPage && !equipmentFetching) {
+                    equipmentFetchNextPage()
+                  }
+                }
+              }}
+            >
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <Checkbox
+                        checked={isEquipmentAllChecked}
+                        indeterminate={checkedEquipmentIds.length > 0 && !isEquipmentAllChecked}
+                        onChange={(e) => toggleCheckAllItems('equipment', e.target.checked)}
+                        sx={{ color: 'black' }}
+                      />
+                    </TableCell>
+                    {[
+                      '업체명',
+                      '기사명',
+                      '차량번호',
+                      '규격',
+                      '구분',
+                      '작업내용',
+                      '단가',
+                      '시간',
+                      '첨부파일',
+                      '비고',
+                      '등록/수정일',
+                    ].map((label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
+                          label
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+
+                <TableBody>
+                  {equipmentData.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={11} align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                        장비 데이터가 없습니다.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    equipmentData.map((m) => (
+                      <TableRow key={m.id}>
+                        <TableCell
+                          padding="checkbox"
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF' }}
+                        >
+                          <Checkbox
+                            checked={checkedEquipmentIds.includes(m.id)}
+                            onChange={(e) => toggleCheckItem('equipment', m.id, e.target.checked)}
+                          />
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <CommonSelect
+                            fullWidth
+                            value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
+                            onChange={async (value) => {
+                              const selectedCompany = withEquipmentInfoOptions.find(
+                                (opt) => opt.id === value,
+                              )
+                              if (!selectedCompany) return
+
+                              // 해당 row만 업데이트
+                              setSelectedCompanyIds((prev) => ({
+                                ...prev,
+                                [m.id]: selectedCompany.id,
+                              }))
+
+                              setSelectId(m.id)
+
+                              updateItemField(
+                                'equipment',
+                                m.id,
+                                'outsourcingCompanyId',
+                                selectedCompany.id,
+                              )
+
+                              // 해당 row 기사, 차량 초기화
+                              setSelectedDriverIds((prev) => ({
+                                ...prev,
+                                [m.id]: 0,
+                              }))
+
+                              setSelectedCarNumberIds((prev) => ({
+                                ...prev,
+                                [m.id]: 0,
+                              }))
+
+                              // 차량 값도 추가
+                            }}
+                            options={withEquipmentInfoOptions}
+                            onScrollToBottom={() => {
+                              if (withEquipmenthasNextPage && !withEquipmentFetching)
+                                withEquipmentFetchNextPage()
+                            }}
+                            loading={withEquipmentLoading}
+                          />
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <CommonSelect
+                            fullWidth
+                            value={
+                              selectedDriverIds[m.id] || m.outsourcingCompanyContractDriverId || 0
+                            }
+                            onChange={async (value) => {
+                              const selectedDriver = (
+                                driverOptionsByCompany[m.outsourcingCompanyId] ?? []
+                              ).find((opt) => opt.id === value)
+
+                              if (!selectedDriver) return
+
+                              updateItemField(
+                                'equipment',
+                                m.id,
+                                'outsourcingCompanyContractDriverId',
+                                selectedDriver.id,
+                              )
+                            }}
+                            options={
+                              driverOptionsByCompany[m.outsourcingCompanyId] ?? [
+                                { id: 0, name: '선택', category: '' },
+                              ]
+                            }
+                            onScrollToBottom={() => {
+                              if (fuelDriverHasNextPage && !fuelDriverIsFetching)
+                                fuelDriverFetchNextPage()
+                            }}
+                            loading={fuelDriverLoading}
+                          />
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <CommonSelect
+                            fullWidth
+                            value={
+                              selectedCarNumberIds[m.id] ||
+                              m.outsourcingCompanyContractEquipmentId ||
+                              0
+                            }
+                            onChange={async (value) => {
+                              const selectedCarNumber = (
+                                carNumberOptionsByCompany[m.outsourcingCompanyId] ?? []
+                              ).find((opt) => opt.id === value)
+
+                              if (!selectedCarNumber) return
+
+                              updateItemField(
+                                'equipment',
+                                m.id,
+                                'outsourcingCompanyContractEquipmentId',
+                                selectedCarNumber.id,
+                              )
+
+                              updateItemField(
+                                'equipment',
+                                m.id,
+                                'specificationName',
+                                selectedCarNumber.specification || '',
+                              )
+
+                              updateItemField(
+                                'equipment',
+                                m.id,
+                                'type',
+                                selectedCarNumber.category || '-', // type 없으면 '-'
+                              )
+                            }}
+                            options={
+                              carNumberOptionsByCompany[m.outsourcingCompanyId] ?? [
+                                { id: 0, name: '선택', category: '' },
+                              ]
+                            }
+                            onScrollToBottom={() => {
+                              if (fuelEquipmentHasNextPage && !fuelEquipmentIsFetching)
+                                fuelEquipmentFetchNextPage()
+                            }}
+                            loading={fuelEquipmentLoading}
+                          />
+                        </TableCell>
+
+                        {/* 규격 */}
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          {m.specificationName ?? '-'}
+                        </TableCell>
+
+                        {/* 구분 */}
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          {m.type ?? '-'}
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <TextField
+                            size="small"
+                            placeholder="텍스트 입력"
+                            value={m.workContent}
+                            onChange={(e) =>
+                              updateItemField('equipment', m.id, 'workContent', e.target.value)
+                            }
+                          />
+                        </TableCell>
+
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                        >
+                          <TextField
+                            size="small"
+                            placeholder="숫자만"
+                            value={formatNumber(m.unitPrice)}
+                            onChange={(e) => {
+                              const numericValue = unformatNumber(e.target.value)
+                              updateItemField('equipment', m.id, 'unitPrice', numericValue)
+                            }}
+                            inputProps={{
+                              inputMode: 'numeric',
+                              pattern: '[0-9]*',
+                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                            }}
+                            fullWidth
+                          />
+                        </TableCell>
+
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                        >
+                          <TextField
+                            size="small"
+                            type="number" // type을 number로 변경
+                            placeholder="숫자를 입력해주세요."
+                            inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
+                            value={m.workHours === 0 || m.workHours === null ? '' : m.workHours}
+                            onChange={(e) => {
+                              const value = e.target.value
+                              const numericValue = value === '' ? null : parseFloat(value)
+
+                              // dailyWork 배열 idx 위치 업데이트
+                              updateItemField('equipment', m.id, 'workHours', numericValue)
+                            }}
+                            sx={{
+                              height: '100%',
+                              '& .MuiInputBase-root': {
+                                height: '100%',
+                                fontSize: '1rem',
+                              },
+                              '& input': {
+                                textAlign: 'center',
+                                padding: '10px',
+                                MozAppearance: 'textfield', // Firefox
+                                '&::-webkit-outer-spin-button': {
+                                  // Chrome, Safari
+                                  WebkitAppearance: 'none',
+                                  margin: 0,
+                                },
+                                '&::-webkit-inner-spin-button': {
+                                  // Chrome, Safari
+                                  WebkitAppearance: 'none',
+                                  margin: 0,
+                                },
+                              },
+                            }}
+                          />
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                            <CommonFileInput
+                              acceptedExtensions={[
+                                'pdf',
+                                'jpg',
+                                'png',
+                                'hwp',
+                                'xlsx',
+                                'zip',
+                                'jpeg',
+                                'ppt',
+                              ]}
+                              multiple={false}
+                              files={m.files} // 각 항목별 files
+                              onChange={(newFiles) => {
+                                updateItemField('equipment', m.id, 'files', newFiles.slice(0, 1))
+                              }}
+                              uploadTarget="WORK_DAILY_REPORT"
+                            />
+                          </div>
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <TextField
+                            size="small"
+                            placeholder="500자 이하 텍스트 입력"
+                            value={m.memo}
+                            onChange={(e) =>
+                              updateItemField('equipment', m.id, 'memo', e.target.value)
+                            }
+                          />
+                        </TableCell>
+
+                        {/* 등록/수정일 (임시: Date.now 기준) */}
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', width: '260px' }}
+                        >
+                          <CommonInput
+                            placeholder="-"
+                            value={m.modifyDate ?? ''}
+                            onChange={(value) =>
+                              updateItemField('equipment', m.id, 'modifyDate', value)
+                            }
+                            disabled
+                            className="flex-1"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+
+              {equipmentFetching && <div className="p-2 text-center">불러오는 중...</div>}
+            </TableContainer>
           </div>
 
-          <TableContainer
-            component={Paper}
-            onScroll={(e) => {
-              const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
-              if (scrollHeight - scrollTop <= clientHeight * 1.2) {
-                if (equipmentHasNextPage && !equipmentFetching) {
-                  equipmentFetchNextPage()
-                }
-              }
-            }}
-          >
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                  <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <Checkbox
-                      checked={isEquipmentAllChecked}
-                      indeterminate={checkedEquipmentIds.length > 0 && !isEquipmentAllChecked}
-                      onChange={(e) => toggleCheckAllItems('equipment', e.target.checked)}
-                      sx={{ color: 'black' }}
-                    />
-                  </TableCell>
-                  {[
-                    '업체명',
-                    '기사명',
-                    '차량번호',
-                    '규격',
-                    '구분',
-                    '작업내용',
-                    '단가',
-                    '시간',
-                    '비고',
-                    '등록/수정일',
-                  ].map((label) => (
-                    <TableCell
-                      key={label}
-                      align="center"
-                      sx={{
-                        backgroundColor: '#D1D5DB',
-                        border: '1px solid  #9CA3AF',
-                        color: 'black',
-                        fontWeight: 'bold',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {label === '비고' || label === '등록/수정일' ? (
-                        label
-                      ) : (
-                        <div className="flex items-center justify-center">
-                          <span>{label}</span>
-                          <span className="text-red-500 ml-1">*</span>
-                        </div>
-                      )}
+          <div>
+            <div className="flex justify-between items-center mt-10 mb-2">
+              <span className="font-bold border-b-2 mb-4">증빙</span>
+              <div className="flex gap-4">
+                <CommonButton
+                  label="삭제"
+                  className="px-7"
+                  variant="danger"
+                  onClick={() => removeCheckedItems('equipmentFile')}
+                />
+                <CommonButton
+                  label="추가"
+                  className="px-7"
+                  variant="secondary"
+                  onClick={() => addItem('equipmentFile')}
+                />
+              </div>
+            </div>
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <Checkbox
+                        checked={isEquipmentProofAllChecked}
+                        indeterminate={
+                          equipmentProofCheckIds.length > 0 && !isEquipmentProofAllChecked
+                        }
+                        onChange={(e) => toggleCheckAllItems('equipmentFile', e.target.checked)}
+                        sx={{ color: 'black' }}
+                      />
                     </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-
-              <TableBody>
-                {equipmentData.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={11} align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                      장비 데이터가 없습니다.
-                    </TableCell>
+                    {['문서명', '첨부', '비고'].map((label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        {label === '비고' || label === '첨부' || label === '문서명' ? (
+                          label
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    ))}
                   </TableRow>
-                ) : (
-                  equipmentData.map((m) => (
-                    <TableRow key={m.id}>
+                </TableHead>
+                <TableBody>
+                  {equipmentProof.map((m) => (
+                    <TableRow key={m.id} sx={{ border: '1px solid  #9CA3AF' }}>
                       <TableCell
                         padding="checkbox"
                         align="center"
                         sx={{ border: '1px solid  #9CA3AF' }}
                       >
                         <Checkbox
-                          checked={checkedEquipmentIds.includes(m.id)}
-                          onChange={(e) => toggleCheckItem('equipment', m.id, e.target.checked)}
+                          checked={equipmentProofCheckIds.includes(m.id)}
+                          onChange={(e) => toggleCheckItem('equipmentFile', m.id, e.target.checked)}
                         />
                       </TableCell>
-
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        <CommonSelect
-                          fullWidth
-                          value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
-                          onChange={async (value) => {
-                            const selectedCompany = withEquipmentInfoOptions.find(
-                              (opt) => opt.id === value,
-                            )
-                            if (!selectedCompany) return
-
-                            // 해당 row만 업데이트
-                            setSelectedCompanyIds((prev) => ({
-                              ...prev,
-                              [m.id]: selectedCompany.id,
-                            }))
-
-                            setSelectId(m.id)
-
-                            updateItemField(
-                              'equipment',
-                              m.id,
-                              'outsourcingCompanyId',
-                              selectedCompany.id,
-                            )
-
-                            // 해당 row 기사, 차량 초기화
-                            setSelectedDriverIds((prev) => ({
-                              ...prev,
-                              [m.id]: 0,
-                            }))
-
-                            setSelectedCarNumberIds((prev) => ({
-                              ...prev,
-                              [m.id]: 0,
-                            }))
-
-                            // 차량 값도 추가
-                          }}
-                          options={withEquipmentInfoOptions}
-                          onScrollToBottom={() => {
-                            if (withEquipmenthasNextPage && !withEquipmentFetching)
-                              withEquipmentFetchNextPage()
-                          }}
-                          loading={withEquipmentLoading}
-                        />
-                      </TableCell>
-
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        <CommonSelect
-                          fullWidth
-                          value={
-                            selectedDriverIds[m.id] || m.outsourcingCompanyContractDriverId || 0
-                          }
-                          onChange={async (value) => {
-                            const selectedDriver = (
-                              driverOptionsByCompany[m.outsourcingCompanyId] ?? []
-                            ).find((opt) => opt.id === value)
-
-                            if (!selectedDriver) return
-
-                            updateItemField(
-                              'equipment',
-                              m.id,
-                              'outsourcingCompanyContractDriverId',
-                              selectedDriver.id,
-                            )
-                          }}
-                          options={
-                            driverOptionsByCompany[m.outsourcingCompanyId] ?? [
-                              { id: 0, name: '선택', category: '' },
-                            ]
-                          }
-                          onScrollToBottom={() => {
-                            if (fuelDriverHasNextPage && !fuelDriverIsFetching)
-                              fuelDriverFetchNextPage()
-                          }}
-                          loading={fuelDriverLoading}
-                        />
-                      </TableCell>
-
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        <CommonSelect
-                          fullWidth
-                          value={
-                            selectedCarNumberIds[m.id] ||
-                            m.outsourcingCompanyContractEquipmentId ||
-                            0
-                          }
-                          onChange={async (value) => {
-                            const selectedCarNumber = (
-                              carNumberOptionsByCompany[m.outsourcingCompanyId] ?? []
-                            ).find((opt) => opt.id === value)
-
-                            if (!selectedCarNumber) return
-
-                            updateItemField(
-                              'equipment',
-                              m.id,
-                              'outsourcingCompanyContractEquipmentId',
-                              selectedCarNumber.id,
-                            )
-
-                            updateItemField(
-                              'equipment',
-                              m.id,
-                              'specificationName',
-                              selectedCarNumber.specification || '',
-                            )
-
-                            updateItemField(
-                              'equipment',
-                              m.id,
-                              'type',
-                              selectedCarNumber.category || '-', // type 없으면 '-'
-                            )
-                          }}
-                          options={
-                            carNumberOptionsByCompany[m.outsourcingCompanyId] ?? [
-                              { id: 0, name: '선택', category: '' },
-                            ]
-                          }
-                          onScrollToBottom={() => {
-                            if (fuelEquipmentHasNextPage && !fuelEquipmentIsFetching)
-                              fuelEquipmentFetchNextPage()
-                          }}
-                          loading={fuelEquipmentLoading}
-                        />
-                      </TableCell>
-
-                      {/* 규격 */}
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        {m.specificationName ?? '-'}
-                      </TableCell>
-
-                      {/* 구분 */}
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        {m.type ?? '-'}
-                      </TableCell>
-
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
                         <TextField
                           size="small"
                           placeholder="텍스트 입력"
-                          value={m.workContent}
+                          sx={{ width: '100%' }}
+                          value={m.name}
                           onChange={(e) =>
-                            updateItemField('equipment', m.id, 'workContent', e.target.value)
+                            updateItemField('equipmentFile', m.id, 'name', e.target.value)
                           }
                         />
                       </TableCell>
-
-                      <TableCell
-                        align="center"
-                        sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
-                      >
-                        <TextField
-                          size="small"
-                          placeholder="숫자만"
-                          value={formatNumber(m.unitPrice)}
-                          onChange={(e) => {
-                            const numericValue = unformatNumber(e.target.value)
-                            updateItemField('equipment', m.id, 'unitPrice', numericValue)
-                          }}
-                          inputProps={{
-                            inputMode: 'numeric',
-                            pattern: '[0-9]*',
-                            style: { textAlign: 'right' }, // ← 오른쪽 정렬
-                          }}
-                          fullWidth
-                        />
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                          <CommonFileInput
+                            acceptedExtensions={[
+                              'pdf',
+                              'jpg',
+                              'png',
+                              'hwp',
+                              'xlsx',
+                              'zip',
+                              'jpeg',
+                              'ppt',
+                            ]}
+                            multiple={false}
+                            files={m.files} // 각 항목별 files
+                            onChange={(newFiles) => {
+                              updateItemField('equipmentFile', m.id, 'files', newFiles.slice(0, 1))
+                            }}
+                            uploadTarget="WORK_DAILY_REPORT"
+                          />
+                        </div>
                       </TableCell>
-
-                      <TableCell
-                        align="center"
-                        sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
-                      >
-                        <TextField
-                          size="small"
-                          type="number" // type을 number로 변경
-                          placeholder="숫자를 입력해주세요."
-                          inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
-                          value={m.workHours === 0 || m.workHours === null ? '' : m.workHours}
-                          onChange={(e) => {
-                            const value = e.target.value
-                            const numericValue = value === '' ? null : parseFloat(value)
-
-                            // dailyWork 배열 idx 위치 업데이트
-                            updateItemField('equipment', m.id, 'workHours', numericValue)
-                          }}
-                          sx={{
-                            height: '100%',
-                            '& .MuiInputBase-root': {
-                              height: '100%',
-                              fontSize: '1rem',
-                            },
-                            '& input': {
-                              textAlign: 'center',
-                              padding: '10px',
-                              MozAppearance: 'textfield', // Firefox
-                              '&::-webkit-outer-spin-button': {
-                                // Chrome, Safari
-                                WebkitAppearance: 'none',
-                                margin: 0,
-                              },
-                              '&::-webkit-inner-spin-button': {
-                                // Chrome, Safari
-                                WebkitAppearance: 'none',
-                                margin: 0,
-                              },
-                            },
-                          }}
-                        />
-                      </TableCell>
-
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <TextField
                           size="small"
                           placeholder="500자 이하 텍스트 입력"
+                          sx={{ width: '100%' }}
                           value={m.memo}
                           onChange={(e) =>
-                            updateItemField('equipment', m.id, 'memo', e.target.value)
+                            updateItemField('equipmentFile', m.id, 'memo', e.target.value)
                           }
-                        />
-                      </TableCell>
-
-                      {/* 등록/수정일 (임시: Date.now 기준) */}
-                      <TableCell
-                        align="center"
-                        sx={{ border: '1px solid  #9CA3AF', width: '260px' }}
-                      >
-                        <CommonInput
-                          placeholder="-"
-                          value={m.modifyDate ?? ''}
-                          onChange={(value) =>
-                            updateItemField('equipment', m.id, 'modifyDate', value)
-                          }
-                          disabled
-                          className="flex-1"
                         />
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-
-            {equipmentFetching && <div className="p-2 text-center">불러오는 중...</div>}
-          </TableContainer>
-        </div>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </div>
+        </>
       )}
 
       {activeTab === '유류' && (
-        <div>
-          <div className="flex justify-between items-center mt-10 mb-2">
-            <span className="font-bold mb-4"> [{activeTab}]</span>
-            <div className="flex gap-4">
-              <CommonButton
-                label="삭제"
-                className="px-7"
-                variant="danger"
-                onClick={() => removeCheckedItems('fuel')}
-                disabled={
-                  isHeadOfficeInfo
-                    ? false // 본사 정보이면 무조건 활성화
-                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
-                }
-              />
-              <CommonButton
-                label="추가"
-                className="px-7"
-                variant="secondary"
-                onClick={() => addItem('fuel')}
-                disabled={
-                  isHeadOfficeInfo
-                    ? false // 본사 정보이면 무조건 활성화
-                    : detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                      detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
-                }
-              />
+        <>
+          <div>
+            <div className="flex justify-between items-center mt-10 mb-2">
+              <span className="font-bold mb-4"> [{activeTab}]</span>
+              <div className="flex gap-4">
+                <CommonButton
+                  label="삭제"
+                  className="px-7"
+                  variant="danger"
+                  onClick={() => removeCheckedItems('fuel')}
+                  disabled={
+                    isHeadOfficeInfo
+                      ? false // 본사 정보이면 무조건 활성화
+                      : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                        detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
+                  }
+                />
+                <CommonButton
+                  label="추가"
+                  className="px-7"
+                  variant="secondary"
+                  onClick={() => addItem('fuel')}
+                  disabled={
+                    isHeadOfficeInfo
+                      ? false // 본사 정보이면 무조건 활성화
+                      : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                        detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
+                  }
+                />
+              </div>
             </div>
+
+            <TableContainer
+              component={Paper}
+              onScroll={(e) => {
+                const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
+                if (scrollHeight - scrollTop <= clientHeight * 1.2) {
+                  if (fuelHasNextPage && !fuelFetching) {
+                    fuelFetchNextPage()
+                  }
+                }
+              }}
+            >
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <Checkbox
+                        checked={isFuelAllChecked}
+                        indeterminate={checkedFuelIds.length > 0 && !isFuelAllChecked}
+                        onChange={(e) => toggleCheckAllItems('fuel', e.target.checked)}
+                        sx={{ color: 'black' }}
+                      />
+                    </TableCell>
+                    {[
+                      '업체명',
+                      '기사명',
+                      '차량번호',
+                      '규격',
+                      '유종',
+                      '주유량',
+                      '첨부파일',
+                      '비고',
+                      '등록/수정일',
+                    ].map((label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
+                          label
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+
+                <TableBody>
+                  {fuelData.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={9} align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                        유류 데이터가 없습니다.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    fuelData.map((m) => (
+                      <TableRow key={m.id}>
+                        <TableCell
+                          padding="checkbox"
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF' }}
+                        >
+                          <Checkbox
+                            checked={checkedFuelIds.includes(m.id)}
+                            onChange={(e) => toggleCheckItem('fuel', m.id, e.target.checked)}
+                          />
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <CommonSelect
+                            fullWidth
+                            // value={m.outsourcingCompanyId || 0}
+                            value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
+                            onChange={async (value) => {
+                              const selectedCompany = withEquipmentInfoOptions.find(
+                                (opt) => opt.id === value,
+                              )
+                              if (!selectedCompany) return
+
+                              // 해당 row만 업데이트
+                              setSelectedCompanyIds((prev) => ({
+                                ...prev,
+                                [m.id]: selectedCompany.id,
+                              }))
+
+                              setSelectId(m.id)
+
+                              updateItemField(
+                                'fuel',
+                                m.id,
+                                'outsourcingCompanyId',
+                                selectedCompany.id,
+                              )
+
+                              // 해당 row 기사, 차량 초기화
+                              setSelectedDriverIds((prev) => ({
+                                ...prev,
+                                [m.id]: 0,
+                              }))
+
+                              setSelectedCarNumberIds((prev) => ({
+                                ...prev,
+                                [m.id]: 0,
+                              }))
+
+                              // 차량 값도 추가
+                            }}
+                            options={withEquipmentInfoOptions}
+                            onScrollToBottom={() => {
+                              if (withEquipmenthasNextPage && !withEquipmentFetching)
+                                withEquipmentFetchNextPage()
+                            }}
+                            loading={withEquipmentLoading}
+                          />
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <CommonSelect
+                            fullWidth
+                            value={selectedDriverIds[m.id] || m.driverId || 0}
+                            onChange={async (value) => {
+                              const selectedDriver = (
+                                driverOptionsByCompany[m.outsourcingCompanyId] ?? []
+                              ).find((opt) => opt.id === value)
+
+                              if (!selectedDriver) return
+
+                              updateItemField('fuel', m.id, 'driverId', selectedDriver.id)
+                            }}
+                            options={
+                              driverOptionsByCompany[m.outsourcingCompanyId] ?? [
+                                { id: 0, name: '선택', category: '' },
+                              ]
+                            }
+                            onScrollToBottom={() => {
+                              if (fuelDriverHasNextPage && !fuelDriverIsFetching)
+                                fuelDriverFetchNextPage()
+                            }}
+                            loading={fuelDriverLoading}
+                          />
+                        </TableCell>
+
+                        <TableCell>
+                          <CommonSelect
+                            fullWidth
+                            value={selectedCarNumberIds[m.id] || m.equipmentId || 0}
+                            onChange={async (value) => {
+                              const selectedCarNumber = (
+                                carNumberOptionsByCompany[m.outsourcingCompanyId] ?? []
+                              ).find((opt) => opt.id === value)
+
+                              if (!selectedCarNumber) return
+
+                              updateItemField('fuel', m.id, 'equipmentId', selectedCarNumber.id)
+
+                              updateItemField(
+                                'fuel',
+                                m.id,
+                                'specificationName',
+                                selectedCarNumber.specification || '',
+                              )
+                            }}
+                            options={
+                              carNumberOptionsByCompany[m.outsourcingCompanyId] ?? [
+                                { id: 0, name: '선택', category: '' },
+                              ]
+                            }
+                            onScrollToBottom={() => {
+                              if (fuelEquipmentHasNextPage && !fuelEquipmentIsFetching)
+                                fuelEquipmentFetchNextPage()
+                            }}
+                            loading={fuelEquipmentLoading}
+                          />
+                        </TableCell>
+
+                        {/* 규격 */}
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          {m.specificationName ?? '-'}
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <CommonSelect
+                            fullWidth={true}
+                            value={m.fuelType || 'BASE'}
+                            onChange={async (value) => {
+                              updateItemField('fuel', m.id, 'fuelType', value)
+                            }}
+                            options={OilTypeMethodOptions}
+                          />
+                        </TableCell>
+
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                        >
+                          <TextField
+                            size="small"
+                            placeholder="숫자만"
+                            value={formatNumber(m.fuelAmount)}
+                            onChange={(e) => {
+                              const numericValue = unformatNumber(e.target.value)
+                              updateItemField('fuel', m.id, 'fuelAmount', numericValue)
+                            }}
+                            inputProps={{
+                              inputMode: 'numeric',
+                              pattern: '[0-9]*',
+                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                            }}
+                          />
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                            <CommonFileInput
+                              acceptedExtensions={[
+                                'pdf',
+                                'jpg',
+                                'png',
+                                'hwp',
+                                'xlsx',
+                                'zip',
+                                'jpeg',
+                                'ppt',
+                              ]}
+                              multiple={false}
+                              files={m.files} // 각 항목별 files
+                              onChange={(newFiles) => {
+                                updateItemField('fuel', m.id, 'files', newFiles.slice(0, 1))
+                              }}
+                              uploadTarget="WORK_DAILY_REPORT"
+                            />
+                          </div>
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <TextField
+                            size="small"
+                            placeholder="500자 이하 텍스트 입력"
+                            value={m.memo}
+                            onChange={(e) => updateItemField('fuel', m.id, 'memo', e.target.value)}
+                          />
+                        </TableCell>
+
+                        {/* 등록/수정일 (임시: Date.now 기준) */}
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', width: '260px' }}
+                        >
+                          <CommonInput
+                            placeholder="-"
+                            value={m.modifyDate ?? ''}
+                            onChange={(value) => updateItemField('fuel', m.id, 'modifyDate', value)}
+                            disabled
+                            className="flex-1"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+
+              {fuelFetching && <div className="p-2 text-center">불러오는 중...</div>}
+            </TableContainer>
           </div>
 
-          <TableContainer
-            component={Paper}
-            onScroll={(e) => {
-              const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
-              if (scrollHeight - scrollTop <= clientHeight * 1.2) {
-                if (fuelHasNextPage && !fuelFetching) {
-                  fuelFetchNextPage()
-                }
-              }
-            }}
-          >
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                  <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <Checkbox
-                      checked={isFuelAllChecked}
-                      indeterminate={checkedFuelIds.length > 0 && !isFuelAllChecked}
-                      onChange={(e) => toggleCheckAllItems('fuel', e.target.checked)}
-                      sx={{ color: 'black' }}
-                    />
-                  </TableCell>
-                  {[
-                    '업체명',
-                    '기사명',
-                    '차량번호',
-                    '규격',
-                    '유종',
-                    '주유량',
-                    '비고',
-                    '등록/수정일',
-                  ].map((label) => (
-                    <TableCell
-                      key={label}
-                      align="center"
-                      sx={{
-                        backgroundColor: '#D1D5DB',
-                        border: '1px solid  #9CA3AF',
-                        color: 'black',
-                        fontWeight: 'bold',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {label === '비고' || label === '등록/수정일' ? (
-                        label
-                      ) : (
-                        <div className="flex items-center justify-center">
-                          <span>{label}</span>
-                          <span className="text-red-500 ml-1">*</span>
-                        </div>
-                      )}
+          <div>
+            <div className="flex justify-between items-center mt-10 mb-2">
+              <span className="font-bold border-b-2 mb-4">증빙</span>
+              <div className="flex gap-4">
+                <CommonButton
+                  label="삭제"
+                  className="px-7"
+                  variant="danger"
+                  onClick={() => removeCheckedItems('fuelFile')}
+                />
+                <CommonButton
+                  label="추가"
+                  className="px-7"
+                  variant="secondary"
+                  onClick={() => addItem('fuelFile')}
+                />
+              </div>
+            </div>
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <Checkbox
+                        checked={isFuelProofAllChecked}
+                        indeterminate={fuelProofCheckIds.length > 0 && !isFuelProofAllChecked}
+                        onChange={(e) => toggleCheckAllItems('fuelFile', e.target.checked)}
+                        sx={{ color: 'black' }}
+                      />
                     </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-
-              <TableBody>
-                {fuelData.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={9} align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                      유류 데이터가 없습니다.
-                    </TableCell>
+                    {['문서명', '첨부', '비고'].map((label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        {label === '비고' || label === '첨부' || label === '문서명' ? (
+                          label
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    ))}
                   </TableRow>
-                ) : (
-                  fuelData.map((m) => (
-                    <TableRow key={m.id}>
+                </TableHead>
+                <TableBody>
+                  {fuelProof.map((m) => (
+                    <TableRow key={m.id} sx={{ border: '1px solid  #9CA3AF' }}>
                       <TableCell
                         padding="checkbox"
                         align="center"
                         sx={{ border: '1px solid  #9CA3AF' }}
                       >
                         <Checkbox
-                          checked={checkedFuelIds.includes(m.id)}
-                          onChange={(e) => toggleCheckItem('fuel', m.id, e.target.checked)}
+                          checked={fuelProofCheckIds.includes(m.id)}
+                          onChange={(e) => toggleCheckItem('fuelFile', m.id, e.target.checked)}
                         />
                       </TableCell>
-
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        <CommonSelect
-                          fullWidth
-                          // value={m.outsourcingCompanyId || 0}
-                          value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
-                          onChange={async (value) => {
-                            const selectedCompany = withEquipmentInfoOptions.find(
-                              (opt) => opt.id === value,
-                            )
-                            if (!selectedCompany) return
-
-                            // 해당 row만 업데이트
-                            setSelectedCompanyIds((prev) => ({
-                              ...prev,
-                              [m.id]: selectedCompany.id,
-                            }))
-
-                            setSelectId(m.id)
-
-                            updateItemField(
-                              'fuel',
-                              m.id,
-                              'outsourcingCompanyId',
-                              selectedCompany.id,
-                            )
-
-                            // 해당 row 기사, 차량 초기화
-                            setSelectedDriverIds((prev) => ({
-                              ...prev,
-                              [m.id]: 0,
-                            }))
-
-                            setSelectedCarNumberIds((prev) => ({
-                              ...prev,
-                              [m.id]: 0,
-                            }))
-
-                            // 차량 값도 추가
-                          }}
-                          options={withEquipmentInfoOptions}
-                          onScrollToBottom={() => {
-                            if (withEquipmenthasNextPage && !withEquipmentFetching)
-                              withEquipmentFetchNextPage()
-                          }}
-                          loading={withEquipmentLoading}
-                        />
-                      </TableCell>
-
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        <CommonSelect
-                          fullWidth
-                          value={selectedDriverIds[m.id] || m.driverId || 0}
-                          onChange={async (value) => {
-                            const selectedDriver = (
-                              driverOptionsByCompany[m.outsourcingCompanyId] ?? []
-                            ).find((opt) => opt.id === value)
-
-                            if (!selectedDriver) return
-
-                            updateItemField('fuel', m.id, 'driverId', selectedDriver.id)
-                          }}
-                          options={
-                            driverOptionsByCompany[m.outsourcingCompanyId] ?? [
-                              { id: 0, name: '선택', category: '' },
-                            ]
-                          }
-                          onScrollToBottom={() => {
-                            if (fuelDriverHasNextPage && !fuelDriverIsFetching)
-                              fuelDriverFetchNextPage()
-                          }}
-                          loading={fuelDriverLoading}
-                        />
-                      </TableCell>
-
-                      <TableCell>
-                        <CommonSelect
-                          fullWidth
-                          value={selectedCarNumberIds[m.id] || m.equipmentId || 0}
-                          onChange={async (value) => {
-                            const selectedCarNumber = (
-                              carNumberOptionsByCompany[m.outsourcingCompanyId] ?? []
-                            ).find((opt) => opt.id === value)
-
-                            if (!selectedCarNumber) return
-
-                            updateItemField('fuel', m.id, 'equipmentId', selectedCarNumber.id)
-
-                            updateItemField(
-                              'fuel',
-                              m.id,
-                              'specificationName',
-                              selectedCarNumber.specification || '',
-                            )
-                          }}
-                          options={
-                            carNumberOptionsByCompany[m.outsourcingCompanyId] ?? [
-                              { id: 0, name: '선택', category: '' },
-                            ]
-                          }
-                          onScrollToBottom={() => {
-                            if (fuelEquipmentHasNextPage && !fuelEquipmentIsFetching)
-                              fuelEquipmentFetchNextPage()
-                          }}
-                          loading={fuelEquipmentLoading}
-                        />
-                      </TableCell>
-
-                      {/* 규격 */}
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        {m.specificationName ?? '-'}
-                      </TableCell>
-
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        <CommonSelect
-                          fullWidth={true}
-                          value={m.fuelType || 'BASE'}
-                          onChange={async (value) => {
-                            updateItemField('fuel', m.id, 'fuelType', value)
-                          }}
-                          options={OilTypeMethodOptions}
-                        />
-                      </TableCell>
-
-                      <TableCell
-                        align="center"
-                        sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
-                      >
+                      <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
                         <TextField
                           size="small"
-                          placeholder="숫자만"
-                          value={formatNumber(m.fuelAmount)}
-                          onChange={(e) => {
-                            const numericValue = unformatNumber(e.target.value)
-                            updateItemField('fuel', m.id, 'fuelAmount', numericValue)
-                          }}
-                          inputProps={{
-                            inputMode: 'numeric',
-                            pattern: '[0-9]*',
-                            style: { textAlign: 'right' }, // ← 오른쪽 정렬
-                          }}
+                          placeholder="텍스트 입력"
+                          sx={{ width: '100%' }}
+                          value={m.name}
+                          onChange={(e) =>
+                            updateItemField('fuelFile', m.id, 'name', e.target.value)
+                          }
                         />
                       </TableCell>
-
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                          <CommonFileInput
+                            acceptedExtensions={[
+                              'pdf',
+                              'jpg',
+                              'png',
+                              'hwp',
+                              'xlsx',
+                              'zip',
+                              'jpeg',
+                              'ppt',
+                            ]}
+                            multiple={false}
+                            files={m.files} // 각 항목별 files
+                            onChange={(newFiles) => {
+                              updateItemField('fuelFile', m.id, 'files', newFiles.slice(0, 1))
+                            }}
+                            uploadTarget="WORK_DAILY_REPORT"
+                          />
+                        </div>
+                      </TableCell>
                       <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <TextField
                           size="small"
                           placeholder="500자 이하 텍스트 입력"
+                          sx={{ width: '100%' }}
                           value={m.memo}
-                          onChange={(e) => updateItemField('fuel', m.id, 'memo', e.target.value)}
-                        />
-                      </TableCell>
-
-                      {/* 등록/수정일 (임시: Date.now 기준) */}
-                      <TableCell
-                        align="center"
-                        sx={{ border: '1px solid  #9CA3AF', width: '260px' }}
-                      >
-                        <CommonInput
-                          placeholder="-"
-                          value={m.modifyDate ?? ''}
-                          onChange={(value) => updateItemField('fuel', m.id, 'modifyDate', value)}
-                          disabled
-                          className="flex-1"
+                          onChange={(e) =>
+                            updateItemField('fuelFile', m.id, 'memo', e.target.value)
+                          }
                         />
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-
-            {fuelFetching && <div className="p-2 text-center">불러오는 중...</div>}
-          </TableContainer>
-        </div>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </div>
+        </>
       )}
 
       {activeTab === '현장 사진 등록' && (

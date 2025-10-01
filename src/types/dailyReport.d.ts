@@ -7,6 +7,15 @@ export type DailyAttachedFile = {
   files: FileUploadInfo[]
 }
 
+export type DailyProofAttachedFile = {
+  id: number
+  name: string
+  memo: string
+  fileUrl?: string | null
+  originalFileName?: string | null
+  files: FileUploadInfo[]
+}
+
 // 발주처 조회 리스트 가져오는 타입들
 
 export interface Contact {
@@ -147,6 +156,9 @@ export type FuelsItem = {
   specificationName?: string
   fuelType: string
   fuelAmount: number
+  fileUrl?: string
+  originalFileName?: string
+  files: FileUploadInfo[]
   memo: string
   modifyDate?: string
 }
@@ -178,6 +190,28 @@ export type DailyFormState = {
   // 파일첨부, 수정이력
   files: AttachedFile[]
   checkedAttachedFileIds: number[]
+
+  // 직원에 증빙서류 타입 추가
+  employeeFile: DailyProofAttachedFile[]
+  employeeCheckId: number[]
+
+  // 직영 게약직
+
+  // 직영에 증빙서류 타입 추가
+  contractProofFile: DailyProofAttachedFile[]
+  contractProofCheckId: number[]
+
+  // 직영에 증빙서류 타입 추가
+  outsourcingProofFile: DailyProofAttachedFile[]
+  outsourcingProofCheckId: number[]
+
+  // 직영에 증빙서류 타입 추가
+  equipmentProofFile: DailyProofAttachedFile[]
+  equipmentProofCheckId: number[]
+
+  // 직영에 증빙서류 타입 추가
+  fuelProofFile: DailyProofAttachedFile[]
+  fuelProofCheckId: number[]
 }
 
 type DailyReportFormStore = {
@@ -191,6 +225,15 @@ type DailyReportFormStore = {
   resetFuel: () => void
   resetFile: () => void
 
+  resetEmployeesEvidenceFile: () => void
+  resetContractEvidenceFile: () => void
+
+  resetOutsourcingEvidenceFile: () => void
+
+  resetEquipmentEvidenceFile: () => void
+
+  resetFuelEvidenceFile: () => void
+
   setField: <K extends keyof Omit<DailyFormState, 'reset' | 'setField'>>(
     field: K,
     value: DailyFormState[K],
@@ -199,10 +242,15 @@ type DailyReportFormStore = {
   addItem: (
     type:
       | 'Employees'
+      | 'EmployeeFiles'
       | 'directContracts'
+      | 'directContractFiles'
       | 'outsourcings'
+      | 'outsourcingFiles'
       | 'equipment'
+      | 'equipmentFile'
       | 'fuel'
+      | 'fuelFile'
       | 'ContractWorker'
       | 'attachedFile',
   ) => void
@@ -210,22 +258,66 @@ type DailyReportFormStore = {
   addTemporaryCheckedItems: (type: 'directContracts') => void
 
   updateItemField: (
-    type: 'Employees' | 'directContracts' | 'outsourcings' | 'equipment' | 'fuel' | 'attachedFile',
+    type:
+      | 'Employees'
+      | 'EmployeeFiles'
+      | 'directContracts'
+      | 'directContractFiles'
+      | 'outsourcings'
+      | 'outsourcingFiles'
+      | 'equipment'
+      | 'equipmentFile'
+      | 'fuel'
+      | 'fuelFile'
+      | 'attachedFile',
     id: number,
     field: string,
     value: T,
   ) => void
   toggleCheckItem: (
-    type: 'Employees' | 'directContracts' | 'outsourcings' | 'equipment' | 'fuel' | 'attachedFile',
+    type:
+      | 'Employees'
+      | 'EmployeeFiles'
+      | 'directContracts'
+      | 'directContractFiles'
+      | 'outsourcings'
+      | 'outsourcingFiles'
+      | 'equipment'
+      | 'equipmentFile'
+      | 'fuel'
+      | 'fuelFile'
+      | 'attachedFile',
     id: number,
     checked: boolean,
   ) => void
   toggleCheckAllItems: (
-    type: 'Employees' | 'directContracts' | 'outsourcings' | 'equipment' | 'fuel' | 'attachedFile',
+    type:
+      | 'Employees'
+      | 'EmployeeFiles'
+      | 'directContracts'
+      | 'directContractFiles'
+      | 'outsourcings'
+      | 'outsourcingFiles'
+      | 'equipment'
+      | 'equipmentFile'
+      | 'fuel'
+      | 'fuelFile'
+      | 'attachedFile',
     checked: boolean,
   ) => void
   removeCheckedItems: (
-    type: 'Employees' | 'directContracts' | 'equipment' | 'outsourcings' | 'fuel' | 'attachedFile',
+    type:
+      | 'Employees'
+      | 'EmployeeFiles'
+      | 'directContracts'
+      | 'directContractFiles'
+      | 'equipment'
+      | 'equipmentFile'
+      | 'outsourcings'
+      | 'outsourcingFiles'
+      | 'fuel'
+      | 'fuelFile'
+      | 'attachedFile',
   ) => void
 
   //payload 값
