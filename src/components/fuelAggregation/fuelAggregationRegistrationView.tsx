@@ -508,7 +508,10 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
       const companyId = row.outsourcingCompanyId
       const driverData = row.driverId
       const carNumberId = row.equipmentId
-      if (!companyId) return
+
+      if (driverOptionsByCompany[companyId] && carNumberOptionsByCompany[companyId]) {
+        return
+      }
 
       try {
         const res = await FuelDriverNameScroll({

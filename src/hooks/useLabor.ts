@@ -105,9 +105,9 @@ export function useLaborInfo() {
         size: Number(search.pageCount) || 10,
         sort:
           search.arraySort === '최신순'
-            ? 'id,desc'
+            ? 'yearMonth,desc '
             : search.arraySort === '오래된순'
-            ? 'id,asc'
+            ? 'yearMonth,asc'
             : 'username,asc',
       }
 

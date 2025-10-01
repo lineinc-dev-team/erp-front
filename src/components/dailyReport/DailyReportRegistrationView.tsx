@@ -1026,6 +1026,12 @@ export default function DailyReportRegistrationView() {
   // "계정 관리" 메뉴에 대한 권한
   const { hasApproval } = useMenuPermission(roleId, '출역일보', enabled)
 
+  const [carNumberOptionsByCompany, setCarNumberOptionsByCompany] = useState<Record<number, any[]>>(
+    {},
+  )
+
+  const [driverOptionsByCompany, setDriverOptionsByCompany] = useState<Record<number, any[]>>({})
+
   const {
     data: workerList,
     fetchNextPage: workerListFetchNextPage,
@@ -1068,6 +1074,8 @@ export default function DailyReportRegistrationView() {
   // 상세페이지 데이터 (예: props나 query에서 가져온 값)
   const outsourcings = resultOutsourcing
 
+  console.log('outsourcings24', outsourcings)
+
   // 1. 상세페이지 들어올 때 각 업체별 worker 데이터 API 호출
   useEffect(() => {
     if (!outsourcings.length) return
@@ -1075,7 +1083,10 @@ export default function DailyReportRegistrationView() {
     outsourcings.forEach(async (row) => {
       const companyId = row.outsourcingCompanyId
       const worker = row.outsourcingCompanyContractWorkerId
-      if (!companyId) return
+
+      if (workerOptionsByCompany[companyId]) {
+        return
+      }
 
       try {
         const res = await OutsourcingWorkerNameScroll({
@@ -1114,8 +1125,6 @@ export default function DailyReportRegistrationView() {
   const [selectedDriverIds, setSelectedDriverIds] = useState<{ [rowId: number]: number }>({})
 
   // 옵션에 따른 상태값
-
-  const [driverOptionsByCompany, setDriverOptionsByCompany] = useState<Record<number, any[]>>({})
 
   // 업체명 id
 
@@ -1163,10 +1172,6 @@ export default function DailyReportRegistrationView() {
 
   // 옵션에 따른 상태값
 
-  const [carNumberOptionsByCompany, setCarNumberOptionsByCompany] = useState<Record<number, any[]>>(
-    {},
-  )
-
   const {
     data: fuelEquipment,
     fetchNextPage: fuelEquipmentFetchNextPage,
@@ -1212,6 +1217,8 @@ export default function DailyReportRegistrationView() {
 
   const outsourcingfuel = fuelData
 
+  const equipmentDataResult = equipmentData
+
   useEffect(() => {
     if (!outsourcingfuel.length) return
 
@@ -1219,7 +1226,10 @@ export default function DailyReportRegistrationView() {
       const companyId = row.outsourcingCompanyId
       const driverData = row.driverId
       const carNumberId = row.equipmentId
-      if (!companyId) return
+
+      if (driverOptionsByCompany[companyId] && carNumberOptionsByCompany[companyId]) {
+        return
+      }
 
       try {
         const res = await FuelDriverNameScroll({
@@ -1289,6 +1299,87 @@ export default function DailyReportRegistrationView() {
       }
     })
   }, [outsourcingfuel])
+
+  useEffect(() => {
+    if (!equipmentDataResult.length) return
+
+    equipmentDataResult.forEach(async (row) => {
+      const companyId = row.outsourcingCompanyId
+      const driverData = row.outsourcingCompanyContractDriverId
+      const carNumberId = row.outsourcingCompanyContractEquipmentId
+
+      if (driverOptionsByCompany[companyId] && carNumberOptionsByCompany[companyId]) {
+        return
+      }
+
+      try {
+        const res = await FuelDriverNameScroll({
+          pageParam: 0,
+          id: companyId,
+          size: 200,
+        })
+
+        const options = res.data.content.map((user: any) => ({
+          id: user.id,
+          name: user.name + (user.deleted ? ' (삭제됨)' : ''),
+          deleted: user.deleted,
+        }))
+
+        setDriverOptionsByCompany((prev) => {
+          const exists = options.some((opt: any) => opt.id === driverData)
+
+          return {
+            ...prev,
+            [companyId]: [
+              { id: 0, name: '선택', deleted: false },
+              ...options,
+              // 만약 선택된 worker가 목록에 없으면 추가
+              ...(driverData && !exists ? [{ id: driverData, name: '', deleted: true }] : []),
+            ],
+          }
+        })
+
+        const carNumberRes = await FuelEquipmentNameScroll({
+          pageParam: 0,
+          id: companyId,
+          size: 200,
+        })
+
+        const carOptions = carNumberRes.data.content.map((user: any) => ({
+          id: user.id,
+          specification: user.specification,
+          vehicleNumber: user.vehicleNumber + (user.deleted ? ' (삭제됨)' : ''),
+          category: user.category,
+        }))
+
+        setCarNumberOptionsByCompany((prev) => {
+          const exists = carOptions.some((opt: any) => opt.id === carNumberId)
+
+          return {
+            ...prev,
+            [companyId]: [
+              { id: 0, specification: '', vehicleNumber: '선택', category: '', deleted: false },
+              ...carOptions,
+              // 만약 선택된 worker가 목록에 없으면 추가
+              ...(carNumberId && !exists
+                ? [
+                    {
+                      id: carNumberId,
+                      specification: '',
+                      vehicleNumber: '',
+                      category: '',
+                      deleted: true,
+                    },
+                  ]
+                : []),
+            ],
+          }
+        })
+      } catch (err) {
+        console.error('업체별 인력 조회 실패', err)
+      }
+    })
+  }, [equipmentDataResult])
 
   // 유효성 검사
 
