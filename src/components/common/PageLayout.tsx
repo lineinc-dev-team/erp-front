@@ -18,7 +18,7 @@ export default function PageLayout({ entity, children }: PageLayoutProps) {
     title = `${entity} 수정`
   } else if (id === undefined) {
     if (entity === '출역일보') {
-      title = '출역일보'
+      title = segment === 'registration' ? `${entity}` : `${entity} 조회`
     } else {
       title = segment === 'registration' ? `${entity} 등록` : `${entity} 조회`
     }
@@ -26,7 +26,7 @@ export default function PageLayout({ entity, children }: PageLayoutProps) {
 
   return (
     <div className="m-8">
-      <h1 className={`text-2xl mb-3 ${entity === '출역일보' ? 'hidden' : ''}`}>{title}</h1>
+      <h1 className={`text-2xl mb-3 `}>{title}</h1>
       {children}
     </div>
   )

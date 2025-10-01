@@ -60,7 +60,7 @@ const menuNameToBasePath: Record<string, string> = {
   '외주업체 관리': '/outsourcingCompany',
   '외주업체 계약 관리': '/outsourcingContract',
   '노무 관리': '/labors',
-  출역일보: '/dailyReport/registration',
+  출역일보: '/dailyReport',
   '노무명세서 관리': '/laborStatement',
   '계정 관리': '/account',
 }
@@ -92,11 +92,11 @@ function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {
     )
 
     // 출역일보에서는 등록도 제거
-    if (menu.name === '출역일보') {
-      filteredPermissions = filteredPermissions.filter(
-        (perm: ApiPermission) => perm.action !== '등록',
-      )
-    }
+    // if (menu.name === '출역일보') {
+    //   filteredPermissions = filteredPermissions.filter(
+    //     (perm: ApiPermission) => perm.action !== '등록',
+    //   )
+    // }
 
     if (menu.name === '노무명세서 관리') {
       filteredPermissions = filteredPermissions.filter(

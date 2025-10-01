@@ -1585,9 +1585,6 @@ export default function DailyReportRegistrationView() {
   return (
     <>
       <div className="flex gap-10 items-center justify-between">
-        <div>
-          <h1 className="text-2xl mb-3 whitespace-nowrap"> 출역일보</h1>
-        </div>
         <div className="flex w-full">
           <div className="flex ">
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
