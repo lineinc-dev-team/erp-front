@@ -50,6 +50,7 @@ import {
   FuelDriverNameScroll,
   FuelEquipmentNameScroll,
 } from '@/services/fuelAggregation/fuelAggregationRegistrationService'
+import { useManagementCost } from '@/hooks/useManagementCost'
 
 export default function DailyReportRegistrationView() {
   const {
@@ -94,15 +95,15 @@ export default function DailyReportRegistrationView() {
     processInfoHasNextPage,
     processInfoIsFetching,
     processInfoLoading,
+  } = useOutSourcingContract()
 
-    // 업체명
-
+  const {
     companyOptions,
     comPanyNameFetchNextPage,
     comPanyNamehasNextPage,
     comPanyNameFetching,
     comPanyNameLoading,
-  } = useOutSourcingContract()
+  } = useManagementCost()
 
   const {
     createDailyMutation,

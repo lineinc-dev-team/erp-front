@@ -26,6 +26,7 @@ import { SitesProcessNameScroll } from '@/services/managementCost/managementCost
 import { useMenuPermission } from '../common/MenuPermissionView'
 import { myInfoProps } from '@/types/user'
 import { CustomNoRowsOverlay } from '../common/NoData'
+import { useManagementCost } from '@/hooks/useManagementCost'
 
 export default function ManagementSteel() {
   const { handleNewSteelCreate } = ManagementSteelService()
@@ -54,13 +55,15 @@ export default function ManagementSteel() {
     processInfoHasNextPage,
     processInfoIsFetching,
     processInfoLoading,
+  } = useOutSourcingContract()
 
+  const {
     companyOptions,
     comPanyNameFetchNextPage,
     comPanyNamehasNextPage,
     comPanyNameFetching,
     comPanyNameLoading,
-  } = useOutSourcingContract()
+  } = useManagementCost()
 
   const SteelDataList = SteelListQuery.data?.data.content ?? []
 

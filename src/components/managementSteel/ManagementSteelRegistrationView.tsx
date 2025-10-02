@@ -40,6 +40,7 @@ import {
 import { WithoutApprovalAndRemovalOptions } from '@/config/erp.confing'
 import { HistoryItem } from '@/types/ordering'
 import { SupplyPriceInput } from '@/utils/supplyVatTotalInput'
+import { useManagementCost } from '@/hooks/useManagementCost'
 
 export default function ManagementSteelRegistrationView({ isEditMode = false }) {
   const { showSnackbar } = useSnackbarStore()
@@ -76,15 +77,15 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     processInfoHasNextPage,
     processInfoIsFetching,
     processInfoLoading,
+  } = useOutSourcingContract()
 
-    // 업체명
-
+  const {
     companyOptions,
     comPanyNameFetchNextPage,
     comPanyNamehasNextPage,
     comPanyNameFetching,
     comPanyNameLoading,
-  } = useOutSourcingContract()
+  } = useManagementCost()
 
   const {
     createSteelMutation,
