@@ -26,6 +26,8 @@ import CommonSelectByName from '../common/CommonSelectByName'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import CommonDatePicker from '../common/DatePicker'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
+import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
+import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 
 export default function DailyReportView() {
   const openTab = useTabOpener()
@@ -35,12 +37,7 @@ export default function DailyReportView() {
   const { DailyListQuery } = useDailyReport()
 
   const {
-    setSitesSearch,
-    sitesOptions,
-    siteNameFetchNextPage,
-    siteNamehasNextPage,
-    siteNameFetching,
-    siteNameLoading,
+    useSitePersonNameListInfiniteScroll,
 
     setProcessSearch,
     processOptions,
@@ -202,6 +199,28 @@ export default function DailyReportView() {
     }
   })
 
+  // 현장명 키워드 검색
+
+  const [isSiteFocused, setIsSiteFocused] = useState(false)
+
+  // 유저 선택 시 처리
+  // const handleSelectSiting = (selectedUser: any) => {
+  //   search.setField('name', selectedUser.name)
+  // }
+
+  const debouncedSiteKeyword = useDebouncedValue(search.siteName, 300)
+
+  const {
+    data: SiteNameData,
+    fetchNextPage: SiteNameFetchNextPage,
+    hasNextPage: SiteNameHasNextPage,
+    isFetching: SiteNameIsFetching,
+    isLoading: SiteNameIsLoading,
+  } = useSitePersonNameListInfiniteScroll(debouncedSiteKeyword)
+
+  const SiteRawList = SiteNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const siteList = Array.from(new Map(SiteRawList.map((user) => [user.name, user])).values())
+
   // 권한에 따른 버튼 활성화
 
   const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
@@ -231,37 +250,68 @@ export default function DailyReportView() {
             <label className="w-[144px] text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명
             </label>
-            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelectByName
-                value={search.siteName || '선택'}
-                onChange={async (value) => {
-                  const selectedSite = sitesOptions.find((opt) => opt.name === value)
-                  if (!selectedSite) return
+            <div className="border border-gray-400 w-full flex items-center">
+              <InfiniteScrollSelect
+                placeholder="현장명을 입력하세요"
+                keyword={search.siteName}
+                // onChangeKeyword={(newKeyword) => search.setField('siteName', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                onChangeKeyword={(newKeyword) => {
+                  search.setField('siteName', newKeyword)
 
-                  search.setField('siteId', selectedSite.id)
-                  search.setField('siteName', selectedSite.name)
-
-                  const res = await SitesProcessNameScroll({
-                    pageParam: 0,
-                    siteId: selectedSite.id,
-                    keyword: '',
-                  })
-
-                  const processes = res.data?.content || []
-                  if (processes.length > 0) {
-                    // search.setField('processId', processes[0].id)
-                    search.setField('processName', processes[0].name)
-                  } else {
-                    // search.setField('processId', 0)
+                  // 현장명 지웠을 경우 공정명도 같이 초기화
+                  if (newKeyword === '') {
                     search.setField('processName', '')
                   }
                 }}
-                options={sitesOptions}
-                onScrollToBottom={() => {
-                  if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
+                items={siteList}
+                hasNextPage={SiteNameHasNextPage ?? false}
+                fetchNextPage={SiteNameFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                // onSelect={handleSelectSiting}
+                onSelect={async (selectedSite) => {
+                  if (!selectedSite) return
+
+                  // 선택된 현장 세팅
+                  search.setField('siteId', selectedSite.id)
+                  search.setField(
+                    'siteName',
+                    selectedSite.name + (selectedSite.deleted ? ' (삭제됨)' : ''),
+                  )
+
+                  if (selectedSite.deleted) {
+                    search.setField('processName', '')
+                    return
+                  }
+
+                  try {
+                    // 공정 목록 조회
+                    const res = await SitesProcessNameScroll({
+                      pageParam: 0,
+                      siteId: selectedSite.id,
+                      keyword: '',
+                    })
+
+                    const processes = res.data?.content || []
+
+                    if (processes.length > 0) {
+                      // 첫 번째 공정 자동 세팅
+                      search.setField('processName', processes[0].name)
+                    } else {
+                      search.setField('processName', '')
+                    }
+                  } catch (err) {
+                    console.error('공정 조회 실패:', err)
+                  }
                 }}
-                onInputChange={(value) => setSitesSearch(value)}
-                loading={siteNameLoading}
+                isLoading={SiteNameIsLoading || SiteNameIsFetching}
+                debouncedKeyword={debouncedSiteKeyword}
+                shouldShowList={isSiteFocused}
+                onFocus={() => setIsSiteFocused(true)}
+                onBlur={() => setIsSiteFocused(false)}
               />
             </div>
           </div>
@@ -289,6 +339,7 @@ export default function DailyReportView() {
                 }}
                 onInputChange={(value) => setProcessSearch(value)}
                 loading={processInfoLoading}
+                disabled
               />
             </div>
           </div>

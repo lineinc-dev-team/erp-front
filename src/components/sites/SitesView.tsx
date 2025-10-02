@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import CommonButton from '../common/Button'
@@ -21,7 +22,7 @@ import {
   SiteColumnList,
   SiteProgressing,
 } from '@/config/erp.confing'
-import { processStatuses, SiteListProps } from '@/types/site'
+import { OrderInfoProps, processStatuses, SiteListProps } from '@/types/site'
 import { formatNumber, getTodayDateString } from '@/utils/formatters'
 import { Fragment, useEffect, useState } from 'react'
 import ExcelModal from '../common/ExcelModal'
@@ -33,6 +34,9 @@ import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { myInfoProps } from '@/types/user'
 import { useMenuPermission } from '../common/MenuPermissionView'
 import { CustomNoRowsOverlay } from '../common/NoData'
+import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
+import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
+import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 
 export default function SitesView() {
   const { search } = useSiteSearchStore()
@@ -41,12 +45,7 @@ export default function SitesView() {
 
   // 현장명 공정명 무한 스크롤
   const {
-    setSitesSearch,
-    sitesOptions,
-    siteNameFetchNextPage,
-    siteNamehasNextPage,
-    siteNameFetching,
-    siteNameLoading,
+    useSitePersonNameListInfiniteScroll,
 
     setProcessSearch,
     processOptions,
@@ -59,11 +58,8 @@ export default function SitesView() {
   const {
     SiteListQuery,
     SiteDeleteMutation,
-    orderPersonFetchNextPage,
-    orderPersonHasNextPage,
-    orderPersonIsFetching,
-    orderPersonIsLoading,
-    orderOptions,
+
+    useOrderingNameListInfiniteScroll,
   } = useSite()
 
   const { showSnackbar } = useSnackbarStore()
@@ -243,6 +239,50 @@ export default function SitesView() {
     })
   }
 
+  // 현장명 키워드 검색
+
+  const [isSiteFocused, setIsSiteFocused] = useState(false)
+
+  // 유저 선택 시 처리
+  // const handleSelectSiting = (selectedUser: any) => {
+  //   search.setField('name', selectedUser.name)
+  // }
+
+  const debouncedSiteKeyword = useDebouncedValue(search.name, 300)
+
+  const {
+    data: SiteNameData,
+    fetchNextPage: SiteNameFetchNextPage,
+    hasNextPage: SiteNameHasNextPage,
+    isFetching: SiteNameIsFetching,
+    isLoading: SiteNameIsLoading,
+  } = useSitePersonNameListInfiniteScroll(debouncedSiteKeyword)
+
+  const SiteRawList = SiteNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const siteList = Array.from(new Map(SiteRawList.map((user) => [user.name, user])).values())
+
+  // 발주처 검색 키워드
+  const [isOrderFocused, setIsOrderFocused] = useState(false)
+
+  // 유저 선택 시 처리
+  const handleSelectOrdering = (selectedUser: OrderInfoProps) => {
+    // 예: username 필드에 선택한 유저 이름 넣기
+    search.setField('clientCompanyName', selectedUser.name)
+  }
+
+  const debouncedOrderingKeyword = useDebouncedValue(search.clientCompanyName, 300)
+
+  const {
+    data: OrderNameData,
+    fetchNextPage: OrderNameFetchNextPage,
+    hasNextPage: OrderNameHasNextPage,
+    isFetching: OrderNameIsFetching,
+    isLoading: OrderNameIsLoading,
+  } = useOrderingNameListInfiniteScroll(debouncedOrderingKeyword)
+
+  const OrderRawList = OrderNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const orderList = Array.from(new Map(OrderRawList.map((user) => [user.name, user])).values())
+
   // 권한에 따른 버튼 활성화
 
   const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
@@ -272,37 +312,68 @@ export default function SitesView() {
             <label className="w-[144px] text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명
             </label>
-            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelectByName
-                value={search.name || '선택'}
-                onChange={async (value) => {
-                  const selectedSite = sitesOptions.find((opt) => opt.name === value)
+            <div className="border border-gray-400 w-full flex items-center">
+              <InfiniteScrollSelect
+                placeholder="현장명을 입력하세요"
+                keyword={search.name}
+                // onChangeKeyword={(newKeyword) => search.setField('siteName', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                onChangeKeyword={(newKeyword) => {
+                  search.setField('name', newKeyword)
+
+                  // 현장명 지웠을 경우 공정명도 같이 초기화
+                  if (newKeyword === '') {
+                    search.setField('processName', '')
+                  }
+                }}
+                items={siteList}
+                hasNextPage={SiteNameHasNextPage ?? false}
+                fetchNextPage={SiteNameFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                // onSelect={handleSelectSiting}
+                onSelect={async (selectedSite) => {
                   if (!selectedSite) return
 
+                  // 선택된 현장 세팅
                   search.setField('nameId', selectedSite.id)
-                  search.setField('name', selectedSite.name)
+                  search.setField(
+                    'name',
+                    selectedSite.name + (selectedSite.deleted ? ' (삭제됨)' : ''),
+                  )
 
-                  // const res = await SitesProcessNameScroll({
-                  //   pageParam: 0,
-                  //   siteId: selectedSite.id,
-                  //   keyword: '',
-                  // })
+                  if (selectedSite.deleted) {
+                    search.setField('processName', '')
+                    return
+                  }
 
-                  // const processes = res.data?.content || []
-                  // if (processes.length > 0) {
-                  //   search.setField('processId', processes[0].id)
-                  //   search.setField('processName', processes[0].name)
-                  // } else {
-                  //   search.setField('processId', 0)
-                  //   search.setField('processName', '')
-                  // }
+                  try {
+                    // 공정 목록 조회
+                    const res = await SitesProcessNameScroll({
+                      pageParam: 0,
+                      siteId: selectedSite.id,
+                      keyword: '',
+                    })
+
+                    const processes = res.data?.content || []
+
+                    if (processes.length > 0) {
+                      // 첫 번째 공정 자동 세팅
+                      search.setField('processName', processes[0].name)
+                    } else {
+                      search.setField('processName', '')
+                    }
+                  } catch (err) {
+                    console.error('공정 조회 실패:', err)
+                  }
                 }}
-                options={sitesOptions}
-                onScrollToBottom={() => {
-                  if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
-                }}
-                onInputChange={(value) => setSitesSearch(value)}
-                loading={siteNameLoading}
+                isLoading={SiteNameIsLoading || SiteNameIsFetching}
+                debouncedKeyword={debouncedSiteKeyword}
+                shouldShowList={isSiteFocused}
+                onFocus={() => setIsSiteFocused(true)}
+                onBlur={() => setIsSiteFocused(false)}
               />
             </div>
           </div>
@@ -330,6 +401,7 @@ export default function SitesView() {
                 }}
                 onInputChange={(value) => setProcessSearch(value)}
                 loading={processInfoLoading}
+                disabled
               />
             </div>
           </div>
@@ -434,21 +506,29 @@ export default function SitesView() {
           </div>
 
           <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+            <label className="w-[143px] text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               발주처
             </label>
-            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelectByName
-                value={search.clientCompanyName || '선택'} // 현재 선택된 name 값
-                onChange={(value) => {
-                  search.setField('clientCompanyName', value) // 선택된 name을 상태로 저장
-                }}
-                options={orderOptions}
-                displayLabel
-                onScrollToBottom={() => {
-                  if (orderPersonHasNextPage && !orderPersonIsFetching) orderPersonFetchNextPage()
-                }}
-                loading={orderPersonIsLoading}
+            <div className="border border-gray-400  w-full flex items-center">
+              <InfiniteScrollSelect
+                placeholder="발주처명을 입력하세요"
+                keyword={search.clientCompanyName}
+                onChangeKeyword={(newKeyword) => search.setField('clientCompanyName', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                items={orderList}
+                hasNextPage={OrderNameHasNextPage ?? false}
+                fetchNextPage={OrderNameFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                onSelect={handleSelectOrdering}
+                // shouldShowList={true}
+                isLoading={OrderNameIsLoading || OrderNameIsFetching}
+                debouncedKeyword={debouncedOrderingKeyword}
+                shouldShowList={isOrderFocused}
+                onFocus={() => setIsOrderFocused(true)}
+                onBlur={() => setIsOrderFocused(false)}
               />
             </div>
           </div>

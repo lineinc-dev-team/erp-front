@@ -16,6 +16,7 @@ type InfiniteScrollSelectProps<T> = {
   isLoading?: boolean
   onFocus?: () => void
   onBlur?: () => void
+  disabled?: boolean
 }
 
 export function InfiniteScrollSelect<T>({
@@ -32,6 +33,7 @@ export function InfiniteScrollSelect<T>({
   onBlur,
   shouldShowList = true,
   isLoading = false,
+  disabled = false,
 }: InfiniteScrollSelectProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]) // 아이템 각각에 ref 저장
@@ -130,21 +132,31 @@ export function InfiniteScrollSelect<T>({
   return (
     <div className=" relative border-gray-400 px-2 p-2 w-full flex justify-center items-center">
       <input
-        className="border rounded px-2 py-2 w-full"
+        className={`border rounded px-2 py-2 w-full ${
+          disabled ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed' : ''
+        }`}
         placeholder={placeholder}
         value={keyword}
-        onChange={(e) => onChangeKeyword(e.target.value)}
+        onChange={(e) => !disabled && onChangeKeyword(e.target.value)}
         onFocus={() => {
-          setIsOpen(true)
-          if (onFocus) onFocus()
+          if (!disabled) {
+            setIsOpen(true)
+            if (onFocus) onFocus()
+          }
         }}
         onBlur={() => {
-          setTimeout(() => {
-            setIsOpen(false)
-            if (onBlur) onBlur()
-          }, 200) // 100~200ms 정도 딜레이 주면 충분합니다.
+          if (!disabled) {
+            setTimeout(() => {
+              setIsOpen(false)
+              if (onBlur) onBlur()
+            }, 200)
+          }
         }}
-        onKeyDown={handleKeyDown}
+        onKeyDown={(e) => {
+          if (!disabled) handleKeyDown(e)
+        }}
+        disabled={disabled}
+        readOnly={disabled}
       />
 
       {showList && (

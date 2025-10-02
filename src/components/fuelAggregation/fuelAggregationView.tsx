@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import CommonButton from '../common/Button'
@@ -20,7 +21,6 @@ import { useManagementMaterial } from '@/hooks/useMaterialManagement'
 import { formatNumber, getTodayDateString } from '@/utils/formatters'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import CommonSelectByName from '../common/CommonSelectByName'
-import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import { useFuelAggregation } from '@/hooks/useFuelAggregation'
 import { FuelDataList, fuelStatuses } from '@/types/fuelAggregation'
 import { useFuelSearchStore } from '@/stores/fuelAggregationStore'
@@ -28,6 +28,9 @@ import { FuelExcelDownload } from '@/services/fuelAggregation/fuelAggregationSer
 import { myInfoProps } from '@/types/user'
 import { useMenuPermission } from '../common/MenuPermissionView'
 import { CustomNoRowsOverlay } from '../common/NoData'
+import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
+import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
+import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 
 export default function FuelAggregationView() {
   const { search } = useFuelSearchStore()
@@ -47,12 +50,7 @@ export default function FuelAggregationView() {
   } = useFuelAggregation()
 
   const {
-    setSitesSearch,
-    sitesOptions,
-    siteNameFetchNextPage,
-    siteNamehasNextPage,
-    siteNameFetching,
-    siteNameLoading,
+    useSitePersonNameListInfiniteScroll,
 
     // 공정명
     setProcessSearch,
@@ -64,11 +62,7 @@ export default function FuelAggregationView() {
 
     // 업체명
 
-    companyOptions,
-    comPanyNameFetchNextPage,
-    comPanyNamehasNextPage,
-    comPanyNameFetching,
-    comPanyNameLoading,
+    useOutsourcingNameListInfiniteScroll,
   } = useOutSourcingContract()
 
   const FuelDataList = FuelListQuery.data?.data.content ?? []
@@ -207,6 +201,45 @@ export default function FuelAggregationView() {
     })
   }
 
+  // 현장명 키워드 검색
+
+  const [isSiteFocused, setIsSiteFocused] = useState(false)
+
+  const debouncedSiteKeyword = useDebouncedValue(search.siteName, 300)
+
+  const {
+    data: SiteNameData,
+    fetchNextPage: SiteNameFetchNextPage,
+    hasNextPage: SiteNameHasNextPage,
+    isFetching: SiteNameIsFetching,
+    isLoading: SiteNameIsLoading,
+  } = useSitePersonNameListInfiniteScroll(debouncedSiteKeyword)
+
+  const SiteRawList = SiteNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const siteList = Array.from(new Map(SiteRawList.map((user) => [user.name, user])).values())
+
+  const [isOutsourcingFocused, setIsOutsourcingFocused] = useState(false)
+
+  // 유저 선택 시 처리
+  const handleSelectOutsourcing = (selectedUser: any) => {
+    search.setField('outsourcingCompanyName', selectedUser.name)
+  }
+
+  const debouncedOutsourcingKeyword = useDebouncedValue(search.outsourcingCompanyName, 300)
+
+  const {
+    data: OutsourcingNameData,
+    fetchNextPage: OutsourcingeNameFetchNextPage,
+    hasNextPage: OutsourcingNameHasNextPage,
+    isFetching: OutsourcingNameIsFetching,
+    isLoading: OutsourcingNameIsLoading,
+  } = useOutsourcingNameListInfiniteScroll(debouncedOutsourcingKeyword)
+
+  const OutsourcingRawList = OutsourcingNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const outsourcingList = Array.from(
+    new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
+  )
+
   // 권한에 따른 버튼 활성화
 
   const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
@@ -236,35 +269,68 @@ export default function FuelAggregationView() {
             <label className="w-[144px] text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명
             </label>
-            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelectByName
-                value={search.siteName || '선택'}
-                onChange={async (value) => {
-                  const selectedSite = sitesOptions.find((opt) => opt.name === value)
-                  if (!selectedSite) return
+            <div className="border border-gray-400 w-full flex items-center">
+              <InfiniteScrollSelect
+                placeholder="현장명을 입력하세요"
+                keyword={search.siteName}
+                // onChangeKeyword={(newKeyword) => search.setField('siteName', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                onChangeKeyword={(newKeyword) => {
+                  search.setField('siteName', newKeyword)
 
-                  search.setField('siteId', selectedSite.id)
-                  search.setField('siteName', selectedSite.name)
-
-                  const res = await SitesProcessNameScroll({
-                    pageParam: 0,
-                    siteId: selectedSite.id,
-                    keyword: '',
-                  })
-
-                  const processes = res.data?.content || []
-                  if (processes.length > 0) {
-                    search.setField('processName', processes[0].name)
-                  } else {
+                  // 현장명 지웠을 경우 공정명도 같이 초기화
+                  if (newKeyword === '') {
                     search.setField('processName', '')
                   }
                 }}
-                options={sitesOptions}
-                onScrollToBottom={() => {
-                  if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
+                items={siteList}
+                hasNextPage={SiteNameHasNextPage ?? false}
+                fetchNextPage={SiteNameFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                // onSelect={handleSelectSiting}
+                onSelect={async (selectedSite) => {
+                  if (!selectedSite) return
+
+                  // 선택된 현장 세팅
+                  search.setField('siteId', selectedSite.id)
+                  search.setField(
+                    'siteName',
+                    selectedSite.name + (selectedSite.deleted ? ' (삭제됨)' : ''),
+                  )
+
+                  if (selectedSite.deleted) {
+                    search.setField('processName', '')
+                    return
+                  }
+
+                  try {
+                    // 공정 목록 조회
+                    const res = await SitesProcessNameScroll({
+                      pageParam: 0,
+                      siteId: selectedSite.id,
+                      keyword: '',
+                    })
+
+                    const processes = res.data?.content || []
+
+                    if (processes.length > 0) {
+                      // 첫 번째 공정 자동 세팅
+                      search.setField('processName', processes[0].name)
+                    } else {
+                      search.setField('processName', '')
+                    }
+                  } catch (err) {
+                    console.error('공정 조회 실패:', err)
+                  }
                 }}
-                onInputChange={(value) => setSitesSearch(value)}
-                loading={siteNameLoading}
+                isLoading={SiteNameIsLoading || SiteNameIsFetching}
+                debouncedKeyword={debouncedSiteKeyword}
+                shouldShowList={isSiteFocused}
+                onFocus={() => setIsSiteFocused(true)}
+                onBlur={() => setIsSiteFocused(false)}
               />
             </div>
           </div>
@@ -290,6 +356,7 @@ export default function FuelAggregationView() {
                 }}
                 onInputChange={(value) => setProcessSearch(value)}
                 loading={processInfoLoading}
+                disabled
               />
             </div>
           </div>
@@ -348,22 +415,28 @@ export default function FuelAggregationView() {
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               업체명
             </label>
-            <div className="border border-gray-400 p-2 px-2 w-full">
-              <CommonSelectByName
-                fullWidth
-                value={search.outsourcingCompanyName || '선택'}
-                onChange={async (value) => {
-                  const selectedCompany = companyOptions.find((opt) => opt.name === value)
-                  if (!selectedCompany) return
-
-                  search.setField('outsourcingCompanyId', selectedCompany.id)
-                  search.setField('outsourcingCompanyName', selectedCompany.name)
-                }}
-                options={companyOptions}
-                onScrollToBottom={() => {
-                  if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
-                }}
-                loading={comPanyNameLoading}
+            <div className="border border-gray-400  w-full flex items-center">
+              <InfiniteScrollSelect
+                placeholder="업체명을 입력하세요"
+                keyword={search.outsourcingCompanyName}
+                onChangeKeyword={(newKeyword) =>
+                  search.setField('outsourcingCompanyName', newKeyword)
+                } // ★필드명과 값 둘 다 넘겨야 함
+                items={outsourcingList}
+                hasNextPage={OutsourcingNameHasNextPage ?? false}
+                fetchNextPage={OutsourcingeNameFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                onSelect={handleSelectOutsourcing}
+                // shouldShowList={true}
+                isLoading={OutsourcingNameIsLoading || OutsourcingNameIsFetching}
+                debouncedKeyword={debouncedOutsourcingKeyword}
+                shouldShowList={isOutsourcingFocused}
+                onFocus={() => setIsOutsourcingFocused(true)}
+                onBlur={() => setIsOutsourcingFocused(false)}
               />
             </div>
           </div>

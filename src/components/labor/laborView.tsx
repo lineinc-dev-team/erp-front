@@ -21,6 +21,8 @@ import CommonSelectByName from '../common/CommonSelectByName'
 import { myInfoProps } from '@/types/user'
 import { useMenuPermission } from '../common/MenuPermissionView'
 import { CustomNoRowsOverlay } from '../common/NoData'
+import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
+import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 
 export default function LaborView() {
   const openTab = useTabOpener()
@@ -31,12 +33,7 @@ export default function LaborView() {
     LaborListQuery,
     LaborDeleteMutation,
 
-    setCompanySearch,
-    companyOptions,
-    comPanyNameFetchNextPage,
-    comPanyNamehasNextPage,
-    comPanyNameFetching,
-    comPanyNameLoading,
+    useOutsourcingNameListInfiniteScroll,
 
     etcDesOptions,
     setETCdesSearch,
@@ -211,6 +208,31 @@ export default function LaborView() {
       fields, // 필수 필드: ["id", "name", "businessNumber", ...]
     })
   }
+  // 업체명 키워드 검색
+
+  const [isOutsourcingFocused, setIsOutsourcingFocused] = useState(false)
+
+  // 유저 선택 시 처리
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleSelectOutsourcing = (selectedUser: any) => {
+    search.setField('outsourcingCompanyName', selectedUser.name)
+    search.setField('outsourcingCompanyId', selectedUser.id)
+  }
+
+  const debouncedOutsourcingKeyword = useDebouncedValue(search.outsourcingCompanyName, 300)
+
+  const {
+    data: OutsourcingNameData,
+    fetchNextPage: OutsourcingeNameFetchNextPage,
+    hasNextPage: OutsourcingNameHasNextPage,
+    isFetching: OutsourcingNameIsFetching,
+    isLoading: OutsourcingNameIsLoading,
+  } = useOutsourcingNameListInfiniteScroll(debouncedOutsourcingKeyword)
+
+  const OutsourcingRawList = OutsourcingNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const outsourcingList = Array.from(
+    new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
+  )
 
   // 권한에 따른 버튼 활성화
 
@@ -314,22 +336,28 @@ export default function LaborView() {
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               소속업체
             </label>
-            <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
-              <CommonSelect
-                fullWidth
-                value={search.outsourcingCompanyId ?? -1}
-                onChange={async (value) => {
-                  const selectedCompany = companyOptions.find((opt) => opt.id === value)
-                  if (!selectedCompany) return
-
-                  search.setField('outsourcingCompanyId', selectedCompany.id)
-                }}
-                options={companyOptions}
-                onScrollToBottom={() => {
-                  if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
-                }}
-                onInputChange={(value) => setCompanySearch(value)}
-                loading={comPanyNameLoading}
+            <div className="border border-gray-400  w-full flex items-center">
+              <InfiniteScrollSelect
+                placeholder="업체명을 입력하세요"
+                keyword={search.outsourcingCompanyName}
+                onChangeKeyword={(newKeyword) =>
+                  search.setField('outsourcingCompanyName', newKeyword)
+                } // ★필드명과 값 둘 다 넘겨야 함
+                items={outsourcingList}
+                hasNextPage={OutsourcingNameHasNextPage ?? false}
+                fetchNextPage={OutsourcingeNameFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                onSelect={handleSelectOutsourcing}
+                // shouldShowList={true}
+                isLoading={OutsourcingNameIsLoading || OutsourcingNameIsFetching}
+                debouncedKeyword={debouncedOutsourcingKeyword}
+                shouldShowList={isOutsourcingFocused}
+                onFocus={() => setIsOutsourcingFocused(true)}
+                onBlur={() => setIsOutsourcingFocused(false)}
               />
             </div>
           </div>

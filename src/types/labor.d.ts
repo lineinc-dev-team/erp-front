@@ -41,6 +41,7 @@ export type LaborSearchState = {
   name: string
   residentNumber: string
   outsourcingCompanyId: number
+  outsourcingCompanyName: string
   phoneNumber: string
   isHeadOffice: boolean | null
 

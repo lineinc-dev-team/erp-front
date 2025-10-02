@@ -91,8 +91,8 @@ export function useLaborInfo() {
         typeDescription: search.typeDescription === '선택' ? undefined : search.typeDescription,
         name: search.name,
         residentNumber: search.residentNumber,
-        outsourcingCompanyId:
-          search.outsourcingCompanyId === -1 ? undefined : search.outsourcingCompanyId,
+        outsourcingCompanyName:
+          search.outsourcingCompanyName === '' ? undefined : search.outsourcingCompanyName,
         phoneNumber: search.phoneNumber,
         isHeadOffice:
           search.outsourcingCompanyId === -1
@@ -185,42 +185,55 @@ export function useLaborInfo() {
     router.push('/labors')
   }
 
-  const [CompanySearch, setCompanySearch] = useState('')
+  const useOutsourcingNameListInfiniteScroll = (keyword: string) => {
+    return useInfiniteQuery({
+      queryKey: ['outsourcingInfo', keyword],
+      queryFn: ({ pageParam }) => GetCompanyNameInfoService({ pageParam, keyword }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        const nextPage = sliceInfo.page + 1
+        return sliceInfo.hasNext ? nextPage : undefined
+      },
+    })
+  }
 
-  const {
-    data: comPanyNameInfo,
-    fetchNextPage: comPanyNameFetchNextPage,
-    hasNextPage: comPanyNamehasNextPage,
-    isFetching: comPanyNameFetching,
-    isLoading: comPanyNameLoading,
-  } = useInfiniteQuery({
-    queryKey: ['compnayInfo', CompanySearch],
-    queryFn: ({ pageParam }) =>
-      GetCompanyNameInfoService({ pageParam, keyword: CompanySearch, type: '' }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
-      const { sliceInfo } = lastPage.data
-      const nextPage = sliceInfo.page + 1
-      return sliceInfo.hasNext ? nextPage : undefined
-    },
-  })
+  // const [CompanySearch, setCompanySearch] = useState('')
 
-  const companyOptions = useMemo(() => {
-    const defaultOptions = [
-      { id: -1, name: '선택', deleted: false },
-      { id: 0, name: '라인공영', deleted: false },
-    ]
+  // const {
+  //   data: comPanyNameInfo,
+  //   fetchNextPage: comPanyNameFetchNextPage,
+  //   hasNextPage: comPanyNamehasNextPage,
+  //   isFetching: comPanyNameFetching,
+  //   isLoading: comPanyNameLoading,
+  // } = useInfiniteQuery({
+  //   queryKey: ['compnayInfo', CompanySearch],
+  //   queryFn: ({ pageParam }) =>
+  //     GetCompanyNameInfoService({ pageParam, keyword: CompanySearch, type: '' }),
+  //   initialPageParam: 0,
+  //   getNextPageParam: (lastPage) => {
+  //     const { sliceInfo } = lastPage.data
+  //     const nextPage = sliceInfo.page + 1
+  //     return sliceInfo.hasNext ? nextPage : undefined
+  //   },
+  // })
 
-    const options = (comPanyNameInfo?.pages || [])
-      .flatMap((page) => page.data.content)
-      .map((user) => ({
-        id: user.id,
-        name: user.name,
-        deleted: false,
-      }))
+  // const companyOptions = useMemo(() => {
+  //   const defaultOptions = [
+  //     { id: -1, name: '선택', deleted: false },
+  //     { id: 0, name: '라인공영', deleted: false },
+  //   ]
 
-    return [...defaultOptions, ...options]
-  }, [comPanyNameInfo])
+  //   const options = (comPanyNameInfo?.pages || [])
+  //     .flatMap((page) => page.data.content)
+  //     .map((user) => ({
+  //       id: user.id,
+  //       name: user.name,
+  //       deleted: false,
+  //     }))
+
+  //   return [...defaultOptions, ...options]
+  // }, [comPanyNameInfo])
 
   // 구분을 기타로 선택 시 보여주는 쿼리
 
@@ -269,12 +282,7 @@ export function useLaborInfo() {
 
     useLaborHistoryDataQuery,
 
-    setCompanySearch,
-    companyOptions,
-    comPanyNameFetchNextPage,
-    comPanyNamehasNextPage,
-    comPanyNameFetching,
-    comPanyNameLoading,
+    useOutsourcingNameListInfiniteScroll,
 
     // 기타의 설명 데이터 값
 

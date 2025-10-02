@@ -1,5 +1,5 @@
 import { useDailyFormStore } from '@/stores/dailyReportStore'
-import { useFuelFormStore } from '@/stores/fuelAggregationStore'
+import { useFuelFormStore, useFuelSearchStore } from '@/stores/fuelAggregationStore'
 import { useManagementCostFormStore } from '@/stores/managementCostsStore'
 import { useManagementSteelFormStore } from '@/stores/managementSteelStore'
 import { useManagementMaterialFormStore } from '@/stores/materialManagementStore'
@@ -22,6 +22,8 @@ export const useSiteId = () => {
 
   const fuelForm = useFuelFormStore((state) => state.form)
 
+  const fuelSearch = useFuelSearchStore((state) => state.search)
+
   // 노무 명세
 
   // 출역일보
@@ -30,6 +32,8 @@ export const useSiteId = () => {
 
   if (pathname.startsWith('/fuelAggregation/registration')) {
     return fuelForm?.siteId
+  } else if (pathname.startsWith('/fuelAggregation')) {
+    return fuelSearch?.siteId
   } else if (pathname.startsWith('/outsourcingContract/registration')) {
     return form?.siteId
   } else if (pathname.startsWith('/materialManagement/registration')) {

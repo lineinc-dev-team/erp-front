@@ -146,6 +146,7 @@ export type ManagementCostFormState = {
   siteName: string
   siteProcessId: number
   siteProcessName: string
+  outsourcingCompanyName: string
   outsourcingCompanyId: number
   itemType: string
   itemTypeDescription: string

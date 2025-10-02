@@ -71,10 +71,11 @@ export const useMaterialSearchStore = create<{ search: MaterialSearchState }>((s
 export const useManagementMaterialFormStore = create<MaterialFormStore>((set, get) => ({
   form: {
     siteId: 0,
-    siteName: '선택',
+    siteName: '',
     siteProcessId: 0,
-    siteProcessName: '선택',
+    siteProcessName: '',
     outsourcingCompanyId: 0,
+    outsourcingCompanyName: '',
     inputType: 'BASE',
     inputTypeDescription: '',
     deliveryDate: null,
@@ -94,10 +95,11 @@ export const useManagementMaterialFormStore = create<MaterialFormStore>((set, ge
     set(() => ({
       form: {
         siteId: 0,
-        siteName: '선택',
+        siteName: '',
         siteProcessId: 0,
-        siteProcessName: '선택',
+        siteProcessName: '',
         outsourcingCompanyId: 0,
+        outsourcingCompanyName: '',
         inputType: 'BASE',
         inputTypeDescription: '',
         deliveryDate: null,

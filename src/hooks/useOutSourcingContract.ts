@@ -183,28 +183,6 @@ export default function useOutSourcingContract() {
     })
   }
 
-  // 인력 정보 조회 무한 스크롤
-  // const useOutsourcingContractPersonDataQuery = (
-  //   outsourcingContractId: number,
-  //   enabled: boolean,
-  // ) => {
-  //   return useInfiniteQuery({
-  //     queryKey: ['PersonList', outsourcingContractId],
-  //     queryFn: ({ pageParam = 0 }) =>
-  //       ContractPersonDetailService(outsourcingContractId, pageParam, 4, 'id,desc'),
-  //     initialPageParam: 0,
-  //     getNextPageParam: (lastPage) => {
-  //       const { sliceInfo } = lastPage?.data
-  //       const nextPage = sliceInfo?.page + 1
-
-  //       return sliceInfo?.hasNext ? nextPage : undefined
-  //     },
-  //     enabled: enabled && !!outsourcingContractId && !isNaN(outsourcingContractId),
-  //   })
-  // }
-
-  // 현장명, 공정명 무한 스크롤 기능
-
   const [sitesSearch, setSitesSearch] = useState('')
 
   const {
@@ -237,11 +215,26 @@ export default function useOutSourcingContract() {
     return [defaultOption, ...options]
   }, [siteNameInfo])
 
+  const useSitePersonNameListInfiniteScroll = (keyword: string) => {
+    return useInfiniteQuery({
+      queryKey: ['ContractsiteInfo', keyword],
+      queryFn: ({ pageParam }) => SitesPersonScroll({ pageParam, keyword }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        const nextPage = sliceInfo.page + 1
+        return sliceInfo.hasNext ? nextPage : undefined
+      },
+    })
+  }
+
   const [processSearch, setProcessSearch] = useState('')
 
   const isSearchPage = pathName.includes('/outsourcingContract')
 
   const siteId = useSiteId() // 훅 실행해서 값 받기
+
+  console.log('siteIdsiteId', siteId)
 
   const {
     data: processInfo,
@@ -320,41 +313,54 @@ export default function useOutSourcingContract() {
 
   // 업체명 리스트 + 사업자등록 번호
 
-  const {
-    data: comPanyNameInfo,
-    fetchNextPage: comPanyNameFetchNextPage,
-    hasNextPage: comPanyNamehasNextPage,
-    isFetching: comPanyNameFetching,
-    isLoading: comPanyNameLoading,
-  } = useInfiniteQuery({
-    queryKey: ['compnayInfo'],
-    queryFn: ({ pageParam = 0 }) => GetCompanyNameInfoService({ pageParam }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
-      const { sliceInfo } = lastPage.data
-      const nextPage = sliceInfo.page + 1
-      return sliceInfo.hasNext ? nextPage : undefined
-    },
-  })
+  // const {
+  //   data: comPanyNameInfo,
+  //   fetchNextPage: comPanyNameFetchNextPage,
+  //   hasNextPage: comPanyNamehasNextPage,
+  //   isFetching: comPanyNameFetching,
+  //   isLoading: comPanyNameLoading,
+  // } = useInfiniteQuery({
+  //   queryKey: ['compnayInfo'],
+  //   queryFn: ({ pageParam = 0 }) => GetCompanyNameInfoService({ pageParam }),
+  //   initialPageParam: 0,
+  //   getNextPageParam: (lastPage) => {
+  //     const { sliceInfo } = lastPage.data
+  //     const nextPage = sliceInfo.page + 1
+  //     return sliceInfo.hasNext ? nextPage : undefined
+  //   },
+  // })
 
-  const companyOptions = useMemo(() => {
-    const defaultOption = { id: 0, name: '선택', businessNumber: '', deleted: false }
+  // const companyOptions = useMemo(() => {
+  //   const defaultOption = { id: 0, name: '선택', businessNumber: '', deleted: false }
 
-    const options = (comPanyNameInfo?.pages || [])
-      .flatMap((page) => page.data.content)
-      .map((user) => ({
-        id: user.id,
-        name: user.name,
-        businessNumber: user.businessNumber,
-        ceoName: user.ceoName,
-        bankName: user.bankName,
-        accountNumber: user.accountNumber,
-        accountHolder: user.accountHolder,
-        deleted: false,
-      }))
+  //   const options = (comPanyNameInfo?.pages || [])
+  //     .flatMap((page) => page.data.content)
+  //     .map((user) => ({
+  //       id: user.id,
+  //       name: user.name,
+  //       businessNumber: user.businessNumber,
+  //       ceoName: user.ceoName,
+  //       bankName: user.bankName,
+  //       accountNumber: user.accountNumber,
+  //       accountHolder: user.accountHolder,
+  //       deleted: false,
+  //     }))
 
-    return [defaultOption, ...options]
-  }, [comPanyNameInfo])
+  //   return [defaultOption, ...options]
+  // }, [comPanyNameInfo])
+
+  const useOutsourcingNameListInfiniteScroll = (keyword: string) => {
+    return useInfiniteQuery({
+      queryKey: ['outsourcingInfo', keyword],
+      queryFn: ({ pageParam }) => GetCompanyNameInfoService({ pageParam, keyword }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        const nextPage = sliceInfo.page + 1
+        return sliceInfo.hasNext ? nextPage : undefined
+      },
+    })
+  }
 
   return {
     OutsourcingContractListQuery,
@@ -372,15 +378,19 @@ export default function useOutSourcingContract() {
     useOutsourcingContractHistoryDataQuery,
 
     // 업체명
-    companyOptions,
-    comPanyNameFetchNextPage,
-    comPanyNamehasNextPage,
-    comPanyNameFetching,
-    comPanyNameLoading,
-
+    useOutsourcingNameListInfiniteScroll,
     // 외주계약등록에서 사용 할 현장명
-    setSitesSearch,
+    // setSitesSearch,
+    // sitesOptions,
+    // siteNameFetchNextPage,
+    // siteNamehasNextPage,
+    // siteNameFetching,
+    // siteNameLoading,
+
+    useSitePersonNameListInfiniteScroll,
+
     sitesOptions,
+    setSitesSearch,
     siteNameFetchNextPage,
     siteNamehasNextPage,
     siteNameFetching,

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import CommonButton from '../common/Button'
@@ -25,6 +26,8 @@ import { SitesProcessNameScroll } from '@/services/managementCost/managementCost
 import { myInfoProps } from '@/types/user'
 import { useMenuPermission } from '../common/MenuPermissionView'
 import { CustomNoRowsOverlay } from '../common/NoData'
+import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
+import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 
 export default function MaterialManagementView() {
   const { handleNewMaterialCreate } = ManagementMaterialService()
@@ -43,13 +46,7 @@ export default function MaterialManagementView() {
   } = useManagementMaterial()
 
   const {
-    setSitesSearch,
-    sitesOptions,
-    siteNameFetchNextPage,
-    siteNamehasNextPage,
-    siteNameFetching,
-    siteNameLoading,
-
+    useSitePersonNameListInfiniteScroll,
     // 공정명
     setProcessSearch,
     processOptions,
@@ -60,11 +57,7 @@ export default function MaterialManagementView() {
 
     // 업체명
 
-    companyOptions,
-    comPanyNameFetchNextPage,
-    comPanyNamehasNextPage,
-    comPanyNameFetching,
-    comPanyNameLoading,
+    useOutsourcingNameListInfiniteScroll,
   } = useOutSourcingContract()
 
   const MaterialDataList = MaterialListQuery.data?.data.content ?? []
@@ -245,6 +238,52 @@ export default function MaterialManagementView() {
     })
   }
 
+  // 현장명 키워드 검색
+
+  const [isSiteFocused, setIsSiteFocused] = useState(false)
+
+  // 유저 선택 시 처리
+  // const handleSelectSiting = (selectedUser: any) => {
+  //   search.setField('name', selectedUser.name)
+  // }
+
+  const debouncedSiteKeyword = useDebouncedValue(search.siteName, 300)
+
+  const {
+    data: SiteNameData,
+    fetchNextPage: SiteNameFetchNextPage,
+    hasNextPage: SiteNameHasNextPage,
+    isFetching: SiteNameIsFetching,
+    isLoading: SiteNameIsLoading,
+  } = useSitePersonNameListInfiniteScroll(debouncedSiteKeyword)
+
+  const SiteRawList = SiteNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const siteList = Array.from(new Map(SiteRawList.map((user) => [user.name, user])).values())
+
+  // 업체명 키워드 검색
+
+  const [isOutsourcingFocused, setIsOutsourcingFocused] = useState(false)
+
+  // 유저 선택 시 처리
+  const handleSelectOutsourcing = (selectedUser: any) => {
+    search.setField('outsourcingCompanyName', selectedUser.name)
+  }
+
+  const debouncedOutsourcingKeyword = useDebouncedValue(search.outsourcingCompanyName, 300)
+
+  const {
+    data: OutsourcingNameData,
+    fetchNextPage: OutsourcingeNameFetchNextPage,
+    hasNextPage: OutsourcingNameHasNextPage,
+    isFetching: OutsourcingNameIsFetching,
+    isLoading: OutsourcingNameIsLoading,
+  } = useOutsourcingNameListInfiniteScroll(debouncedOutsourcingKeyword)
+
+  const OutsourcingRawList = OutsourcingNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const outsourcingList = Array.from(
+    new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
+  )
+
   // 권한에 따른 버튼 활성화
 
   const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
@@ -274,37 +313,68 @@ export default function MaterialManagementView() {
             <label className="w-[144px] text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명
             </label>
-            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelectByName
-                value={search.siteName || '선택'}
-                onChange={async (value) => {
-                  const selectedSite = sitesOptions.find((opt) => opt.name === value)
-                  if (!selectedSite) return
+            <div className="border border-gray-400 w-full flex items-center">
+              <InfiniteScrollSelect
+                placeholder="현장명을 입력하세요"
+                keyword={search.siteName}
+                // onChangeKeyword={(newKeyword) => search.setField('siteName', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                onChangeKeyword={(newKeyword) => {
+                  search.setField('siteName', newKeyword)
 
-                  search.setField('siteId', selectedSite.id)
-                  search.setField('siteName', selectedSite.name)
-
-                  const res = await SitesProcessNameScroll({
-                    pageParam: 0,
-                    siteId: selectedSite.id,
-                    keyword: '',
-                  })
-
-                  const processes = res.data?.content || []
-                  if (processes.length > 0) {
-                    search.setField('processId', processes[0].id)
-                    search.setField('processName', processes[0].name)
-                  } else {
-                    search.setField('processId', 0)
+                  // 현장명 지웠을 경우 공정명도 같이 초기화
+                  if (newKeyword === '') {
                     search.setField('processName', '')
                   }
                 }}
-                options={sitesOptions}
-                onScrollToBottom={() => {
-                  if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
+                items={siteList}
+                hasNextPage={SiteNameHasNextPage ?? false}
+                fetchNextPage={SiteNameFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                // onSelect={handleSelectSiting}
+                onSelect={async (selectedSite) => {
+                  if (!selectedSite) return
+
+                  // 선택된 현장 세팅
+                  search.setField('siteId', selectedSite.id)
+                  search.setField(
+                    'siteName',
+                    selectedSite.name + (selectedSite.deleted ? ' (삭제됨)' : ''),
+                  )
+
+                  if (selectedSite.deleted) {
+                    search.setField('processName', '')
+                    return
+                  }
+
+                  try {
+                    // 공정 목록 조회
+                    const res = await SitesProcessNameScroll({
+                      pageParam: 0,
+                      siteId: selectedSite.id,
+                      keyword: '',
+                    })
+
+                    const processes = res.data?.content || []
+
+                    if (processes.length > 0) {
+                      // 첫 번째 공정 자동 세팅
+                      search.setField('processName', processes[0].name)
+                    } else {
+                      search.setField('processName', '')
+                    }
+                  } catch (err) {
+                    console.error('공정 조회 실패:', err)
+                  }
                 }}
-                onInputChange={(value) => setSitesSearch(value)}
-                loading={siteNameLoading}
+                isLoading={SiteNameIsLoading || SiteNameIsFetching}
+                debouncedKeyword={debouncedSiteKeyword}
+                shouldShowList={isSiteFocused}
+                onFocus={() => setIsSiteFocused(true)}
+                onBlur={() => setIsSiteFocused(false)}
               />
             </div>
           </div>
@@ -330,6 +400,7 @@ export default function MaterialManagementView() {
                 }}
                 onInputChange={(value) => setProcessSearch(value)}
                 loading={processInfoLoading}
+                disabled
               />
             </div>
           </div>
@@ -358,7 +429,7 @@ export default function MaterialManagementView() {
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               자재업체명
             </label>
-            <div className="border border-gray-400 p-2 px-2 w-full">
+            {/* <div className="border border-gray-400 p-2 px-2 w-full">
               <CommonSelectByName
                 fullWidth
                 value={search.outsourcingCompanyName || '선택'}
@@ -374,6 +445,31 @@ export default function MaterialManagementView() {
                   if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
                 }}
                 loading={comPanyNameLoading}
+              />
+            </div> */}
+
+            <div className="border border-gray-400  w-full flex items-center">
+              <InfiniteScrollSelect
+                placeholder="업체명을 입력하세요"
+                keyword={search.outsourcingCompanyName}
+                onChangeKeyword={(newKeyword) =>
+                  search.setField('outsourcingCompanyName', newKeyword)
+                } // ★필드명과 값 둘 다 넘겨야 함
+                items={outsourcingList}
+                hasNextPage={OutsourcingNameHasNextPage ?? false}
+                fetchNextPage={OutsourcingeNameFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                onSelect={handleSelectOutsourcing}
+                // shouldShowList={true}
+                isLoading={OutsourcingNameIsLoading || OutsourcingNameIsFetching}
+                debouncedKeyword={debouncedOutsourcingKeyword}
+                shouldShowList={isOutsourcingFocused}
+                onFocus={() => setIsOutsourcingFocused(true)}
+                onBlur={() => setIsOutsourcingFocused(false)}
               />
             </div>
           </div>

@@ -102,6 +102,7 @@ export type ManagementMaterialFormState = {
   siteProcessId: number // 공정명
   siteProcessName: string
   outsourcingCompanyId: number
+  outsourcingCompanyName: string
   inputType: string
   inputTypeDescription: string
   deliveryDate: Date | null

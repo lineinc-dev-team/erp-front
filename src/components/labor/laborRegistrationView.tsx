@@ -40,6 +40,8 @@ import { AttachedFile, LaborFormState } from '@/types/labor'
 import { idTypeValueToName } from '@/stores/outsourcingCompanyStore'
 import { CommonResidentNumberInput } from '@/utils/commonResidentNumberInput'
 import { HistoryItem } from '@/types/ordering'
+import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
+import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 
 export default function LaborRegistrationView({ isEditMode = false }) {
   const {
@@ -62,12 +64,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     WorkTypeMethodOptions,
     LaborTypeMethodOptions,
     laborCancel,
-    setCompanySearch,
-    companyOptions,
-    comPanyNameFetchNextPage,
-    comPanyNamehasNextPage,
-    comPanyNameFetching,
-    comPanyNameLoading,
+    useOutsourcingNameListInfiniteScroll,
 
     useLaborHistoryDataQuery,
   } = useLaborInfo()
@@ -136,6 +133,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     if (laborDetailData && isEditMode === true) {
       const client = laborDetailData.data
 
+      console.log('24', client)
+
       // 첨부파일 데이터 가공
       const formattedFiles = (client.files ?? [])
         .map((item: AttachedFile) => ({
@@ -199,6 +198,9 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       setField('memo', client.memo)
       setField('files', formattedFiles)
 
+      setField('outsourcingCompanyName', client.outsourcingCompany.name)
+      setField('outsourcingCompanyId', client.outsourcingCompany.id)
+
       setField('tenureMonths', client.tenureMonths === null ? '-' : client.tenureMonths + '개월')
 
       // isSeverancePayEligible 설정
@@ -219,48 +221,28 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     }
   }, [laborDetailData, isEditMode, reset, setField])
 
-  const [updatedOutSourcingCompanyOptions, setUpdatedOutSourcingCompanyOptions] =
-    useState(companyOptions)
+  const [isOutsourcingFocused, setIsOutsourcingFocused] = useState(false)
 
-  useEffect(() => {
-    if (laborDetailData && isEditMode) {
-      const client = laborDetailData.data
-      const newLaborOptions = [...companyOptions]
+  // 유저 선택 시 처리
+  const handleSelectOutsourcing = (selectedUser: any) => {
+    setField('outsourcingCompanyName', selectedUser.name)
+    setField('outsourcingCompanyId', selectedUser.id)
+  }
 
-      if (client.outsourcingCompany) {
-        const laborName =
-          client.outsourcingCompany.name + (client.outsourcingCompany.deleted ? ' (삭제됨)' : '')
+  const debouncedOutsourcingKeyword = useDebouncedValue(form.outsourcingCompanyName, 300)
 
-        const exists = newLaborOptions.some((u) => u.id === client.outsourcingCompany.id)
-        if (!exists) {
-          newLaborOptions.push({
-            id: client.outsourcingCompany.id,
-            name: laborName,
-            deleted: client.outsourcingCompany.deleted,
-          })
-        }
-      }
+  const {
+    data: OutsourcingNameData,
+    fetchNextPage: OutsourcingeNameFetchNextPage,
+    hasNextPage: OutsourcingNameHasNextPage,
+    isFetching: OutsourcingNameIsFetching,
+    isLoading: OutsourcingNameIsLoading,
+  } = useOutsourcingNameListInfiniteScroll(debouncedOutsourcingKeyword)
 
-      const deletedUsers = newLaborOptions.filter((u) => u.deleted)
-      const normalUsers = newLaborOptions.filter((u) => !u.deleted && u.id !== -1)
-
-      setUpdatedOutSourcingCompanyOptions([
-        newLaborOptions.find((u) => u.id === -1)!,
-        ...deletedUsers,
-        ...normalUsers,
-      ])
-
-      setField(
-        'outsourcingCompanyId',
-
-        client.isHeadOffice ? 0 : client.outsourcingCompany?.id ?? -1,
-      )
-    } else if (!isEditMode) {
-      // 등록 모드일 경우
-      setUpdatedOutSourcingCompanyOptions(companyOptions)
-      setField('outsourcingCompanyId', -1) // "선택" 기본값
-    }
-  }, [laborDetailData, isEditMode, companyOptions])
+  const OutsourcingRawList = OutsourcingNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const outsourcingList = Array.from(
+    new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
+  )
 
   const formatChangeDetail = (getChanges: string) => {
     try {
@@ -554,28 +536,27 @@ export default function LaborRegistrationView({ isEditMode = false }) {
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               소속업체 <span className="text-red-500 ml-1">*</span>
             </label>
-            <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
-              <div className="flex gap-2 items-center py-2">
-                <CommonSelect
-                  fullWidth
-                  value={form.outsourcingCompanyId ?? -1}
-                  onChange={async (value) => {
-                    const selectedCompany = updatedOutSourcingCompanyOptions.find(
-                      (opt) => opt.id === value,
-                    )
-                    if (!selectedCompany) return
-
-                    setField('outsourcingCompanyId', selectedCompany.id)
-                    setField('outsourcingCompanyName', selectedCompany.name)
-                  }}
-                  options={updatedOutSourcingCompanyOptions}
-                  onScrollToBottom={() => {
-                    if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
-                  }}
-                  onInputChange={(value) => setCompanySearch(value)}
-                  loading={comPanyNameLoading}
-                />
-              </div>
+            <div className="border border-gray-400  w-full">
+              <InfiniteScrollSelect
+                placeholder="업체명을 입력하세요"
+                keyword={form.outsourcingCompanyName}
+                onChangeKeyword={(newKeyword) => setField('outsourcingCompanyName', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                items={outsourcingList}
+                hasNextPage={OutsourcingNameHasNextPage ?? false}
+                fetchNextPage={OutsourcingeNameFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                onSelect={handleSelectOutsourcing}
+                // shouldShowList={true}
+                isLoading={OutsourcingNameIsLoading || OutsourcingNameIsFetching}
+                debouncedKeyword={debouncedOutsourcingKeyword}
+                shouldShowList={isOutsourcingFocused}
+                onFocus={() => setIsOutsourcingFocused(true)}
+                onBlur={() => setIsOutsourcingFocused(false)}
+              />
             </div>
           </div>
 

@@ -53,6 +53,8 @@ import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { useQuery } from '@tanstack/react-query'
 import CommonMultiFileInput from '@/components/common/CommonMultiFileInput'
 import { HistoryItem } from '@/types/ordering'
+import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
+import { InfiniteScrollSelect } from '@/components/common/InfiniteScrollSelect'
 
 export default function OutsourcingContractRegistrationView({ isEditMode = false }) {
   const {
@@ -77,12 +79,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
   } = useContractFormStore()
 
   const {
-    setSitesSearch,
-    sitesOptions,
-    siteNameFetchNextPage,
-    siteNamehasNextPage,
-    siteNameFetching,
-    siteNameLoading,
+    useSitePersonNameListInfiniteScroll,
 
     // 공정명
     setProcessSearch,
@@ -94,11 +91,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
     // 업체명
 
-    companyOptions,
-    comPanyNameFetchNextPage,
-    comPanyNamehasNextPage,
-    comPanyNameFetching,
-    comPanyNameLoading,
+    useOutsourcingNameListInfiniteScroll,
 
     // 옵션 타입
     createOutSourcingContractMutation,
@@ -273,48 +266,48 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
   // 현장명이 지워졌을떄 보이는 로직
 
-  const [updatedSiteOptions, setUpdatedSiteOptions] = useState(sitesOptions)
+  // const [updatedSiteOptions, setUpdatedSiteOptions] = useState(sitesOptions)
 
-  useEffect(() => {
-    if (contractDetailData && isEditMode) {
-      const client = contractDetailData.data
+  // useEffect(() => {
+  //   if (contractDetailData && isEditMode) {
+  //     const client = contractDetailData.data
 
-      // 기존 siteOptions 복사
-      const newSiteOptions = [...sitesOptions]
+  //     // 기존 siteOptions 복사
+  //     const newSiteOptions = [...sitesOptions]
 
-      if (client.site) {
-        const siteName = client.site.name + (client.site.deleted ? ' (삭제됨)' : '')
+  //     if (client.site) {
+  //       const siteName = client.site.name + (client.site.deleted ? ' (삭제됨)' : '')
 
-        // 이미 options에 있는지 체크
-        const exists = newSiteOptions.some((s) => s.id === client.site.id)
-        if (!exists) {
-          newSiteOptions.push({
-            id: client.site.id,
-            name: siteName,
-            deleted: client.site.deleted,
-          })
-        }
-      }
+  //       // 이미 options에 있는지 체크
+  //       const exists = newSiteOptions.some((s) => s.id === client.site.id)
+  //       if (!exists) {
+  //         newSiteOptions.push({
+  //           id: client.site.id,
+  //           name: siteName,
+  //           deleted: client.site.deleted,
+  //         })
+  //       }
+  //     }
 
-      // 삭제된 현장 / 일반 현장 분리
-      const deletedSites = newSiteOptions.filter((s) => s.deleted)
-      const normalSites = newSiteOptions.filter((s) => !s.deleted && s.id !== 0)
+  //     // 삭제된 현장 / 일반 현장 분리
+  //     const deletedSites = newSiteOptions.filter((s) => s.deleted)
+  //     const normalSites = newSiteOptions.filter((s) => !s.deleted && s.id !== 0)
 
-      // 최종 옵션 배열 세팅
-      setUpdatedSiteOptions([
-        newSiteOptions.find((s) => s.id === 0) ?? { id: 0, name: '선택', deleted: false },
-        ...deletedSites,
-        ...normalSites,
-      ])
+  //     // 최종 옵션 배열 세팅
+  //     setUpdatedSiteOptions([
+  //       newSiteOptions.find((s) => s.id === 0) ?? { id: 0, name: '선택', deleted: false },
+  //       ...deletedSites,
+  //       ...normalSites,
+  //     ])
 
-      // 선택된 현장 id 세팅
-      setField('siteId', client.site?.id ?? 0)
-    } else if (!isEditMode) {
-      // 등록 모드
-      setUpdatedSiteOptions(sitesOptions)
-      setField('siteId', 0)
-    }
-  }, [contractDetailData, isEditMode, sitesOptions])
+  //     // 선택된 현장 id 세팅
+  //     setField('siteId', client.site?.id ?? 0)
+  //   } else if (!isEditMode) {
+  //     // 등록 모드
+  //     setUpdatedSiteOptions(sitesOptions)
+  //     setField('siteId', 0)
+  //   }
+  // }, [contractDetailData, isEditMode, sitesOptions])
 
   const [updatedProcessOptions, setUpdatedProcessOptions] = useState(processOptions)
 
@@ -361,58 +354,58 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     }
   }, [contractDetailData, isEditMode, processOptions, setField])
 
-  const [updatedCompanyOptions, setUpdatedCompanyOptions] = useState(companyOptions)
+  // const [updatedCompanyOptions, setUpdatedCompanyOptions] = useState(companyOptions)
 
-  useEffect(() => {
-    if (contractDetailData && isEditMode) {
-      const client = contractDetailData.data
+  // useEffect(() => {
+  //   if (contractDetailData && isEditMode) {
+  //     const client = contractDetailData.data
 
-      const newCompanyOptions = [...companyOptions]
+  //     const newCompanyOptions = [...companyOptions]
 
-      if (client.outsourcingCompany) {
-        const companyName =
-          client.outsourcingCompany.name + (client.outsourcingCompany.deleted ? ' (삭제됨)' : '')
+  //     if (client.outsourcingCompany) {
+  //       const companyName =
+  //         client.outsourcingCompany.name + (client.outsourcingCompany.deleted ? ' (삭제됨)' : '')
 
-        // 이미 options에 있는지 체크
-        const exists = newCompanyOptions.some((c) => c.id === client.outsourcingCompany.id)
-        if (!exists) {
-          newCompanyOptions.push({
-            id: client.outsourcingCompany.id,
-            name: companyName,
-            businessNumber: client.outsourcingCompany.businessNumber ?? '',
-            ceoName: client.outsourcingCompany.ceoName ?? '',
-            bankName: client.outsourcingCompany.bankName ?? '',
-            accountNumber: client.outsourcingCompany.accountNumber ?? '',
-            accountHolder: client.outsourcingCompany.accountHolder ?? '',
-            deleted: client.outsourcingCompany.deleted,
-          })
-        }
-      }
+  //       // 이미 options에 있는지 체크
+  //       const exists = newCompanyOptions.some((c) => c.id === client.outsourcingCompany.id)
+  //       if (!exists) {
+  //         newCompanyOptions.push({
+  //           id: client.outsourcingCompany.id,
+  //           name: companyName,
+  //           businessNumber: client.outsourcingCompany.businessNumber ?? '',
+  //           ceoName: client.outsourcingCompany.ceoName ?? '',
+  //           bankName: client.outsourcingCompany.bankName ?? '',
+  //           accountNumber: client.outsourcingCompany.accountNumber ?? '',
+  //           accountHolder: client.outsourcingCompany.accountHolder ?? '',
+  //           deleted: client.outsourcingCompany.deleted,
+  //         })
+  //       }
+  //     }
 
-      const deletedCompanies = newCompanyOptions.filter((c) => c.deleted)
-      const normalCompanies = newCompanyOptions.filter((c) => !c.deleted && c.id !== 0)
+  //     const deletedCompanies = newCompanyOptions.filter((c) => c.deleted)
+  //     const normalCompanies = newCompanyOptions.filter((c) => !c.deleted && c.id !== 0)
 
-      setUpdatedCompanyOptions([
-        newCompanyOptions.find((c) => c.id === 0) ?? {
-          id: 0,
-          name: '선택',
-          businessNumber: '',
-          ceoName: '',
-          bankName: '',
-          accountNumber: '',
-          accountHolder: '',
-          deleted: false,
-        },
-        ...deletedCompanies,
-        ...normalCompanies,
-      ])
+  //     setUpdatedCompanyOptions([
+  //       newCompanyOptions.find((c) => c.id === 0) ?? {
+  //         id: 0,
+  //         name: '선택',
+  //         businessNumber: '',
+  //         ceoName: '',
+  //         bankName: '',
+  //         accountNumber: '',
+  //         accountHolder: '',
+  //         deleted: false,
+  //       },
+  //       ...deletedCompanies,
+  //       ...normalCompanies,
+  //     ])
 
-      setField('CompanyId', client.outsourcingCompany?.id ?? 0)
-    } else if (!isEditMode) {
-      setUpdatedCompanyOptions(companyOptions)
-      setField('CompanyId', 0) // "선택" 기본값
-    }
-  }, [contractDetailData, isEditMode, companyOptions])
+  //     setField('CompanyId', client.outsourcingCompany?.id ?? 0)
+  //   } else if (!isEditMode) {
+  //     setUpdatedCompanyOptions(companyOptions)
+  //     setField('CompanyId', 0) // "선택" 기본값
+  //   }
+  // }, [contractDetailData, isEditMode, companyOptions])
 
   useEffect(() => {
     if (contractDetailData && isEditMode === true) {
@@ -486,6 +479,10 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       setField('siteId', client.site?.id)
       setField('processId', client.siteProcess?.id)
       setField('CompanyId', client.outsourcingCompany?.id)
+
+      setField('siteName', client.site?.name)
+      setField('processName', client.siteProcess?.name)
+      setField('CompanyName', client.outsourcingCompany?.name)
       setField('businessNumber', client.outsourcingCompany?.businessNumber)
       setField('type', client?.typeCode)
       setField('typeDescription', client?.typeDescription)
@@ -659,7 +656,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
           ],
         }))
 
-        setField('attachedFiles', etcFiles) // ✅ 누락된 부분
+        setField('attachedFiles', etcFiles)
       }
     } else {
       reset()
@@ -673,8 +670,49 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     isEditMode,
     reset,
     setField,
-    companyOptions,
   ])
+
+  const [isSiteFocused, setIsSiteFocused] = useState(false)
+
+  const debouncedSiteKeyword = useDebouncedValue(form.siteName, 300)
+
+  const {
+    data: SiteNameData,
+    fetchNextPage: SiteNameFetchNextPage,
+    hasNextPage: SiteNameHasNextPage,
+    isFetching: SiteNameIsFetching,
+    isLoading: SiteNameIsLoading,
+  } = useSitePersonNameListInfiniteScroll(debouncedSiteKeyword)
+
+  const SiteRawList = SiteNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const siteList = Array.from(new Map(SiteRawList.map((user) => [user.name, user])).values())
+
+  // 업체명 이름 키워드
+
+  // 업체명 키워드 검색
+
+  const [isOutsourcingFocused, setIsOutsourcingFocused] = useState(false)
+
+  // 유저 선택 시 처리
+  // const handleSelectOutsourcing = (selectedUser: any) => {
+  //   setField('CompanyName', selectedUser.name)
+  //   setField('CompanyId', selectedUser.id)
+  // }
+
+  const debouncedOutsourcingKeyword = useDebouncedValue(form.CompanyName, 300)
+
+  const {
+    data: OutsourcingNameData,
+    fetchNextPage: OutsourcingeNameFetchNextPage,
+    hasNextPage: OutsourcingNameHasNextPage,
+    isFetching: OutsourcingNameIsFetching,
+    isLoading: OutsourcingNameIsLoading,
+  } = useOutsourcingNameListInfiniteScroll(debouncedOutsourcingKeyword)
+
+  const OutsourcingRawList = OutsourcingNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const outsourcingList = Array.from(
+    new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
+  )
 
   const formatChangeDetail = (getChanges: string) => {
     try {
@@ -935,14 +973,33 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명 <span className="text-red-500 ml-1">*</span>
             </label>
-            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelect
-                fullWidth
-                value={form.siteId || 0}
-                onChange={async (value) => {
-                  const selectedSite = updatedSiteOptions.find((opt) => opt.id === value)
+            <div className="border border-gray-400 w-full flex items-center">
+              <InfiniteScrollSelect
+                disabled={false}
+                placeholder="현장명을 입력하세요"
+                keyword={form.siteName}
+                onChangeKeyword={(newKeyword) => {
+                  setField('siteName', newKeyword)
+
+                  // 현장명 지웠을 경우 공정명도 같이 초기화
+                  if (newKeyword === '') {
+                    setField('processName', '')
+                    setField('processId', 0)
+                  }
+                }}
+                items={siteList}
+                hasNextPage={SiteNameHasNextPage ?? false}
+                fetchNextPage={SiteNameFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                // onSelect={handleSelectSiting}
+                onSelect={async (selectedSite) => {
                   if (!selectedSite) return
 
+                  // 선택된 현장 세팅
                   setField('siteId', selectedSite.id)
                   setField(
                     'siteName',
@@ -950,21 +1007,12 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                   )
 
                   if (selectedSite.deleted) {
-                    // 삭제된 경우
-                    const deletedProcess = updatedProcessOptions.find(
-                      (p) => p.id === contractDetailData?.data.siteProcess?.id,
-                    )
-                    if (deletedProcess) {
-                      setField('processId', deletedProcess.id)
-                      setField(
-                        'processName',
-                        deletedProcess.name + (deletedProcess.deleted ? ' (삭제됨)' : ''),
-                      )
-                    } else {
-                      setField('processId', 0)
-                      setField('processName', '')
-                    }
-                  } else {
+                    setField('processName', '')
+                    return
+                  }
+
+                  try {
+                    // 공정 목록 조회
                     const res = await SitesProcessNameScroll({
                       pageParam: 0,
                       siteId: selectedSite.id,
@@ -972,29 +1020,24 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     })
 
                     const processes = res.data?.content || []
+
                     if (processes.length > 0) {
-                      const firstProcess = processes[0]
-
-                      setUpdatedProcessOptions((prev) => [
-                        { id: 0, name: '선택', deleted: false },
-                        ...prev.filter((p) => p.deleted), // 삭제된 것 유지
-                        ...processes.map((p: any) => ({ ...p, deleted: false })),
-                      ])
-
-                      setField('processId', firstProcess.id)
-                      setField('processName', firstProcess.name)
+                      // 첫 번째 공정 자동 세팅
+                      setField('processName', processes[0].name)
+                      setField('processId', processes[0].id)
                     } else {
-                      setField('processId', 0)
                       setField('processName', '')
+                      setField('processId', 0)
                     }
+                  } catch (err) {
+                    console.error('공정 조회 실패:', err)
                   }
                 }}
-                options={updatedSiteOptions}
-                onScrollToBottom={() => {
-                  if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
-                }}
-                onInputChange={(value) => setSitesSearch(value)}
-                loading={siteNameLoading}
+                isLoading={SiteNameIsLoading || SiteNameIsFetching}
+                debouncedKeyword={debouncedSiteKeyword}
+                shouldShowList={isSiteFocused}
+                onFocus={() => setIsSiteFocused(true)}
+                onBlur={() => setIsSiteFocused(false)}
               />
             </div>
           </div>
@@ -1029,12 +1072,27 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               업체명 <span className="text-red-500 ml-1">*</span>
             </label>
-            <div className="border border-gray-400 p-2 px-2 w-full">
-              <CommonSelect
-                fullWidth
-                value={form.CompanyId || 0}
-                onChange={async (value) => {
-                  const selectedCompany = updatedCompanyOptions.find((opt) => opt.id === value)
+            <div className="border border-gray-400  w-full">
+              <InfiniteScrollSelect
+                placeholder="업체명을 입력하세요"
+                keyword={form.CompanyName}
+                onChangeKeyword={(newKeyword) => {
+                  setField('CompanyName', newKeyword)
+
+                  // 업체명을 지우면 사업자등록번호도 같이 초기화
+                  if (newKeyword === '') {
+                    setField('businessNumber', '')
+                  }
+                }}
+                items={outsourcingList}
+                hasNextPage={OutsourcingNameHasNextPage ?? false}
+                fetchNextPage={OutsourcingeNameFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                onSelect={async (selectedCompany) => {
                   if (!selectedCompany) return
 
                   setField('CompanyId', selectedCompany.id)
@@ -1042,33 +1100,35 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
                   if (selectedCompany.deleted) {
                     setField('businessNumber', selectedCompany.businessNumber || '')
-
                     return
                   }
 
-                  const res = await GetCompanyNameInfoService({
-                    pageParam: 0,
-                    keyword: '',
-                  })
+                  try {
+                    const res = await GetCompanyNameInfoService({
+                      pageParam: 0,
+                      keyword: '',
+                    })
 
-                  const companyList = res.data?.content || []
+                    const companyList = res.data?.content || []
+                    const matched = companyList.find(
+                      (company: CompanyInfo) => company.id === selectedCompany.id,
+                    )
 
-                  const matched = companyList.find(
-                    (company: CompanyInfo) => company.id === selectedCompany.id,
-                  )
-
-                  if (matched) {
-                    setField('businessNumber', matched.businessNumber)
-                  } else {
+                    if (matched) {
+                      setField('businessNumber', matched.businessNumber)
+                    } else {
+                      setField('businessNumber', '')
+                    }
+                  } catch (err) {
+                    console.error('업체 조회 실패:', err)
                     setField('businessNumber', '')
                   }
                 }}
-                options={updatedCompanyOptions}
-                onScrollToBottom={() => {
-                  if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
-                }}
-                // onInputChange={(value) => setCompanySearch(value)}
-                loading={comPanyNameLoading}
+                isLoading={OutsourcingNameIsLoading || OutsourcingNameIsFetching}
+                debouncedKeyword={debouncedOutsourcingKeyword}
+                shouldShowList={isOutsourcingFocused}
+                onFocus={() => setIsOutsourcingFocused(true)}
+                onBlur={() => setIsOutsourcingFocused(false)}
               />
             </div>
           </div>
