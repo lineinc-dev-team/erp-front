@@ -150,13 +150,27 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
 
               // weight, count, unitPrice 변경 시 totalWeight, amount 자동 계산
               if (['weight', 'count', 'unitPrice'].includes(field)) {
-                const weight = Number(field === 'weight' ? value : updatedItem.weight) || 0
-                const count = Number(field === 'count' ? value : updatedItem.count) || 0
-                const unitPrice = Number(field === 'unitPrice' ? value : updatedItem.unitPrice) || 0
+                // 고철 등 총 무게 직접 입력 타입이면 weight*count 계산 건너뛰기
+                const isDirectTotalWeight =
+                  field === 'unitPrice' &&
+                  updatedItem.totalWeight &&
+                  !updatedItem.weight &&
+                  !updatedItem.count
 
-                // 소수점 4자리까지 허용
-                updatedItem.totalWeight = Number((weight * count).toFixed(4))
-                updatedItem.amount = Number((updatedItem.totalWeight * unitPrice).toFixed(0))
+                if (!isDirectTotalWeight) {
+                  const weight = Number(field === 'weight' ? value : updatedItem.weight) || 0
+                  const count = Number(field === 'count' ? value : updatedItem.count) || 0
+                  const unitPrice =
+                    Number(field === 'unitPrice' ? value : updatedItem.unitPrice) || 0
+
+                  updatedItem.totalWeight = Number((weight * count).toFixed(4))
+                  updatedItem.amount = Number((updatedItem.totalWeight * unitPrice).toFixed(0))
+                } else {
+                  // 총 무게 직접 입력 → 단가 변경 시 amount만 계산
+                  const totalWeight = Number(updatedItem.totalWeight || '0')
+                  const unitPrice = Number(updatedItem.unitPrice || '0')
+                  updatedItem.amount = Math.round(totalWeight * unitPrice)
+                }
               }
 
               return updatedItem

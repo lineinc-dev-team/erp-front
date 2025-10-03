@@ -916,9 +916,12 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           size="small"
                           placeholder="입력"
                           value={m.weight || ''}
-                          onChange={(e) =>
-                            updateItemField('MaterialItem', m.id, 'weight', e.target.value)
-                          }
+                          onChange={(e) => {
+                            const regex = /^-?\d*\.?\d{0,4}$/
+                            if (regex.test(e.target.value)) {
+                              updateItemField('MaterialItem', m.id, 'weight', e.target.value)
+                            }
+                          }}
                           inputProps={{
                             style: { textAlign: 'center' },
                           }}
@@ -975,7 +978,12 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           style: { textAlign: 'right' },
                         }}
                         fullWidth
-                        disabled={isEditMode}
+                        disabled={
+                          isEditMode ||
+                          form.type === 'INCOMING' ||
+                          form.type === 'OUTGOING' ||
+                          form.type === 'ON_SITE_STOCK'
+                        }
                       />
                     </TableCell>
 
@@ -990,10 +998,9 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         <TextField
                           size="small"
                           placeholder="숫자만"
-                          value={formatNumber(m.unitPrice) || ''}
+                          value={m.unitPrice || ''}
                           onChange={(e) => {
-                            const formatted = unformatNumber(e.target.value)
-                            updateItemField('MaterialItem', m.id, 'unitPrice', formatted)
+                            updateItemField('MaterialItem', m.id, 'unitPrice', e.target.value)
                           }}
                           inputProps={{
                             style: { textAlign: 'right' },
@@ -1023,7 +1030,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         <TextField
                           size="small"
                           placeholder="숫자만"
-                          value={formatNumber(m.amount) || ''}
+                          value={m.amount || ''}
                           onChange={(e) => {
                             const formatted = unformatNumber(e.target.value)
                             updateItemField('MaterialItem', m.id, 'amount', formatted)
@@ -1032,7 +1039,12 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                             style: { textAlign: 'right' },
                           }}
                           fullWidth
-                          disabled={isEditMode}
+                          disabled={
+                            isEditMode ||
+                            form.type === 'INCOMING' ||
+                            form.type === 'OUTGOING' ||
+                            form.type === 'ON_SITE_STOCK'
+                          }
                         />
                       )}
                     </TableCell>
@@ -1198,8 +1210,11 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
                   >
-                    {getWeightAmount().toLocaleString()}
+                    {getWeightAmount().toLocaleString(undefined, {
+                      maximumFractionDigits: 4,
+                    })}
                   </TableCell>
+
                   <TableCell
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}

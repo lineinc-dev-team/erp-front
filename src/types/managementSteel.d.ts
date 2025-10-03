@@ -148,7 +148,13 @@ type SteelFormStore = {
   ) => void
 
   addItem: (type: 'MaterialItem' | 'attachedFile') => void
-  updateItemField: (type: 'MaterialItem' | 'attachedFile', id: T, field: T, value: T) => void
+  updateItemField: (
+    type: 'MaterialItem' | 'attachedFile',
+    id: T,
+    field: T,
+    value: T,
+    type?: string,
+  ) => void
 
   toggleCheckItem: (type: 'MaterialItem' | 'attachedFile', id: number, checked: boolean) => void
   toggleCheckAllItems: (type: 'MaterialItem' | 'attachedFile', checked: boolean) => void
