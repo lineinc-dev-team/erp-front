@@ -53,7 +53,7 @@ export type SteelSearchState = {
   searchTrigger: number
   siteId: number
   siteName: string
-  processName: string
+  siteProcessName: string
   itemName: string
   type: string
   outsourcingCompanyName: string
@@ -76,17 +76,21 @@ export type SteelSearchState = {
 // 등록 타입
 export type MaterialItem = {
   id: number
-  standard: string
+  outsourcingCompanyId: number
+  outsourcingCompanyName?: string
   name: string
-  unit: string
+  specification: string
+  weight: number
   count: number
-  length: number
-  totalLength: number
-  unitWeight: number
-  quantity: number
+  totalWeight: number
   unitPrice: number
-  supplyPrice: number
-  memo: string
+  amount: number
+  category: string
+  createdAt?: Date | null
+  fileUrl?: string
+  originalFileName?: string
+  files: FileUploadInfo[]
+  memo
 }
 
 export type AttachedFile = {
@@ -103,23 +107,8 @@ export type ManagementSteelFormState = {
   siteName: string
   siteProcessId: number // 공정명
   siteProcessName: string
-  outsourcingCompanyId?: number
-  usage: string // 구분
-  type: string // 용도
-  typeCode: string
-  orderDate?: Date | null
-  approvalDate?: Date | null
-  releaseDate?: Date | null
-  previousTypeCode: string
-
-  startDate: Date | null // 일자 (YYYY-MM-DD)
-  endDate: Date | null // 일자 (YYYY-MM-DD)
-  initialStartDateAt: string
-  initialEndDateAt: string
-  memo: string // 비고
-
+  type: string
   // === Client Info ===
-  businessNumber: string // 사업자등록번호
 
   // === Material Items ===
   details: MaterialItem[]
@@ -150,6 +139,8 @@ type SteelFormStore = {
 
   reset: () => void
 
+  resetDetailData: () => void
+
   // methods
   setField: <K extends keyof Omit<ManagementSteelFormState, 'reset' | 'setField'>>(
     field: K,
@@ -163,9 +154,11 @@ type SteelFormStore = {
   toggleCheckAllItems: (type: 'MaterialItem' | 'attachedFile', checked: boolean) => void
   removeCheckedItems: (type: 'MaterialItem' | 'attachedFile') => void
 
-  getTotalContractAmount: () => number
-  getTotalOutsourceQty: () => number
-  getTotalOutsourceAmount: () => number
+  getWeightAmount: () => number
+  getCountAmount: () => number
+  getTotalWeightAmount: () => number
+  getUnitPriceAmount: () => number
+  getAmountAmount: () => number
   //관리비 등록하기
 
   updateMemo: (id: number, newMemo: string) => void

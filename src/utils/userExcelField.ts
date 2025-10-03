@@ -93,16 +93,18 @@ export type CostExcelFieldKey = (typeof CostExcelFieldMap)[CostExcelFieldLabel]
 export const SteelExcelFieldMap = {
   No: 'id',
   현장명: 'siteName',
-  공정명: 'processName',
-  구분: 'type',
-  발주일: 'orderDate',
-  승인일: 'approvalDate',
-  반출일: 'releaseDate',
-  기간: 'startDateAndEndDate',
-  업체명: 'outsourcingCompanyName',
-  사업자등록번호: 'businessNumber',
-  총금액: 'totalAmount',
-  비고: 'memo',
+  공정명: 'siteProcessName',
+  '입고 자사(톤/금액)': 'incomingOwnMaterial',
+  '입고 구매(톤/금액)': 'incomingPurchase',
+  '입고 임대(톤/금액)': 'incomingRental',
+  '출고 자사(톤/금액)': 'outgoingOwnMaterial',
+  '출고 구매(톤/금액)': 'outgoingPurchase',
+  '출고 임대(톤/금액)': 'outgoingRental',
+  '사장(톤)': 'onSiteStock',
+  '고철(톤/금액)': 'scrap',
+  '총 금액(투입비)': 'totalInvestmentAmount',
+  '현장보유수량(톤)': 'onSiteRemainingWeight',
+  등록일: 'createdAt',
 } as const
 
 export type SteelExcelFieldLabel = keyof typeof SteelExcelFieldMap

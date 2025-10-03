@@ -2,11 +2,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
-import CommonInput from '../common/Input'
 import CommonSelect from '../common/Select'
 import CommonButton from '../common/Button'
-import CommonFileInput from '../common/FileInput'
 import {
+  Button,
   Checkbox,
   Paper,
   Table,
@@ -19,37 +18,35 @@ import {
   Typography,
 } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
-import { useParams, useRouter } from 'next/navigation'
-import CommonDatePicker from '../common/DatePicker'
+import { useParams } from 'next/navigation'
 import { useManagementSteelFormStore } from '@/stores/managementSteelStore'
 import { useManagementSteel } from '@/hooks/useManagementSteel'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { SteelDetailService } from '@/services/managementSteel/managementSteelRegistrationService'
-import { AttachedFile, DetailItem, ManagementSteelFormState } from '@/types/managementSteel'
+import { ManagementSteelFormState } from '@/types/managementSteel'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
-import { GetCompanyNameInfoService } from '@/services/outsourcingContract/outsourcingContractRegistrationService'
-import { CompanyInfo } from '@/types/outsourcingContract'
 import {
   formatDateTime,
   formatNumber,
   getTodayDateString,
   unformatNumber,
 } from '@/utils/formatters'
-import { WithoutApprovalAndRemovalOptions } from '@/config/erp.confing'
 import { HistoryItem } from '@/types/ordering'
-import { SupplyPriceInput } from '@/utils/supplyVatTotalInput'
-import { useManagementCost } from '@/hooks/useManagementCost'
+import { useDebouncedArrayValue, useDebouncedValue } from '@/hooks/useDebouncedEffect'
+import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
+import CommonSelectByName from '../common/CommonSelectByName'
+import { steelTypeOptions } from '@/config/erp.confing'
+import CommonFileInput from '../common/FileInput'
 
 export default function ManagementSteelRegistrationView({ isEditMode = false }) {
   const { showSnackbar } = useSnackbarStore()
 
-  const router = useRouter()
-
   const {
     setField,
     form,
+    resetDetailData,
     updateItemField,
     removeCheckedItems,
     reset,
@@ -57,18 +54,16 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     toggleCheckItem,
     toggleCheckAllItems,
     updateMemo,
-    getTotalContractAmount,
-    getTotalOutsourceQty,
-    getTotalOutsourceAmount,
+    getWeightAmount,
+    getCountAmount,
+    getTotalWeightAmount,
+    getUnitPriceAmount,
+    getAmountAmount,
+    //관리비 등록하기
   } = useManagementSteelFormStore()
 
   const {
-    setSitesSearch,
-    sitesOptions,
-    siteNameFetchNextPage,
-    siteNamehasNextPage,
-    siteNameFetching,
-    siteNameLoading,
+    useSitePersonNameListInfiniteScroll,
 
     // 공정명
     setProcessSearch,
@@ -77,24 +72,11 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     processInfoHasNextPage,
     processInfoIsFetching,
     processInfoLoading,
+    useOutsourcingNameListInfiniteScroll,
   } = useOutSourcingContract()
 
-  const {
-    companyOptions,
-    comPanyNameFetchNextPage,
-    comPanyNamehasNextPage,
-    comPanyNameFetching,
-    comPanyNameLoading,
-  } = useManagementCost()
-
-  const {
-    createSteelMutation,
-    useSteelHistoryDataQuery,
-    SteelModifyMutation,
-    SteelApproveMutation,
-    SteelReleaseMutation,
-    steelCancel,
-  } = useManagementSteel()
+  const { createSteelMutation, useSteelHistoryDataQuery, SteelModifyMutation, steelCancel } =
+    useManagementSteel()
 
   // 체크 박스에 활용
   const contractAddAttachedFiles = form.details
@@ -103,20 +85,8 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     contractAddAttachedFiles.length > 0 &&
     contractCheckIds.length === contractAddAttachedFiles.length
 
-  const attachedFiles = form.attachedFiles
-  const fileCheckIds = form.checkedAttachedFileIds
-  const isFilesAllChecked = attachedFiles.length > 0 && fileCheckIds.length === attachedFiles.length
-
-  // 상세페이지 로직
-
   const params = useParams()
   const steelDetailId = Number(params?.id)
-
-  const { data } = useQuery({
-    queryKey: ['SteelInfo'],
-    queryFn: () => SteelDetailService(steelDetailId),
-    enabled: isEditMode && !!steelDetailId, // 수정 모드일 때만 fetch
-  })
 
   const PROPERTY_NAME_MAP: Record<string, string> = {
     siteName: '현장명',
@@ -141,6 +111,41 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     usage: '용도',
   }
 
+  const TAB_CONFIG = [
+    { label: '집계', value: undefined },
+    { label: '입고', value: 'INCOMING' },
+    { label: '출고', value: 'OUTGOING' },
+    { label: '사장', value: 'ON_SITE_STOCK' },
+    { label: '고철', value: 'SCRAP' },
+  ]
+
+  const [activeTab, setActiveTab] = useState<string | undefined>('INCOMING')
+
+  const getTabLabel = (value: string | undefined) => {
+    return TAB_CONFIG.find((tab) => tab.value === value)?.label ?? ''
+  }
+
+  const handleTabClick = (value: string | undefined) => {
+    if (activeTab === value) return // 같은 탭 클릭 시 무시
+
+    const confirmLeave = window.confirm(
+      `현재 "${getTabLabel(activeTab)}"의 데이터를 저장 혹은 수정하지 않았습니다. 
+    이동하시면 데이터는 초기화 됩니다. 이동하시겠습니까?`,
+    )
+
+    if (!confirmLeave) return
+
+    resetDetailData()
+    setActiveTab(value)
+    setField('type', value || '')
+  }
+
+  // 등록/상세 초기 설정
+  useEffect(() => {
+    setActiveTab('INCOMING')
+    setField('type', 'INCOMING')
+  }, [])
+
   const {
     data: steelHistoryList,
     fetchNextPage,
@@ -151,243 +156,68 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
 
   const historyList = useManagementSteelFormStore((state) => state.form.changeHistories)
 
-  // 현장명이 지워졌을떄 보이는 로직
-
-  const [updatedSiteOptions, setUpdatedSiteOptions] = useState(sitesOptions)
-
-  useEffect(() => {
-    if (data && isEditMode) {
-      const client = data.data
-
-      // 기존 siteOptions 복사
-      const newSiteOptions = [...sitesOptions]
-
-      if (client.site) {
-        const siteName = client.site.name + (client.site.deleted ? ' (삭제됨)' : '')
-
-        // 이미 options에 있는지 체크
-        const exists = newSiteOptions.some((s) => s.id === client.site.id)
-        if (!exists) {
-          newSiteOptions.push({
-            id: client.site.id,
-            name: siteName,
-            deleted: client.site.deleted,
-          })
-        }
-      }
-
-      // 삭제된 현장 / 일반 현장 분리
-      const deletedSites = newSiteOptions.filter((s) => s.deleted)
-      const normalSites = newSiteOptions.filter((s) => !s.deleted && s.id !== 0)
-
-      // 최종 옵션 배열 세팅
-      setUpdatedSiteOptions([
-        newSiteOptions.find((s) => s.id === 0) ?? { id: 0, name: '선택', deleted: false },
-        ...deletedSites,
-        ...normalSites,
-      ])
-
-      // 선택된 현장 id 세팅
-      setField('siteId', client.site?.id ?? 0)
-    } else if (!isEditMode) {
-      // 등록 모드
-      setUpdatedSiteOptions(sitesOptions)
-      setField('siteId', 0)
-    }
-  }, [data, isEditMode, sitesOptions])
-
-  const [updatedProcessOptions, setUpdatedProcessOptions] = useState(processOptions)
-
-  useEffect(() => {
-    if (isEditMode && data) {
-      const client = data.data
-
-      const newProcessOptions = [...processOptions]
-
-      if (client.process) {
-        const isDeleted = client.process.deleted
-        const processName = client.process.name + (isDeleted ? ' (삭제됨)' : '')
-
-        if (!newProcessOptions.some((p) => p.id === client.process.id)) {
-          newProcessOptions.push({
-            id: client.process.id,
-            name: processName,
-            deleted: isDeleted,
-          })
-        }
-
-        if (!form.siteProcessId) {
-          setField('siteProcessId', client.process.id)
-          setField('siteProcessName', processName)
-        }
-      }
-
-      // 삭제된 공정 / 일반 공정 분리
-      const deletedProcesses = newProcessOptions.filter((p) => p.deleted)
-      const normalProcesses = newProcessOptions.filter((p) => !p.deleted && p.id !== 0)
-
-      setUpdatedProcessOptions([
-        newProcessOptions.find((s) => s.id === 0) ?? { id: 0, name: '선택', deleted: false },
-        ...deletedProcesses,
-        ...normalProcesses,
-      ])
-    } else if (!isEditMode) {
-      // 등록 모드에서는 항상 processOptions로 초기화
-      setUpdatedProcessOptions(processOptions)
-    }
-  }, [data, isEditMode, processOptions, setField])
-
-  const [updatedCompanyOptions, setUpdatedCompanyOptions] = useState(companyOptions)
-
-  useEffect(() => {
-    if (data && isEditMode) {
-      const client = data.data
-
-      const newCompanyOptions = [...companyOptions]
-
-      if (client.outsourcingCompany) {
-        const companyName =
-          client.outsourcingCompany.name + (client.outsourcingCompany.deleted ? ' (삭제됨)' : '')
-
-        // 이미 options에 있는지 체크
-        const exists = newCompanyOptions.some((c) => c.id === client.outsourcingCompany.id)
-        if (!exists) {
-          newCompanyOptions.push({
-            id: client.outsourcingCompany.id,
-            name: companyName,
-            businessNumber: client.outsourcingCompany.businessNumber ?? '',
-            ceoName: client.outsourcingCompany.ceoName ?? '',
-            bankName: client.outsourcingCompany.bankName ?? '',
-            accountNumber: client.outsourcingCompany.accountNumber ?? '',
-            accountHolder: client.outsourcingCompany.accountHolder ?? '',
-            deleted: client.outsourcingCompany.deleted,
-          })
-        }
-      }
-
-      const deletedCompanies = newCompanyOptions.filter((c) => c.deleted)
-      const normalCompanies = newCompanyOptions.filter((c) => !c.deleted && c.id !== 0)
-
-      setUpdatedCompanyOptions([...deletedCompanies, ...normalCompanies])
-
-      setField('outsourcingCompanyId', client.outsourcingCompany?.id ?? 0)
-    } else if (!isEditMode) {
-      setUpdatedCompanyOptions(companyOptions)
-      setField('outsourcingCompanyId', 0) // "선택" 기본값
-    }
-  }, [data, isEditMode, companyOptions])
-
-  useEffect(() => {
-    if (isEditMode && data) {
-      const client = data.data
-
-      const newProcessOptions = [...processOptions]
-
-      if (client.process) {
-        const isDeleted = client.process.deleted
-        const processName = client.process.name + (isDeleted ? ' (삭제됨)' : '')
-
-        if (!newProcessOptions.some((p) => p.id === client.process.id)) {
-          newProcessOptions.push({
-            id: client.process.id,
-            name: processName,
-            deleted: isDeleted,
-          })
-        }
-
-        if (!form.siteProcessId) {
-          setField('siteProcessId', client.process.id)
-          setField('siteProcessName', processName)
-        }
-      }
-
-      // 삭제된 공정 / 일반 공정 분리
-      const deletedProcesses = newProcessOptions.filter((p) => p.deleted)
-      const normalProcesses = newProcessOptions.filter((p) => !p.deleted && p.id !== 0)
-
-      setUpdatedProcessOptions([
-        newProcessOptions.find((s) => s.id === 0) ?? { id: 0, name: '선택', deleted: false },
-        ...deletedProcesses,
-        ...normalProcesses,
-      ])
-    } else if (!isEditMode) {
-      // 등록 모드에서는 항상 processOptions로 초기화
-      setUpdatedProcessOptions(processOptions)
-    }
-  }, [data, isEditMode, processOptions, setField])
+  const { data } = useQuery({
+    queryKey: ['SteelInfo', steelDetailId, form.type ?? ''],
+    queryFn: () => SteelDetailService(steelDetailId, form.type),
+    enabled: isEditMode && !!steelDetailId,
+  })
 
   useEffect(() => {
     if (data && isEditMode === true) {
       const client = data.data
 
       // // 상세 항목 가공
-      const formattedDetails = (client.details ?? []).map((c: DetailItem) => ({
+      const formattedDetails = (client.details ?? []).map((c: any) => ({
         id: c.id,
-        name: c.name,
-        quantity: c.quantity,
-        unit: c.unit,
-        unitPrice: c.unitPrice,
-        supplyPrice: c.supplyPrice,
-        count: c.count,
-        length: c.length,
-        totalLength: c.totalLength,
-        unitWeight: c.unitWeight,
-        standard: c.standard,
-        memo: c.memo,
+        name: c.name, // 품명
+        specification: c.specification, // 규격
+        weight: c.weight, // 무게(톤)
+        count: c.count, // 본
+        totalWeight: c.totalWeight, // 총 무게(톤)
+        unitPrice: c.unitPrice, // 단가
+        amount: c.amount, // 금액
+        category: c.category ?? '', // 구분 (자사자재/구매 등)
+        outsourcingCompanyName: c.outsourcingCompany?.name ?? '', // 거래선
+        files:
+          c.fileUrl && c.originalFileName
+            ? [
+                {
+                  fileUrl: c.fileUrl,
+                  originalFileName: c.originalFileName,
+                },
+              ]
+            : [],
+
+        memo: c.memo, // 비고
+        createdAt: getTodayDateString(client.createdAt),
       }))
       setField('details', formattedDetails)
 
-      // // 첨부 파일 가공
-      const formattedFiles = (client.files ?? []).map((item: AttachedFile) => ({
-        id: item.id,
-        name: item.name,
-        memo: item.memo,
-        files: [
-          {
-            fileUrl: item.fileUrl && item.fileUrl.trim() !== '' ? item.fileUrl : null,
-            originalFileName:
-              item.originalFileName && item.originalFileName.trim() !== ''
-                ? item.originalFileName
-                : null,
-          },
-        ],
-      }))
-      setField('attachedFiles', formattedFiles)
-
       // 각 필드에 값 세팅
       setField('siteId', client.site?.id ?? '')
-      setField('siteProcessId', client.process?.id ?? '')
-      setField('startDate', client.startDate ? new Date(client.startDate) : null)
-      setField('endDate', client.endDate ? new Date(client.endDate) : null)
+      setField('siteProcessId', client.siteProcess?.id ?? '')
 
-      setField('orderDate', client.orderDate ? new Date(client.orderDate) : null)
-      setField('approvalDate', client.approvalDate ? new Date(client.approvalDate) : null)
-      setField('releaseDate', client.releaseDate ? new Date(client.releaseDate) : null)
-
-      if (client.typeCode === 'PURCHASE') {
-        setField('type', client.type ?? '')
-      }
-
-      if (client.previousType === '발주' || !client.previousType) {
-        setField('type', client.type ?? '') // 예: '승인' 같은 필드
-      } else {
-        setField('type', `${client.type ?? ''}(${client.previousType ?? ''})`)
-      }
-
-      setField('usage', client.usage ?? '')
-
-      setField('typeCode', client.typeCode)
-      setField('previousTypeCode', client.previousTypeCode)
-
-      setField('memo', client.memo ?? '')
-
-      setField('outsourcingCompanyId', client.outsourcingCompany?.id)
-
-      setField('businessNumber', client.outsourcingCompany?.businessNumber ?? '')
+      setField('siteName', client.site?.name ?? '')
+      setField('siteProcessName', client.siteProcess?.name ?? '')
     } else {
       reset()
     }
   }, [data, isEditMode, reset, setField])
+
+  const [isSiteFocused, setIsSiteFocused] = useState(false)
+
+  const debouncedSiteKeyword = useDebouncedValue(form.siteName, 300)
+
+  const {
+    data: SiteNameData,
+    fetchNextPage: SiteNameFetchNextPage,
+    hasNextPage: SiteNameHasNextPage,
+    isFetching: SiteNameIsFetching,
+    isLoading: SiteNameIsLoading,
+  } = useSitePersonNameListInfiniteScroll(debouncedSiteKeyword)
+
+  const SiteRawList = SiteNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const siteList = Array.from(new Map(SiteRawList.map((user) => [user.name, user])).values())
 
   const formatChangeDetail = (getChanges: string) => {
     try {
@@ -477,55 +307,34 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     // 기본 정보
     if (!form.siteId) return '현장명을 선택하세요.'
     if (!form.siteProcessId) return '공정명을 선택하세요.'
-    if (form.type === 'BASE') return '구분을 선택하세요.'
 
-    if (!form.usage?.trim()) return '용도를 입력하세요.'
-    if (!form.startDate) return '시작일을 선택하세요.'
-    if (!form.endDate) return '종료일을 선택하세요.'
-    if (form.startDate && form.endDate && new Date(form.startDate) > new Date(form.endDate))
-      return '종료일은 시작일 이후여야 합니다.'
-
-    if (form.memo.length > 500) {
-      return '비고는 500자 이하로 입력해주세요.'
-    }
-
-    // type이 PURCHASE 또는 LEASE일 경우 거래선 필수
-    if (
-      ['PURCHASE', 'LEASE'].includes(form.type) ||
-      ['PURCHASE', 'LEASE'].includes(form.typeCode)
-    ) {
-      if (!form.outsourcingCompanyId || form.outsourcingCompanyId === 0)
-        return '업체명을 선택하세요.'
-      if (!form.businessNumber?.trim()) return '사업자등록번호를 입력하세요.'
-    }
-
-    if (contractAddAttachedFiles.length > 0) {
-      for (const item of contractAddAttachedFiles) {
-        if (!item.standard?.trim()) return '규격을 입력해주세요.'
-        if (!item.name?.trim()) return '품명을 입력해주세요.'
-        if (!item.unit?.trim()) return '단위를 입력해주세요.'
-        if (!item.count) return '본 수량을 입력해주세요.'
-        if (!item.length) return '길이를 입력해주세요.'
-        if (!item.totalLength) return '총 길이를 입력해주세요.'
-        if (!item.unitWeight) return '단위중량을 입력해주세요.'
-        if (!item.quantity) return '수량을 입력해주세요.'
-        if (!item.unitPrice) return '단가를 입력해주세요.'
-        if (!item.supplyPrice) return '공급가를 입력해주세요.'
-        if (item.memo.length > 500) {
-          return '품목상세의 비고는 500자 이하로 입력해주세요.'
-        }
-      }
-    }
+    // if (contractAddAttachedFiles.length > 0) {
+    //   for (const item of contractAddAttachedFiles) {
+    //     if (!item.standard?.trim()) return '규격을 입력해주세요.'
+    //     if (!item.name?.trim()) return '품명을 입력해주세요.'
+    //     if (!item.unit?.trim()) return '단위를 입력해주세요.'
+    //     if (!item.count) return '본 수량을 입력해주세요.'
+    //     if (!item.length) return '길이를 입력해주세요.'
+    //     if (!item.totalLength) return '총 길이를 입력해주세요.'
+    //     if (!item.unitWeight) return '단위중량을 입력해주세요.'
+    //     if (!item.quantity) return '수량을 입력해주세요.'
+    //     if (!item.unitPrice) return '단가를 입력해주세요.'
+    //     if (!item.supplyPrice) return '공급가를 입력해주세요.'
+    //     if (item.memo.length > 500) {
+    //       return '품목상세의 비고는 500자 이하로 입력해주세요.'
+    //     }
+    //   }
+    // }
 
     // 첨부파일 이름 체크
-    if (attachedFiles.length > 0) {
-      for (const file of attachedFiles) {
-        if (!file.name?.trim()) return '첨부파일의 이름을 입력해주세요.'
-        if (file.memo.length > 500) {
-          return '첨부파일의 비고는 500자 이하로 입력해주세요.'
-        }
-      }
-    }
+    // if (attachedFiles.length > 0) {
+    //   for (const file of attachedFiles) {
+    //     if (!file.name?.trim()) return '첨부파일의 이름을 입력해주세요.'
+    //     if (file.memo.length > 500) {
+    //       return '첨부파일의 비고는 500자 이하로 입력해주세요.'
+    //     }
+    //   }
+    // }
 
     return null
   }
@@ -551,6 +360,57 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     }
   }
 
+  const [isOutsourcingFocused, setIsOutsourcingFocused] = useState(false)
+
+  // 유저 선택 시 처리
+  const handleSelectOutsourcing = (id: number, selectedCompany: any) => {
+    if (!selectedCompany) {
+      updateItemField('MaterialItem', id, 'outsourcingCompanyId', 0)
+      updateItemField('MaterialItem', id, 'outsourcingCompanyName', '')
+      return
+    }
+
+    updateItemField('MaterialItem', id, 'outsourcingCompanyId', selectedCompany.id)
+    updateItemField('MaterialItem', id, 'outsourcingCompanyName', selectedCompany.name)
+  }
+
+  const outsoucingLine = form.details.map((item) => item.originalFileName ?? '')
+
+  const debouncedOutsourcingKeyword = useDebouncedArrayValue(outsoucingLine, 300)
+
+  const {
+    data: OutsourcingNameData,
+    fetchNextPage: OutsourcingeNameFetchNextPage,
+    hasNextPage: OutsourcingNameHasNextPage,
+    isFetching: OutsourcingNameIsFetching,
+    isLoading: OutsourcingNameIsLoading,
+  } = useOutsourcingNameListInfiniteScroll(debouncedOutsourcingKeyword)
+
+  const OutsourcingRawList = OutsourcingNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const outsourcingList = Array.from(
+    new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
+  )
+
+  const incomingSubtotalWeight =
+    (data?.data?.incomingOwnMaterialTotalWeight || 0) +
+    (data?.data?.incomingPurchaseTotalWeight || 0) +
+    (data?.data?.incomingRentalTotalWeight || 0)
+
+  const incomingSubtotalAmount =
+    (data?.data?.incomingOwnMaterialAmount || 0) +
+    (data?.data?.incomingPurchaseAmount || 0) +
+    (data?.data?.incomingRentalAmount || 0)
+
+  const outgoingSubtotalWeight =
+    (data?.data?.outgoingOwnMaterialTotalWeight || 0) +
+    (data?.data?.outgoingPurchaseTotalWeight || 0) +
+    (data?.data?.outgoingRentalTotalWeight || 0)
+
+  const outgoingSubtotalAmount =
+    (data?.data?.outgoingOwnMaterialAmount || 0) +
+    (data?.data?.outgoingPurchaseAmount || 0) +
+    (data?.data?.outgoingRentalAmount || 0)
+
   return (
     <>
       <div>
@@ -560,14 +420,33 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명 <span className="text-red-500 ml-1">*</span>
             </label>
-            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelect
-                fullWidth
-                value={form.siteId || 0}
-                onChange={async (value) => {
-                  const selectedSite = updatedSiteOptions.find((opt) => opt.id === value)
+            <div className="border border-gray-400 w-full flex items-center">
+              <InfiniteScrollSelect
+                disabled={false}
+                placeholder="현장명을 입력하세요"
+                keyword={form.siteName}
+                onChangeKeyword={(newKeyword) => {
+                  setField('siteName', newKeyword)
+
+                  // 현장명 지웠을 경우 공정명도 같이 초기화
+                  if (newKeyword === '') {
+                    setField('siteProcessName', '')
+                    setField('siteProcessId', 0)
+                  }
+                }}
+                items={siteList}
+                hasNextPage={SiteNameHasNextPage ?? false}
+                fetchNextPage={SiteNameFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                // onSelect={handleSelectSiting}
+                onSelect={async (selectedSite) => {
                   if (!selectedSite) return
 
+                  // 선택된 현장 세팅
                   setField('siteId', selectedSite.id)
                   setField(
                     'siteName',
@@ -575,21 +454,12 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                   )
 
                   if (selectedSite.deleted) {
-                    // 삭제된 경우
-                    const deletedProcess = updatedProcessOptions.find(
-                      (p) => p.id === data?.data.process?.id,
-                    )
-                    if (deletedProcess) {
-                      setField('siteProcessId', deletedProcess.id)
-                      setField(
-                        'siteProcessName',
-                        deletedProcess.name + (deletedProcess.deleted ? ' (삭제됨)' : ''),
-                      )
-                    } else {
-                      setField('siteProcessId', 0)
-                      setField('siteProcessName', '')
-                    }
-                  } else {
+                    setField('siteProcessName', '')
+                    return
+                  }
+
+                  try {
+                    // 공정 목록 조회
                     const res = await SitesProcessNameScroll({
                       pageParam: 0,
                       siteId: selectedSite.id,
@@ -597,30 +467,24 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     })
 
                     const processes = res.data?.content || []
+
                     if (processes.length > 0) {
-                      const firstProcess = processes[0]
-
-                      setUpdatedProcessOptions((prev) => [
-                        { id: 0, name: '선택', deleted: false },
-                        ...prev.filter((p) => p.deleted), // 삭제된 것 유지
-                        ...processes.map((p: any) => ({ ...p, deleted: false })),
-                      ])
-
-                      setField('siteProcessId', firstProcess.id)
-                      setField('siteProcessName', firstProcess.name)
+                      // 첫 번째 공정 자동 세팅
+                      setField('siteProcessName', processes[0].name)
+                      setField('siteProcessId', processes[0].id)
                     } else {
-                      setField('siteProcessId', 0)
                       setField('siteProcessName', '')
+                      setField('siteProcessId', 0)
                     }
+                  } catch (err) {
+                    console.error('공정 조회 실패:', err)
                   }
                 }}
-                options={updatedSiteOptions}
-                onScrollToBottom={() => {
-                  if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
-                }}
-                onInputChange={(value) => setSitesSearch(value)}
-                loading={siteNameLoading}
-                disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
+                isLoading={SiteNameIsLoading || SiteNameIsFetching}
+                debouncedKeyword={debouncedSiteKeyword}
+                shouldShowList={isSiteFocused}
+                onFocus={() => setIsSiteFocused(true)}
+                onBlur={() => setIsSiteFocused(false)}
               />
             </div>
           </div>
@@ -634,13 +498,13 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                 className="text-xl"
                 value={form.siteProcessId || 0}
                 onChange={(value) => {
-                  const selectedProcess = updatedProcessOptions.find((opt) => opt.name === value)
+                  const selectedProcess = processOptions.find((opt) => opt.name === value)
                   if (selectedProcess) {
                     setField('siteProcessId', selectedProcess.id)
                     setField('siteProcessName', selectedProcess.name)
                   }
                 }}
-                options={updatedProcessOptions}
+                options={processOptions}
                 displayLabel
                 onScrollToBottom={() => {
                   if (processInfoHasNextPage && !processInfoIsFetching) processInfoFetchNextPage()
@@ -651,710 +515,732 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
               />
             </div>
           </div>
-          <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              구분 <span className="text-red-500 ml-1">*</span>
-            </label>
-            <div className="border flex items-center p-2 gap-4 border-gray-400 px-2 w-full">
-              {isEditMode === false && (
-                <CommonSelect
-                  fullWidth={true}
-                  className="text-2xl"
-                  value={form.type || 'BASE'}
-                  displayLabel
-                  onChange={(value) => setField('type', value)}
-                  options={WithoutApprovalAndRemovalOptions}
-                  disabled={isEditMode} // ← 수정 시 선택 불가
-                />
-              )}
-              {isEditMode && (
-                <CommonInput
-                  placeholder="텍스트 입력"
-                  value={form.type}
-                  onChange={(value) => setField('usage', value)}
-                  className="flex-1"
-                  disabled
-                />
-              )}
-            </div>
-          </div>
-
-          <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              용도 <span className="text-red-500 ml-1">*</span>
-            </label>
-            <div className="border flex  items-center border-gray-400 px-2 w-full">
-              <CommonInput
-                placeholder="텍스트 입력"
-                value={form.usage}
-                onChange={(value) => setField('usage', value)}
-                className="flex-1"
-                disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-              />
-            </div>
-          </div>
-
-          <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              기간 <span className="text-red-500 ml-1">*</span>
-            </label>
-            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
-              <CommonDatePicker
-                value={form.startDate}
-                onChange={(value) => {
-                  setField('startDate', value)
-
-                  if (
-                    value !== null &&
-                    form.endDate !== null &&
-                    new Date(form.endDate) < new Date(value)
-                  ) {
-                    setField('endDate', value)
-                  }
-                }}
-                disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-              />
-              ~
-              <CommonDatePicker
-                value={form.endDate}
-                onChange={(value) => {
-                  if (
-                    value !== null &&
-                    form.startDate !== null &&
-                    new Date(value) < new Date(form.startDate)
-                  ) {
-                    showSnackbar('종료일은 시작일 이후여야 합니다.', 'error')
-                    return
-                  }
-                  setField('endDate', value)
-                }}
-                disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-              />
-            </div>
-          </div>
-
-          <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              비고
-            </label>
-            <div className="border border-gray-400 px-2 w-full">
-              <CommonInput
-                placeholder="500자 이하 텍스트 입력"
-                value={form.memo}
-                onChange={(value) => setField('memo', value)}
-                className="flex-1"
-                disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-              />
-            </div>
-          </div>
         </div>
       </div>
 
-      {(!isEditMode
-        ? ['PURCHASE', 'LEASE'].includes(form.type)
-        : form.previousTypeCode === null
-        ? ['PURCHASE', 'LEASE', 'APPROVAL'].includes(form.typeCode)
-        : ['PURCHASE', 'LEASE'].includes(form.previousTypeCode)) && (
-        <div className="mt-6">
-          <span className="font-bold border-b-2 mb-4">거래선</span>
-          <div className="grid grid-cols-2 mt-1 ">
-            <div className="flex">
-              <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-                업체명 <span className="text-red-500 ml-1">*</span>
-              </label>
-              <div className="border border-gray-400 p-2 px-2 w-full">
-                <CommonSelect
-                  fullWidth
-                  value={form.outsourcingCompanyId || 0}
-                  onChange={async (value) => {
-                    const selectedCompany = updatedCompanyOptions.find((opt) => opt.id === value)
-                    if (!selectedCompany) return
+      <div className="flex border-b border-gray-400 mt-10 mb-4">
+        {TAB_CONFIG.map((tab) => {
+          const isActive = activeTab === tab.value
+          return (
+            <Button
+              key={tab.label}
+              onClick={() => handleTabClick(tab.value)}
+              sx={{
+                borderRadius: '10px 10px 0 0',
+                borderBottom: '1px solid #161616',
+                backgroundColor: isActive ? '#ffffff' : '#e0e0e0',
+                color: isActive ? '#000000' : '#9e9e9e',
+                border: '1px solid #7a7a7a',
+                fontWeight: isActive ? 'bold' : 'normal',
+                padding: '6px 16px',
+                minWidth: '120px',
+                textTransform: 'none',
+              }}
+            >
+              {tab.label}
+            </Button>
+          )
+        })}
+      </div>
 
-                    setField('outsourcingCompanyId', selectedCompany.id)
+      {form.type === '' && (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow sx={{ backgroundColor: '#4B5563' }}>
+                <TableCell
+                  align="center"
+                  colSpan={2}
+                  sx={{ fontWeight: 'bold', color: 'white', border: '1px solid #999', width: 50 }}
+                >
+                  구분
+                </TableCell>
 
-                    // 1. 회사 정보 요청
-                    const res = await GetCompanyNameInfoService({
-                      pageParam: 0,
-                      keyword: '',
-                    })
+                <TableCell
+                  align="center"
+                  sx={{ fontWeight: 'bold', color: 'white', border: '1px solid #999', width: 500 }}
+                >
+                  총 무게(톤)
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{ fontWeight: 'bold', color: 'white', border: '1px solid #999', width: 500 }}
+                >
+                  금액
+                </TableCell>
+              </TableRow>
+            </TableHead>
 
-                    const companyList = res.data?.content || []
+            <TableBody>
+              <TableRow>
+                <TableCell rowSpan={3} align="center" sx={{ border: '1px solid #999' }}>
+                  입고
+                </TableCell>
+                <TableCell align="center" sx={{ border: '1px solid #999' }}>
+                  자사자재
+                </TableCell>
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? '-' : formatNumber(data?.data?.incomingOwnMaterialTotalWeight)}
+                </TableCell>
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? '-' : formatNumber(data?.data?.incomingOwnMaterialAmount)}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell align="center" sx={{ border: '1px solid #999' }}>
+                  구매
+                </TableCell>
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? '-' : formatNumber(data?.data?.incomingPurchaseTotalWeight)}
+                </TableCell>
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? '-' : formatNumber(data?.data?.incomingPurchaseAmount)}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell align="center" sx={{ border: '1px solid #999' }}>
+                  임대
+                </TableCell>
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? '-' : formatNumber(data?.data?.incomingRentalTotalWeight)}
+                </TableCell>
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? '-' : formatNumber(data?.data?.incomingRentalAmount)}
+                </TableCell>
+              </TableRow>
+              {/* 입고 소계 */}
+              <TableRow sx={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
+                <TableCell colSpan={2} align="center" sx={{ border: '1px solid #999' }}>
+                  소계
+                </TableCell>
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? '-' : formatNumber(incomingSubtotalWeight)}
+                </TableCell>
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? '-' : formatNumber(incomingSubtotalAmount)}
+                </TableCell>
+              </TableRow>
 
-                    // 2. 선택한 업체 ID와 일치하는 항목 찾기
-                    const matched = companyList.find(
-                      (company: CompanyInfo) => company.id === selectedCompany.id,
-                    )
+              {/* 출고 */}
+              <TableRow>
+                <TableCell rowSpan={3} align="center" sx={{ border: '1px solid #999' }}>
+                  출고
+                </TableCell>
+                <TableCell align="center" sx={{ border: '1px solid #999' }}>
+                  자사자재
+                </TableCell>
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? '-' : formatNumber(data?.data?.outgoingOwnMaterialTotalWeight)}
+                </TableCell>
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? '-' : formatNumber(data?.data?.outgoingOwnMaterialAmount)}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell align="center" sx={{ border: '1px solid #999' }}>
+                  구매
+                </TableCell>
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? '-' : formatNumber(data?.data?.outgoingPurchaseTotalWeight)}
+                </TableCell>
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? '-' : formatNumber(data?.data?.outgoingPurchaseAmount)}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell align="center" sx={{ border: '1px solid #999' }}>
+                  임대
+                </TableCell>
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? '-' : formatNumber(data?.data?.outgoingRentalTotalWeight)}
+                </TableCell>
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? '-' : formatNumber(data?.data?.outgoingRentalAmount)}
+                </TableCell>
+              </TableRow>
+              {/* 출고 소계 */}
+              <TableRow sx={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
+                <TableCell colSpan={2} align="center" sx={{ border: '1px solid #999' }}>
+                  소계
+                </TableCell>
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? '-' : formatNumber(outgoingSubtotalWeight)}
+                </TableCell>
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? '-' : formatNumber(outgoingSubtotalAmount)}
+                </TableCell>
+              </TableRow>
 
-                    if (matched) {
-                      setField('businessNumber', matched.businessNumber)
-                    } else {
-                      setField('businessNumber', '')
-                    }
-                  }}
-                  options={updatedCompanyOptions}
-                  onScrollToBottom={() => {
-                    if (comPanyNamehasNextPage && !comPanyNameFetching) comPanyNameFetchNextPage()
-                  }}
-                  loading={comPanyNameLoading}
-                  disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-                />
-              </div>
-            </div>
-            <div className="flex">
-              <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-                사업자등록번호
-              </label>
-              <div className="border border-gray-400 px-2 w-full">
-                <CommonInput
-                  value={form.businessNumber ?? ''}
-                  onChange={(value) => {
-                    setField('businessNumber', value)
-                  }}
-                  disabled={true}
-                  className=" flex-1"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+              {/* 사장 */}
+              <TableRow>
+                <TableCell colSpan={2} align="center" sx={{ border: '1px solid #999' }}>
+                  사장
+                </TableCell>
+
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? '-' : formatNumber(data?.data?.onSiteStockTotalWeight)}
+                </TableCell>
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  -
+                </TableCell>
+              </TableRow>
+
+              {/* 고철 */}
+              <TableRow>
+                <TableCell colSpan={2} align="center" sx={{ border: '1px solid #999' }}>
+                  고철
+                </TableCell>
+
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? '-' : formatNumber(data?.data?.scrapTotalWeight)}
+                </TableCell>
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? '-' : formatNumber(data?.data?.scrapAmount)}
+                </TableCell>
+              </TableRow>
+
+              {/* 합계 */}
+              <TableRow sx={{ backgroundColor: '#e0e0e0', fontWeight: 'bold' }}>
+                <TableCell colSpan={2} align="center" sx={{ border: '1px solid #999' }}>
+                  현장보유수량 | 총 금액(투입비)
+                </TableCell>
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? 0 : formatNumber(data?.data?.onSiteRemainingWeight)}
+                </TableCell>
+                <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                  {!isEditMode ? 0 : formatNumber(data?.data?.totalInvestmentAmount)}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
 
-      {isEditMode && (
+      {form.type !== '' && (
         <div>
-          <div className="flex justify-between items-center mt-10 mb-2">
-            <span className="font-bold border-b-2 mb-4">구분</span>
+          <div className="flex justify-between items-center mb-2">
+            <span className="font-bold border-b-2 mb-4"></span>
+            <div className="flex gap-4">
+              <CommonButton
+                label="삭제"
+                className="px-7"
+                variant="danger"
+                onClick={() => removeCheckedItems('MaterialItem')}
+              />
+              <CommonButton
+                label="추가"
+                className="px-7"
+                variant="secondary"
+                onClick={() => addItem('MaterialItem')}
+              />
+            </div>
           </div>
-          <TableContainer component={Paper}>
-            <Table size="small">
+          <TableContainer component={Paper} sx={{ height: '400px' }}>
+            <Table size="small" sx={{ borderCollapse: 'collapse' }}>
               <TableHead>
-                <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid #9CA3AF' }}>
-                  {['발주', '승인', '반출'].map((label) => (
-                    <TableCell
-                      key={label}
-                      align="center"
-                      sx={{
-                        backgroundColor: '#D1D5DB',
-                        border: '1px solid #9CA3AF',
-                        color: 'black',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      {label}
-                    </TableCell>
-                  ))}
+                <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
+                  <TableCell rowSpan={2} padding="checkbox" sx={{ border: '1px solid #9CA3AF' }}>
+                    <Checkbox
+                      checked={isContractAllChecked}
+                      indeterminate={contractCheckIds.length > 0 && !isContractAllChecked}
+                      onChange={(e) => toggleCheckAllItems('MaterialItem', e.target.checked)}
+                      sx={{ color: 'black' }}
+                    />
+                  </TableCell>
+
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                  >
+                    품명 <span className="text-red-500 ml-1">*</span>
+                  </TableCell>
+
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                  >
+                    규격 <span className="text-red-500 ml-1">*</span>
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                  >
+                    무게(톤) <span className="text-red-500 ml-1">*</span>
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                  >
+                    본 <span className="text-red-500 ml-1">*</span>
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                  >
+                    총 무게(톤)<span className="text-red-500 ml-1">*</span>
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                  >
+                    단가 <span className="text-red-500 ml-1">*</span>
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                  >
+                    금액 <span className="text-red-500 ml-1">*</span>
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                  >
+                    구분 <span className="text-red-500 ml-1">*</span>
+                  </TableCell>
+
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                  >
+                    거래선 <span className="text-red-500 ml-1">*</span>
+                  </TableCell>
+
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                  >
+                    등록
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      border: '1px solid #9CA3AF',
+                      whiteSpace: 'nowrap',
+                      fontWeight: 'bold',
+                      color: 'black',
+                    }}
+                  >
+                    증빙 <span className="text-red-500 ml-1">*</span>
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      border: '1px solid #9CA3AF',
+                      whiteSpace: 'nowrap',
+                      fontWeight: 'bold',
+                      color: 'black',
+                    }}
+                  >
+                    비고
+                  </TableCell>
                 </TableRow>
               </TableHead>
+
               <TableBody>
-                <TableRow>
-                  {['ORDER', 'APPROVAL', 'RELEASE'].map((code) => (
+                {contractAddAttachedFiles.map((m) => (
+                  <TableRow key={m.id} sx={{ border: '1px solid #9CA3AF' }}>
                     <TableCell
-                      key={code}
+                      padding="checkbox"
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF' }}
+                    >
+                      <Checkbox
+                        checked={contractCheckIds.includes(m.id)}
+                        onChange={(e) => toggleCheckItem('MaterialItem', m.id, e.target.checked)}
+                      />
+                    </TableCell>
+
+                    <TableCell
                       align="center"
                       sx={{
                         border: '1px solid #9CA3AF',
-                        whiteSpace: 'pre-line',
+                        whiteSpace: 'nowrap',
+                        width: {
+                          xs: 80, // 모바일 (smaller)
+                          sm: 120, // 태블릿
+                          md: 160, // 데스크탑
+                        },
                       }}
                     >
-                      {code === 'ORDER'
-                        ? getTodayDateString(form.orderDate) ?? '-'
-                        : code === 'APPROVAL'
-                        ? getTodayDateString(form.approvalDate) ?? '-'
-                        : getTodayDateString(form.releaseDate) ?? '-'}
+                      <TextField
+                        size="small"
+                        placeholder="입력"
+                        value={m.name || ''}
+                        onChange={(e) =>
+                          updateItemField('MaterialItem', m.id, 'name', e.target.value)
+                        }
+                        inputProps={{
+                          style: { textAlign: 'center' },
+                        }}
+                        disabled={isEditMode}
+                      />
                     </TableCell>
-                  ))}
+                    {/* 규격 */}
+                    <TableCell align="center" sx={{ border: '1px solid #9CA3AF', width: '200px' }}>
+                      {activeTab === 'SCRAP' ? (
+                        '-'
+                      ) : (
+                        <TextField
+                          size="small"
+                          placeholder="입력"
+                          value={m.specification || ''}
+                          onChange={(e) =>
+                            updateItemField('MaterialItem', m.id, 'specification', e.target.value)
+                          }
+                          inputProps={{
+                            style: { textAlign: 'center' },
+                          }}
+                          disabled={isEditMode}
+                        />
+                      )}
+                    </TableCell>
+
+                    {/* 무게(톤) */}
+
+                    <TableCell
+                      align="center"
+                      sx={{
+                        border: '1px solid #9CA3AF',
+                        whiteSpace: 'nowrap',
+                        width: {
+                          xs: 80, // 모바일 (smaller)
+                          sm: 100, // 태블릿
+                          md: 140, // 데스크탑
+                        },
+                      }}
+                    >
+                      {activeTab === 'SCRAP' ? (
+                        '-'
+                      ) : (
+                        <TextField
+                          size="small"
+                          placeholder="입력"
+                          value={m.weight || ''}
+                          onChange={(e) =>
+                            updateItemField('MaterialItem', m.id, 'weight', e.target.value)
+                          }
+                          inputProps={{
+                            style: { textAlign: 'center' },
+                          }}
+                          disabled={isEditMode}
+                        />
+                      )}
+                    </TableCell>
+
+                    {/* 본 */}
+                    <TableCell
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', width: '90px', padding: '6px' }}
+                    >
+                      {activeTab === 'SCRAP' ? (
+                        '-'
+                      ) : (
+                        <TextField
+                          size="small"
+                          placeholder="입력"
+                          value={m.count || ''}
+                          onChange={(e) =>
+                            updateItemField('MaterialItem', m.id, 'count', e.target.value)
+                          }
+                          inputProps={{
+                            style: { textAlign: 'center' },
+                          }}
+                          disabled={isEditMode}
+                        />
+                      )}
+                    </TableCell>
+
+                    {/* 총 무게(톤) 수량 */}
+                    <TableCell
+                      align="center"
+                      sx={{
+                        border: '1px solid #9CA3AF',
+                        whiteSpace: 'nowrap',
+                        width: {
+                          xs: 80, // 모바일 (smaller)
+                          sm: 100, // 태블릿
+                          md: 140, // 데스크탑
+                        },
+                      }}
+                    >
+                      <TextField
+                        size="small"
+                        placeholder="입력"
+                        value={m.totalWeight || ''}
+                        onChange={(e) => {
+                          const formatted = unformatNumber(e.target.value)
+                          updateItemField('MaterialItem', m.id, 'totalWeight', formatted)
+                        }}
+                        inputProps={{
+                          style: { textAlign: 'right' },
+                        }}
+                        fullWidth
+                        disabled={isEditMode}
+                      />
+                    </TableCell>
+
+                    {/* 단가 */}
+                    <TableCell
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', width: '150px', padding: '6px' }}
+                    >
+                      {activeTab === 'ON_SITE_STOCK' ? (
+                        '-'
+                      ) : (
+                        <TextField
+                          size="small"
+                          placeholder="숫자만"
+                          value={formatNumber(m.unitPrice) || ''}
+                          onChange={(e) => {
+                            const formatted = unformatNumber(e.target.value)
+                            updateItemField('MaterialItem', m.id, 'unitPrice', formatted)
+                          }}
+                          inputProps={{
+                            style: { textAlign: 'right' },
+                          }}
+                          fullWidth
+                          disabled={isEditMode}
+                        />
+                      )}
+                    </TableCell>
+
+                    {/* 금액 */}
+                    <TableCell
+                      align="center"
+                      sx={{
+                        border: '1px solid #9CA3AF',
+                        whiteSpace: 'nowrap',
+                        width: {
+                          xs: 80, // 모바일 (smaller)
+                          sm: 120, // 태블릿
+                          md: 160, // 데스크탑
+                        },
+                      }}
+                    >
+                      {activeTab === 'ON_SITE_STOCK' ? (
+                        '-'
+                      ) : (
+                        <TextField
+                          size="small"
+                          placeholder="숫자만"
+                          value={formatNumber(m.amount) || ''}
+                          onChange={(e) => {
+                            const formatted = unformatNumber(e.target.value)
+                            updateItemField('MaterialItem', m.id, 'amount', formatted)
+                          }}
+                          inputProps={{
+                            style: { textAlign: 'right' },
+                          }}
+                          fullWidth
+                          disabled={isEditMode}
+                        />
+                      )}
+                    </TableCell>
+
+                    {/* 구분 */}
+                    <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                      {activeTab === 'ON_SITE_STOCK' || activeTab === 'SCRAP' ? (
+                        '-'
+                      ) : (
+                        <CommonSelectByName
+                          value={m.category || '선택'}
+                          onChange={async (value) => {
+                            const selectedProduct = steelTypeOptions.find(
+                              (opt) => opt.name === value,
+                            )
+                            if (!selectedProduct) return
+                            updateItemField('MaterialItem', m.id, 'category', value)
+                          }}
+                          options={steelTypeOptions}
+                          disabled={isEditMode}
+                        />
+                      )}
+                    </TableCell>
+
+                    {/* 거래선 */}
+                    <TableCell
+                      align="center"
+                      sx={{
+                        border: '1px solid #9CA3AF',
+                        whiteSpace: 'nowrap',
+                        width: {
+                          xs: 100, // 모바일 (smaller)
+                          sm: 160, // 태블릿
+                          md: 200, // 데스크탑
+                        },
+                      }}
+                    >
+                      {activeTab === 'ON_SITE_STOCK' ? (
+                        '-' // 사장 탭일 때는 단순히 "-" 표시
+                      ) : (
+                        <InfiniteScrollSelect
+                          placeholder="업체명을 입력하세요"
+                          keyword={m.outsourcingCompanyName || ''} // 각 row의 값 사용
+                          onChangeKeyword={(newKeyword) =>
+                            updateItemField(
+                              'MaterialItem',
+                              m.id,
+                              'outsourcingCompanyName',
+                              newKeyword,
+                            )
+                          }
+                          items={outsourcingList}
+                          hasNextPage={OutsourcingNameHasNextPage ?? false}
+                          fetchNextPage={OutsourcingeNameFetchNextPage}
+                          renderItem={(item, isHighlighted) => (
+                            <div
+                              className={
+                                isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''
+                              }
+                            >
+                              {item.name}
+                            </div>
+                          )}
+                          onSelect={(selectedCompany) =>
+                            handleSelectOutsourcing(m.id, selectedCompany)
+                          }
+                          isLoading={OutsourcingNameIsLoading || OutsourcingNameIsFetching}
+                          debouncedKeyword={debouncedOutsourcingKeyword}
+                          shouldShowList={isOutsourcingFocused}
+                          onFocus={() => setIsOutsourcingFocused(true)}
+                          onBlur={() => setIsOutsourcingFocused(false)}
+                          disabled={isEditMode}
+                        />
+                      )}
+                    </TableCell>
+
+                    {/* 등록 수정에서 보여주는 용도임 */}
+                    <TableCell
+                      align="center"
+                      sx={{
+                        border: '1px solid #9CA3AF',
+                        whiteSpace: 'nowrap',
+                        width: {
+                          xs: 80, // 모바일 (smaller)
+                          sm: 120, // 태블릿
+                          md: 160, // 데스크탑
+                        },
+                      }}
+                    >
+                      <TextField
+                        size="small"
+                        value={m.createdAt || ''}
+                        disabled
+                        sx={{ width: '100%' }}
+                      />
+                    </TableCell>
+
+                    {/* 증빙 */}
+                    <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                      <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                        <CommonFileInput
+                          acceptedExtensions={[
+                            'pdf',
+                            'jpg',
+                            'png',
+                            'hwp',
+                            'xlsx',
+                            'zip',
+                            'jpeg',
+                            'ppt',
+                          ]}
+                          multiple={false}
+                          files={m.files} // 각 항목별 files
+                          onChange={(newFiles) =>
+                            updateItemField('MaterialItem', m.id, 'files', newFiles)
+                          }
+                          uploadTarget="WORK_DAILY_REPORT"
+                        />
+                      </div>
+                    </TableCell>
+
+                    {/* 비고 */}
+                    <TableCell
+                      align="center"
+                      sx={{
+                        border: '1px solid #9CA3AF',
+                        whiteSpace: 'nowrap',
+                        width: {
+                          xs: 80, // 모바일 (smaller)
+                          sm: 120, // 태블릿
+                          md: 160, // 데스크탑
+                        },
+                      }}
+                    >
+                      <TextField
+                        size="small"
+                        placeholder="텍스트"
+                        multiline
+                        value={m.memo || ''}
+                        onChange={(e) =>
+                          updateItemField('MaterialItem', m.id, 'memo', e.target.value)
+                        }
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+
+                <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
+                  <TableCell
+                    colSpan={3}
+                    align="right"
+                    sx={{
+                      border: '1px solid #9CA3AF',
+                      fontSize: '16px',
+                      textAlign: 'center',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    소계
+                  </TableCell>
+
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  >
+                    {getWeightAmount().toLocaleString()}
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  >
+                    {getCountAmount().toLocaleString()}
+                  </TableCell>
+
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  >
+                    {getTotalWeightAmount().toLocaleString()}
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  >
+                    {getUnitPriceAmount().toLocaleString()}
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  >
+                    {getAmountAmount().toLocaleString()}
+                  </TableCell>
+                  <TableCell
+                    colSpan={5}
+                    align="right"
+                    sx={{
+                      border: '1px solid #9CA3AF',
+                      fontSize: '16px',
+                      textAlign: 'center',
+                      fontWeight: 'bold',
+                    }}
+                  ></TableCell>
                 </TableRow>
               </TableBody>
             </Table>
           </TableContainer>
         </div>
       )}
-
-      <div>
-        <div className="flex justify-between items-center mt-10 mb-2">
-          <span className="font-bold border-b-2 mb-4">품목상세</span>
-          <div className="flex gap-4">
-            <CommonButton
-              label="삭제"
-              className="px-7"
-              variant="danger"
-              onClick={() => removeCheckedItems('MaterialItem')}
-              disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-            />
-            <CommonButton
-              label="추가"
-              className="px-7"
-              variant="secondary"
-              disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-              onClick={() => addItem('MaterialItem')}
-            />
-          </div>
-        </div>
-        <TableContainer component={Paper}>
-          <Table size="small" sx={{ borderCollapse: 'collapse' }}>
-            <TableHead>
-              <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
-                <TableCell rowSpan={2} padding="checkbox" sx={{ border: '1px solid #9CA3AF' }}>
-                  <Checkbox
-                    checked={isContractAllChecked}
-                    indeterminate={contractCheckIds.length > 0 && !isContractAllChecked}
-                    onChange={(e) => toggleCheckAllItems('MaterialItem', e.target.checked)}
-                    sx={{ color: 'black' }}
-                    disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-                  />
-                </TableCell>
-
-                <TableCell
-                  align="center"
-                  sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
-                >
-                  규격 <span className="text-red-500 ml-1">*</span>
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
-                >
-                  품명 <span className="text-red-500 ml-1">*</span>
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
-                >
-                  단위 <span className="text-red-500 ml-1">*</span>
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
-                >
-                  본 <span className="text-red-500 ml-1">*</span>
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
-                >
-                  길이 <span className="text-red-500 ml-1">*</span>
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
-                >
-                  총 길이 <span className="text-red-500 ml-1">*</span>
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
-                >
-                  단위중량 <span className="text-red-500 ml-1">*</span>
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
-                >
-                  수량 <span className="text-red-500 ml-1">*</span>
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
-                >
-                  단가 <span className="text-red-500 ml-1">*</span>
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{
-                    border: '1px solid #9CA3AF',
-                    whiteSpace: 'nowrap',
-                    fontWeight: 'bold',
-                    color: 'black',
-                  }}
-                >
-                  공급가 <span className="text-red-500 ml-1">*</span>
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{
-                    border: '1px solid #9CA3AF',
-                    whiteSpace: 'nowrap',
-                    fontWeight: 'bold',
-                    color: 'black',
-                  }}
-                >
-                  비고
-                </TableCell>
-              </TableRow>
-            </TableHead>
-
-            <TableBody>
-              {contractAddAttachedFiles.map((m) => (
-                <TableRow key={m.id} sx={{ border: '1px solid #9CA3AF' }}>
-                  <TableCell padding="checkbox" align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                    <Checkbox
-                      checked={contractCheckIds.includes(m.id)}
-                      onChange={(e) => toggleCheckItem('MaterialItem', m.id, e.target.checked)}
-                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-                    />
-                  </TableCell>
-
-                  <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      placeholder="입력"
-                      value={m.standard || ''}
-                      onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'standard', e.target.value)
-                      }
-                      inputProps={{ maxLength: 50 }}
-                      fullWidth
-                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-                    />
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      placeholder="입력"
-                      value={m.name || ''}
-                      onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'name', e.target.value)
-                      }
-                      inputProps={{ maxLength: 50 }}
-                      fullWidth
-                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-                    />
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      placeholder="입력"
-                      value={m.unit || ''}
-                      onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'unit', e.target.value)
-                      }
-                      inputProps={{ maxLength: 10 }}
-                      fullWidth
-                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-                    />
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      placeholder="숫자만"
-                      value={m.count || ''}
-                      onChange={(e) => {
-                        const formatted = unformatNumber(e.target.value)
-                        updateItemField('MaterialItem', m.id, 'count', formatted)
-                      }}
-                      inputProps={{
-                        style: { textAlign: 'right' },
-                      }}
-                      fullWidth
-                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-                    />
-                  </TableCell>
-
-                  {/* 도급금액 수량 */}
-                  <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      placeholder="숫자만"
-                      value={m.length || ''}
-                      onChange={(e) => {
-                        const formatted = unformatNumber(e.target.value)
-                        updateItemField('MaterialItem', m.id, 'length', formatted)
-                      }}
-                      inputProps={{
-                        style: { textAlign: 'right' },
-                      }}
-                      fullWidth
-                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-                    />
-                  </TableCell>
-
-                  {/* 도급금액 금액 */}
-                  <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      placeholder="숫자만"
-                      value={m.totalLength || ''}
-                      onChange={(e) => {
-                        const formatted = unformatNumber(e.target.value)
-                        updateItemField('MaterialItem', m.id, 'totalLength', formatted)
-                      }}
-                      inputProps={{
-                        style: { textAlign: 'right' },
-                      }}
-                      fullWidth
-                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-                    />
-                  </TableCell>
-
-                  {/* 외주계약금액 수량 */}
-                  <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      placeholder="숫자만"
-                      value={m.unitWeight || ''}
-                      onChange={(e) => {
-                        const formatted = unformatNumber(e.target.value)
-                        updateItemField('MaterialItem', m.id, 'unitWeight', formatted)
-                      }}
-                      inputProps={{
-                        style: { textAlign: 'right' },
-                      }}
-                      fullWidth
-                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-                    />
-                  </TableCell>
-
-                  {/* 외주계약금액 금액 */}
-                  {/* 수량 */}
-                  <TableCell sx={{ border: '1px solid  #9CA3AF', width: '90px' }}>
-                    <TextField
-                      size="small"
-                      placeholder="수량"
-                      value={m.quantity || ''}
-                      onChange={(e) => {
-                        const quantity = e.target.value === '' ? '' : Number(e.target.value)
-
-                        // 공급가 계산 (수량 * 단가)
-                        const supplyPrice = quantity && m.unitPrice ? quantity * m.unitPrice : 0
-                        const vat = Math.floor(supplyPrice * 0.1)
-                        const total = supplyPrice + vat
-
-                        updateItemField('MaterialItem', m.id, 'quantity', quantity)
-                        updateItemField('MaterialItem', m.id, 'supplyPrice', supplyPrice)
-                        updateItemField('MaterialItem', m.id, 'vat', vat)
-                        updateItemField('MaterialItem', m.id, 'total', total)
-                      }}
-                      variant="outlined"
-                      inputProps={{ style: { textAlign: 'right' } }}
-                    />
-                  </TableCell>
-
-                  {/* 단가 */}
-                  <TableCell align="right" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      inputMode="numeric"
-                      placeholder="숫자 입력"
-                      value={formatNumber(m.unitPrice) || ''}
-                      onChange={(e) => {
-                        const unitPrice =
-                          e.target.value === '' ? '' : unformatNumber(e.target.value)
-
-                        // 공급가 계산 (수량 * 단가)
-                        const supplyPrice = m.quantity && unitPrice ? m.quantity * unitPrice : 0
-                        const vat = Math.floor(supplyPrice * 0.1)
-                        const total = supplyPrice + vat
-
-                        updateItemField('MaterialItem', m.id, 'unitPrice', unitPrice)
-                        updateItemField('MaterialItem', m.id, 'supplyPrice', supplyPrice)
-                        updateItemField('MaterialItem', m.id, 'vat', vat)
-                        updateItemField('MaterialItem', m.id, 'total', total)
-                      }}
-                      variant="outlined"
-                      inputProps={{
-                        style: {
-                          textAlign: 'right',
-                        },
-                      }}
-                    />
-                  </TableCell>
-
-                  {/* 공급가 */}
-                  <TableCell align="right" sx={{ border: '1px solid #9CA3AF' }}>
-                    <SupplyPriceInput
-                      value={m.supplyPrice}
-                      onChange={(supply) => {
-                        const vat = Math.floor(supply * 0.1)
-                        const total = supply + vat
-
-                        // MaterialItem 객체 업데이트
-                        updateItemField('MaterialItem', m.id, 'supplyPrice', supply)
-                        updateItemField('MaterialItem', m.id, 'vat', vat)
-                        updateItemField('MaterialItem', m.id, 'total', total)
-                      }}
-                    />
-                  </TableCell>
-
-                  <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      placeholder="500자 이하 텍스트 입력"
-                      multiline
-                      value={m.memo || ''}
-                      onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'memo', e.target.value)
-                      }
-                      inputProps={{ maxLength: 500 }}
-                      fullWidth
-                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-              <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
-                <TableCell
-                  colSpan={8}
-                  align="right"
-                  sx={{
-                    border: '1px solid #9CA3AF',
-                    fontSize: '16px',
-                    textAlign: 'center',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  소계
-                </TableCell>
-
-                <TableCell
-                  align="center"
-                  sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
-                >
-                  {getTotalContractAmount().toLocaleString()}
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
-                >
-                  {getTotalOutsourceQty().toLocaleString()}
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
-                >
-                  {getTotalOutsourceAmount().toLocaleString()}
-                </TableCell>
-                <TableCell sx={{ border: '1px solid #9CA3AF' }} />
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </div>
-
-      {/* 첨부파일 */}
-      <div>
-        <div className="flex justify-between items-center mt-10 mb-2">
-          <span className="font-bold border-b-2 mb-4">첨부파일</span>
-          <div className="flex gap-4">
-            <CommonButton
-              label="삭제"
-              className="px-7"
-              variant="danger"
-              onClick={() => removeCheckedItems('attachedFile')}
-              disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-            />
-            <CommonButton
-              label="추가"
-              className="px-7"
-              variant="secondary"
-              onClick={() => addItem('attachedFile')}
-              disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-            />
-          </div>
-        </div>
-        <TableContainer component={Paper}>
-          <Table size="small">
-            <TableHead>
-              <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
-                  <Checkbox
-                    checked={isFilesAllChecked}
-                    indeterminate={fileCheckIds.length > 0 && !isFilesAllChecked}
-                    onChange={(e) => toggleCheckAllItems('attachedFile', e.target.checked)}
-                    sx={{ color: 'black' }}
-                    disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-                  />
-                </TableCell>
-                {['문서명', '첨부', '비고'].map((label) => (
-                  <TableCell
-                    key={label}
-                    align="center"
-                    sx={{
-                      backgroundColor: '#D1D5DB',
-                      border: '1px solid  #9CA3AF',
-                      color: 'black',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    {label === '비고' || label === '첨부' ? (
-                      label
-                    ) : (
-                      <div className="flex items-center justify-center">
-                        <span>{label}</span>
-                        <span className="text-red-500 ml-1">*</span>
-                      </div>
-                    )}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {attachedFiles.map((m) => (
-                <TableRow key={m.id} sx={{ border: '1px solid  #9CA3AF' }}>
-                  <TableCell
-                    padding="checkbox"
-                    align="center"
-                    sx={{ border: '1px solid  #9CA3AF' }}
-                  >
-                    <Checkbox
-                      checked={fileCheckIds.includes(m.id)}
-                      onChange={(e) => toggleCheckItem('attachedFile', m.id, e.target.checked)}
-                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-                    />
-                  </TableCell>
-                  <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
-                    <TextField
-                      size="small"
-                      placeholder="텍스트 입력"
-                      sx={{ width: '100%' }}
-                      value={m.name}
-                      onChange={(e) =>
-                        updateItemField('attachedFile', m.id, 'name', e.target.value)
-                      }
-                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-                    />
-                  </TableCell>
-
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
-                      <CommonFileInput
-                        acceptedExtensions={[
-                          'pdf',
-                          'jpg',
-                          'png',
-                          'hwp',
-                          'xlsx',
-                          'zip',
-                          'jpeg',
-                          'ppt',
-                        ]}
-                        multiple={false}
-                        files={m.files} // 각 항목별 files
-                        onChange={(newFiles) => {
-                          updateItemField('attachedFile', m.id, 'files', newFiles.slice(0, 1))
-                          // updateItemField('attachedFile', m.id, 'files', newFiles)
-                        }}
-                        uploadTarget="CLIENT_COMPANY"
-                        disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-                      />
-                    </div>
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      placeholder="500자 이하 텍스트 입력"
-                      sx={{ width: '100%' }}
-                      value={m.memo}
-                      onChange={(e) =>
-                        updateItemField('attachedFile', m.id, 'memo', e.target.value)
-                      }
-                      disabled={['APPROVAL', 'RELEASE'].includes(form.typeCode)}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </div>
 
       {isEditMode && (
         <div>
@@ -1473,37 +1359,14 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
       <div className="flex justify-center gap-10 mt-10">
         <CommonButton label="취소" variant="reset" className="px-10" onClick={steelCancel} />
 
-        {!(isEditMode && ['APPROVAL', 'RELEASE'].includes(form.typeCode)) && (
-          <CommonButton
-            label={isEditMode ? '+ 수정' : '+ 등록'}
-            className="px-10 font-bold"
-            variant="secondary"
-            onClick={handleSteelSubmit}
-          />
-        )}
+        <CommonButton
+          label={isEditMode ? '+ 수정' : '+ 등록'}
+          className="px-10 font-bold"
+          variant="secondary"
+          onClick={handleSteelSubmit}
+        />
 
-        {/* 승인 버튼 */}
-        {isEditMode && ['ORDER', 'PURCHASE', 'LEASE'].includes(form.typeCode) && (
-          <CommonButton
-            label="승인"
-            className="px-10 font-bold"
-            variant="primary"
-            onClick={() => {
-              if (window.confirm('정말 승인 하시겠습니까?')) {
-                SteelApproveMutation.mutate(
-                  { steelManagementIds: [steelDetailId] },
-                  {
-                    onSuccess: () => {
-                      router.push('/managementSteel')
-                    },
-                  },
-                )
-              }
-            }}
-          />
-        )}
-
-        {isEditMode && form.typeCode === 'APPROVAL' && (
+        {/* {isEditMode && form.typeCode === 'APPROVAL' && (
           <CommonButton
             label="반출"
             className="px-10 font-bold"
@@ -1521,7 +1384,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
               }
             }}
           />
-        )}
+        )} */}
       </div>
     </>
   )

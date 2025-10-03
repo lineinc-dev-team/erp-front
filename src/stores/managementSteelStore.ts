@@ -4,7 +4,6 @@ import {
   SteelFormStore,
   SteelSearchState,
 } from '@/types/managementSteel'
-import { getTodayDateString } from '@/utils/formatters'
 import { create } from 'zustand'
 
 export const useSteelSearchStore = create<{ search: SteelSearchState }>((set) => ({
@@ -12,7 +11,7 @@ export const useSteelSearchStore = create<{ search: SteelSearchState }>((set) =>
     searchTrigger: 0,
     siteId: 0,
     siteName: '',
-    processName: '',
+    siteProcessName: '',
     itemName: '',
     type: '',
     outsourcingCompanyName: '',
@@ -41,7 +40,7 @@ export const useSteelSearchStore = create<{ search: SteelSearchState }>((set) =>
           ...state.search,
           siteId: 0,
           siteName: '',
-          processName: '',
+          siteProcessName: '',
           itemName: '',
           type: '',
           outsourcingCompanyName: '',
@@ -62,17 +61,7 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
     siteName: '',
     siteProcessId: 0,
     siteProcessName: '',
-    outsourcingCompanyId: 0,
-    usage: '',
-    type: 'BASE',
-    typeCode: '',
-    previousTypeCode: '',
-    startDate: null,
-    endDate: null,
-    initialStartDateAt: '',
-    initialEndDateAt: '',
-    memo: '',
-    businessNumber: '',
+    type: 'INCOMING',
     details: [],
     checkedMaterialItemIds: [],
 
@@ -83,29 +72,27 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
   },
 
   reset: () =>
-    set(() => ({
+    set((state) => ({
       form: {
         siteId: 0,
         siteName: '',
         siteProcessId: 0,
         siteProcessName: '',
-        outsourcingCompanyId: 0,
-        usage: '',
-        type: 'BASE',
-        typeCode: '',
-        previousTypeCode: '',
-        startDate: null,
-        endDate: null,
-        initialStartDateAt: '',
-        initialEndDateAt: '',
-        memo: '',
-        businessNumber: '',
+        type: state.form.type,
         details: [],
         checkedMaterialItemIds: [],
         attachedFiles: [],
         checkedAttachedFileIds: [],
 
         changeHistories: [],
+      },
+    })),
+
+  resetDetailData: () =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        details: [],
       },
     })),
 
@@ -120,16 +107,16 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
       if (typeName === 'MaterialItem') {
         const newItem: MaterialItem = {
           id,
-          standard: '',
-          name: '',
-          unit: '',
+          outsourcingCompanyId: 1,
+          name: 'H Bearn',
+          specification: '',
+          weight: 0,
           count: 0,
-          length: 0,
-          totalLength: 0,
-          unitWeight: 0,
-          quantity: 0,
+          totalWeight: 0,
           unitPrice: 0,
-          supplyPrice: 0,
+          amount: 0,
+          category: '선택',
+          files: [],
           memo: '',
         }
         return {
@@ -155,9 +142,25 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
         return {
           form: {
             ...state.form,
-            details: state.form.details.map((item) =>
-              item.id === id ? { ...item, [field]: value } : item,
-            ),
+            details: state.form.details.map((item) => {
+              if (item.id !== id) return item
+
+              // 변경된 값 적용
+              const updatedItem = { ...item, [field]: value }
+
+              // weight, count, unitPrice 변경 시 totalWeight, amount 자동 계산
+              if (['weight', 'count', 'unitPrice'].includes(field)) {
+                const weight = Number(field === 'weight' ? value : updatedItem.weight) || 0
+                const count = Number(field === 'count' ? value : updatedItem.count) || 0
+                const unitPrice = Number(field === 'unitPrice' ? value : updatedItem.unitPrice) || 0
+
+                // 소수점 4자리까지 허용
+                updatedItem.totalWeight = Number((weight * count).toFixed(4))
+                updatedItem.amount = Number((updatedItem.totalWeight * unitPrice).toFixed(0))
+              }
+
+              return updatedItem
+            }),
           },
         }
       } else {
@@ -196,29 +199,47 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
       }
     }),
 
-  // 도급금액 금액 합계
-  getTotalContractAmount: () => {
+  // 무게합산
+  getWeightAmount: () => {
     const { details } = get().form
     return details.reduce((sum, item) => {
-      const amount = Number(item.quantity)
-      return sum + (isNaN(amount) ? 0 : amount)
+      const weight = Number(item.weight)
+      return sum + (isNaN(weight) ? 0 : weight)
     }, 0)
   },
 
-  // 외주계약금액 수량 합계
-  getTotalOutsourceQty: () => {
+  // 본 합산
+  getCountAmount: () => {
     const { details } = get().form
     return details.reduce((sum, item) => {
-      const qty = Number(item.unitPrice)
-      return sum + (isNaN(qty) ? 0 : qty)
+      const count = Number(item.count)
+      return sum + (isNaN(count) ? 0 : count)
     }, 0)
   },
 
-  // 외주계약금액 금액 합계
-  getTotalOutsourceAmount: () => {
+  // 총 무게 합산
+  getTotalWeightAmount: () => {
     const { details } = get().form
     return details.reduce((sum, item) => {
-      const amount = Number(item.supplyPrice)
+      const totalWeight = Number(item.totalWeight)
+      return sum + (isNaN(totalWeight) ? 0 : totalWeight)
+    }, 0)
+  },
+
+  // 단가 합산 (단순 합인지, 평균 내야 하는지 요구 확인 필요)
+  getUnitPriceAmount: () => {
+    const { details } = get().form
+    return details.reduce((sum, item) => {
+      const unitPrice = Number(item.unitPrice)
+      return sum + (isNaN(unitPrice) ? 0 : unitPrice)
+    }, 0)
+  },
+
+  // 금액 합산
+  getAmountAmount: () => {
+    const { details } = get().form
+    return details.reduce((sum, item) => {
+      const amount = Number(item.amount)
       return sum + (isNaN(amount) ? 0 : amount)
     }, 0)
   },
@@ -293,39 +314,30 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
   newSteelData: () => {
     const form = get().form
 
-    const startedAtStr = getTodayDateString(form.startDate)
-    const endedAtStr = getTodayDateString(form.endDate)
-
     return {
       ...form,
-      outsourcingCompanyId: form.outsourcingCompanyId === 0 ? undefined : form.outsourcingCompanyId,
-      startDate: startedAtStr !== form.initialStartDateAt ? startedAtStr : form.initialStartDateAt,
-      endDate: endedAtStr !== form.initialEndDateAt ? endedAtStr : form.initialEndDateAt,
-      details: form.details,
-      // 첨부파일에 파일 업로드를 안할 시 null 로 넣는다..
-      files: form.attachedFiles.flatMap((f) => {
-        if (!f.files || f.files.length === 0) {
-          // 파일이 없을 경우에도 name, memo는 전송
-          return [
-            {
-              id: f.id || Date.now(),
-              name: f.name,
-              fileUrl: '',
-              originalFileName: '',
-              memo: f.memo || '',
-            },
-          ]
-        }
+      // outsourcingCompanyId: form.outsourcingCompanyId === 0 ? undefined : form.outsourcingCompanyId,
 
-        // 파일이 있을 경우
-        return f.files.map((fileObj: FileUploadInfo) => ({
-          id: f.id || Date.now(),
-          name: f.name,
-          fileUrl: fileObj.fileUrl || '',
-          originalFileName: fileObj.name || fileObj.originalFileName,
-          memo: f.memo || '',
-        }))
+      details: form.details.map((item) => {
+        const file = item.files?.[0]
+        return {
+          id: item.id,
+          outsourcingCompanyId: item.outsourcingCompanyId,
+          type: form.type,
+          name: item.name,
+          specification: item.specification,
+          weight: item.weight,
+          count: item.count,
+          totalWeight: item.totalWeight,
+          unitPrice: item.unitPrice,
+          amount: item.amount,
+          category: item.category === '선택' ? null : item.category,
+          fileUrl: file?.fileUrl || null,
+          originalFileName: file?.originalFileName || null,
+          memo: item.memo,
+        }
       }),
+
       checkedMaterialItemIds: undefined,
       checkedAttachedFileIds: undefined,
       attachedFiles: undefined,

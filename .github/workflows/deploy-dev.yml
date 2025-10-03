@@ -32,6 +32,7 @@ jobs:
           platforms: linux/amd64
           build-args: |
             NEXT_PUBLIC_API_URL=https://dev-erp-api.dooson.it/api/v1
+            NEXT_PUBLIC_API_URL_V2=https://dev-erp-api.dooson.it/api/v2
 
       - name: SSH to EC2 and deploy
         uses: appleboy/ssh-action@v1.0.0

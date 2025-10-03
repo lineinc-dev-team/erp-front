@@ -1,5 +1,7 @@
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL
 
+const apiBaseUrlv2 = process.env.NEXT_PUBLIC_API_URL_V2
+
 if (!apiBaseUrl) {
   throw new Error('환경 변수 NEXT_PUBLIC_API_URL 설정되지 않았습니다.')
 }
@@ -25,6 +27,7 @@ export const API = {
   FILEUPLOAD: `${apiBaseUrl}/files`,
   COST: `${apiBaseUrl}/management-costs`,
   STEEL: `${apiBaseUrl}/steel-managements`,
+  STEELv2: `${apiBaseUrlv2}/steel-managements`,
   MATERIAL: `${apiBaseUrl}/material-managements`,
   DAILYREPORT: `${apiBaseUrl}/daily-reports`,
   LABOR: `${apiBaseUrl}/labors`,

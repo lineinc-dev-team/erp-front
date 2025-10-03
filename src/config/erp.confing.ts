@@ -125,17 +125,19 @@ export const CostColumnList: GridColDef[] = [
 export const SteelColumnList: GridColDef[] = [
   { field: 'no', headerName: 'No', width: 10 },
   // { field: 'id', headerName: 'No', width: 70 },
-  { field: 'site', headerName: '현장명', width: 130 },
-  { field: 'process', headerName: '공정명', width: 130 },
-  { field: 'type', headerName: '구분', width: 180 },
-  { field: 'orderDate', headerName: '발주일', width: 100 },
-  { field: 'approvalDate', headerName: '승인일', width: 120 },
-  { field: 'releaseDate', headerName: '반출일', width: 120 },
-  { field: 'startDate', headerName: '기간', width: 100 },
-  { field: 'outsourcingCompanyName', headerName: '업체명', width: 100 },
-  { field: 'outsourcingCompanyBusinessNumber', headerName: '사업자등록번호', width: 100 },
-  { field: 'totalAmount', headerName: '총금액', width: 100 },
-  { field: 'memo', headerName: '비고', width: 100 },
+  { field: 'siteName', headerName: '현장명', width: 130 },
+  { field: 'siteProcessName', headerName: '공정명', width: 130 },
+  { field: 'incomingOwnMaterial', headerName: '입고 자사(톤/금액)', width: 180 },
+  { field: 'incomingPurchase', headerName: '입고 구매(톤/금액)', width: 100 },
+  { field: 'incomingRental', headerName: '입고 임대(톤/금액)', width: 120 },
+  { field: 'outgoingOwnMaterial', headerName: '출고 자사(톤/금액)', width: 120 },
+  { field: 'outgoingPurchase', headerName: '출고 구매(톤/금액)', width: 100 },
+  { field: 'outgoingRental', headerName: '출고 임대(톤/금액)', width: 100 },
+  { field: 'onSiteStock', headerName: '사장(톤)', width: 100 },
+  { field: 'scrap', headerName: '고철(톤/금액)', width: 100 },
+  { field: 'totalInvestmentAmount', headerName: '총 금액(투입비)', width: 100 },
+  { field: 'onSiteRemainingWeight', headerName: '현장보유수량(톤)', width: 100 },
+  { field: 'createdAt', headerName: '등록일', width: 100 },
 ]
 
 export const MaterialColumnList: GridColDef[] = [
@@ -353,9 +355,9 @@ export const itemTypeOptions = [
 // 강재관리 옵션 타입
 export const steelTypeOptions = [
   { label: '선택', name: '선택' },
-  { label: '발주', name: 'ORDER' },
-  { label: '임대', name: 'PURCHASE' },
-  { label: '구매', name: 'LEASE' },
+  { label: '자사자재', name: 'OWN_MATERIAL' },
+  { label: '구매', name: 'PURCHASE' },
+  { label: '임대', name: 'RENTAL' },
 ]
 
 // 자재관리 투입구분타입

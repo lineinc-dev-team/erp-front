@@ -5,13 +5,10 @@ import {
   CreateManagementSteel,
   ModifySteelManagement,
   SteelInfoHistoryService,
-  SteelTypeIdInfoService,
 } from '@/services/managementSteel/managementSteelRegistrationService'
 import { useManagementSteelFormStore, useSteelSearchStore } from '@/stores/managementSteelStore'
 import {
   ManagementSteelInfoService,
-  SteelApproveService,
-  SteelReleaseService,
   SteelRemoveService,
 } from '@/services/managementSteel/managementSteelService'
 import { useEffect } from 'react'
@@ -71,7 +68,7 @@ export function useManagementSteel() {
     queryFn: () => {
       const rawParams = {
         siteName: search.siteName === '선택' ? undefined : search.siteName,
-        processName: search.processName,
+        siteProcessName: search.siteProcessName,
         itemName: search.itemName,
         type: search.type === 'BASE' ? '' : search.type,
         outsourcingCompanyName:
@@ -123,34 +120,34 @@ export function useManagementSteel() {
   })
 
   //강재데이터 승인!
-  const SteelApproveMutation = useMutation({
-    mutationFn: ({ steelManagementIds }: { steelManagementIds: number[] }) =>
-      SteelApproveService(steelManagementIds),
+  // const SteelApproveMutation = useMutation({
+  //   mutationFn: ({ steelManagementIds }: { steelManagementIds: number[] }) =>
+  //     SteelApproveService(steelManagementIds),
 
-    onSuccess: () => {
-      showSnackbar('강재 관리가 승인되었습니다.', 'success')
-      queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
-    },
+  //   onSuccess: () => {
+  //     showSnackbar('강재 관리가 승인되었습니다.', 'success')
+  //     queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
+  //   },
 
-    onError: () => {
-      showSnackbar('승인 실패: 이미 반출된 건은 승인 상태로 변경할 수 없습니다.', 'error')
-    },
-  })
+  //   onError: () => {
+  //     showSnackbar('승인 실패: 이미 반출된 건은 승인 상태로 변경할 수 없습니다.', 'error')
+  //   },
+  // })
 
   //강재데이터 반출!
-  const SteelReleaseMutation = useMutation({
-    mutationFn: ({ steelManagementIds }: { steelManagementIds: number[] }) =>
-      SteelReleaseService(steelManagementIds),
+  // const SteelReleaseMutation = useMutation({
+  //   mutationFn: ({ steelManagementIds }: { steelManagementIds: number[] }) =>
+  //     SteelReleaseService(steelManagementIds),
 
-    onSuccess: () => {
-      showSnackbar('강재 관리가 반출되었습니다.', 'success')
-      queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
-    },
+  //   onSuccess: () => {
+  //     showSnackbar('강재 관리가 반출되었습니다.', 'success')
+  //     queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
+  //   },
 
-    onError: () => {
-      showSnackbar('반출 실패: 승인되지 않은 건은 반출할 수 없습니다.', 'error')
-    },
-  })
+  //   onError: () => {
+  //     showSnackbar('반출 실패: 승인되지 않은 건은 반출할 수 없습니다.', 'error')
+  //   },
+  // })
 
   //   // 발주처 수정
 
@@ -193,12 +190,12 @@ export function useManagementSteel() {
 
   // 구분 조회
 
-  const { data: steelTypeInfoId } = useQuery({
-    queryKey: ['steelTypeInfo'],
-    queryFn: SteelTypeIdInfoService,
-  })
+  // const { data: steelTypeInfoId } = useQuery({
+  //   queryKey: ['steelTypeInfo'],
+  //   queryFn: SteelTypeIdInfoService,
+  // })
 
-  const SteelTypeMethodOptions = [{ code: 'BASE', name: '선택' }, ...(steelTypeInfoId?.data ?? [])]
+  // const SteelTypeMethodOptions = [{ code: 'BASE', name: '선택' }, ...(steelTypeInfoId?.data ?? [])]
 
   const steelCancel = () => {
     router.push('/managementSteel')
@@ -206,12 +203,9 @@ export function useManagementSteel() {
   return {
     createSteelMutation,
     SteelDeleteMutation,
-    SteelApproveMutation,
     SteelListQuery,
-    SteelReleaseMutation,
     SteelModifyMutation,
     steelCancel,
-    SteelTypeMethodOptions,
 
     useSteelHistoryDataQuery,
   }
