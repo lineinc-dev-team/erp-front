@@ -71,6 +71,14 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
     changeHistories: [],
   },
 
+  isSaved: false, //
+
+  setSaved: (saved: boolean) =>
+    set((state) => ({
+      ...state,
+      isSaved: saved,
+    })),
+
   reset: () =>
     set((state) => ({
       form: {
@@ -86,6 +94,7 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
 
         changeHistories: [],
       },
+      isSaved: false,
     })),
 
   resetDetailData: () =>

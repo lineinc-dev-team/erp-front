@@ -16,7 +16,7 @@ import { getTodayDateString } from '@/utils/formatters'
 
 export function useManagementSteel() {
   const { showSnackbar } = useSnackbarStore()
-  const { reset } = useManagementSteelFormStore()
+  const { reset, setSaved } = useManagementSteelFormStore()
 
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -28,6 +28,7 @@ export function useManagementSteel() {
       showSnackbar('강재관리가 등록 되었습니다.', 'success')
       // 초기화 로직
       queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
+      setSaved(true)
       reset()
       router.push('/managementSteel')
     },
@@ -157,6 +158,7 @@ export function useManagementSteel() {
     onSuccess: () => {
       showSnackbar('강재수불부가 수정 되었습니다.', 'success')
       queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
+      setSaved(true)
       // reset()
       // router.push('/managementSteel')
     },

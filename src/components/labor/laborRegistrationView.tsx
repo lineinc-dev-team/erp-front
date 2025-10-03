@@ -198,8 +198,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       setField('memo', client.memo)
       setField('files', formattedFiles)
 
-      setField('outsourcingCompanyName', client.outsourcingCompany.name)
-      setField('outsourcingCompanyId', client.outsourcingCompany.id)
+      setField('outsourcingCompanyName', client?.outsourcingCompany?.name)
+      setField('outsourcingCompanyId', client?.outsourcingCompany?.id)
 
       setField('tenureMonths', client.tenureMonths === null ? '-' : client.tenureMonths + '개월')
 
@@ -536,10 +536,10 @@ export default function LaborRegistrationView({ isEditMode = false }) {
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               소속업체 <span className="text-red-500 ml-1">*</span>
             </label>
-            <div className="border border-gray-400  w-full">
+            <div className="border border-gray-400  w-full flex flex-col  py-2 px-1">
               <InfiniteScrollSelect
                 placeholder="업체명을 입력하세요"
-                keyword={form.outsourcingCompanyName}
+                keyword={form.outsourcingCompanyName ?? ''}
                 onChangeKeyword={(newKeyword) => setField('outsourcingCompanyName', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
                 items={outsourcingList}
                 hasNextPage={OutsourcingNameHasNextPage ?? false}
@@ -644,7 +644,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
             <div className="border border-gray-400 py-6 px-2 w-full">
               <CommonInput
                 placeholder="'-'없이 숫자만 입력"
-                value={form.phoneNumber}
+                value={form.phoneNumber ?? ''}
                 onChange={(value) => {
                   const clientPhone = formatPhoneNumber(value)
                   setField('phoneNumber', clientPhone)
@@ -717,7 +717,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
             <div className="border flex  items-center border-gray-400 px-2 w-full">
               <AmountInput
                 className="w-full"
-                value={formatNumber(form.dailyWage)}
+                value={formatNumber(form.dailyWage) ?? ''}
                 onChange={(val) => {
                   const numericValue = unformatNumber(val)
                   setField('dailyWage', numericValue)
@@ -734,7 +734,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
                 className="text-2xl"
-                value={form.bankName}
+                value={form.bankName ?? ''}
                 onChange={(value) => setField('bankName', value)}
                 options={bankOptions}
               />

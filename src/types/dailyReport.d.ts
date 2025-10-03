@@ -175,6 +175,9 @@ export type DailyFormState = {
 type DailyReportFormStore = {
   form: DailyFormState
 
+  isSaved: boolean
+  setSaved: (saved: boolean) => void
+
   reset: () => void
   resetEmployees: () => void
   resetDirectContracts: () => void

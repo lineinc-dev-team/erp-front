@@ -56,6 +56,8 @@ export default function DailyReportRegistrationView() {
   const {
     form,
     reset,
+    isSaved,
+    setSaved,
     setField,
     updateItemField,
     removeCheckedItems,
@@ -159,10 +161,21 @@ export default function DailyReportRegistrationView() {
   const [activeTab, setActiveTab] = useState('직원')
 
   const handleTabClick = (tab: string) => {
-    const confirmLeave = window.confirm(
-      `현재 ${activeTab}의 데이터를 저장 혹은 수정하지 않았습니다. 이동하시면 데이터는 초기화 됩니다. 이동하시겠습니까?`,
-    )
-    if (!confirmLeave) return // 취소 시 이동하지 않음
+    let message = ''
+
+    if (!isSaved) {
+      // 저장되지 않은 변경사항이 있는 상태
+      if (isEditMode) {
+        message = '수정한 내용이 저장되지 않았습니다. 이동하시겠습니까?'
+      } else {
+        message = `현재 "${activeTab}" 탭의 데이터가 등록되지 않았습니다. 이동하시면 입력한 내용이 사라집니다. 계속하시겠습니까?`
+      }
+    } else if (isSaved) {
+      // 저장 완료된 상태
+      message = `현재 "${activeTab}" 탭의 데이터는 저장되었습니다. 이동하시면 화면에 입력된 내용은 초기화됩니다. 계속하시겠습니까?`
+    }
+
+    if (message && !window.confirm(message)) return
 
     // 이전 탭에 맞는 reset 함수만 실행
     switch (activeTab) {
@@ -4210,7 +4223,7 @@ export default function DailyReportRegistrationView() {
                   {
                     onSuccess: async () => {
                       handleEmployeesRefetch() // 직원 데이터 재조회
-
+                      setSaved(true)
                       // 날씨가 바뀌었을 경우만 호출
                       if (previousWeatherRef.current !== form.weather) {
                         try {
@@ -4244,7 +4257,7 @@ export default function DailyReportRegistrationView() {
                   {
                     onSuccess: async () => {
                       handleContractRefetch() // 직원 데이터 재조회
-
+                      setSaved(true)
                       // 날씨가 바뀌었을 경우만 호출
                       if (previousWeatherRef.current !== form.weather) {
                         try {
@@ -4278,7 +4291,7 @@ export default function DailyReportRegistrationView() {
                   {
                     onSuccess: async () => {
                       handleOutsourcingRefetch() // 직원 데이터 재조회
-
+                      setSaved(true)
                       // 날씨가 바뀌었을 경우만 호출
                       if (previousWeatherRef.current !== form.weather) {
                         try {
@@ -4312,7 +4325,7 @@ export default function DailyReportRegistrationView() {
                   {
                     onSuccess: async () => {
                       handleEquipmentRefetch() // 직원 데이터 재조회
-
+                      setSaved(true)
                       // 날씨가 바뀌었을 경우만 호출
                       if (previousWeatherRef.current !== form.weather) {
                         try {
@@ -4340,7 +4353,7 @@ export default function DailyReportRegistrationView() {
                 FuelModifyMutation.mutate(modifyFuelNumber, {
                   onSuccess: async () => {
                     handleFuelRefetch() // 직원 데이터 재조회
-
+                    setSaved(true)
                     // 날씨가 바뀌었을 경우만 호출
                     if (previousWeatherRef.current !== form.weather) {
                       try {
@@ -4373,7 +4386,7 @@ export default function DailyReportRegistrationView() {
                   {
                     onSuccess: async () => {
                       handleFileRefetch() // 직원 데이터 재조회
-
+                      setSaved(true)
                       // 날씨가 바뀌었을 경우만 호출
                       if (previousWeatherRef.current !== form.weather) {
                         try {
@@ -4403,6 +4416,7 @@ export default function DailyReportRegistrationView() {
                 createDailyMutation.mutate(undefined, {
                   onSuccess: () => {
                     handleEmployeesRefetch() // 등록 성공 후 실행
+                    setSaved(true)
                   },
                 })
               } else if (activeTab === '직영/계약직') {
@@ -4410,6 +4424,7 @@ export default function DailyReportRegistrationView() {
                 createDailyMutation.mutate(undefined, {
                   onSuccess: () => {
                     handleContractRefetch() // 등록 성공 후 실행
+                    setSaved(true)
                   },
                 })
               } else if (activeTab === '외주') {
@@ -4417,6 +4432,7 @@ export default function DailyReportRegistrationView() {
                 createDailyMutation.mutate(undefined, {
                   onSuccess: () => {
                     handleOutsourcingRefetch() // 등록 성공 후 실행
+                    setSaved(true)
                   },
                 })
               } else if (activeTab === '장비') {
@@ -4424,6 +4440,7 @@ export default function DailyReportRegistrationView() {
                 createDailyMutation.mutate(undefined, {
                   onSuccess: () => {
                     handleEquipmentRefetch() // 등록 성공 후 실행
+                    setSaved(true)
                   },
                 })
               } else if (activeTab === '유류') {
@@ -4431,6 +4448,7 @@ export default function DailyReportRegistrationView() {
                 createDailyMutation.mutate(undefined, {
                   onSuccess: () => {
                     handleFuelRefetch() // 등록 성공 후 실행
+                    setSaved(true)
                   },
                 })
               } else if (activeTab === '현장 사진 등록') {
@@ -4438,6 +4456,7 @@ export default function DailyReportRegistrationView() {
                 createDailyMutation.mutate(undefined, {
                   onSuccess: () => {
                     handleFileRefetch() // 등록 성공 후 실행
+                    setSaved(true)
                   },
                 })
               }

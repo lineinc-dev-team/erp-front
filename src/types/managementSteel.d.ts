@@ -108,6 +108,7 @@ export type ManagementSteelFormState = {
   siteProcessId: number // 공정명
   siteProcessName: string
   type: string
+
   // === Client Info ===
 
   // === Material Items ===
@@ -136,6 +137,8 @@ export type SteelPayload = Omit<
 
 type SteelFormStore = {
   form: ManagementSteelFormState
+  isSaved: boolean
+  setSaved: (saved: boolean) => void
 
   reset: () => void
 

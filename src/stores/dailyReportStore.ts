@@ -103,6 +103,14 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
     checkedAttachedFileIds: [],
   },
 
+  isSaved: false, //
+
+  setSaved: (saved: boolean) =>
+    set((state) => ({
+      ...state,
+      isSaved: saved,
+    })),
+
   reset: () =>
     set(() => ({
       form: {
@@ -141,6 +149,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         files: [],
         checkedAttachedFileIds: [],
       },
+      isSaved: false,
     })),
 
   resetEmployees: () =>
