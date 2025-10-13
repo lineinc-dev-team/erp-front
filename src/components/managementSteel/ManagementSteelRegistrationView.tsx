@@ -377,7 +377,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     updateItemField('MaterialItem', id, 'outsourcingCompanyName', selectedCompany.name)
   }
 
-  const outsoucingLine = form.details.map((item) => item.originalFileName ?? '')
+  const outsoucingLine = form.details.map((item) => item.outsourcingCompanyName ?? '')
 
   const debouncedOutsourcingKeyword = useDebouncedArrayValue(outsoucingLine, 300)
 
