@@ -184,7 +184,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
 
       // // 상세 항목 가공
       const formattedDetails = (client.details ?? []).map((c: any) => ({
-        id: c.id,
+        checkId: c.id,
         name: c.name, // 품명
         specification: c.specification, // 규격
         weight: c.weight, // 무게(톤)
@@ -325,33 +325,19 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     if (!form.siteId) return '현장명을 선택하세요.'
     if (!form.siteProcessId) return '공정명을 선택하세요.'
 
-    // if (contractAddAttachedFiles.length > 0) {
-    //   for (const item of contractAddAttachedFiles) {
-    //     if (!item.standard?.trim()) return '규격을 입력해주세요.'
-    //     if (!item.name?.trim()) return '품명을 입력해주세요.'
-    //     if (!item.unit?.trim()) return '단위를 입력해주세요.'
-    //     if (!item.count) return '본 수량을 입력해주세요.'
-    //     if (!item.length) return '길이를 입력해주세요.'
-    //     if (!item.totalLength) return '총 길이를 입력해주세요.'
-    //     if (!item.unitWeight) return '단위중량을 입력해주세요.'
-    //     if (!item.quantity) return '수량을 입력해주세요.'
-    //     if (!item.unitPrice) return '단가를 입력해주세요.'
-    //     if (!item.supplyPrice) return '공급가를 입력해주세요.'
-    //     if (item.memo.length > 500) {
-    //       return '품목상세의 비고는 500자 이하로 입력해주세요.'
-    //     }
-    //   }
-    // }
-
-    // 첨부파일 이름 체크
-    // if (attachedFiles.length > 0) {
-    //   for (const file of attachedFiles) {
-    //     if (!file.name?.trim()) return '첨부파일의 이름을 입력해주세요.'
-    //     if (file.memo.length > 500) {
-    //       return '첨부파일의 비고는 500자 이하로 입력해주세요.'
-    //     }
-    //   }
-    // }
+    if (contractAddAttachedFiles.length > 0) {
+      for (const item of contractAddAttachedFiles) {
+        if (!item.name?.trim()) return '품명을 입력해주세요.'
+        if (!item.specification?.trim()) return '규격을 입력해주세요.'
+        if (!item.weight) return '무게(톤)을 입력해주세요.'
+        if (!item.count) return '본 수량을 입력해주세요.'
+        if (!item.totalWeight) return '총 무게(톤)을 입력해주세요.'
+        if (!item.unitPrice) return '단가를 입력해주세요.'
+        if (!item.amount) return '금액을 입력해주세요.'
+        if (item.category === '선택') return '구분을 선택해주세요.'
+        if (!item.outsourcingCompanyName?.trim()) return '거래선을 입력해주세요.'
+      }
+    }
 
     return null
   }
@@ -837,7 +823,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       color: 'black',
                     }}
                   >
-                    증빙 <span className="text-red-500 ml-1">*</span>
+                    증빙
                   </TableCell>
                   <TableCell
                     align="center"
@@ -855,15 +841,18 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
 
               <TableBody>
                 {contractAddAttachedFiles.map((m) => (
-                  <TableRow key={m.id} sx={{ border: '1px solid #9CA3AF' }}>
+                  <TableRow key={m.checkId} sx={{ border: '1px solid #9CA3AF' }}>
                     <TableCell
                       padding="checkbox"
                       align="center"
                       sx={{ border: '1px solid #9CA3AF' }}
                     >
                       <Checkbox
-                        checked={contractCheckIds.includes(m.id)}
-                        onChange={(e) => toggleCheckItem('MaterialItem', m.id, e.target.checked)}
+                        checked={contractCheckIds.includes(m.checkId)}
+                        onChange={(e) =>
+                          toggleCheckItem('MaterialItem', m.checkId, e.target.checked)
+                        }
+                        disabled={m.isModifyType === false}
                       />
                     </TableCell>
 
@@ -884,7 +873,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         placeholder="입력"
                         value={m.name || ''}
                         onChange={(e) =>
-                          updateItemField('MaterialItem', m.id, 'name', e.target.value)
+                          updateItemField('MaterialItem', m.checkId, 'name', e.target.value)
                         }
                         inputProps={{
                           style: { textAlign: 'center' },
@@ -902,7 +891,12 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           placeholder="입력"
                           value={m.specification || ''}
                           onChange={(e) =>
-                            updateItemField('MaterialItem', m.id, 'specification', e.target.value)
+                            updateItemField(
+                              'MaterialItem',
+                              m.checkId,
+                              'specification',
+                              e.target.value,
+                            )
                           }
                           inputProps={{
                             style: { textAlign: 'center' },
@@ -936,7 +930,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           onChange={(e) => {
                             const regex = /^-?\d*\.?\d{0,4}$/
                             if (regex.test(e.target.value)) {
-                              updateItemField('MaterialItem', m.id, 'weight', e.target.value)
+                              updateItemField('MaterialItem', m.checkId, 'weight', e.target.value)
                             }
                           }}
                           inputProps={{
@@ -960,7 +954,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           placeholder="입력"
                           value={m.count || ''}
                           onChange={(e) =>
-                            updateItemField('MaterialItem', m.id, 'count', e.target.value)
+                            updateItemField('MaterialItem', m.checkId, 'count', e.target.value)
                           }
                           inputProps={{
                             style: { textAlign: 'center' },
@@ -989,7 +983,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         value={m.totalWeight || ''}
                         onChange={(e) => {
                           const formatted = unformatNumber(e.target.value)
-                          updateItemField('MaterialItem', m.id, 'totalWeight', formatted)
+                          updateItemField('MaterialItem', m.checkId, 'totalWeight', formatted)
                         }}
                         inputProps={{
                           style: { textAlign: 'right' },
@@ -1017,7 +1011,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           placeholder="숫자만"
                           value={m.unitPrice || ''}
                           onChange={(e) => {
-                            updateItemField('MaterialItem', m.id, 'unitPrice', e.target.value)
+                            updateItemField('MaterialItem', m.checkId, 'unitPrice', e.target.value)
                           }}
                           inputProps={{
                             style: { textAlign: 'right' },
@@ -1050,7 +1044,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           value={m.amount || ''}
                           onChange={(e) => {
                             const formatted = unformatNumber(e.target.value)
-                            updateItemField('MaterialItem', m.id, 'amount', formatted)
+                            updateItemField('MaterialItem', m.checkId, 'amount', formatted)
                           }}
                           inputProps={{
                             style: { textAlign: 'right' },
@@ -1078,7 +1072,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                               (opt) => opt.name === value,
                             )
                             if (!selectedProduct) return
-                            updateItemField('MaterialItem', m.id, 'category', value)
+                            updateItemField('MaterialItem', m.checkId, 'category', value)
                           }}
                           options={steelTypeOptions}
                           disabled={m.isModifyType === false}
@@ -1108,7 +1102,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           onChangeKeyword={(newKeyword) =>
                             updateItemField(
                               'MaterialItem',
-                              m.id,
+                              m.checkId,
                               'outsourcingCompanyName',
                               newKeyword,
                             )
@@ -1126,7 +1120,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                             </div>
                           )}
                           onSelect={(selectedCompany) =>
-                            handleSelectOutsourcing(m.id, selectedCompany)
+                            handleSelectOutsourcing(m.checkId ?? 0, selectedCompany)
                           }
                           isLoading={OutsourcingNameIsLoading || OutsourcingNameIsFetching}
                           debouncedKeyword={debouncedOutsourcingKeyword}
@@ -1176,7 +1170,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           multiple={false}
                           files={m.files} // 각 항목별 files
                           onChange={(newFiles) =>
-                            updateItemField('MaterialItem', m.id, 'files', newFiles)
+                            updateItemField('MaterialItem', m.checkId, 'files', newFiles)
                           }
                           uploadTarget="WORK_DAILY_REPORT"
                         />
@@ -1202,7 +1196,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         multiline
                         value={m.memo || ''}
                         onChange={(e) =>
-                          updateItemField('MaterialItem', m.id, 'memo', e.target.value)
+                          updateItemField('MaterialItem', m.checkId, 'memo', e.target.value)
                         }
                       />
                     </TableCell>

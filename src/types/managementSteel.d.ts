@@ -75,7 +75,8 @@ export type SteelSearchState = {
 
 // 등록 타입
 export type MaterialItem = {
-  id: number
+  checkId: number
+  id: number | null
   outsourcingCompanyId: number
   outsourcingCompanyName?: string
   name: string

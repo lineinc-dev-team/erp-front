@@ -112,10 +112,10 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
 
   addItem: (typeName) =>
     set((state) => {
-      const id = Date.now()
       if (typeName === 'MaterialItem') {
         const newItem: MaterialItem = {
-          id,
+          checkId: Date.now(),
+          id: null,
           outsourcingCompanyId: 1,
           name: 'H Bearn',
           specification: '',
@@ -137,7 +137,7 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
         }
       } else {
         const newFile: AttachedFile = {
-          id,
+          id: Date.now(),
           name: '',
           memo: '',
           files: [],
@@ -153,7 +153,7 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
           form: {
             ...state.form,
             details: state.form.details.map((item) => {
-              if (item.id !== id) return item
+              if (item.checkId !== id) return item
 
               // 변경된 값 적용
               const updatedItem = { ...item, [field]: value }
@@ -297,7 +297,7 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
         return {
           form: {
             ...state.form,
-            checkedMaterialItemIds: checked ? state.form.details.map((m) => m.id) : [],
+            checkedMaterialItemIds: checked ? state.form.details.map((m) => m.checkId) : [],
           },
         }
       } else {
@@ -317,7 +317,7 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
           form: {
             ...state.form,
             details: state.form.details.filter(
-              (item) => !state.form.checkedMaterialItemIds.includes(item.id),
+              (item) => !state.form.checkedMaterialItemIds.includes(item.checkId),
             ),
             checkedMaterialItemIds: [],
           },
