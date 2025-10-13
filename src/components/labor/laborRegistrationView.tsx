@@ -198,8 +198,14 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       setField('memo', client.memo)
       setField('files', formattedFiles)
 
-      setField('outsourcingCompanyName', client?.outsourcingCompany?.name)
-      setField('outsourcingCompanyId', client?.outsourcingCompany?.id)
+      setField(
+        'outsourcingCompanyName',
+        client?.outsourcingCompany ? client.outsourcingCompany.name : '라인공영',
+      )
+      setField(
+        'outsourcingCompanyId',
+        client?.outsourcingCompany ? client.outsourcingCompany.id : 0,
+      )
 
       setField('tenureMonths', client.tenureMonths === null ? '-' : client.tenureMonths + '개월')
 
@@ -239,10 +245,26 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     isLoading: OutsourcingNameIsLoading,
   } = useOutsourcingNameListInfiniteScroll(debouncedOutsourcingKeyword)
 
+  // const OutsourcingRawList = OutsourcingNameData?.pages.flatMap((page) => page.data.content) ?? []
+  // const outsourcingList = Array.from(
+  //   new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
+  // )
+
   const OutsourcingRawList = OutsourcingNameData?.pages.flatMap((page) => page.data.content) ?? []
-  const outsourcingList = Array.from(
+
+  let outsourcingList = Array.from(
     new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
   )
+
+  if (
+    debouncedOutsourcingKeyword === '' || // 아무것도 입력 안 한 상태
+    debouncedOutsourcingKeyword.includes('라인') // '라인'이 포함된 경우
+  ) {
+    const alreadyExists = outsourcingList.some((item) => item.name === '라인공영')
+    if (!alreadyExists) {
+      outsourcingList = [{ id: 0, name: '라인공영' }, ...outsourcingList]
+    }
+  }
 
   const formatChangeDetail = (getChanges: string) => {
     try {
