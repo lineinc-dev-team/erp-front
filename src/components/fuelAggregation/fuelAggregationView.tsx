@@ -88,11 +88,11 @@ export default function FuelAggregationView() {
         memo: fuelInfo?.memo ?? '-',
 
         // fuelInfo 필드
-        driverName: fuelInfo?.driver.name ?? '-',
-        vehicleNumber: fuelInfo?.equipment.vehicleNumber ?? '-',
-        fuelType: fuelInfo?.fuelType ?? '-',
-        fuelAmount: formatNumber(fuelInfo?.fuelAmount) ?? '-',
-        specification: fuelInfo?.equipment.specification ?? '-',
+        driverName: fuelInfo?.driver?.name || '-',
+        vehicleNumber: fuelInfo?.equipment?.vehicleNumber || '-',
+        fuelType: fuelInfo?.fuelType || '-',
+        fuelAmount: formatNumber(fuelInfo?.fuelAmount) || '-',
+        specification: fuelInfo?.equipment?.specification || '-',
       },
     ]
   })

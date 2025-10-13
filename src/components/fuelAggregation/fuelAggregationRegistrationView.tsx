@@ -232,11 +232,11 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
         id: item.id,
         outsourcingCompanyId: item.outsourcingCompany?.id ?? 0,
         businessNumber: item.outsourcingCompany?.businessNumber ?? '',
-        driverId: item.driver.id ?? '',
-        specificationName: item.equipment.specification ?? '',
+        driverId: item?.driver?.id ?? 0,
+        specificationName: item?.equipment?.specification ?? '',
         fuelType: item.fuelTypeCode ?? '',
         fuelAmount: item.fuelAmount ?? '0',
-        equipmentId: item.equipment.id ?? '',
+        equipmentId: item?.equipment?.id ?? 0,
         createdAt: item.createdAt ?? '',
         updatedAt: item.updatedAt ?? '',
         memo: item.memo,
@@ -927,7 +927,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                       onChange={async (value) => {
                         const selectedDriver = (
                           driverOptionsByCompany[m.outsourcingCompanyId] ?? []
-                        ).find((opt) => opt.id === value)
+                        ).find((opt) => opt?.id === value)
 
                         if (!selectedDriver) return
 
