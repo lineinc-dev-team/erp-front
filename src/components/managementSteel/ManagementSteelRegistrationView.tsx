@@ -185,6 +185,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
       // // 상세 항목 가공
       const formattedDetails = (client.details ?? []).map((c: any) => ({
         checkId: c.id,
+        id: c.id,
         name: c.name, // 품명
         specification: c.specification, // 규격
         weight: c.weight, // 무게(톤)
@@ -193,6 +194,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         unitPrice: c.unitPrice, // 단가
         amount: c.amount, // 금액
         category: c.category ?? '', // 구분 (자사자재/구매 등)
+        outsourcingCompanyId: c.outsourcingCompany?.id ?? '', // 거래선
         outsourcingCompanyName: c.outsourcingCompany?.name ?? '', // 거래선
         isModifyType: false,
         files:
@@ -320,6 +322,28 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading],
   )
 
+  // function validateSteelForm(form: ManagementSteelFormState) {
+  //   // 기본 정보
+  //   if (!form.siteId) return '현장명을 선택하세요.'
+  //   if (!form.siteProcessId) return '공정명을 선택하세요.'
+
+  //   if (contractAddAttachedFiles.length > 0) {
+  //     for (const item of contractAddAttachedFiles) {
+  //       if (!item.name?.trim()) return '품명을 입력해주세요.'
+  //       if (!item.specification?.trim()) return '규격을 입력해주세요.'
+  //       if (!item.weight) return '무게(톤)을 입력해주세요.'
+  //       if (!item.count) return '본 수량을 입력해주세요.'
+  //       if (!item.totalWeight) return '총 무게(톤)을 입력해주세요.'
+  //       if (!item.unitPrice) return '단가를 입력해주세요.'
+  //       if (!item.amount) return '금액을 입력해주세요.'
+  //       if (item.category === '선택') return '구분을 선택해주세요.'
+  //       if (!item.outsourcingCompanyName?.trim()) return '거래선을 입력해주세요.'
+  //     }
+  //   }
+
+  //   return null
+  // }
+
   function validateSteelForm(form: ManagementSteelFormState) {
     // 기본 정보
     if (!form.siteId) return '현장명을 선택하세요.'
@@ -327,15 +351,36 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
 
     if (contractAddAttachedFiles.length > 0) {
       for (const item of contractAddAttachedFiles) {
+        // 사장 탭에서 단가/금액/거래선은 체크 제외
+        const isOnSiteStock = form.type === 'ON_SITE_STOCK'
+        const isScrap = form.type === 'SCRAP'
+
+        // 품명
         if (!item.name?.trim()) return '품명을 입력해주세요.'
-        if (!item.specification?.trim()) return '규격을 입력해주세요.'
-        if (!item.weight) return '무게(톤)을 입력해주세요.'
-        if (!item.count) return '본 수량을 입력해주세요.'
+
+        // 규격
+        if (!isScrap && !item.specification?.trim()) return '규격을 입력해주세요.'
+
+        // 무게
+        if (!isScrap && !item.weight) return '무게(톤)을 입력해주세요.'
+
+        // 본
+        if (!isScrap && !item.count) return '본 수량을 입력해주세요.'
+
+        // 총 무게
         if (!item.totalWeight) return '총 무게(톤)을 입력해주세요.'
-        if (!item.unitPrice) return '단가를 입력해주세요.'
-        if (!item.amount) return '금액을 입력해주세요.'
-        if (item.category === '선택') return '구분을 선택해주세요.'
-        if (!item.outsourcingCompanyName?.trim()) return '거래선을 입력해주세요.'
+
+        // 단가
+        if (!isOnSiteStock && !item.unitPrice) return '단가를 입력해주세요.'
+
+        // 금액
+        if (!isOnSiteStock && !item.amount) return '금액을 입력해주세요.'
+
+        // 구분
+        if (!isScrap && !isOnSiteStock && item.category === '선택') return '구분을 선택해주세요.'
+
+        // 거래선
+        if (!isOnSiteStock && !item.outsourcingCompanyName?.trim()) return '거래선을 입력해주세요.'
       }
     }
 
