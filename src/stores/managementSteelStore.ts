@@ -123,6 +123,7 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
           count: 0,
           totalWeight: 0,
           unitPrice: 0,
+          isModifyType: true,
           amount: 0,
           category: '선택',
           files: [],

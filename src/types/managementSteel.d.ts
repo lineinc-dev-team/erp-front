@@ -85,6 +85,7 @@ export type MaterialItem = {
   totalWeight: number
   unitPrice: number
   amount: number
+  isModifyType?: boolean
   category: string
   createdAt?: Date | null
   fileUrl?: string

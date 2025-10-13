@@ -194,6 +194,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         amount: c.amount, // 금액
         category: c.category ?? '', // 구분 (자사자재/구매 등)
         outsourcingCompanyName: c.outsourcingCompany?.name ?? '', // 거래선
+        isModifyType: false,
         files:
           c.fileUrl && c.originalFileName
             ? [
@@ -888,7 +889,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         inputProps={{
                           style: { textAlign: 'center' },
                         }}
-                        disabled={isEditMode}
+                        disabled={m.isModifyType === false}
                       />
                     </TableCell>
                     {/* 규격 */}
@@ -906,7 +907,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           inputProps={{
                             style: { textAlign: 'center' },
                           }}
-                          disabled={isEditMode}
+                          disabled={m.isModifyType === false}
                         />
                       )}
                     </TableCell>
@@ -941,7 +942,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           inputProps={{
                             style: { textAlign: 'center' },
                           }}
-                          disabled={isEditMode}
+                          disabled={m.isModifyType === false}
                         />
                       )}
                     </TableCell>
@@ -964,7 +965,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           inputProps={{
                             style: { textAlign: 'center' },
                           }}
-                          disabled={isEditMode}
+                          disabled={m.isModifyType === false}
                         />
                       )}
                     </TableCell>
@@ -995,7 +996,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         }}
                         fullWidth
                         disabled={
-                          isEditMode ||
+                          m.isModifyType === false ||
                           form.type === 'INCOMING' ||
                           form.type === 'OUTGOING' ||
                           form.type === 'ON_SITE_STOCK'
@@ -1022,7 +1023,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                             style: { textAlign: 'right' },
                           }}
                           fullWidth
-                          disabled={isEditMode}
+                          disabled={m.isModifyType === false}
                         />
                       )}
                     </TableCell>
@@ -1056,7 +1057,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           }}
                           fullWidth
                           disabled={
-                            isEditMode ||
+                            m.isModifyType === false ||
                             form.type === 'INCOMING' ||
                             form.type === 'OUTGOING' ||
                             form.type === 'ON_SITE_STOCK'
@@ -1080,7 +1081,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                             updateItemField('MaterialItem', m.id, 'category', value)
                           }}
                           options={steelTypeOptions}
-                          disabled={isEditMode}
+                          disabled={m.isModifyType === false}
                         />
                       )}
                     </TableCell>
@@ -1132,7 +1133,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           shouldShowList={isOutsourcingFocused}
                           onFocus={() => setIsOutsourcingFocused(true)}
                           onBlur={() => setIsOutsourcingFocused(false)}
-                          disabled={isEditMode}
+                          disabled={m.isModifyType === false}
                         />
                       )}
                     </TableCell>
