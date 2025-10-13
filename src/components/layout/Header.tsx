@@ -88,7 +88,7 @@ function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {
     const icon = menuNameToIcon[menu.name] || null
 
     let filteredPermissions = menu.permissions.filter(
-      (perm: ApiPermission) => !['승인', '수정', '삭제'].includes(perm.action),
+      (perm: ApiPermission) => !['승인', '수정', '삭제', '엑셀 다운로드'].includes(perm.action),
     )
 
     // 출역일보에서는 등록도 제거
