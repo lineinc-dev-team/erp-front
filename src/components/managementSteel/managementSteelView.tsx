@@ -301,7 +301,7 @@ export default function ManagementSteel() {
 
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              일자(기간)
+              등록일
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonDatePicker
@@ -408,7 +408,6 @@ export default function ManagementSteel() {
             headerAlign: 'center',
             align: 'center',
           }))}
-          checkboxSelection
           disableRowSelectionOnClick
           keepNonExistentRowsSelected
           disableColumnFilter // 필터 비활성화
