@@ -262,7 +262,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
           if (before === 'null') {
             before = '추가'
             style = { color: '#1976d2' } // 파란색 - 추가
-          } else if (after === 'null') {
+          } else if (after === 'null' || after === '') {
             after = '삭제'
             style = { color: '#d32f2f' } // 빨간색 - 삭제
           }
