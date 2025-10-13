@@ -89,6 +89,15 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
   const params = useParams()
   const steelDetailId = Number(params?.id)
 
+  const {
+    data: steelHistoryList,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    refetch: refetchSteelHistory, // refetch 함수
+  } = useSteelHistoryDataQuery(steelDetailId, isEditMode)
+
   const PROPERTY_NAME_MAP: Record<string, string> = {
     siteName: '현장명',
     processName: '공정명',
@@ -154,6 +163,9 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     resetDetailData()
     setActiveTab(value)
     setField('type', value || '')
+
+    // 탭 이동 시 수정 이력 다시 불러오기
+    refetchSteelHistory()
   }
 
   // 등록/상세 초기 설정
@@ -161,14 +173,6 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     setActiveTab('INCOMING')
     setField('type', 'INCOMING')
   }, [])
-
-  const {
-    data: steelHistoryList,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-  } = useSteelHistoryDataQuery(steelDetailId, isEditMode)
 
   const historyList = useManagementSteelFormStore((state) => state.form.changeHistories)
 
@@ -303,7 +307,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
       )
       setField('changeHistories', allHistories)
     }
-  }, [steelHistoryList, setField])
+  }, [steelHistoryList, setField, activeTab])
 
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useCallback(
@@ -807,19 +811,21 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    규격 <span className="text-red-500 ml-1">*</span>
+                    규격
+                    {form.type !== 'SCRAP' && <span className="text-red-500 ml-1">*</span>}
                   </TableCell>
                   <TableCell
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    무게(톤) <span className="text-red-500 ml-1">*</span>
+                    무게(톤)
+                    {form.type !== 'SCRAP' && <span className="text-red-500 ml-1">*</span>}
                   </TableCell>
                   <TableCell
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    본 <span className="text-red-500 ml-1">*</span>
+                    본{form.type !== 'SCRAP' && <span className="text-red-500 ml-1">*</span>}
                   </TableCell>
                   <TableCell
                     align="center"
@@ -831,26 +837,32 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    단가 <span className="text-red-500 ml-1">*</span>
+                    단가
+                    {form.type !== 'ON_SITE_STOCK' && <span className="text-red-500 ml-1">*</span>}
                   </TableCell>
                   <TableCell
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    금액 <span className="text-red-500 ml-1">*</span>
+                    금액
+                    {form.type !== 'ON_SITE_STOCK' && <span className="text-red-500 ml-1">*</span>}
                   </TableCell>
                   <TableCell
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    구분 <span className="text-red-500 ml-1">*</span>
+                    구분
+                    {form.type !== 'SCRAP' && form.type !== 'ON_SITE_STOCK' && (
+                      <span className="text-red-500 ml-1">*</span>
+                    )}
                   </TableCell>
 
                   <TableCell
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    거래선 <span className="text-red-500 ml-1">*</span>
+                    거래선{' '}
+                    {form.type !== 'ON_SITE_STOCK' && <span className="text-red-500 ml-1">*</span>}
                   </TableCell>
 
                   <TableCell
@@ -897,7 +909,6 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         onChange={(e) =>
                           toggleCheckItem('MaterialItem', m.checkId, e.target.checked)
                         }
-                        disabled={m.isModifyType === false}
                       />
                     </TableCell>
 
