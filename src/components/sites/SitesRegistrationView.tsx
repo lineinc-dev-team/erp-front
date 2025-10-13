@@ -123,48 +123,6 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     enabled: isEditMode && !!siteId, // 수정 모드일 때만 fetch
   })
 
-  // const [updatedOrderOptions, setUpdatedOrderOptions] = useState(orderOptions)
-
-  // useEffect(() => {
-  //   if (data && isEditMode) {
-  //     const client = data.data
-
-  //     const newOrderOptions = [...orderOptions]
-
-  //     if (client.clientCompany) {
-  //       const clientName =
-  //         client.clientCompany.name + (client.clientCompany.deleted ? ' (삭제됨)' : '')
-
-  //       // 이미 options에 있는지 체크
-  //       const exists = orderOptions.some((u) => u.id === client.clientCompany.id)
-  //       if (!exists) {
-  //         newOrderOptions.push({
-  //           id: client.clientCompany.id,
-  //           name: clientName,
-  //           deleted: client.clientCompany.deleted,
-  //         })
-  //       }
-
-  //       // 삭제된 유저 분리
-  //       const deletedOrders = newOrderOptions.filter((u) => u.deleted)
-  //       const normalOrders = newOrderOptions.filter((u) => !u.deleted && u.id !== '0')
-
-  //       setUpdatedOrderOptions([
-  //         newOrderOptions.find((u) => u.id === '0')!, // 선택 옵션
-  //         ...deletedOrders,
-  //         ...normalOrders,
-  //       ])
-
-  //       // 선택된 유저 id 세팅
-  //       setField('clientCompanyId', client.clientCompany?.id ?? '0')
-  //     }
-  //   } else if (!isEditMode) {
-  //     // 등록 모드일 경우
-  //     setUpdatedOrderOptions(orderOptions)
-  //     setField('clientCompanyId', 0) // "선택" 기본값
-  //   }
-  // }, [data, isEditMode, orderOptions])
-
   useEffect(() => {
     if (data && isEditMode) {
       const client = data.data
