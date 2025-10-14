@@ -8,7 +8,7 @@ import { Pagination, Tooltip } from '@mui/material'
 import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
 import ExcelModal from '../common/ExcelModal'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { laborStateMentExcelFieldMap } from '@/utils/userExcelField'
 import { useLaborStateMentInfo } from '@/hooks/useLaborStateMent'
 import CommonSelectByName from '../common/CommonSelectByName'
@@ -21,6 +21,8 @@ import { formatNumber } from '@/utils/formatters'
 import { CustomNoRowsOverlay } from '../common/NoData'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
+import { myInfoProps } from '@/types/user'
+import { useMenuPermission } from '../common/MenuPermissionView'
 
 export default function LaborStateMentView() {
   const { search } = useLaborStateMentSearchStore()
@@ -94,12 +96,24 @@ export default function LaborStateMentView() {
 
         renderCell: (params: GridRenderCellParams) => {
           const clientId = params.row.id
+
+          const handleClick = () => {
+            if (hasModify) {
+              router.push(`/laborStatement/registration/${clientId}`)
+            }
+          }
+
           return (
             <div
-              onClick={() => router.push(`/laborStatement/registration/${clientId}`)}
-              className="flex justify-center items-center cursor-pointer"
+              onClick={handleClick}
+              className={`flex justify-center items-center ${
+                hasModify
+                  ? 'cursor-pointer text-orange-500 font-bold'
+                  : 'cursor-not-allowed text-gray-400'
+              }`}
+              style={!hasModify ? { pointerEvents: 'none' } : {}}
             >
-              <span className="text-orange-500 font-bold">{params.value}</span>
+              <span>{params.value}</span>
             </div>
           )
         },
@@ -165,6 +179,27 @@ export default function LaborStateMentView() {
       fields, // 필수 필드: ["id", "name", "businessNumber", ...]
     })
   }
+
+  // 권한에 따른 버튼 활성화
+
+  const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
+
+  useEffect(() => {
+    const headerData = sessionStorage.getItem('myInfo')
+    search.reset()
+    if (headerData) {
+      setMyInfo(JSON.parse(headerData))
+    }
+  }, [])
+
+  const roleId = Number(myInfo?.roles?.[0]?.id)
+
+  const rolePermissionStatus = myInfo?.roles?.[0]?.deleted
+
+  const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
+
+  // "계정 관리" 메뉴에 대한 권한
+  const { hasModify, hasExcelDownload } = useMenuPermission(roleId, '노무명세서 관리', enabled)
 
   return (
     <>
@@ -348,6 +383,7 @@ export default function LaborStateMentView() {
             <div className="flex items-center gap-2">
               <CommonButton
                 label="엑셀 다운로드"
+                disabled={!hasExcelDownload}
                 variant="reset"
                 onClick={() => setModalOpen(true)}
                 className="px-3"

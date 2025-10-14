@@ -117,7 +117,7 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
           checkId: Date.now(),
           id: null,
           outsourcingCompanyId: 1,
-          name: 'H Bearn',
+          name: 'H Beam',
           specification: '',
           weight: 0,
           count: 0,

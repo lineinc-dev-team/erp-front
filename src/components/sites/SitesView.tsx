@@ -302,7 +302,11 @@ export default function SitesView() {
   const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
 
   // "계정 관리" 메뉴에 대한 권한
-  const { hasDelete, hasCreate, hasModify } = useMenuPermission(roleId, '현장 관리', enabled)
+  const { hasDelete, hasCreate, hasModify, hasExcelDownload } = useMenuPermission(
+    roleId,
+    '현장 관리',
+    enabled,
+  )
 
   return (
     <>
@@ -715,6 +719,7 @@ export default function SitesView() {
               />
               <CommonButton
                 label="엑셀 다운로드"
+                disabled={!hasExcelDownload}
                 variant="reset"
                 onClick={() => setModalOpen(true)}
                 className="px-3"

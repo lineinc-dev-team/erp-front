@@ -303,7 +303,7 @@ export default function MaterialManagementView() {
   const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
 
   // "계정 관리" 메뉴에 대한 권한
-  const { hasCreate, hasModify } = useMenuPermission(roleId, '자재 관리', enabled)
+  const { hasCreate, hasModify, hasExcelDownload } = useMenuPermission(roleId, '자재 관리', enabled)
 
   return (
     <>
@@ -553,6 +553,7 @@ export default function MaterialManagementView() {
             <div className="flex items-center gap-2">
               <CommonButton
                 label="엑셀 다운로드"
+                disabled={!hasExcelDownload} // 권한 없으면 비활성화
                 variant="reset"
                 onClick={() => setModalOpen(true)}
                 className="px-3"

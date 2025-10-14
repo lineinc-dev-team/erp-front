@@ -259,7 +259,7 @@ export default function FuelAggregationView() {
   const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
 
   // "계정 관리" 메뉴에 대한 권한
-  const { hasModify } = useMenuPermission(roleId, '유류집계 관리', enabled)
+  const { hasModify, hasExcelDownload } = useMenuPermission(roleId, '유류집계 관리', enabled)
 
   return (
     <>
@@ -567,6 +567,7 @@ export default function FuelAggregationView() {
               /> */}
               <CommonButton
                 label="엑셀 다운로드"
+                disabled={!hasExcelDownload}
                 variant="reset"
                 onClick={() => setModalOpen(true)}
                 className="px-3"
