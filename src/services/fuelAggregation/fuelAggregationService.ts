@@ -108,7 +108,6 @@ export async function FuelExcelDownload({
   if (vehicleNumber) queryParams.append('vehicleNumber', vehicleNumber)
   if (dateStartDate) queryParams.append('dateStartDate', dateStartDate)
   if (dateEndDate) queryParams.append('dateEndDate', dateEndDate)
-  if (fields && fields.length > 0) queryParams.append('fields', fields.join(','))
 
   if (fields && fields.length > 0) {
     queryParams.append('fields', fields.join(','))

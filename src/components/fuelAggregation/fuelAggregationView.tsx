@@ -9,9 +9,9 @@ import { Checkbox, ListItemText, MenuItem, Pagination, Select, Tooltip } from '@
 import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
 import {
-  ArrayStatusOptions,
   FuelColumnList,
   FuelStatusesing,
+  LaborArrayStatusOptions,
   PageCount,
 } from '@/config/erp.confing'
 import { useEffect, useState } from 'react'
@@ -526,7 +526,7 @@ export default function FuelAggregationView() {
                   search.setField('arraySort', value)
                   search.setField('currentPage', 1)
                 }}
-                options={ArrayStatusOptions}
+                options={LaborArrayStatusOptions}
               />
             </div>
 

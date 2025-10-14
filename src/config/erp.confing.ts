@@ -170,7 +170,7 @@ export const FuelColumnList: GridColDef[] = [
   { field: 'driverName', headerName: '기사명', width: 130 },
   { field: 'vehicleNumber', headerName: '차량번호', width: 180 },
   { field: 'specification', headerName: '규격', width: 100 },
-  { field: 'fuelType', headerName: '유중', width: 120 },
+  { field: 'fuelType', headerName: '유종', width: 120 },
   { field: 'fuelAmount', headerName: '주유량', width: 120 },
   { field: 'createdAt', headerName: '등록/수정일', width: 100 },
   { field: 'memo', headerName: '비고', width: 100 },

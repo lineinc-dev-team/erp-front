@@ -115,7 +115,7 @@ export async function FuelDriverNameScroll({
 // 외주 업체에 대한 차량번호
 export async function FuelEquipmentNameScroll({
   pageParam = 0,
-  size = 200,
+  size = 20,
   keyword = '',
   id = 0,
   sort = '',

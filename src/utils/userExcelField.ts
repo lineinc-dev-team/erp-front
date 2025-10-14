@@ -205,12 +205,15 @@ export type ContractoutExcelFieldKey =
 
 export const fuelExcelFieldMap = {
   No: 'id',
+  현장명: 'siteName',
+  공정명: 'processName',
+  일자: 'date',
   업체명: 'outsourcingCompanyName',
   기사명: 'driverName',
   차량번호: 'vehicleNumber',
   규격: 'specification',
-  유중: 'fuelType',
-  주유량: 'fuelAmount',
+  유종: 'fuelType',
+  쥬유량: 'fuelAmount',
   '등록/수정일': 'createdAtAndUpdatedAt',
   비고: 'memo',
 } as const
