@@ -197,7 +197,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         totalWeight: c.totalWeight, // 총 무게(톤)
         unitPrice: c.unitPrice, // 단가
         amount: c.amount, // 금액
-        category: c.category ?? '', // 구분 (자사자재/구매 등)
+        category: c.category ?? null, // 구분 (자사자재/구매 등)
         outsourcingCompanyId: c.outsourcingCompany?.id ?? '', // 거래선
         outsourcingCompanyName: c.outsourcingCompany?.name ?? '', // 거래선
         isModifyType: false,
@@ -857,13 +857,16 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     )}
                   </TableCell>
 
-                  <TableCell
-                    align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
-                  >
-                    거래선{' '}
-                    {form.type !== 'ON_SITE_STOCK' && <span className="text-red-500 ml-1">*</span>}
-                  </TableCell>
+                  {/* 거래선 헤더 */}
+                  {form.type !== 'ON_SITE_STOCK' && (
+                    <TableCell
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                    >
+                      거래선
+                      <span className="text-red-500 ml-1">*</span>
+                    </TableCell>
+                  )}
 
                   <TableCell
                     align="center"
@@ -1137,21 +1140,19 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     </TableCell>
 
                     {/* 거래선 */}
-                    <TableCell
-                      align="center"
-                      sx={{
-                        border: '1px solid #9CA3AF',
-                        whiteSpace: 'nowrap',
-                        width: {
-                          xs: 100, // 모바일 (smaller)
-                          sm: 160, // 태블릿
-                          md: 200, // 데스크탑
-                        },
-                      }}
-                    >
-                      {activeTab === 'ON_SITE_STOCK' ? (
-                        '-' // 사장 탭일 때는 단순히 "-" 표시
-                      ) : (
+                    {activeTab !== 'ON_SITE_STOCK' && (
+                      <TableCell
+                        align="center"
+                        sx={{
+                          border: '1px solid #9CA3AF',
+                          whiteSpace: 'nowrap',
+                          width: {
+                            xs: 100, // 모바일 (smaller)
+                            sm: 160, // 태블릿
+                            md: 200, // 데스크탑
+                          },
+                        }}
+                      >
                         <InfiniteScrollSelect
                           placeholder="업체명을 입력하세요"
                           keyword={m.outsourcingCompanyName || ''} // 각 row의 값 사용
@@ -1169,7 +1170,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           renderItem={(item, isHighlighted) => (
                             <div
                               className={
-                                isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''
+                                isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''
                               }
                             >
                               {item.name}
@@ -1185,8 +1186,8 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           onBlur={() => setIsOutsourcingFocused(false)}
                           disabled={m.isModifyType === false}
                         />
-                      )}
-                    </TableCell>
+                      </TableCell>
+                    )}
 
                     {/* 등록 수정에서 보여주는 용도임 */}
                     <TableCell

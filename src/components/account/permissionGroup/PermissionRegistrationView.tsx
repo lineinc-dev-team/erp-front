@@ -71,7 +71,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
 
   // 메뉴 및 권한 타입
 
-  const permissionTypes = ['등록', '조회', '수정', '삭제', '승인'] as const
+  const permissionTypes = ['등록', '조회', '수정', '삭제', '엑셀 다운로드', '승인'] as const
 
   const isAllChecked = form.users.length > 0 && form.userIds.length === form.users.length
 
