@@ -340,13 +340,12 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
 
     return {
       ...form,
-      // outsourcingCompanyId: form.outsourcingCompanyId === 0 ? undefined : form.outsourcingCompanyId,
 
       details: form.details.map((item) => {
         const file = item.files?.[0]
         return {
           id: item.id,
-          outsourcingCompanyId: item.outsourcingCompanyId,
+          outsourcingCompanyId: item.outsourcingCompanyId === 1 ? null : item.outsourcingCompanyId,
           type: form.type,
           name: item.name,
           specification: item.specification,

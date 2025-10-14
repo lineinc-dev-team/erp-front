@@ -77,7 +77,7 @@ export type SteelSearchState = {
 export type MaterialItem = {
   checkId: number
   id: number | null
-  outsourcingCompanyId: number
+  outsourcingCompanyId: number | null
   outsourcingCompanyName?: string
   name: string
   specification: string

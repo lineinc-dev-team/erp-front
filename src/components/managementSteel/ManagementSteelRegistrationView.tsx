@@ -384,7 +384,13 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         if (!isScrap && !isOnSiteStock && item.category === '선택') return '구분을 선택해주세요.'
 
         // 거래선
-        if (!isOnSiteStock && !item.outsourcingCompanyName?.trim()) return '거래선을 입력해주세요.'
+        if (
+          item.category !== 'OWN_MATERIAL' && // OWN_MATERIAL이면 검사 제외
+          !isOnSiteStock &&
+          !item.outsourcingCompanyName?.trim()
+        ) {
+          return '거래선을 입력해주세요.'
+        }
       }
     }
 
@@ -417,7 +423,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
   // 유저 선택 시 처리
   const handleSelectOutsourcing = (id: number, selectedCompany: any) => {
     if (!selectedCompany) {
-      updateItemField('MaterialItem', id, 'outsourcingCompanyId', 0)
+      updateItemField('MaterialItem', id, 'outsourcingCompanyId', 1)
       updateItemField('MaterialItem', id, 'outsourcingCompanyName', '')
       return
     }
@@ -1184,7 +1190,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           shouldShowList={isOutsourcingFocused}
                           onFocus={() => setIsOutsourcingFocused(true)}
                           onBlur={() => setIsOutsourcingFocused(false)}
-                          disabled={m.isModifyType === false}
+                          disabled={m.isModifyType === false || m.category === 'OWN_MATERIAL'}
                         />
                       </TableCell>
                     )}
