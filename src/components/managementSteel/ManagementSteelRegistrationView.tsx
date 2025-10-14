@@ -1294,7 +1294,9 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
                   >
-                    {getTotalWeightAmount().toLocaleString()}
+                    {getTotalWeightAmount().toLocaleString(undefined, {
+                      maximumFractionDigits: 4,
+                    })}
                   </TableCell>
                   <TableCell
                     align="center"
