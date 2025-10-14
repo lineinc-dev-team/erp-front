@@ -1045,7 +1045,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       <TextField
                         size="small"
                         placeholder="입력"
-                        value={m.totalWeight || ''}
+                        value={m.totalWeight || 0}
                         onChange={(e) => {
                           const formatted = unformatNumber(e.target.value)
                           updateItemField('MaterialItem', m.checkId, 'totalWeight', formatted)
@@ -1106,7 +1106,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         <TextField
                           size="small"
                           placeholder="숫자만"
-                          value={m.amount || ''}
+                          value={m.amount || 0}
                           onChange={(e) => {
                             const formatted = unformatNumber(e.target.value)
                             updateItemField('MaterialItem', m.checkId, 'amount', formatted)

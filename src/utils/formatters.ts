@@ -35,16 +35,28 @@ export const formatDateSecondTime = (dateString: string) => {
 }
 
 // 숫자를 세 자리마다 콤마 붙인 문자열로 변환
+// export function formatNumber(value: number | string): string {
+//   const num = Number(value)
+//   if (isNaN(num) || num === 0) return ''
+//   return num.toLocaleString()
+// }
+// 숫자를 세 자리마다 콤마 붙인 문자열로 변환
 export function formatNumber(value: number | string): string {
+  if (value === null || value === undefined || value === '') return ''
+
   const num = Number(value)
-  if (isNaN(num) || num === 0) return ''
-  return num.toLocaleString()
+  if (isNaN(num)) return ''
+
+  // 소수점 전체 유지하면서 3자리마다 콤마
+  const [integerPart, decimalPart] = num.toString().split('.')
+  const formattedInteger = Number(integerPart).toLocaleString() // 3자리마다 콤마
+  return decimalPart ? `${formattedInteger}.${decimalPart}` : formattedInteger
 }
 
-export // 입력받은 문자열에서 숫자만 남기기
-function unformatNumber(value: string): number {
-  const numericString = value.replace(/[^0-9]/g, '')
-  return Number(numericString)
+export function unformatNumber(value: string): number {
+  if (!value) return 0
+  const numericString = value.replace(/[^0-9.]/g, '') // 숫자와 소수점만 허용
+  return Number(numericString) || 0
 }
 
 export const formatDateTime = (dateStr: string) => {

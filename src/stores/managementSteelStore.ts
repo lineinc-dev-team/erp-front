@@ -173,12 +173,12 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
                   const unitPrice =
                     Number(field === 'unitPrice' ? value : updatedItem.unitPrice) || 0
 
-                  updatedItem.totalWeight = Number((weight * count).toFixed(4))
+                  updatedItem.totalWeight = Number((weight * count).toFixed(4) || 0)
                   updatedItem.amount = Number((updatedItem.totalWeight * unitPrice).toFixed(0))
                 } else {
                   // 총 무게 직접 입력 → 단가 변경 시 amount만 계산
-                  const totalWeight = Number(updatedItem.totalWeight || '0')
-                  const unitPrice = Number(updatedItem.unitPrice || '0')
+                  const totalWeight = Number(updatedItem.totalWeight || 0)
+                  const unitPrice = Number(updatedItem.unitPrice || 0)
                   updatedItem.amount = Math.round(totalWeight * unitPrice)
                 }
               }
@@ -340,6 +340,7 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
 
     return {
       ...form,
+      // outsourcingCompanyId: form.outsourcingCompanyId === 0 ? undefined : form.outsourcingCompanyId,
 
       details: form.details.map((item) => {
         const file = item.files?.[0]
