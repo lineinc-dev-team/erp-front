@@ -224,6 +224,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     categoryName: '유형',
     contractAmount: '계약금액(총액)',
     memo: '비고',
+    description: '상세내용',
     businessNumber: '사업자등록번호',
     typeName: '구분명',
     typeDescription: '구분 설명',
@@ -408,6 +409,8 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
   // }, [contractDetailData, isEditMode, companyOptions])
 
   useEffect(() => {
+    reset()
+
     if (contractDetailData && isEditMode === true) {
       const client = contractDetailData.data
 
@@ -574,7 +577,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
               subEquipments: (item.subEquipments ?? []).map((sub) => ({
                 id: sub.id,
                 typeCode: sub.typeCode,
-                memo: sub.memo,
+                description: sub.description,
               })),
             }),
           )
@@ -779,7 +782,16 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       )
       setField('changeHistories', allHistories)
     }
-  }, [outsourcingContractHistoryList, setField])
+  }, [
+    outsourcingContractHistoryList,
+    setField,
+    contractDetailData,
+    outsourcingPersonList,
+    contractConstructionDetailData,
+    contractEquipmentDetailData,
+    contractDriverDetailData,
+    isEditMode,
+  ])
 
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useCallback(
@@ -800,30 +812,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
   // 인력 쪽 무한 스크롤 콜백함수구현
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-
-  // const loadMorePersonRef = useCallback(
-  //   (node: HTMLDivElement | null) => {
-  //     if (!node || outsourcingPersonIsLoading || outsourcingPersonIsFetchingNextPage) return
-
-  //     const observer = new IntersectionObserver(
-  //       (entries) => {
-  //         if (entries[0].isIntersecting && outsourcingPersonHasNextPage) {
-  //           outsourcingPersonFetchNextPage()
-  //         }
-  //       },
-  //       { root: scrollContainerRef.current, threshold: 0.5 },
-  //     )
-
-  //     observer.observe(node)
-  //     return () => observer.unobserve(node)
-  //   },
-  //   [
-  //     outsourcingPersonFetchNextPage,
-  //     outsourcingPersonIsFetchingNextPage,
-  //     outsourcingPersonIsLoading,
-  //     outsourcingPersonHasNextPage,
-  //   ],
-  // )
 
   const [isChecked, setIsChecked] = useState(false)
 
@@ -900,13 +888,23 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
     if (equipmentAddAttachedFiles.length > 0) {
       for (const item of equipmentAddAttachedFiles) {
+        // 장비 체크
         if (!item.specification?.trim()) return '장비의 규격을 입력해주세요.'
         if (!item.vehicleNumber?.trim()) return '장비의 차량번호를 입력해주세요.'
         if (!item.category?.trim()) return '장비의 구분을 입력해주세요.'
         if (!item.unitPrice) return '장비의 단가를 입력해주세요.'
         if (!item.subtotal) return '장비의 소계를 입력해주세요.'
-        if (item.memo.length > 500) {
-          return '장비의 비고는 500자 이하로 입력해주세요.'
+        if (item.memo.length > 500) return '장비의 비고는 500자 이하로 입력해주세요.'
+
+        if (item.subEquipments?.length) {
+          for (const sub of item.subEquipments) {
+            if (!sub.typeCode?.trim() || sub.typeCode === 'BASE') {
+              return '하위 장비의 유형을 입력해주세요.'
+            }
+            if (sub.description.length > 500) {
+              return '하위 장비의 비고는 500자 이하로 입력해주세요.'
+            }
+          }
         }
       }
     }
@@ -2247,9 +2245,14 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                               />
                               <TextField
                                 size="small"
-                                value={item.memo ?? ''}
+                                value={item.description ?? ''}
                                 onChange={(e) =>
-                                  updateSubEquipmentField(m.id, item.id, 'memo', e.target.value)
+                                  updateSubEquipmentField(
+                                    m.id,
+                                    item.id,
+                                    'description',
+                                    e.target.value,
+                                  )
                                 }
                               />
 
@@ -2533,7 +2536,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                 </TableRow>
               </TableHead>
               <TableBody>
-                {historyList.map((item: HistoryItem) => (
+                {historyList?.map((item: HistoryItem) => (
                   <TableRow key={item.id}>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       {formatDateTime(item.updatedAt)}

@@ -234,8 +234,6 @@ export default function useOutSourcingContract() {
 
   const siteId = useSiteId() // 훅 실행해서 값 받기
 
-  console.log('siteIdsiteId', siteId)
-
   const {
     data: processInfo,
     fetchNextPage: processInfoFetchNextPage,

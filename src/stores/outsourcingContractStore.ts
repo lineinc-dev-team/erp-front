@@ -105,7 +105,6 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
     checkedArticleIds: [],
     equipmentManagers: [],
     checkedEquipmentIds: [],
-    changeHistories: [],
   },
 
   reset: () =>
@@ -142,7 +141,6 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         checkedArticleIds: [],
         equipmentManagers: [],
         checkedEquipmentIds: [],
-        changeHistories: [],
       },
     })),
 
@@ -158,8 +156,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
 
   updateMemo: (id, value) =>
     set((state) => {
-      // 기존 changeHistories 업데이트
-      const updatedHistories = state.form.changeHistories.map((history) =>
+      const updatedHistories = state?.form?.changeHistories?.map((history) =>
         history.id === id ? { ...history, memo: value } : history,
       )
 
@@ -543,14 +540,14 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
                       {
                         id: Date.now(),
                         typeCode: 'BASE',
-                        memo: '',
+                        description: '',
                       },
                     ]
                   : [
                       {
                         id: Date.now(),
                         typeCode: 'BASE',
-                        memo: '',
+                        description: '',
                       },
                     ],
               }
@@ -729,7 +726,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
           item.subEquipments?.map((sub) => ({
             id: sub.id || Date.now(),
             type: sub.typeCode,
-            memo: sub.memo,
+            description: sub.description,
           })) || [],
       })),
 

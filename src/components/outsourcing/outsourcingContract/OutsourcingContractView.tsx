@@ -14,7 +14,7 @@ import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
 import { useTabOpener } from '@/utils/openTab'
 import { OutsourcingContractList } from '@/types/outsourcingContract'
-import { getTodayDateString } from '@/utils/formatters'
+import { formatNumber, getTodayDateString } from '@/utils/formatters'
 import CommonSelectByName from '@/components/common/CommonSelectByName'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import ExcelModal from '@/components/common/ExcelModal'
@@ -79,6 +79,7 @@ export default function OutsourcingContractView() {
       hasGuaranteeCertificate: user.hasGuaranteeCertificate === false ? 'N' : 'Y',
       hasContractCertificate: user.hasContractCertificate === false ? 'N' : 'Y',
       memo: user.memo || '-',
+      contractAmount: formatNumber(user.contractAmount),
       createdAt: getTodayDateString(user.createdAt),
     }
   })

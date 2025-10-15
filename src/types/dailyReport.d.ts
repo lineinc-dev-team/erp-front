@@ -60,6 +60,7 @@ export type directContractsItem = {
   id: T
   checkId: number
   outsourcingCompanyId: T
+  outsourcingCompanyName?: string
   laborId: T
   position: string
   workContent: string
@@ -175,6 +176,7 @@ export type DailyFormState = {
 type DailyReportFormStore = {
   form: DailyFormState
 
+  lastModifiedRowId?: number
   isSaved: boolean
   setSaved: (saved: boolean) => void
 
@@ -289,5 +291,5 @@ type DailyReportFormStore = {
   modifyEquipment: () => void
   modifyFuel: () => void
   modifyFile: () => void
-  modifyWeather: () => void
+  modifyWeather: (activeTab: string) => void
 }

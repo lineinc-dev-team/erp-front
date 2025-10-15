@@ -12,7 +12,6 @@ import {
 } from '@/config/erp.confing'
 import { Pagination, Tooltip } from '@mui/material'
 import { useAccountStore } from '@/stores/accountManagementStore'
-import { useRouter } from 'next/navigation'
 import { Fragment, useEffect, useState } from 'react'
 import { useTabOpener } from '@/utils/openTab'
 import { LaborDataList } from '@/types/labor'
@@ -89,8 +88,6 @@ export default function DailyReportView() {
 
   const { setSelectedIds } = useAccountStore()
 
-  const router = useRouter()
-
   // 그리도 라우팅 로직!
   const enhancedColumns = DailyColumnList.map((col): GridColDef => {
     if (col.field === 'memo') {
@@ -152,35 +149,35 @@ export default function DailyReportView() {
         },
       }
     }
-    if (col.field === 'reportDate') {
-      return {
-        ...col,
-        headerAlign: 'center',
-        align: 'center',
-        flex: 1,
-        cellClassName: 'no-hover-bg', // 커스텀 클래스 지정
-        renderCell: (params: GridRenderCellParams) => {
-          const clientId = params.row.id
+    // if (col.field === 'reportDate') {
+    //   return {
+    //     ...col,
+    //     headerAlign: 'center',
+    //     align: 'center',
+    //     flex: 1,
+    //     cellClassName: 'no-hover-bg', // 커스텀 클래스 지정
+    //     renderCell: (params: GridRenderCellParams) => {
+    //       const clientId = params.row.id
 
-          const handleClick = () => {
-            if (hasModify) {
-              router.push(`/dailyReport/registration/${clientId}`)
-            }
-          }
+    //       const handleClick = () => {
+    //         if (hasModify) {
+    //           router.push(`/dailyReport/registration/${clientId}`)
+    //         }
+    //       }
 
-          return (
-            <div
-              onClick={handleClick}
-              className={`flex justify-center items-center ${
-                hasModify && 'cursor-pointer text-black-500 font-bold'
-              }`}
-            >
-              <span>{params.value}</span>
-            </div>
-          )
-        },
-      }
-    }
+    //       return (
+    //         <div
+    //           onClick={handleClick}
+    //           className={`flex justify-center items-center ${
+    //             hasModify && 'cursor-pointer text-black-500 font-bold'
+    //           }`}
+    //         >
+    //           <span>{params.value}</span>
+    //         </div>
+    //       )
+    //     },
+    //   }
+    // }
 
     if (col.field === 'no') {
       return {
@@ -246,7 +243,7 @@ export default function DailyReportView() {
   const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
 
   // "계정 관리" 메뉴에 대한 권한
-  const { hasCreate, hasModify } = useMenuPermission(roleId, '노무 관리', enabled)
+  const { hasCreate } = useMenuPermission(roleId, '노무 관리', enabled)
 
   return (
     <>

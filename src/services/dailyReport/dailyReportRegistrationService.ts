@@ -113,7 +113,16 @@ export async function ModifyEmployeesReport({
 }
 
 // 계약/인력 쪽 인력 데이터 조회
-export async function GetContractNameInfoService({ pageParam = 0, size = 100, keyword = '' }) {
+export async function GetContractNameInfoService({
+  pageParam = 0,
+  size = 200,
+  keyword = '',
+}: {
+  pageParam?: number
+  size?: number
+  outsourcingCompanyId?: string | number | ''
+  keyword?: string
+}) {
   const url = `${API.LABOR}/search?page=${pageParam}&size=${size}&keyword=${encodeURIComponent(
     keyword,
   )}&types=DIRECT_CONTRACT&types=ETC`
@@ -835,13 +844,15 @@ export async function ModifyWeatherReport({
   siteId,
   siteProcessId,
   reportDate,
+  activeTab,
 }: {
   siteId: number
   siteProcessId: number
   reportDate: string
+  activeTab: string
 }) {
   const { modifyWeather } = useDailyFormStore.getState()
-  const payload = modifyWeather()
+  const payload = modifyWeather(activeTab)
 
   const res = await fetch(
     `${API.DAILYREPORT}?siteId=${siteId}&siteProcessId=${siteProcessId}&reportDate=${reportDate}`,

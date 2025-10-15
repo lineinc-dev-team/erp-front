@@ -59,7 +59,6 @@ export async function OutsourcingContractExcelDownload({
   contractStartDate,
   contractEndDate,
   contactName,
-  isActive = true,
   fields,
 }: {
   sort?: string
@@ -72,7 +71,6 @@ export async function OutsourcingContractExcelDownload({
   contractStartDate?: string
   contractEndDate?: string
   contactName?: string
-  isActive?: boolean
   fields?: string[]
 }) {
   const queryParams = new URLSearchParams()
@@ -87,8 +85,6 @@ export async function OutsourcingContractExcelDownload({
   if (contractStartDate) queryParams.append('contractStartDate', contractStartDate)
   if (contractEndDate) queryParams.append('contractEndDate', contractEndDate)
   if (contactName) queryParams.append('contactName', contactName)
-
-  queryParams.append('isActive', String(isActive))
 
   if (fields && fields.length > 0) {
     queryParams.append('fields', fields.join(','))

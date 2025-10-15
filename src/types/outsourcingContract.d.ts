@@ -63,7 +63,7 @@ export type OutsourcingArticleInfoAttachedFile = {
 type subEquipmentInfo = {
   id: number
   typeCode: string
-  memo: string
+  description: string
 }
 export type OutsourcingEquipmentInfoAttachedFile = {
   id: number
@@ -215,7 +215,7 @@ export type OutsourcingContractFormState = {
   checkedArticleIds: number[]
 
   editedHistories?: Pick<HistoryItem, 'id' | 'memo'>[]
-  changeHistories: HistoryItem[] // 수정 이력 포함
+  changeHistories?: HistoryItem[] // 수정 이력 포함
 }
 
 type OutsourcingContractFormStore = {

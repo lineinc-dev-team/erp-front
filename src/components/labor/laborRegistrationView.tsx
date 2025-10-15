@@ -376,7 +376,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       return '휴대폰 번호를 010-1234-5678 형식으로 입력하세요.'
     }
 
-    if (form.memo.length > 500) {
+    if (form.memo?.length > 500) {
       return '비고는 500자 이하로 입력해주세요.'
     }
 

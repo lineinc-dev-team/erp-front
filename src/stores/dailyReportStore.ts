@@ -228,7 +228,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
     set((state) => ({
       form: {
         ...state.form,
-        DailyAttachedFile: [],
+        files: [],
       },
     })),
 
@@ -472,6 +472,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
               m.checkId === id ? { ...m, [field]: value } : m,
             ),
           },
+          lastModifiedRowId: id,
         }
       } else if (type === 'outsourcingFiles') {
         return {
@@ -1207,42 +1208,53 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
     }
   },
 
-  modifyWeather: () => {
+  modifyWeather: (activeTab: string) => {
     const form = get().form
 
-    // fileType 별로 evidenceFiles 생성
-    const evidenceFiles = [
+    const allProofFiles = [
       { type: 'EMPLOYEE', items: form.employeeFile || [] },
       { type: 'DIRECT_CONTRACT', items: form.contractProofFile || [] },
       { type: 'OUTSOURCING', items: form.outsourcingProofFile || [] },
       { type: 'EQUIPMENT', items: form.equipmentProofFile || [] },
       { type: 'FUEL', items: form.fuelProofFile || [] },
     ]
-      .filter((f) => f.items?.length) // 비어있는 타입 제외
-      .map((f) => ({
-        fileType: f.type,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        files: f.items.flatMap((item: any) => {
-          if (!item.files || item.files.length === 0) {
-            return [
-              {
-                id: item.id || Date.now(),
-                name: item.name || '',
-                memo: item.memo || '',
-                fileUrl: '',
-                originalFileName: '',
-              },
-            ]
-          }
-          return item.files.map((fileObj: FileUploadInfo) => ({
-            id: item.id || Date.now(),
-            name: item.name || '',
-            fileUrl: fileObj.fileUrl || '',
-            originalFileName: fileObj.name || fileObj.originalFileName,
-            memo: item.memo || '',
-          }))
-        }),
-      }))
+
+    const tabTypeMap: Record<string, string> = {
+      직원: 'EMPLOYEE',
+      직영: 'DIRECT_CONTRACT',
+      외주: 'OUTSOURCING',
+      장비: 'EQUIPMENT',
+      유류: 'FUEL',
+    }
+
+    const targetType = tabTypeMap[activeTab]
+    const filteredFiles = allProofFiles.filter((f) => f.type === targetType)
+
+    // fileType 별로 evidenceFiles 생성
+    const evidenceFiles = filteredFiles.map((f) => ({
+      fileType: f.type,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      files: f.items.flatMap((item: any) => {
+        if (!item.files || item.files.length === 0) {
+          return [
+            {
+              id: item.id || Date.now(),
+              name: item.name || '',
+              memo: item.memo || '',
+              fileUrl: '',
+              originalFileName: '',
+            },
+          ]
+        }
+        return item.files.map((fileObj: FileUploadInfo) => ({
+          id: item.id || Date.now(),
+          name: item.name || '',
+          fileUrl: fileObj.fileUrl || '',
+          originalFileName: fileObj.name || fileObj.originalFileName,
+          memo: item.memo || '',
+        }))
+      }),
+    }))
     return {
       files: undefined,
       siteId: undefined,

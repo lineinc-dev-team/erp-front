@@ -65,12 +65,7 @@ export default function useOutSourcingCompany() {
         isActive: search.isActive === '1' ? true : search.isActive === '2' ? false : undefined,
         page: search.currentPage - 1, // 항상 현재 페이지에 맞춤
         size: Number(search.pageCount) || 10,
-        sort:
-          search.arraySort === '최신순'
-            ? 'id,desc'
-            : search.arraySort === '오래된순'
-            ? 'id,asc'
-            : 'username,asc',
+        sort: search.arraySort === '최신순' ? 'id,desc' : 'id,asc',
       }
 
       const filteredParams = Object.fromEntries(

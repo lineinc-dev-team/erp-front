@@ -191,7 +191,7 @@ export const outsourcingContractExcelFieldMap = {
   보증서: 'hasGuaranteeCertificate',
   계약서: 'hasContractCertificate',
   '세금계산서 발행조건': 'taxInvoiceCondition',
-  담당자: 'contacts',
+  담당자: 'contactName',
   작성일자: 'createdAt',
   상태: 'contractStatus',
   비고: 'memo',

@@ -97,7 +97,7 @@ type ContractHistoryItem = {
   type: string
   contactName: string
   defaultDeductions: string
-  files: []
+  files: FileUploadInfo[]
   contractStartDate: string
   contractEndDate: string
   createdAt: string

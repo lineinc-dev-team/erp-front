@@ -121,7 +121,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     originalFileName: '파일 추가',
     address: '주소',
     department: '부서',
-    position: '직급(직책',
+    position: '직급(직책)',
   }
 
   const {
@@ -135,6 +135,8 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
   const historyList = useOutsourcingFormStore((state) => state.form.changeHistories)
 
   const ContractHistoryList = useContractHistoryDataQuery.data?.data.content ?? []
+
+  console.log('ContractHistoryList2', ContractHistoryList)
 
   const totalList = useContractHistoryDataQuery.data?.data.pageInfo.totalElements ?? 0
   const pageCount = 10
@@ -407,8 +409,8 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     if (managers.length > 0) {
       for (const item of managers) {
         if (!item.name?.trim()) return '담당자의 이름을 입력해주세요.'
-        if (!item.position?.trim()) return '담당자의 부서를 입력해주세요.'
-        if (!item.department?.trim()) return '담당자의 직급(직책)을 입력해주세요.'
+        if (!item.department?.trim()) return '담당자의 부서를 입력해주세요.'
+        if (!item.position?.trim()) return '담당자의 직급(직책)을 입력해주세요.'
         if (!item.landlineNumber?.trim()) return '담당자의 전화번호를 입력해주세요.'
         if (!item.phoneNumber?.trim()) return '담당자의 개인 휴대폰을 입력해주세요.'
         if (!item.email?.trim()) return '담당자의 이메일을 입력해주세요.'
@@ -783,7 +785,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                     <TextField
                       placeholder="텍스트 입력"
                       size="small"
-                      value={m.name}
+                      value={m.name ?? ''}
                       onChange={(e) => updateItemField('manager', m.id, 'name', e.target.value)}
                     />
                   </TableCell>
@@ -791,20 +793,21 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                     <TextField
                       placeholder="텍스트 입력"
                       size="small"
-                      value={m.position}
-                      onChange={(e) => updateItemField('manager', m.id, 'position', e.target.value)}
+                      value={m.department ?? ''}
+                      onChange={(e) =>
+                        updateItemField('manager', m.id, 'department', e.target.value)
+                      }
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <TextField
                       placeholder="텍스트 입력"
                       size="small"
-                      value={m.department}
-                      onChange={(e) =>
-                        updateItemField('manager', m.id, 'department', e.target.value)
-                      }
+                      value={m.position ?? ''}
+                      onChange={(e) => updateItemField('manager', m.id, 'position', e.target.value)}
                     />
                   </TableCell>
+
                   <TableCell
                     align="center"
                     sx={{
@@ -814,7 +817,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <CommonSelect
-                        value={m.managerAreaNumber}
+                        value={m.managerAreaNumber || '지역번호'}
                         onChange={(value) => {
                           updateItemField('manager', m.id, 'managerAreaNumber', value)
                         }}
@@ -824,7 +827,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                       <TextField
                         size="small"
                         placeholder="'-'없이 숫자만 입력"
-                        value={m.landlineNumber}
+                        value={m.landlineNumber ?? ''}
                         onChange={(e) => {
                           const formatAreaNumber = formatPersonNumber(e.target.value)
                           updateItemField('manager', m.id, 'landlineNumber', formatAreaNumber)
@@ -838,7 +841,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                     <TextField
                       size="small"
                       placeholder="'-'없이 숫자만 입력"
-                      value={m.phoneNumber}
+                      value={m.phoneNumber ?? ''}
                       onChange={(e) => {
                         const formatted = formatPhoneNumber(e.target.value)
                         updateItemField('manager', m.id, 'phoneNumber', formatted)
@@ -849,7 +852,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                     <TextField
                       size="small"
                       placeholder="텍스트 입력"
-                      value={m.email}
+                      value={m.email ?? ''}
                       onChange={(e) => updateItemField('manager', m.id, 'email', e.target.value)}
                     />
                   </TableCell>
@@ -857,7 +860,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                     <TextField
                       size="small"
                       placeholder="500자 이하 텍스트 입력"
-                      value={m.memo}
+                      value={m.memo ?? ''}
                       onChange={(e) => updateItemField('manager', m.id, 'memo', e.target.value)}
                     />
                   </TableCell>
@@ -941,7 +944,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                       size="small"
                       placeholder="텍스트 입력"
                       sx={{ width: '100%' }}
-                      value={m.name}
+                      value={m.name ?? ''}
                       onChange={(e) =>
                         updateItemField('attachedFile', m.id, 'name', e.target.value)
                       }
@@ -976,7 +979,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                       size="small"
                       placeholder="500자 이하 텍스트 입력"
                       sx={{ width: '100%' }}
-                      value={m.memo}
+                      value={m.memo ?? ''}
                       onChange={(e) =>
                         updateItemField('attachedFile', m.id, 'memo', e.target.value)
                       }
@@ -1026,7 +1029,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
               </TableHead>
               <TableBody>
                 {ContractHistoryList.map((item: ContractHistoryItem, index: number) => (
-                  <TableRow key={item.contractId}>
+                  <TableRow key={item.contractId ?? index}>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       {(form.currentPage - 1) * pageCount + index + 1}
                     </TableCell>
@@ -1046,7 +1049,9 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                       {item.defaultDeductions}
                     </TableCell>
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      {item.files?.length ? 'O' : 'X'}
+                      {item.files?.some((item) => item.fileUrl && item.fileUrl.trim() !== '')
+                        ? 'O'
+                        : 'X'}
                     </TableCell>
 
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>

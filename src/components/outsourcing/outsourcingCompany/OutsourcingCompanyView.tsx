@@ -4,7 +4,7 @@ import CommonInput from '@/components/common/Input'
 import CommonSelect from '@/components/common/Select'
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import {
-  ArrayStatusOptions,
+  LaborArrayStatusOptions,
   outsourcingCompanyList,
   PageCount,
   UseORnotOptions,
@@ -136,8 +136,8 @@ export default function OutsourcingCompanyView() {
             <div className="flex flex-col items-center">
               {mainContacts.map((contact, index) => (
                 <Fragment key={index}>
-                  <div className="whitespace-pre-wrap">{contact.position}</div>
                   <div className="whitespace-pre-wrap">{contact.department || '-'}</div>
+                  <div className="whitespace-pre-wrap">{contact.position}</div>
                 </Fragment>
               ))}
             </div>
@@ -468,7 +468,7 @@ export default function OutsourcingCompanyView() {
                   search.setField('arraySort', value)
                   search.setField('currentPage', 1)
                 }}
-                options={ArrayStatusOptions}
+                options={LaborArrayStatusOptions}
               />
             </div>
 
