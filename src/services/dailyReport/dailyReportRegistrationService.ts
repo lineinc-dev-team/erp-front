@@ -424,9 +424,14 @@ export async function GetEquipmentByFilterService({
 
 // 장비를 가지고 있는 업체만 조회
 
-export async function GetWithEquipmentService({ pageParam = 0, size = 200, sort = '' }) {
+export async function GetWithEquipmentService({
+  pageParam = 0,
+  size = 200,
+  keyword = '',
+  sort = '',
+}) {
   const resData = await fetch(
-    `${API.OUTSOURCINGCOMPANY}/search?page=${pageParam}&size=${size}&sort=${sort}`,
+    `${API.OUTSOURCINGCOMPANY}/search?page=${pageParam}&size=${size}&sort=${sort}&keyword=${keyword}`,
     {
       method: 'GET',
       headers: {
@@ -709,7 +714,7 @@ export async function ModifyFileReport({
 
 export async function OutsourcingWorkerNameScroll({
   pageParam = 0,
-  size = 10,
+  size = 200,
   keyword = '',
   id = 0,
   sort = '',

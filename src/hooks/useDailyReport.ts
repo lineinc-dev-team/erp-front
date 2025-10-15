@@ -197,6 +197,19 @@ export function useDailyReport() {
     return [...defaultOptions, ...options]
   }, [withEquipmentInfo])
 
+  const useOutsourcingNameByFuel = (keyword: string) => {
+    return useInfiniteQuery({
+      queryKey: ['withEquipmentInfo', keyword],
+      queryFn: ({ pageParam }) => GetWithEquipmentService({ pageParam, keyword }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        const nextPage = sliceInfo.page + 1
+        return sliceInfo.hasNext ? nextPage : undefined
+      },
+    })
+  }
+
   // 장비 수정
   const EquipmentModifyMutation = useMutation({
     mutationFn: ({
@@ -348,6 +361,21 @@ export function useDailyReport() {
     },
   })
 
+  // 출역일보 직원 키워드 검색
+
+  // const useEmployeeInfoInfiniteScroll = (keyword: string) => {
+  //   return useInfiniteQuery({
+  //     queryKey: ['employeeInfo', keyword],
+  //     queryFn: ({ pageParam }) => GetEmployeeInfoService({ pageParam, keyword }),
+  //     initialPageParam: 0,
+  //     getNextPageParam: (lastPage) => {
+  //       const { sliceInfo } = lastPage.data
+  //       const nextPage = sliceInfo.page + 1
+  //       return sliceInfo.hasNext ? nextPage : undefined
+  //     },
+  //   })
+  // }
+
   const {
     data: employeeInfo,
     fetchNextPage: employeeFetchNextPage,
@@ -460,12 +488,13 @@ export function useDailyReport() {
     CompleteInfoMutation,
 
     reportCancel,
+    // useEmployeeInfoInfiniteScroll,
+
     employeeInfoOptions,
     employeeFetchNextPage,
     employeehasNextPage,
     employeeFetching,
     employeeLoading,
-
     // 계약직 이름
 
     contractNameInfoOptions,
@@ -484,5 +513,7 @@ export function useDailyReport() {
     withEquipmentLoading,
 
     DailyListQuery,
+
+    useOutsourcingNameByFuel,
   }
 }

@@ -230,9 +230,23 @@ export default function LaborView() {
   } = useOutsourcingNameListInfiniteScroll(debouncedOutsourcingKeyword)
 
   const OutsourcingRawList = OutsourcingNameData?.pages.flatMap((page) => page.data.content) ?? []
-  const outsourcingList = Array.from(
+  // const outsourcingList = Array.from(
+  //   new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
+  // )
+
+  let outsourcingList = Array.from(
     new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
   )
+
+  if (
+    debouncedOutsourcingKeyword === '' || // 아무것도 입력 안 한 상태
+    debouncedOutsourcingKeyword.includes('라인') // '라인'이 포함된 경우
+  ) {
+    const alreadyExists = outsourcingList.some((item) => item.name === '라인공영')
+    if (!alreadyExists) {
+      outsourcingList = [{ id: 0, name: '라인공영' }, ...outsourcingList]
+    }
+  }
 
   // 권한에 따른 버튼 활성화
 
@@ -512,8 +526,14 @@ export default function LaborView() {
           disableColumnMenu
           hideFooterPagination
           getRowHeight={() => 'auto'}
-          getRowClassName={(params) =>
-            params.row.isSeverancePayEligible === 'Y' ? 'severance-row' : ''
+          getRowClassName={
+            (params) =>
+              [
+                params.row.isSeverancePayEligible === 'Y' ? 'severance-row' : '',
+                params.row.name === '임시' ? 'Temporary-row' : '',
+              ]
+                .filter(Boolean) // 빈 문자열 제거
+                .join(' ') // 공백으로 합치기
           }
           sx={{
             '& .MuiDataGrid-row:hover': {
@@ -532,6 +552,10 @@ export default function LaborView() {
             '& .severance-row': {
               backgroundColor: 'red',
               color: 'white',
+            },
+
+            '& .Temporary-row .MuiDataGrid-cell:nth-of-type(5)': {
+              color: 'red', // 첫 번째 cell만 이름이라고 가정하고 붉게
             },
           }}
           onRowSelectionModelChange={(newSelection) => {

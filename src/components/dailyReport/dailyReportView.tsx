@@ -16,7 +16,7 @@ import { useRouter } from 'next/navigation'
 import { Fragment, useEffect, useState } from 'react'
 import { useTabOpener } from '@/utils/openTab'
 import { LaborDataList } from '@/types/labor'
-import { getTodayDateString } from '@/utils/formatters'
+import { formatNumber, getTodayDateString } from '@/utils/formatters'
 import { myInfoProps } from '@/types/user'
 import { useMenuPermission } from '../common/MenuPermissionView'
 import { CustomNoRowsOverlay } from '../common/NoData'
@@ -72,6 +72,12 @@ export default function DailyReportView() {
       equipmentTotalHours: `${item.equipmentTotalHours || 0} / ${
         item.equipmentEvidenceSubmitted ? 'Y' : 'N'
       }`,
+
+      gasolineTotalAmount: formatNumber(item.gasolineTotalAmount),
+
+      dieselTotalAmount: formatNumber(item.dieselTotalAmount),
+      ureaTotalAmount: formatNumber(item.ureaTotalAmount),
+      etcTotalAmount: formatNumber(item.etcTotalAmount),
 
       fuelEvidenceSubmitted: `${item.fuelEvidenceSubmitted ? 'Y' : 'N'}`,
 

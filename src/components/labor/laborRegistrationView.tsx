@@ -210,7 +210,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       setField('tenureMonths', client.tenureMonths === null ? '-' : client.tenureMonths + '개월')
 
       // isSeverancePayEligible 설정
-      setField('isSeverancePayEligible', client.isSeverancePayEligible ? 'Y' : 'N')
+      setField('isSeverancePayEligible', client.isSeverancePayEligible === true ? 'Y' : 'N')
 
       // // resignationDate 연동
       // if (client.resignationDate === null) {
@@ -830,7 +830,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                 </label>
                 <div className="border border-gray-400 flex items-center px-2 w-full">
                   <CommonInput
-                    value={form.isSeverancePayEligible ? 'Y' : 'N'}
+                    value={form.isSeverancePayEligible}
                     onChange={(value) => setField('isSeverancePayEligible', value)}
                     className="flex-1"
                     disabled
@@ -1019,7 +1019,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                     총일수
                   </TableCell>
                   <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 120 }}>
-                    노무부 총액
+                    노무비 총액
                   </TableCell>
                   <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 80 }}>
                     소득세

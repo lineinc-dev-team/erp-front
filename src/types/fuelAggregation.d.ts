@@ -89,8 +89,11 @@ export type FuelSearchState = {
 export type fuelDetailItem = {
   id: number
   outsourcingCompanyId: number
+  outsourcingCompanyName?: string
   driverId: number
+  driverName?: string
   equipmentId: number
+  equipmentName?: string
   specificationName: string
   fuelType: string
   fuelAmount: number

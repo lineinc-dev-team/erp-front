@@ -307,7 +307,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
           if (before === 'null') {
             before = '추가'
             style = { color: '#1976d2' } // 파란색 - 추가
-          } else if (after === 'null') {
+          } else if (after === 'null' || after === '') {
             after = '삭제'
             style = { color: '#d32f2f' } // 빨간색 - 삭제
           }
@@ -441,7 +441,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
       const { sliceInfo } = lastPage.data
       return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
     },
-    enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
+    enabled: !!selectedCompanyIds[selectId],
   })
 
   useEffect(() => {
@@ -834,7 +834,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                         fontWeight: 'bold',
                       }}
                     >
-                      {label === '비고' ? (
+                      {label === '비고' || label === '첨부파일' ? (
                         label
                       ) : (
                         <div className="flex items-center justify-center">

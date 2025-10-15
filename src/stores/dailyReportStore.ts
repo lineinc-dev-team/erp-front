@@ -414,7 +414,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           form: { ...state.form, directContracts: [...state.form.directContracts, newItem] },
         }
       }
-      return state // 👈 type이 안 맞으면 기존 state 반환
+      return state
     }),
 
   updateItemField: (type, id, field, value) =>
@@ -725,7 +725,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         return {
           form: {
             ...state.form,
-            files: state.form.employeeFile.filter(
+            employeeFile: state.form.employeeFile.filter(
               (f) => !state.form.employeeCheckId.includes(f.id),
             ),
             employeeCheckId: [],
@@ -735,7 +735,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         return {
           form: {
             ...state.form,
-            files: state.form.fuelProofFile.filter(
+            fuelProofFile: state.form.fuelProofFile.filter(
               (f) => !state.form.fuelProofCheckId.includes(f.id),
             ),
             fuelProofCheckId: [],
@@ -745,7 +745,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         return {
           form: {
             ...state.form,
-            files: state.form.equipmentProofFile.filter(
+            equipmentProofFile: state.form.equipmentProofFile.filter(
               (f) => !state.form.equipmentProofCheckId.includes(f.id),
             ),
             equipmentProofCheckId: [],
@@ -755,7 +755,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         return {
           form: {
             ...state.form,
-            files: state.form.contractProofFile.filter(
+            contractProofFile: state.form.contractProofFile.filter(
               (f) => !state.form.contractProofCheckId.includes(f.id),
             ),
             contractProofCheckId: [],
@@ -775,7 +775,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         return {
           form: {
             ...state.form,
-            files: state.form.outsourcingProofFile.filter(
+            outsourcingProofFile: state.form.outsourcingProofFile.filter(
               (f) => !state.form.outsourcingProofCheckId.includes(f.id),
             ),
             outsourcingProofCheckId: [],

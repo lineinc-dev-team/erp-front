@@ -1715,17 +1715,19 @@ export default function DailyReportRegistrationView() {
             {formatDateSecondTime(detailReport.data.completedAt)}
           </div>
         ) : (
-          <CommonButton
-            label="마감"
-            disabled={
-              !hasApproval ||
-              detailReport?.data?.status === 'AUTO_COMPLETED' ||
-              detailReport?.data?.status === 'COMPLETED'
-            }
-            className="px-6 py-2 mb-2"
-            variant="secondary"
-            onClick={Deadline}
-          />
+          form.reportDate && (
+            <CommonButton
+              label="마감"
+              disabled={
+                !hasApproval ||
+                detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                detailReport?.data?.status === 'COMPLETED'
+              }
+              className="px-6 py-2 mb-2"
+              variant="secondary"
+              onClick={Deadline}
+            />
+          )
         )}
       </div>
 
@@ -2223,7 +2225,7 @@ export default function DailyReportRegistrationView() {
                           ) : (
                             <CommonSelect
                               fullWidth
-                              value={m.outsourcingCompanyId || 0}
+                              value={m.outsourcingCompanyId || -1}
                               onChange={async (value) => {
                                 const selectedCompany = companyOptions.find(
                                   (opt) => opt.id === value,
@@ -2777,7 +2779,7 @@ export default function DailyReportRegistrationView() {
                         <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                           <CommonSelect
                             fullWidth
-                            value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
+                            value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || -1}
                             onChange={async (value) => {
                               const selectedCompany = companyOptions.find((opt) => opt.id === value)
                               if (!selectedCompany) return

@@ -92,7 +92,9 @@ export function useLaborInfo() {
         name: search.name,
         residentNumber: search.residentNumber,
         outsourcingCompanyName:
-          search.outsourcingCompanyName === '' ? undefined : search.outsourcingCompanyName,
+          search.outsourcingCompanyName === '' || search.outsourcingCompanyName === '라인공영'
+            ? undefined
+            : search.outsourcingCompanyName,
         phoneNumber: search.phoneNumber,
         isHeadOffice:
           search.outsourcingCompanyId === -1
@@ -103,12 +105,7 @@ export function useLaborInfo() {
 
         page: search.currentPage - 1,
         size: Number(search.pageCount) || 10,
-        sort:
-          search.arraySort === '최신순'
-            ? 'yearMonth,desc '
-            : search.arraySort === '오래된순'
-            ? 'yearMonth,asc'
-            : 'username,asc',
+        sort: search.arraySort === '최신순' ? 'id,desc ' : 'id,asc',
       }
 
       const filteredParams = Object.fromEntries(
