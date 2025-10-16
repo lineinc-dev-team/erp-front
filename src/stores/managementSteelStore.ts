@@ -116,7 +116,7 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
         const newItem: MaterialItem = {
           checkId: Date.now(),
           id: null,
-          outsourcingCompanyId: 1,
+          outsourcingCompanyId: 0,
           name: 'H Beam',
           specification: '',
           weight: 0,
@@ -346,7 +346,7 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
         const file = item.files?.[0]
         return {
           id: item.id,
-          outsourcingCompanyId: item.outsourcingCompanyId === 1 ? null : item.outsourcingCompanyId,
+          outsourcingCompanyId: item.outsourcingCompanyId === 0 ? null : item.outsourcingCompanyId,
           type: form.type,
           name: item.name,
           specification: item.specification,

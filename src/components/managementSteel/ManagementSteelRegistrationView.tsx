@@ -387,7 +387,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         if (
           item.category !== 'OWN_MATERIAL' && // OWN_MATERIAL이면 검사 제외
           !isOnSiteStock &&
-          !item.outsourcingCompanyName?.trim()
+          !item.outsourcingCompanyName
         ) {
           return '거래선을 입력해주세요.'
         }
@@ -423,7 +423,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
   // 유저 선택 시 처리
   const handleSelectOutsourcing = (id: number, selectedCompany: any) => {
     if (!selectedCompany) {
-      updateItemField('MaterialItem', id, 'outsourcingCompanyId', 1)
+      updateItemField('MaterialItem', id, 'outsourcingCompanyId', 0)
       updateItemField('MaterialItem', id, 'outsourcingCompanyName', '')
       return
     }
