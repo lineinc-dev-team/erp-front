@@ -115,6 +115,7 @@ export default function PermissionManagementUI({ isEditMode = false }) {
       setField('memo', detail.memo)
       setField('userCount', detail.userCount)
       setField('hasGlobalSiteProcessAccess', detail.hasGlobalSiteProcessAccess)
+      setField('hasUnmaskPermission', detail.hasUnmaskPermission)
       setField(
         'Date',
         `${getTodayDateString(detail.createdAt)} / ${getTodayDateString(detail.updatedAt)}`,
@@ -270,6 +271,10 @@ export default function PermissionManagementUI({ isEditMode = false }) {
     setField('hasGlobalSiteProcessAccess', checked)
   }
 
+  const handleUnmaskPermissionCheck = (checked: boolean) => {
+    setField('hasUnmaskPermission', checked)
+  }
+
   return (
     <div>
       <div className="flex-1">
@@ -315,6 +320,15 @@ export default function PermissionManagementUI({ isEditMode = false }) {
                                 onChange={(e) => handleGlobalSiteCheck(e.target.checked)}
                               />
                               전체 현장
+                            </label>
+                            <label className="flex items-center text-[15px] gap-1">
+                              <input
+                                type="checkbox"
+                                className="w-4 h-4"
+                                checked={form.hasUnmaskPermission}
+                                onChange={(e) => handleUnmaskPermissionCheck(e.target.checked)}
+                              />
+                              민감정보 마스킹 해제
                             </label>
                           </div>
                         </div>

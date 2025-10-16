@@ -51,6 +51,7 @@ export const usePermissionGroupStore = create<PermissionFormState>((set, get) =>
     userIds: [],
     permissionIds: [],
     hasGlobalSiteProcessAccess: false,
+    hasUnmaskPermission: false,
     siteProcesses: [{ siteId: 0, processId: 0 }],
   },
 
@@ -65,6 +66,7 @@ export const usePermissionGroupStore = create<PermissionFormState>((set, get) =>
         userIds: [],
         permissionIds: [],
         hasGlobalSiteProcessAccess: false,
+        hasUnmaskPermission: false,
         siteProcesses: [],
       },
     })),
@@ -232,6 +234,8 @@ export const usePermissionGroupStore = create<PermissionFormState>((set, get) =>
       })),
       permissionIds: form.permissionIds,
       hasGlobalSiteProcessAccess: form.hasGlobalSiteProcessAccess,
+      hasUnmaskPermission: form.hasUnmaskPermission,
+
       // siteProcesses: allAreZeros ? [] : form.siteProcesses,
       siteProcesses: filteredSiteProcesses,
     }

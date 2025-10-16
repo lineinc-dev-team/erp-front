@@ -6,6 +6,7 @@ export interface PermissionGroupDetail {
   updatedAt: Date | null
   memo: string
   hasGlobalSiteProcessAccess: boolean
+  hasUnmaskPermission: boolean
   sites: {
     id: number
     name: string
@@ -59,6 +60,7 @@ export type FormState = {
   userIds: number[]
   permissionIds: number[]
   hasGlobalSiteProcessAccess: boolean
+  hasUnmaskPermission: boolean
   siteProcesses: {
     siteId: number
     processId: number

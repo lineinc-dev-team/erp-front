@@ -190,8 +190,8 @@ export async function SinglepermissionUserService(singleId: number) {
 }
 
 // 단일 권한 그룹 조회
-export async function SinglepermissionMenuService(singleId: number) {
-  const resData = await fetch(`${API.SINGLEROLE}/${singleId}/menu-permissions`, {
+export async function SinglepermissionMenuService(menuId: number) {
+  const resData = await fetch(`${API.SINGLEROLE}/${menuId}/menu-permissions`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

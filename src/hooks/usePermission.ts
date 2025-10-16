@@ -156,7 +156,7 @@ export function usePermission() {
   // 상세조회
   const useSinglepermissionListQuery = (id: number, enabled: boolean) => {
     return useQuery({
-      queryKey: ['permissionDetail', id],
+      queryKey: ['permissionInfo', id],
       queryFn: () => SinglepermissionService(id),
       enabled: enabled && !!id && !isNaN(id), // id가 유효할 때만 호출
     })
@@ -164,16 +164,16 @@ export function usePermission() {
 
   const useSinglepermissionUserListQuery = (singleId: number, enabled: boolean) => {
     return useQuery({
-      queryKey: ['permissionInfo', singleId],
+      queryKey: ['permissionInfo', 'user', singleId],
       queryFn: () => SinglepermissionUserService(singleId),
       enabled: enabled && !!singleId && !isNaN(singleId), // id가 유효할 때만 호출
     })
   }
-  const useSinglepermissionMenuListQuery = (singleId: number, enabled: boolean) => {
+  const useSinglepermissionMenuListQuery = (menuId: number, enabled: boolean) => {
     return useQuery({
-      queryKey: ['menuInfoMenus', singleId],
-      queryFn: () => SinglepermissionMenuService(singleId),
-      enabled: enabled && !!singleId && !isNaN(singleId), // id가 유효할 때만 호출
+      queryKey: ['permissionInfo', 'menu', menuId],
+      queryFn: () => SinglepermissionMenuService(menuId),
+      enabled: enabled && !!menuId && !isNaN(menuId), // id가 유효할 때만 호출
     })
   }
 
