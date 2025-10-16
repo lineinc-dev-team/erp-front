@@ -538,6 +538,8 @@ export default function DailyReportRegistrationView() {
     const fetched = allFuels.map((item: any) => ({
       id: item.fuelInfoId,
       outsourcingCompanyId: item.outsourcingCompany?.id ?? 0,
+      outsourcingCompanyName: item.outsourcingCompany?.name ?? 0,
+      deleted: item.outsourcingCompany.deleted,
       driverId: item.outsourcingCompanyDriver.id ?? 0,
       equipmentId: item.outsourcingCompanyEquipment?.id ?? '',
       specificationName: item.outsourcingCompanyEquipment.specification ?? '',
@@ -564,6 +566,57 @@ export default function DailyReportRegistrationView() {
 
   const checkedFuelIds = form.checkedFuelsIds
   const isFuelAllChecked = fuelData.length > 0 && checkedFuelIds.length === fuelData.length
+
+  console.log('확인용 ', fuelData)
+
+  const [updatedOutCompanyOptions, setUpdatedOutCompanyOptions] = useState(withEquipmentInfoOptions)
+
+  useEffect(() => {
+    if (isEditMode && fuelData) {
+      // 원본 복사
+      const newOptions = [...withEquipmentInfoOptions]
+      const processedIds = new Set<number>() // ✅ 이미 처리한 회사 id 추적용
+
+      fuelData.forEach((fuel: any) => {
+        const companyId = fuel.outsourcingCompanyId
+        const companyName = fuel.outsourcingCompanyName
+        const isDeleted = fuel.deleted
+
+        if (!companyId || processedIds.has(companyId)) return // ✅ 중복 방지
+        processedIds.add(companyId)
+
+        const displayName = companyName + (isDeleted ? ' (삭제됨)' : '')
+
+        const existingIndex = newOptions.findIndex((opt) => opt.id === companyId)
+        if (existingIndex !== -1) {
+          newOptions[existingIndex] = {
+            ...newOptions[existingIndex],
+            name: displayName,
+            deleted: isDeleted,
+          }
+        } else {
+          newOptions.push({
+            id: companyId,
+            name: displayName,
+            deleted: isDeleted,
+          })
+        }
+      })
+
+      // ✅ 삭제된 항목을 가장 위로 정렬
+      const deletedCompanies = newOptions.filter((c) => c.deleted)
+      const normalCompanies = newOptions.filter((c) => !c.deleted && c.id !== 0)
+
+      setUpdatedOutCompanyOptions([
+        newOptions.find((s) => s.id === 0) ?? { id: 0, name: '선택', deleted: false },
+        ...deletedCompanies,
+        ...normalCompanies,
+      ])
+    } else if (!isEditMode) {
+      // 등록 모드에서는 기본 옵션으로 초기화
+      setUpdatedOutCompanyOptions(withEquipmentInfoOptions)
+    }
+  }, [fuelData, isEditMode, withEquipmentInfoOptions])
 
   // 첨부팡리
   const {
@@ -1234,87 +1287,6 @@ export default function DailyReportRegistrationView() {
   const equipmentDataResult = equipmentData
 
   useEffect(() => {
-    if (!outsourcingfuel.length) return
-
-    outsourcingfuel.forEach(async (row) => {
-      const companyId = row.outsourcingCompanyId
-      const driverData = row.driverId
-      const carNumberId = row.equipmentId
-
-      if (driverOptionsByCompany[companyId] && carNumberOptionsByCompany[companyId]) {
-        return
-      }
-
-      try {
-        const res = await FuelDriverNameScroll({
-          pageParam: 0,
-          id: companyId,
-          size: 200,
-        })
-
-        const options = res.data.content.map((user: any) => ({
-          id: user.id,
-          name: user.name + (user.deleted ? ' (삭제됨)' : ''),
-          deleted: user.deleted,
-        }))
-
-        setDriverOptionsByCompany((prev) => {
-          const exists = options.some((opt: any) => opt.id === driverData)
-
-          return {
-            ...prev,
-            [companyId]: [
-              { id: 0, name: '선택', deleted: false },
-              ...options,
-              // 만약 선택된 worker가 목록에 없으면 추가
-              ...(driverData && !exists ? [{ id: driverData, name: '', deleted: true }] : []),
-            ],
-          }
-        })
-
-        const carNumberRes = await FuelEquipmentNameScroll({
-          pageParam: 0,
-          id: companyId,
-          size: 200,
-        })
-
-        const carOptions = carNumberRes.data.content.map((user: any) => ({
-          id: user.id,
-          specification: user.specification,
-          vehicleNumber: user.vehicleNumber + (user.deleted ? ' (삭제됨)' : ''),
-          category: user.category,
-        }))
-
-        setCarNumberOptionsByCompany((prev) => {
-          const exists = carOptions.some((opt: any) => opt.id === carNumberId)
-
-          return {
-            ...prev,
-            [companyId]: [
-              { id: 0, specification: '', vehicleNumber: '선택', category: '', deleted: false },
-              ...carOptions,
-              // 만약 선택된 worker가 목록에 없으면 추가
-              ...(carNumberId && !exists
-                ? [
-                    {
-                      id: carNumberId,
-                      specification: '',
-                      vehicleNumber: '',
-                      category: '',
-                      deleted: true,
-                    },
-                  ]
-                : []),
-            ],
-          }
-        })
-      } catch (err) {
-        console.error('업체별 인력 조회 실패', err)
-      }
-    })
-  }, [outsourcingfuel])
-
-  useEffect(() => {
     if (!equipmentDataResult.length) return
 
     equipmentDataResult.forEach(async (row) => {
@@ -1394,6 +1366,8 @@ export default function DailyReportRegistrationView() {
       }
     })
   }, [equipmentDataResult])
+
+  // 유류의 업체명 삭제 됨 표시
 
   // 유효성 검사
 
@@ -1626,6 +1600,89 @@ export default function DailyReportRegistrationView() {
   const previousWeatherRef = useRef(form.weather)
 
   console.log('isEditModeisEditMode', isEditMode)
+
+  useEffect(() => {
+    if (!outsourcingfuel.length) return
+
+    outsourcingfuel.forEach(async (row) => {
+      const companyId = row.outsourcingCompanyId
+      const driverData = row.driverId
+      const carNumberId = row.equipmentId
+
+      if (driverOptionsByCompany[companyId] && carNumberOptionsByCompany[companyId]) {
+        return
+      }
+
+      try {
+        const res = await FuelDriverNameScroll({
+          pageParam: 0,
+          id: companyId,
+          size: 200,
+        })
+
+        if (res === undefined) return
+
+        const options = res.data.content.map((user: any) => ({
+          id: user.id,
+          name: user.name + (user.deleted ? ' (삭제됨)' : ''),
+          deleted: user.deleted,
+        }))
+
+        setDriverOptionsByCompany((prev) => {
+          const exists = options.some((opt: any) => opt.id === driverData)
+
+          return {
+            ...prev,
+            [companyId]: [
+              { id: 0, name: '선택', deleted: false },
+              ...options,
+              // 만약 선택된 worker가 목록에 없으면 추가
+              ...(driverData && !exists ? [{ id: driverData, name: '', deleted: true }] : []),
+            ],
+          }
+        })
+
+        const carNumberRes = await FuelEquipmentNameScroll({
+          pageParam: 0,
+          id: companyId,
+          size: 200,
+        })
+
+        const carOptions = carNumberRes.data.content.map((user: any) => ({
+          id: user.id,
+          specification: user.specification,
+          vehicleNumber: user.vehicleNumber + (user.deleted ? ' (삭제됨)' : ''),
+          category: user.category,
+        }))
+
+        setCarNumberOptionsByCompany((prev) => {
+          const exists = carOptions.some((opt: any) => opt.id === carNumberId)
+
+          return {
+            ...prev,
+            [companyId]: [
+              { id: 0, specification: '', vehicleNumber: '선택', category: '', deleted: false },
+              ...carOptions,
+              // 만약 선택된 worker가 목록에 없으면 추가
+              ...(carNumberId && !exists
+                ? [
+                    {
+                      id: carNumberId,
+                      specification: '',
+                      vehicleNumber: '',
+                      category: '',
+                      deleted: true,
+                    },
+                  ]
+                : []),
+            ],
+          }
+        })
+      } catch (err) {
+        console.error('업체별 인력 조회 실패', err)
+      }
+    })
+  }, [outsourcingfuel])
 
   return (
     <>
@@ -3766,16 +3823,30 @@ export default function DailyReportRegistrationView() {
                             // value={m.outsourcingCompanyId || 0}
                             value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
                             onChange={async (value) => {
-                              const selectedCompany = withEquipmentInfoOptions.find(
+                              const selectedCompany = updatedOutCompanyOptions.find(
                                 (opt) => opt.id === value,
                               )
-                              if (!selectedCompany) return
 
-                              // 해당 row만 업데이트
+                              // ✅ 업체 선택 시 — 어떤 업체를 선택하든 전부 초기화
                               setSelectedCompanyIds((prev) => ({
                                 ...prev,
-                                [m.id]: selectedCompany.id,
+                                [m.id]: selectedCompany ? selectedCompany.id : 0,
                               }))
+
+                              setSelectId(m.id)
+
+                              // ✅ 업체 정보 업데이트
+                              updateItemField(
+                                'fuel',
+                                m.id,
+                                'outsourcingCompanyId',
+                                selectedCompany?.id || null,
+                              )
+
+                              // ✅ 기사, 차량, 규격, 타입 모두 초기화
+                              updateItemField('fuel', m.id, 'driverId', null)
+                              updateItemField('fuel', m.id, 'equipmentId', null)
+                              updateItemField('fuel', m.id, 'specificationName', '-')
 
                               setSelectId(m.id)
 
@@ -3783,7 +3854,7 @@ export default function DailyReportRegistrationView() {
                                 'fuel',
                                 m.id,
                                 'outsourcingCompanyId',
-                                selectedCompany.id,
+                                selectedCompany?.id || null,
                               )
 
                               // 해당 row 기사, 차량 초기화
@@ -3799,7 +3870,7 @@ export default function DailyReportRegistrationView() {
 
                               // 차량 값도 추가
                             }}
-                            options={withEquipmentInfoOptions}
+                            options={updatedOutCompanyOptions}
                             onScrollToBottom={() => {
                               if (withEquipmenthasNextPage && !withEquipmentFetching)
                                 withEquipmentFetchNextPage()
@@ -3851,7 +3922,7 @@ export default function DailyReportRegistrationView() {
                                 'fuel',
                                 m.id,
                                 'specificationName',
-                                selectedCarNumber.specification || '',
+                                selectedCarNumber.specification || '-',
                               )
                             }}
                             options={

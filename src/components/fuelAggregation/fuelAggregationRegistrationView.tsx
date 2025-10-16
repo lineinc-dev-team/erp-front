@@ -412,6 +412,59 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     }
   }
 
+  // 유류의 업체명 삭제 됨 표시
+
+  const [updatedOutCompanyOptions, setUpdatedOutCompanyOptions] = useState(withEquipmentInfoOptions)
+
+  useEffect(() => {
+    if (isEditMode && data) {
+      const client = data.data
+      const newOptions = [...withEquipmentInfoOptions]
+
+      if (client.fuelInfos && Array.isArray(client.fuelInfos)) {
+        client.fuelInfos.forEach((fuel: any) => {
+          const company = fuel.outsourcingCompany
+
+          console.log('companyIdcompanyIdcompanyId24company.id', company.id)
+
+          if (!company) return
+
+          const isDeleted = company.deleted
+          const displayName = company.name + (isDeleted ? ' (삭제됨)' : '')
+
+          // 이미 리스트에 존재하는 경우 → 이름만 수정
+          const existingIndex = newOptions.findIndex((opt) => opt.id === company.id)
+          if (existingIndex !== -1) {
+            newOptions[existingIndex] = {
+              ...newOptions[existingIndex],
+              name: displayName,
+              deleted: isDeleted,
+            }
+          } else {
+            // 없는 경우 새로 추가
+            newOptions.push({
+              id: company.id,
+              name: displayName,
+              deleted: isDeleted,
+            })
+          }
+        })
+      }
+
+      const deletedCompanies = newOptions.filter((c) => c.deleted)
+      const normalCompanies = newOptions.filter((c) => !c.deleted && c.id !== 0)
+
+      setUpdatedOutCompanyOptions([
+        newOptions.find((s) => s.id === 0) ?? { id: 0, name: '선택', deleted: false },
+        ...deletedCompanies,
+        ...normalCompanies,
+      ])
+    } else if (!isEditMode) {
+      // 신규 등록 시 초기화
+      setUpdatedOutCompanyOptions(withEquipmentInfoOptions)
+    }
+  }, [data, isEditMode, withEquipmentInfoOptions])
+
   const [selectedCompanyIds, setSelectedCompanyIds] = useState<{ [rowId: number]: number }>({})
   const [selectId, setSelectId] = useState(0)
 
@@ -428,7 +481,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     isFetching: fuelDriverIsFetching,
     isLoading: fuelDriverLoading,
   } = useInfiniteQuery({
-    queryKey: ['FuelDriverInfo', selectedCompanyIds[selectId]],
+    queryKey: ['FuelDriverInfo', selectedCompanyIds[selectId] || 0],
 
     queryFn: ({ pageParam }) =>
       FuelDriverNameScroll({
@@ -534,14 +587,16 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
           size: 200,
         })
 
-        const options = res.data.content.map((user: any) => ({
+        if (res === undefined) return
+
+        const options = res?.data?.content?.map((user: any) => ({
           id: user.id,
           name: user.name + (user.deleted ? ' (삭제됨)' : ''),
           deleted: user.deleted,
         }))
 
         setDriverOptionsByCompany((prev) => {
-          const exists = options.some((opt: any) => opt.id === driverData)
+          const exists = options?.some((opt: any) => opt.id === driverData)
 
           return {
             ...prev,
@@ -876,16 +931,30 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                       fullWidth
                       value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
                       onChange={async (value) => {
-                        const selectedCompany = withEquipmentInfoOptions.find(
+                        const selectedCompany = updatedOutCompanyOptions.find(
                           (opt) => opt.id === value,
                         )
-                        if (!selectedCompany) return
-
-                        // 해당 row만 업데이트
+                        // ✅ 업체 선택 시 — 어떤 업체를 선택하든 전부 초기화
                         setSelectedCompanyIds((prev) => ({
                           ...prev,
-                          [m.id]: selectedCompany.id,
+                          [m.id]: selectedCompany ? selectedCompany.id : 0,
                         }))
+
+                        setSelectId(m.id)
+
+                        // ✅ 업체 정보 업데이트
+                        updateItemField(
+                          'FuelInfo',
+                          m.id,
+                          'outsourcingCompanyId',
+                          selectedCompany?.id || null,
+                        )
+
+                        // ✅ 기사, 차량, 규격, 타입 모두 초기화
+                        updateItemField('FuelInfo', m.id, 'driverId', null)
+                        updateItemField('FuelInfo', m.id, 'equipmentId', null)
+                        updateItemField('FuelInfo', m.id, 'specificationName', '')
+                        updateItemField('FuelInfo', m.id, 'type', '-')
 
                         setSelectId(m.id)
 
@@ -893,7 +962,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                           'FuelInfo',
                           m.id,
                           'outsourcingCompanyId',
-                          selectedCompany.id,
+                          selectedCompany?.id || null,
                         )
 
                         // 해당 row 기사, 차량 초기화
@@ -909,7 +978,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
 
                         // 차량 값도 추가
                       }}
-                      options={withEquipmentInfoOptions}
+                      options={updatedOutCompanyOptions}
                       onScrollToBottom={() => {
                         if (withEquipmenthasNextPage && !withEquipmentFetching)
                           withEquipmentFetchNextPage()
@@ -951,6 +1020,13 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                       fullWidth
                       value={selectedCarNumberIds[m.id] || m.equipmentId || 0}
                       onChange={async (value) => {
+                        if (value === 0) {
+                          updateItemField('FuelInfo', m.id, 'equipmentId', null)
+                          updateItemField('FuelInfo', m.id, 'specificationName', '')
+                          updateItemField('FuelInfo', m.id, 'type', '-')
+                          return
+                        }
+
                         const selectedCarNumber = (
                           carNumberOptionsByCompany[m.outsourcingCompanyId] ?? []
                         ).find((opt) => opt.id === value)

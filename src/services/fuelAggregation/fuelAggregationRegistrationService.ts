@@ -92,6 +92,9 @@ export async function FuelDriverNameScroll({
   id = 0,
   sort = '',
 }) {
+  if (id === null) {
+    return
+  }
   const resData = await fetch(
     `${API.OUTSOURCINGCOMPANY}/${id}/contract-drivers?page=${pageParam}&size=${size}&keyword=${keyword}&sort=${sort}`,
     {
