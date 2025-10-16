@@ -370,24 +370,72 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                           fileUrl: f.fileUrl,
                           originalFileName: f.originalFileName,
                         }))}
+                      // onChange={(uploaded) => {
+                      //   // 기존 type에 해당하는 파일 제거
+                      //   contract.files
+                      //     .map((f, i) => ({ f, i }))
+                      //     .filter(({ f }) => f.type === type)
+                      //     .reverse() // 뒤에서부터 제거
+                      //     .forEach(({ i }) => removeContractFile(idx, i))
+
+                      //   // 새로운 파일 추가
+                      //   uploaded.forEach(({ fileUrl, file }) => {
+                      //     if (!file) return // file이 없으면 스킵
+
+                      //     addContractFile(idx, {
+                      //       id: undefined,
+                      //       originalFileName: file.name,
+                      //       fileUrl: fileUrl ?? '',
+                      //       type,
+                      //     })
+                      //   })
+                      // }}
+
                       onChange={(uploaded) => {
-                        // 기존 type에 해당하는 파일 제거
-                        contract.files
-                          .map((f, i) => ({ f, i }))
-                          .filter(({ f }) => f.type === type)
-                          .reverse() // 뒤에서부터 제거
-                          .forEach(({ i }) => removeContractFile(idx, i))
+                        // ✅ 1. 기존 파일 목록 유지
+                        const existingFiles = [...contract.files]
 
-                        // 새로운 파일 추가
-                        uploaded.forEach(({ fileUrl, file }) => {
+                        // ✅ 2. 현재 type에 해당하는 기존 파일들 (유지할 목록)
+                        const existingTypeFiles = existingFiles.filter((f) => f.type === type)
+
+                        // ✅ 3. 새로 업로드된 파일 중, 기존에 없는 것만 필터링
+                        const newFiles = uploaded.filter(
+                          ({ fileUrl }) => !existingTypeFiles.some((f) => f.fileUrl === fileUrl),
+                        )
+
+                        // ✅ 4. 새 파일만 추가 (id: undefined)
+                        newFiles.forEach(({ fileUrl, file }) => {
                           if (!file) return // file이 없으면 스킵
-
                           addContractFile(idx, {
+                            id: undefined, // 새 파일만 undefined
                             originalFileName: file.name,
                             fileUrl: fileUrl ?? '',
                             type,
                           })
                         })
+                      }}
+                      // onRemove={(fileId) => {
+                      //   if (fileId) {
+                      //     contract.files
+                      //       .map((f, i) => ({ f, i }))
+                      //       .filter(({ f }) => f.type === type)
+                      //       .reverse() // 뒤에서부터 제거
+                      //       .forEach(({ i }) => removeContractFile(idx, i))
+                      //   }
+                      // }}
+
+                      onRemove={(fileId, fileIndex) => {
+                        // fileId가 있는 경우 (이미 서버에 등록된 파일)
+                        if (fileId) {
+                          console.log('해당 파일 검색', fileId, fileIndex)
+                          // 해당 index만 제거
+                          removeContractFile(idx, fileIndex ?? 0)
+                          // 필요하다면 서버에도 삭제 요청
+                          // await deleteFileApi(fileId)
+                        } else {
+                          // 새로 업로드된(아직 id 없는) 파일도 그냥 제거
+                          removeContractFile(idx, fileIndex ?? 0)
+                        }
                       }}
                     />
                   </div>

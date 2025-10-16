@@ -10,8 +10,9 @@ export default function CommonMultiFileInput({
   className,
   multiple = true,
   onChange,
+  onRemove,
   uploadTarget,
-}: FileUploadProps) {
+}: FileUploadProps & { onRemove?: (fileId?: number, index?: number) => void }) {
   const [loading, setLoading] = useState(false)
   const { showSnackbar } = useSnackbarStore()
 
@@ -52,7 +53,7 @@ export default function CommonMultiFileInput({
         await uploadToS3(uploadUrl, file)
 
         uploadedFiles.push({
-          id: 0, // 신규 업로드 파일은 0
+          id: undefined,
           file,
           fileUrl: publicUrl,
           originalFileName: file.name,
@@ -69,10 +70,21 @@ export default function CommonMultiFileInput({
     setLoading(false)
   }
 
+  // const removeFile = (index: number) => {
+  //   if (files) {
+  //     const updated = files.filter((_, i) => i !== index)
+  //     onChange(updated)
+  //   }
+  // }
+
   const removeFile = (index: number) => {
-    if (files) {
-      const updated = files.filter((_, i) => i !== index)
-      onChange(updated)
+    if (!files) return
+    const fileToRemove = files[index]
+    const updated = files.filter((_, i) => i !== index)
+    onChange(updated)
+
+    if (onRemove) {
+      onRemove(fileToRemove?.id, index)
     }
   }
 
