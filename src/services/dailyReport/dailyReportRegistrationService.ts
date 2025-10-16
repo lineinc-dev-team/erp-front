@@ -117,13 +117,16 @@ export async function GetContractNameInfoService({
   pageParam = 0,
   size = 200,
   keyword = '',
+  outsourcingCompanyId = 0,
 }: {
   pageParam?: number
   size?: number
   outsourcingCompanyId?: string | number | ''
   keyword?: string
 }) {
-  const url = `${API.LABOR}/search?page=${pageParam}&size=${size}&keyword=${encodeURIComponent(
+  const url = `${
+    API.LABOR
+  }/search?page=${pageParam}&size=${size}&outsourcingCompanyId=${outsourcingCompanyId}&keyword=${encodeURIComponent(
     keyword,
   )}&types=DIRECT_CONTRACT&types=ETC`
 

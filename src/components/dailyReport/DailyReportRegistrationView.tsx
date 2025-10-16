@@ -27,6 +27,7 @@ import {
   DetaileReport,
   GetAttachedFileByFilterService,
   GetContractByFilterService,
+  GetContractNameInfoService,
   GetEmployeesByFilterService,
   GetEquipmentByFilterService,
   GetFuelByFilterService,
@@ -125,12 +126,6 @@ export default function DailyReportRegistrationView() {
     employeeFetching,
     employeeLoading,
 
-    contractNameInfoOptions,
-    contractNameFetchNextPage,
-    contractNamehasNextPage,
-    contractNameFetching,
-    contractNameLoading,
-
     // 인력의 정보 조회
 
     withEquipmentInfoOptions,
@@ -148,9 +143,16 @@ export default function DailyReportRegistrationView() {
   const [selectId, setSelectId] = useState(0)
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<{ [rowId: number]: number }>({})
 
+  // 직영 계약직에서 사용하는 해당 변수
+  const [selectContractIds, setSelectContractIds] = useState<{ [rowId: number]: number }>({})
+
   // 옵션에 따른 상태값
 
   const [workerOptionsByCompany, setWorkerOptionsByCompany] = useState<Record<number, any[]>>({})
+
+  const [ContarctNameOptionsByCompany, setContarctNameOptionsByCompany] = useState<
+    Record<number, any[]>
+  >({})
 
   const [modifyFuelNumber, setModifyFuelNumber] = useState(0)
 
@@ -318,7 +320,7 @@ export default function DailyReportRegistrationView() {
     const fetched = allContract.map((item: any) => ({
       id: item.id,
       checkId: item.id,
-      outsourcingCompanyId: item.outsourcingCompany?.id ?? -1,
+      outsourcingCompanyId: item.outsourcingCompany?.id ?? null,
       laborId: item.labor?.id ?? 0,
       position: item.position,
       workContent: item.workContent,
@@ -567,22 +569,20 @@ export default function DailyReportRegistrationView() {
   const checkedFuelIds = form.checkedFuelsIds
   const isFuelAllChecked = fuelData.length > 0 && checkedFuelIds.length === fuelData.length
 
-  console.log('확인용 ', fuelData)
-
   const [updatedOutCompanyOptions, setUpdatedOutCompanyOptions] = useState(withEquipmentInfoOptions)
 
   useEffect(() => {
     if (isEditMode && fuelData) {
       // 원본 복사
       const newOptions = [...withEquipmentInfoOptions]
-      const processedIds = new Set<number>() // ✅ 이미 처리한 회사 id 추적용
+      const processedIds = new Set<number>() //  이미 처리한 회사 id 추적용
 
       fuelData.forEach((fuel: any) => {
         const companyId = fuel.outsourcingCompanyId
         const companyName = fuel.outsourcingCompanyName
         const isDeleted = fuel.deleted
 
-        if (!companyId || processedIds.has(companyId)) return // ✅ 중복 방지
+        if (!companyId || processedIds.has(companyId)) return //  중복 방지
         processedIds.add(companyId)
 
         const displayName = companyName + (isDeleted ? ' (삭제됨)' : '')
@@ -1098,6 +1098,136 @@ export default function DailyReportRegistrationView() {
   )
 
   const [driverOptionsByCompany, setDriverOptionsByCompany] = useState<Record<number, any[]>>({})
+
+  // 직영/계약직에서  이름 불러오기
+
+  // 계약직만 데이터 조회
+
+  const {
+    data: contractInfo,
+    fetchNextPage: contractNameFetchNextPage,
+    hasNextPage: contractNamehasNextPage,
+    isFetching: contractNameFetching,
+    isLoading: contractNameLoading,
+  } = useInfiniteQuery({
+    queryKey: ['contractInfo', selectedCompanyIds[selectId]],
+    queryFn: ({ pageParam = 0 }) =>
+      GetContractNameInfoService({
+        pageParam,
+        outsourcingCompanyId: selectedCompanyIds[selectId] || 0,
+        size: 100,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+    },
+    enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
+  })
+
+  useEffect(() => {
+    if (!contractInfo) return
+
+    const options = contractInfo.pages
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+        type: user.type,
+        previousDailyWage: user.previousDailyWage || user.dailyWage,
+        dailyWage: user.dailyWage,
+        isSeverancePayEligible: user.isSeverancePayEligible,
+      }))
+
+    setContarctNameOptionsByCompany((prev) => ({
+      ...prev,
+      [selectedCompanyIds[selectId]]: [
+        {
+          id: 0,
+          name: '선택',
+          type: '',
+          previousDailyWage: '',
+          dailyWage: '',
+          isSeverancePayEligible: false,
+        },
+        ...options,
+      ],
+    }))
+  }, [contractInfo, selectedCompanyIds, selectId])
+
+  // 상세페이지 데이터 (예: props나 query에서 가져온 값)
+  const ContractOutsourcings = contractData
+
+  // 1. 상세페이지 들어올 때 각 업체별 worker 데이터 API 호출
+  useEffect(() => {
+    if (!ContractOutsourcings.length) return
+
+    ContractOutsourcings.forEach(async (row) => {
+      const companyId = row.outsourcingCompanyId
+      const worker = row.laborId
+
+      console.log('here!', worker)
+
+      if (ContarctNameOptionsByCompany[companyId]) {
+        return
+      }
+
+      if (companyId === null) {
+        return
+      }
+
+      try {
+        const res = await GetContractNameInfoService({
+          pageParam: 0,
+          outsourcingCompanyId: companyId,
+          size: 200,
+        })
+
+        const options = res.data.content.map((user: any) => ({
+          id: user.id,
+          name: user.name,
+          type: user.type,
+          previousDailyWage: user.previousDailyWage || user.dailyWage,
+          dailyWage: user.dailyWage,
+          isSeverancePayEligible: user.isSeverancePayEligible,
+        }))
+
+        setContarctNameOptionsByCompany((prev) => {
+          const exists = options.some((opt: any) => opt.id === worker)
+
+          return {
+            ...prev,
+            [companyId]: [
+              {
+                id: 0,
+                name: '선택',
+                type: '',
+                previousDailyWage: '',
+                dailyWage: '',
+                isSeverancePayEligible: false,
+              },
+              ...options,
+              // 만약 선택된 worker가 목록에 없으면 추가
+              ...(worker && !exists
+                ? [
+                    {
+                      id: worker,
+                      name: '',
+                      type: '',
+                      previousDailyWage: '',
+                      dailyWage: '',
+                      isSeverancePayEligible: false,
+                    },
+                  ]
+                : []),
+            ],
+          }
+        })
+      } catch (err) {
+        console.error('업체별 인력 조회 실패', err)
+      }
+    })
+  }, [ContractOutsourcings])
 
   const {
     data: workerList,
@@ -2313,12 +2443,20 @@ export default function DailyReportRegistrationView() {
                           ) : (
                             <CommonSelect
                               fullWidth
-                              value={m.outsourcingCompanyId || -1}
+                              value={selectedCompanyIds[m.checkId] || m.outsourcingCompanyId || -1}
                               onChange={async (value) => {
                                 const selectedCompany = companyOptions.find(
                                   (opt) => opt.id === value,
                                 )
                                 if (!selectedCompany) return
+
+                                // 해당 row만 업데이트
+                                setSelectedCompanyIds((prev) => ({
+                                  ...prev,
+                                  [m.id]: selectedCompany.id,
+                                }))
+
+                                setSelectId(m.checkId)
 
                                 updateItemField(
                                   'directContracts',
@@ -2333,6 +2471,12 @@ export default function DailyReportRegistrationView() {
                                   'outsourcingCompanyName',
                                   selectedCompany.name,
                                 )
+
+                                // 해당 row 워커만 초기화
+                                setSelectContractIds((prev) => ({
+                                  ...prev,
+                                  [m.id]: 0,
+                                }))
                               }}
                               options={companyOptions}
                               onScrollToBottom={() => {
@@ -2362,14 +2506,15 @@ export default function DailyReportRegistrationView() {
                             />
                           ) : (
                             <CommonSelect
-                              value={m.laborId || 0}
+                              value={selectContractIds[m.id] || m.laborId || 0}
                               onChange={(value) => {
-                                // 선택된 옵션 찾기
-                                const selectedOption = contractNameInfoOptions.find(
-                                  (opt) => opt.id === value,
-                                )
+                                const selectedContractName = (
+                                  ContarctNameOptionsByCompany[m.outsourcingCompanyId] ?? []
+                                ).find((opt) => opt.id === value)
 
-                                if (selectedOption?.isSeverancePayEligible) {
+                                if (!selectedContractName) return
+
+                                if (selectedContractName?.isSeverancePayEligible) {
                                   showSnackbar(
                                     '해당 직원 근속일이 6개월에 도달했습니다. 퇴직금 발생에 주의하세요.',
                                     'error',
@@ -2377,14 +2522,19 @@ export default function DailyReportRegistrationView() {
                                 }
 
                                 updateItemField('directContracts', m.checkId, 'laborId', value)
+
                                 updateItemField(
                                   'directContracts',
                                   m.checkId,
                                   'previousPrice',
-                                  selectedOption?.previousDailyWage ?? 0, // 선택된 항목의 previousDailyWage 자동 입력
+                                  selectedContractName?.previousDailyWage ?? 0, // 선택된 항목의 previousDailyWage 자동 입력
                                 )
                               }}
-                              options={contractNameInfoOptions}
+                              options={
+                                ContarctNameOptionsByCompany[m.outsourcingCompanyId] ?? [
+                                  { id: 0, name: '선택' },
+                                ]
+                              }
                               onScrollToBottom={() => {
                                 if (contractNamehasNextPage && !contractNameFetching)
                                   contractNameFetchNextPage()

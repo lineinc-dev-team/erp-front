@@ -5,7 +5,6 @@ import {
   CompleteInfoData,
   CreatedailyReport,
   DailyListInfoService,
-  GetContractNameInfoService,
   GetEmployeeInfoService,
   GetWithEquipmentService,
   ModifyContractReport,
@@ -407,51 +406,6 @@ export function useDailyReport() {
     return [...defaultOptions, ...options]
   }, [employeeInfo])
 
-  // 계약직만 데이터 조회
-
-  const {
-    data: contractInfo,
-    fetchNextPage: contractNameFetchNextPage,
-    hasNextPage: contractNamehasNextPage,
-    isFetching: contractNameFetching,
-    isLoading: contractNameLoading,
-  } = useInfiniteQuery({
-    queryKey: ['contractInfo'],
-    queryFn: ({ pageParam = 0 }) => GetContractNameInfoService({ pageParam, size: 100 }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
-      const { sliceInfo } = lastPage.data
-      const nextPage = sliceInfo.page + 1
-      return sliceInfo.hasNext ? nextPage : undefined
-    },
-  })
-
-  const contractNameInfoOptions = useMemo(() => {
-    const defaultOptions = [
-      {
-        id: 0,
-        name: '선택',
-        type: '',
-        previousDailyWage: '',
-        dailyWage: '',
-        isSeverancePayEligible: false,
-      },
-    ]
-
-    const options = (contractInfo?.pages || [])
-      .flatMap((page) => page.data.content)
-      .map((user) => ({
-        id: user.id,
-        name: user.name,
-        type: user.type,
-        previousDailyWage: user.previousDailyWage || user.dailyWage,
-        dailyWage: user.dailyWage,
-        isSeverancePayEligible: user.isSeverancePayEligible,
-      }))
-
-    return [...defaultOptions, ...options]
-  }, [contractInfo])
-
   // 업체명의 인력 조회cp
 
   // // 회사 변경
@@ -496,12 +450,6 @@ export function useDailyReport() {
     employeeFetching,
     employeeLoading,
     // 계약직 이름
-
-    contractNameInfoOptions,
-    contractNameFetchNextPage,
-    contractNamehasNextPage,
-    contractNameFetching,
-    contractNameLoading,
 
     // 인력 정보 조회
 
