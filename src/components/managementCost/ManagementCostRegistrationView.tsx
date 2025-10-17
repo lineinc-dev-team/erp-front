@@ -180,7 +180,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     processName: '공정명',
     itemTypeDescription: '항목 내용',
     outsourcingCompanyName: '업체명',
-    vat: '단가',
+    vat: '부가세',
     supplyPrice: '공급가',
     total: '합계',
     account: '계정',
@@ -1062,7 +1062,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       />
                     </TableCell>
 
-                    {/* 부가세 */}
+                    {/* 공제항목 */}
                     <TableCell
                       align="center"
                       sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'nowrap' }}
@@ -1103,7 +1103,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       />
                     </TableCell>
 
-                    {/* 합계 */}
+                    {/* 단가에서 시작 */}
                     <TableCell align="right" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
                         size="small"
