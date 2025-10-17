@@ -111,6 +111,7 @@ export function TotalInput({ supplyPrice, vat }: TotalInputProps) {
       InputProps={{ readOnly: true }}
       variant="outlined"
       sx={textFieldStyle}
+      disabled
       inputProps={{
         style: { textAlign: 'right' },
       }}

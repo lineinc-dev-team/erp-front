@@ -386,7 +386,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         // if (!isOnSiteStock && !item.unitPrice) return '단가를 입력해주세요.'
 
         // 금액
-        if (!isOnSiteStock && !item.amount) return '공급가를 입력해주세요.'
+        // if (!isOnSiteStock && !item.amount) return '공급가를 입력해주세요.'
 
         // 구분
         if (!isScrap && !isOnSiteStock && item.category === '선택') return '구분을 선택해주세요.'
@@ -859,21 +859,21 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
                     공급가
-                    {form.type !== 'ON_SITE_STOCK' && <span className="text-red-500 ml-1">*</span>}
+                    {form.type !== 'ON_SITE_STOCK'}
                   </TableCell>
                   <TableCell
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
                     부가세 (체크 시 자동 계산)
-                    {form.type !== 'ON_SITE_STOCK' && <span className="text-red-500 ml-1">*</span>}
+                    {form.type !== 'ON_SITE_STOCK'}
                   </TableCell>
                   <TableCell
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
                     합계
-                    {form.type !== 'ON_SITE_STOCK' && <span className="text-red-500 ml-1">*</span>}
+                    {form.type !== 'ON_SITE_STOCK'}
                   </TableCell>
                   <TableCell
                     align="center"
@@ -1179,7 +1179,6 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                             style: { textAlign: 'right' },
                           }}
                           fullWidth
-                          disabled={m.isModifyType === false}
                         />
                       )}
                     </TableCell>
