@@ -1062,6 +1062,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       />
                     </TableCell>
 
+                    {/* 부가세 */}
                     <TableCell
                       align="center"
                       sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'nowrap' }}
@@ -1102,6 +1103,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       />
                     </TableCell>
 
+                    {/* 합계 */}
                     <TableCell align="right" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
                         size="small"
