@@ -63,6 +63,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     updateItemField,
     removeCheckedItems,
     reset,
+    resetType,
     setForm,
     updateMemo,
     setRepresentativeManager,
@@ -696,12 +697,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
   const [isOutsourcingFocused, setIsOutsourcingFocused] = useState(false)
 
-  // 유저 선택 시 처리
-  // const handleSelectOutsourcing = (selectedUser: any) => {
-  //   setField('CompanyName', selectedUser.name)
-  //   setField('CompanyId', selectedUser.id)
-  // }
-
   const debouncedOutsourcingKeyword = useDebouncedValue(form.CompanyName, 300)
 
   const {
@@ -1114,6 +1109,8 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
                     if (matched) {
                       setField('businessNumber', matched.businessNumber)
+                      setField('defaultDeductions', matched.defaultDeductionsCode)
+                      setField('defaultDeductionsDescription', matched.defaultDeductionsDescription)
                     } else {
                       setField('businessNumber', '')
                     }
@@ -1155,7 +1152,14 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                 <CommonSelect
                   className="text-2xl"
                   value={form.type || 'BASE'}
-                  onChange={(value) => setField('type', value)}
+                  onChange={(value) => {
+                    setField('type', value)
+                    resetType()
+
+                    if (value !== 'ETC') {
+                      setField('typeDescription', '')
+                    }
+                  }}
                   options={typeMethodOptions}
                   disabled={isEditMode}
                 />
@@ -1226,8 +1230,8 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
           </div>
 
           <div className="flex">
-            <label className="w-[119px] 2xl:w-[124px] text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              공제 항목 기본값 <span className="text-red-500 ml-1">*</span>
+            <label className="w-[119px] 2xl:w-[125px] text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+              공제 항목 기본값
             </label>
             <div className="flex border  border-gray-400 flex-wrap px-2 items-center gap-4 flex-1">
               {deduMethodOptions.map((opt) => (
@@ -1327,7 +1331,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
         </div>
       </div>
 
-      {/* 담당자 */}
       <div>
         <div className="flex justify-between items-center mt-10 mb-2">
           <span className="font-bold border-b-2 mb-4">담당자</span>

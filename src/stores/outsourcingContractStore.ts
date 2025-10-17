@@ -96,9 +96,11 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
     headManagers: [],
     checkedManagerIds: [],
     attachedFiles: [],
+    checkedAttachedFileIds: [],
+
     personManagers: [],
     checkedPersonIds: [],
-    checkedAttachedFileIds: [],
+
     contractManagers: [],
     checkedContractIds: [],
     articleManagers: [],
@@ -135,6 +137,22 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         checkedPersonIds: [],
         attachedFiles: [],
         checkedAttachedFileIds: [],
+        contractManagers: [],
+        checkedContractIds: [],
+        articleManagers: [],
+        checkedArticleIds: [],
+        equipmentManagers: [],
+        checkedEquipmentIds: [],
+      },
+    })),
+
+  resetType: () =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        personManagers: [],
+        checkedPersonIds: [],
+
         contractManagers: [],
         checkedContractIds: [],
         articleManagers: [],

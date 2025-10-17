@@ -499,7 +499,13 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                 <CommonSelect
                   className="text-2xl"
                   value={form.type || 'BASE'}
-                  onChange={(value) => setField('type', value)}
+                  onChange={(value) => {
+                    setField('type', value)
+
+                    if (value !== 'ETC') {
+                      setField('typeDescription', '')
+                    }
+                  }}
                   options={typeMethodOptions}
                   disabled={isEditMode}
                 />

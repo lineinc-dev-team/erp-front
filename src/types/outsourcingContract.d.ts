@@ -223,6 +223,8 @@ type OutsourcingContractFormStore = {
 
   reset: () => void
 
+  resetType: () => void
+
   // methods
   setField: <K extends keyof Omit<OutsourcingContractFormState, 'reset' | 'setField'>>(
     field: K,
