@@ -360,7 +360,34 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                               'wmv',
                               'dwg',
                             ]
-                          : ['pdf', 'hwp', 'png', 'jpg', 'ppt']
+                          : [
+                              'zip',
+                              'pdf',
+                              'txt',
+                              'rtf',
+                              'docx',
+                              'hwp',
+                              'xlsx',
+                              'csv',
+                              'ods',
+                              'pptx',
+                              'odp',
+                              'jpg',
+                              'jpeg',
+                              'png',
+                              'gif',
+                              'tif',
+                              'tiff',
+                              'bmp',
+                              '7z',
+                              'mp3',
+                              'wav',
+                              'mp4',
+                              'mov',
+                              'avi',
+                              'wmv',
+                              'dwg',
+                            ]
                       }
                       files={contract.files
                         .filter((f) => f.type === type)
