@@ -125,6 +125,8 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
           unitPrice: 0,
           isModifyType: true,
           amount: 0,
+          vat: 0,
+          total: 0,
           category: '선택',
           files: [],
           memo: '',
@@ -158,7 +160,6 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
               // 변경된 값 적용
               const updatedItem = { ...item, [field]: value }
 
-              // weight, count, unitPrice 변경 시 totalWeight, amount 자동 계산
               if (['weight', 'count', 'unitPrice'].includes(field)) {
                 // 고철 등 총 무게 직접 입력 타입이면 weight*count 계산 건너뛰기
                 const isDirectTotalWeight =
@@ -181,6 +182,18 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
                   const unitPrice = Number(updatedItem.unitPrice || 0)
                   updatedItem.amount = Math.round(totalWeight * unitPrice)
                 }
+              }
+
+              if (field === 'unitPrice') {
+                const amount = Number(updatedItem.amount) || 0
+
+                // 부가세 자동 계산 (예: 10%)
+                const vat = Math.floor(amount * 0.1)
+
+                updatedItem.vat = vat
+                updatedItem.total = amount + vat
+
+                console.log('단가 입력 → 공급가:', amount, '부가세:', vat, '합계:', amount + vat)
               }
 
               return updatedItem
@@ -265,6 +278,24 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
     return details.reduce((sum, item) => {
       const amount = Number(item.amount)
       return sum + (isNaN(amount) ? 0 : amount)
+    }, 0)
+  },
+
+  // 부가세 합산
+  getvatTotal: () => {
+    const { details } = get().form
+    return details.reduce((sum, item) => {
+      const vat = Number(item.vat)
+      return sum + (isNaN(vat) ? 0 : vat)
+    }, 0)
+  },
+
+  // 진짜 총 합
+  getRealTotal: () => {
+    const { details } = get().form
+    return details.reduce((sum, item) => {
+      const total = Number(item.total)
+      return sum + (isNaN(total) ? 0 : total)
     }, 0)
   },
 
@@ -355,6 +386,9 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
           totalWeight: item.totalWeight,
           unitPrice: item.unitPrice,
           amount: item.amount,
+          vat: item.vat,
+          total: item.total,
+
           category: item.category === '선택' ? null : item.category,
           fileUrl: file?.fileUrl || null,
           originalFileName: file?.originalFileName || null,

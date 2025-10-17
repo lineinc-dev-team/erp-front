@@ -86,6 +86,8 @@ export type MaterialItem = {
   totalWeight: number
   unitPrice: number
   amount: number
+  vat: number
+  total: number
   isModifyType?: boolean
   category: string
   createdAt?: Date | null
@@ -170,6 +172,8 @@ type SteelFormStore = {
   getTotalWeightAmount: () => number
   getUnitPriceAmount: () => number
   getAmountAmount: () => number
+  getvatTotal: () => number
+  getRealTotal: () => number
   //관리비 등록하기
 
   updateMemo: (id: number, newMemo: string) => void

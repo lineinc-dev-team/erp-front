@@ -39,6 +39,7 @@ import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 import CommonSelectByName from '../common/CommonSelectByName'
 import { steelTypeOptions } from '@/config/erp.confing'
 import CommonFileInput from '../common/FileInput'
+import { TotalInput, VatInput } from '@/utils/supplyVatTotalInput'
 
 export default function ManagementSteelRegistrationView({ isEditMode = false }) {
   const { showSnackbar } = useSnackbarStore()
@@ -60,6 +61,9 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     getTotalWeightAmount,
     getUnitPriceAmount,
     getAmountAmount,
+    getvatTotal,
+    getRealTotal,
+
     //관리비 등록하기
   } = useManagementSteelFormStore()
 
@@ -116,7 +120,9 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     standard: '규격',
     unitPrice: '단가',
     quantity: '수량',
-    supplyPrice: '공급가',
+    amount: '공급가',
+    vat: '부가세',
+    total: '합계',
     originalFileName: '파일 추가',
     usage: '용도',
   }
@@ -197,6 +203,8 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         totalWeight: c.totalWeight, // 총 무게(톤)
         unitPrice: c.unitPrice, // 단가
         amount: c.amount, // 금액
+        vat: c.vat,
+        total: c.total,
         category: c.category ?? null, // 구분 (자사자재/구매 등)
         outsourcingCompanyId: c.outsourcingCompany?.id ?? '', // 거래선
         outsourcingCompanyName: c.outsourcingCompany?.name ?? '', // 거래선
@@ -212,7 +220,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
             : [],
 
         memo: c.memo, // 비고
-        createdAt: getTodayDateString(client.createdAt),
+        createdAt: getTodayDateString(c.createdAt),
       }))
       setField('details', formattedDetails)
 
@@ -375,10 +383,10 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         if (!item.totalWeight) return '총 무게(톤)을 입력해주세요.'
 
         // 단가
-        if (!isOnSiteStock && !item.unitPrice) return '단가를 입력해주세요.'
+        // if (!isOnSiteStock && !item.unitPrice) return '단가를 입력해주세요.'
 
         // 금액
-        if (!isOnSiteStock && !item.amount) return '금액을 입력해주세요.'
+        if (!isOnSiteStock && !item.amount) return '공급가를 입력해주세요.'
 
         // 구분
         if (!isScrap && !isOnSiteStock && item.category === '선택') return '구분을 선택해주세요.'
@@ -844,13 +852,27 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
                     단가
+                    {form.type !== 'ON_SITE_STOCK'}
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                  >
+                    공급가
                     {form.type !== 'ON_SITE_STOCK' && <span className="text-red-500 ml-1">*</span>}
                   </TableCell>
                   <TableCell
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    금액
+                    부가세 (체크 시 자동 계산)
+                    {form.type !== 'ON_SITE_STOCK' && <span className="text-red-500 ml-1">*</span>}
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                  >
+                    합계
                     {form.type !== 'ON_SITE_STOCK' && <span className="text-red-500 ml-1">*</span>}
                   </TableCell>
                   <TableCell
@@ -1038,7 +1060,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         width: {
                           xs: 80, // 모바일 (smaller)
                           sm: 100, // 태블릿
-                          md: 140, // 데스크탑
+                          md: 200, // 데스크탑
                         },
                       }}
                     >
@@ -1071,12 +1093,87 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       {activeTab === 'ON_SITE_STOCK' ? (
                         '-'
                       ) : (
+                        // <TextField
+                        //   size="small"
+                        //   placeholder="숫자만"
+                        //   // value={m.unitPrice || 0}
+
+                        //   value={m.unitPrice ?? 0}
+                        //   onFocus={(e) => {
+                        //     // 포커스 시 현재 값이 0이면 제거
+                        //     if (String(e.target.value) === '0') {
+                        //       e.target.value = ''
+                        //     }
+                        //   }}
+                        //   onChange={(e) => {
+                        //     const formatted = e.target.value
+                        //     updateItemField('MaterialItem', m.checkId, 'unitPrice', formatted)
+                        //   }}
+                        //   inputProps={{
+                        //     style: { textAlign: 'right' },
+                        //   }}
+                        //   fullWidth
+                        //   disabled={m.isModifyType === false}
+                        // />
+
                         <TextField
                           size="small"
                           placeholder="숫자만"
-                          value={m.unitPrice || ''}
+                          value={
+                            m.unitPrice !== undefined && m.unitPrice !== null
+                              ? Number(m.unitPrice).toLocaleString(undefined, {
+                                  minimumFractionDigits: 0,
+                                  maximumFractionDigits: 4, // 소수점 최대 4자리까지 표시
+                                })
+                              : 0
+                          }
+                          onFocus={(e) => {
+                            // 포커스 시 0이면 제거
+                            if (e.target.value === '0') {
+                              e.target.value = ''
+                            }
+                          }}
                           onChange={(e) => {
-                            updateItemField('MaterialItem', m.checkId, 'unitPrice', e.target.value)
+                            let inputValue = e.target.value
+
+                            // 입력 허용 문자: 숫자, 소수점, 마이너스
+                            inputValue = inputValue.replace(/[^0-9.-]/g, '')
+
+                            //  마이너스는 맨 앞에만 허용
+                            if (inputValue.indexOf('-') > 0) {
+                              inputValue = '-' + inputValue.replace(/-/g, '')
+                            }
+
+                            //  소수점은 한 번만 허용
+                            const parts = inputValue.split('.')
+                            if (parts.length > 2) {
+                              inputValue = parts[0] + '.' + parts.slice(1).join('')
+                            }
+
+                            //  표시용 포맷 (콤마 추가)
+                            let displayValue = inputValue
+                            const num = parseFloat(inputValue)
+                            if (!isNaN(num)) {
+                              const [intPart, decPart] = inputValue.split('.')
+                              displayValue =
+                                Number(intPart).toLocaleString() +
+                                (decPart !== undefined ? '.' + decPart : '')
+                            }
+
+                            //  화면 표시용 값 업데이트
+                            e.target.value = displayValue
+
+                            //  실제 store에는 숫자(float) 저장 (입력 중 .만 있는 경우 제외)
+                            const numericValue =
+                              inputValue === '-' || inputValue === '.' || inputValue === '-.'
+                                ? 0
+                                : parseFloat(inputValue)
+                            updateItemField(
+                              'MaterialItem',
+                              m.checkId,
+                              'unitPrice',
+                              isNaN(numericValue) ? 0 : numericValue,
+                            )
                           }}
                           inputProps={{
                             style: { textAlign: 'right' },
@@ -1087,7 +1184,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       )}
                     </TableCell>
 
-                    {/* 금액 */}
+                    {/* 공급가 */}
                     <TableCell
                       align="center"
                       sx={{
@@ -1103,13 +1200,85 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       {activeTab === 'ON_SITE_STOCK' ? (
                         '-'
                       ) : (
+                        // <TextField
+                        //   size="small"
+                        //   placeholder="숫자만"
+                        //   value={m.amount || 0}
+                        //   onChange={(e) => {
+                        //     const formatted = unformatNumber(e.target.value)
+                        //     updateItemField('MaterialItem', m.checkId, 'amount', formatted)
+                        //   }}
+                        //   inputProps={{
+                        //     style: { textAlign: 'right' },
+                        //   }}
+                        //   fullWidth
+                        //   disabled={
+                        //     m.isModifyType === false ||
+                        //     form.type === 'INCOMING' ||
+                        //     form.type === 'OUTGOING' ||
+                        //     form.type === 'ON_SITE_STOCK'
+                        //   }
+                        // />
+
                         <TextField
                           size="small"
                           placeholder="숫자만"
-                          value={m.amount || 0}
+                          value={
+                            m.amount !== undefined && m.amount !== null
+                              ? Number(m.amount).toLocaleString(undefined, {
+                                  minimumFractionDigits: 0,
+                                  maximumFractionDigits: 4, // 소수점 최대 4자리까지 표시
+                                })
+                              : 0
+                          }
+                          onFocus={(e) => {
+                            // 포커스 시 0이면 제거
+                            if (e.target.value === '0') {
+                              e.target.value = ''
+                            }
+                          }}
                           onChange={(e) => {
-                            const formatted = unformatNumber(e.target.value)
-                            updateItemField('MaterialItem', m.checkId, 'amount', formatted)
+                            let inputValue = e.target.value
+
+                            // ✅ 입력 허용 문자: 숫자, 소수점, 마이너스
+                            inputValue = inputValue.replace(/[^0-9.-]/g, '')
+
+                            // ✅ 마이너스는 맨 앞에만 허용
+                            if (inputValue.indexOf('-') > 0) {
+                              inputValue = '-' + inputValue.replace(/-/g, '')
+                            }
+
+                            // ✅ 소수점은 한 번만 허용
+                            const parts = inputValue.split('.')
+                            if (parts.length > 2) {
+                              inputValue = parts[0] + '.' + parts.slice(1).join('')
+                            }
+
+                            // ✅ 표시용 포맷 (콤마 추가)
+                            let displayValue = inputValue
+                            const num = parseFloat(inputValue)
+                            if (!isNaN(num)) {
+                              const [intPart, decPart] = inputValue.split('.')
+                              displayValue =
+                                Number(intPart).toLocaleString() +
+                                (decPart !== undefined ? '.' + decPart : '')
+                            }
+
+                            // ✅ 화면 표시용 값 업데이트
+                            e.target.value = displayValue
+
+                            // ✅ 실제 store에는 숫자(float) 저장
+                            const numericValue =
+                              inputValue === '-' || inputValue === '.' || inputValue === '-.'
+                                ? 0
+                                : parseFloat(inputValue)
+
+                            updateItemField(
+                              'MaterialItem',
+                              m.checkId,
+                              'amount',
+                              isNaN(numericValue) ? 0 : numericValue,
+                            )
                           }}
                           inputProps={{
                             style: { textAlign: 'right' },
@@ -1122,6 +1291,57 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                             form.type === 'ON_SITE_STOCK'
                           }
                         />
+                      )}
+                    </TableCell>
+
+                    {/* 부가세 */}
+                    <TableCell
+                      align="center"
+                      sx={{
+                        border: '1px solid #9CA3AF',
+                        whiteSpace: 'nowrap',
+                        width: {
+                          xs: 80, // 모바일 (smaller)
+                          sm: 200, // 태블릿
+                          md: 400, // 데스크탑
+                        },
+                      }}
+                    >
+                      {activeTab === 'ON_SITE_STOCK' ? (
+                        '-'
+                      ) : (
+                        <VatInput
+                          supplyPrice={m.amount}
+                          value={m.vat}
+                          onChange={(vat) => {
+                            // 최신 supplyPrice + 입력된 vat 로 total 계산
+                            const total = (Number(m.amount) || 0) + (Number(vat) || 0)
+
+                            updateItemField('MaterialItem', m.checkId, 'vat', vat)
+                            updateItemField('MaterialItem', m.checkId, 'total', total)
+                          }}
+                          enableManual={true}
+                        />
+                      )}
+                    </TableCell>
+
+                    {/* 합계 */}
+                    <TableCell
+                      align="center"
+                      sx={{
+                        border: '1px solid #9CA3AF',
+                        whiteSpace: 'nowrap',
+                        width: {
+                          xs: 80, // 모바일 (smaller)
+                          sm: 120, // 태블릿
+                          md: 160, // 데스크탑
+                        },
+                      }}
+                    >
+                      {activeTab === 'ON_SITE_STOCK' ? (
+                        '-'
+                      ) : (
+                        <TotalInput supplyPrice={m.amount} vat={m.vat} />
                       )}
                     </TableCell>
 
@@ -1147,6 +1367,25 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
 
                     {/* 거래선 */}
                     {activeTab !== 'ON_SITE_STOCK' && (
+                      // <TextField
+                      //   size="small"
+                      //   placeholder="숫자만"
+                      //   value={m.total || 0}
+                      //   onChange={(e) => {
+                      //     const formatted = unformatNumber(e.target.value)
+                      //     updateItemField('MaterialItem', m.checkId, 'total', formatted)
+                      //   }}
+                      //   inputProps={{
+                      //     style: { textAlign: 'right' },
+                      //   }}
+                      //   fullWidth
+                      //   disabled={
+                      //     m.isModifyType === false ||
+                      //     form.type === 'INCOMING' ||
+                      //     form.type === 'OUTGOING' ||
+                      //     form.type === 'ON_SITE_STOCK'
+                      //   }
+                      // />
                       <TableCell
                         align="center"
                         sx={{
@@ -1155,7 +1394,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           width: {
                             xs: 100, // 모바일 (smaller)
                             sm: 160, // 태블릿
-                            md: 200, // 데스크탑
+                            md: 400, // 데스크탑
                           },
                         }}
                       >
@@ -1203,8 +1442,8 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         whiteSpace: 'nowrap',
                         width: {
                           xs: 80, // 모바일 (smaller)
-                          sm: 120, // 태블릿
-                          md: 160, // 데스크탑
+                          sm: 400, // 태블릿
+                          md: 260, // 데스크탑
                         },
                       }}
                     >
@@ -1217,7 +1456,17 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     </TableCell>
 
                     {/* 증빙 */}
-                    <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                    <TableCell
+                      align="center"
+                      sx={{
+                        border: '1px solid #9CA3AF',
+                        width: {
+                          xs: 80, // 모바일 (smaller)
+                          sm: 120, // 태블릿
+                          md: 160, // 데스크탑
+                        },
+                      }}
+                    >
                       <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
                         <CommonFileInput
                           acceptedExtensions={[
@@ -1315,6 +1564,18 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
                   >
                     {getAmountAmount().toLocaleString()}
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  >
+                    {getvatTotal().toLocaleString()}
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  >
+                    {getRealTotal().toLocaleString()}
                   </TableCell>
                   <TableCell
                     colSpan={5}

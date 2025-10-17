@@ -27,7 +27,7 @@ export function useManagementSteel() {
     onSuccess: () => {
       showSnackbar('강재관리가 등록 되었습니다.', 'success')
       // 초기화 로직
-      queryClient.invalidateQueries({ queryKey: ['SteelInfo'] })
+      queryClient.invalidateQueries({ queryKey: ['steelInfo'] })
       setSaved(true)
       reset()
       router.push('/managementSteel')
