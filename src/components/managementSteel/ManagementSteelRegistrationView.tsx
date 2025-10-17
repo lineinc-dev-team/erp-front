@@ -22,7 +22,10 @@ import { useParams } from 'next/navigation'
 import { useManagementSteelFormStore } from '@/stores/managementSteelStore'
 import { useManagementSteel } from '@/hooks/useManagementSteel'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { SteelDetailService } from '@/services/managementSteel/managementSteelRegistrationService'
+import {
+  SteelDetailExcelDownload,
+  SteelDetailService,
+} from '@/services/managementSteel/managementSteelRegistrationService'
 import { ManagementSteelFormState } from '@/types/managementSteel'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
@@ -40,6 +43,9 @@ import CommonSelectByName from '../common/CommonSelectByName'
 import { steelTypeOptions } from '@/config/erp.confing'
 import CommonFileInput from '../common/FileInput'
 import { TotalInput, VatInput } from '@/utils/supplyVatTotalInput'
+import CommonDatePicker from '../common/DatePicker'
+import { myInfoProps } from '@/types/user'
+import { useMenuPermission } from '../common/MenuPermissionView'
 
 export default function ManagementSteelRegistrationView({ isEditMode = false }) {
   const { showSnackbar } = useSnackbarStore()
@@ -220,6 +226,9 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
             : [],
 
         memo: c.memo, // 비고
+        incomingDate: new Date(c.incomingDate),
+        outgoingDate: new Date(c.outgoingDate),
+        salesDate: new Date(c.salesDate),
         createdAt: getTodayDateString(c.createdAt),
       }))
       setField('details', formattedDetails)
@@ -477,6 +486,33 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     (data?.data?.outgoingPurchaseAmount || 0) +
     (data?.data?.outgoingRentalAmount || 0)
 
+  // 엑셀다운ㄹ도ㅡ
+
+  const handleDownloadExcel = (id: number) => {
+    SteelDetailExcelDownload(id)
+  }
+
+  // 권한에 따른 버튼 활성화
+
+  const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
+
+  useEffect(() => {
+    const headerData = sessionStorage.getItem('myInfo')
+
+    if (headerData) {
+      setMyInfo(JSON.parse(headerData))
+    }
+  }, [])
+
+  const roleId = Number(myInfo?.roles?.[0]?.id)
+
+  const rolePermissionStatus = myInfo?.roles?.[0]?.deleted
+
+  const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
+
+  // "계정 관리" 메뉴에 대한 권한
+  const { hasExcelDownload } = useMenuPermission(roleId, '강재수불부 관리', enabled)
+
   return (
     <>
       <div>
@@ -584,29 +620,48 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         </div>
       </div>
 
-      <div className="flex border-b border-gray-400 mt-10 mb-4">
-        {TAB_CONFIG.map((tab) => {
-          const isActive = activeTab === tab.value
-          return (
-            <Button
-              key={tab.label}
-              onClick={() => handleTabClick(tab.value)}
-              sx={{
-                borderRadius: '10px 10px 0 0',
-                borderBottom: '1px solid #161616',
-                backgroundColor: isActive ? '#ffffff' : '#e0e0e0',
-                color: isActive ? '#000000' : '#9e9e9e',
-                border: '1px solid #7a7a7a',
-                fontWeight: isActive ? 'bold' : 'normal',
-                padding: '6px 16px',
-                minWidth: '120px',
-                textTransform: 'none',
-              }}
-            >
-              {tab.label}
-            </Button>
-          )
-        })}
+      <div className="flex border-b justify-between border-gray-400 mt-10 mb-4">
+        <div>
+          {TAB_CONFIG.map((tab) => {
+            const isActive = activeTab === tab.value
+            return (
+              <Button
+                key={tab.label}
+                onClick={() => handleTabClick(tab.value)}
+                sx={{
+                  borderRadius: '10px 10px 0 0',
+                  borderBottom: '1px solid #161616',
+                  backgroundColor: isActive ? '#ffffff' : '#e0e0e0',
+                  color: isActive ? '#000000' : '#9e9e9e',
+                  border: '1px solid #7a7a7a',
+                  fontWeight: isActive ? 'bold' : 'normal',
+                  padding: '6px 16px',
+                  minWidth: '120px',
+                  textTransform: 'none',
+                }}
+              >
+                {tab.label}
+              </Button>
+            )
+          })}
+        </div>
+
+        <CommonButton
+          label="엑셀 다운로드"
+          disabled={!hasExcelDownload}
+          variant="primary"
+          onClick={() => handleDownloadExcel(steelDetailId)}
+          className="px-3"
+        />
+
+        {/* <ExcelModal open={modalOpen} onClose={() => setModalOpen(false)} /> */}
+        {/* <ExcelModal
+                       open={modalOpen}
+                       onClose={() => setModalOpen(false)}
+                       title="현장 관리 - 엑셀 항목 선택"
+                       fieldMap={fieldMapArray}
+                       onDownload={handleDownloadExcel}
+                     /> */}
       </div>
 
       {form.type === '' && (
@@ -801,11 +856,29 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
               />
             </div>
           </div>
-          <TableContainer component={Paper} sx={{ height: '400px' }}>
-            <Table size="small" sx={{ borderCollapse: 'collapse' }}>
+          <TableContainer
+            component={Paper}
+            sx={{
+              height: '400px',
+              overflowX: 'auto', // 가로 스크롤 허용
+              overflowY: 'auto',
+            }}
+          >
+            <Table
+              size="small"
+              sx={{
+                borderCollapse: 'collapse',
+                width: 'max-content', // 중요!
+                minWidth: 1855,
+              }}
+            >
               <TableHead>
                 <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
-                  <TableCell rowSpan={2} padding="checkbox" sx={{ border: '1px solid #9CA3AF' }}>
+                  <TableCell
+                    rowSpan={2}
+                    padding="checkbox"
+                    sx={{ border: '1px solid #9CA3AF', width: 50 }}
+                  >
                     <Checkbox
                       checked={isContractAllChecked}
                       indeterminate={contractCheckIds.length > 0 && !isContractAllChecked}
@@ -813,71 +886,96 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       sx={{ color: 'black' }}
                     />
                   </TableCell>
+                  {(activeTab === 'INCOMING' && (
+                    <TableCell
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
+                    >
+                      입고일 <span className="text-red-500 ml-1">*</span>
+                    </TableCell>
+                  )) ||
+                    (activeTab === 'OUTGOING' && (
+                      <TableCell
+                        align="center"
+                        sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
+                      >
+                        출고일 <span className="text-red-500 ml-1">*</span>
+                      </TableCell>
+                    )) ||
+                    (activeTab === 'SCRAP' && (
+                      <TableCell
+                        align="center"
+                        sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
+                      >
+                        판매일 <span className="text-red-500 ml-1">*</span>
+                      </TableCell>
+                    )) ||
+                    (activeTab === 'ON_SITE_STOCK' && null)}
 
                   <TableCell
                     align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
                   >
                     품명 <span className="text-red-500 ml-1">*</span>
                   </TableCell>
 
                   <TableCell
                     align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
                   >
                     규격
                     {form.type !== 'SCRAP' && <span className="text-red-500 ml-1">*</span>}
                   </TableCell>
                   <TableCell
                     align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
                   >
                     무게(톤)
                     {form.type !== 'SCRAP' && <span className="text-red-500 ml-1">*</span>}
                   </TableCell>
                   <TableCell
                     align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
                   >
                     본{form.type !== 'SCRAP' && <span className="text-red-500 ml-1">*</span>}
                   </TableCell>
                   <TableCell
                     align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
                   >
                     총 무게(톤)<span className="text-red-500 ml-1">*</span>
                   </TableCell>
                   <TableCell
                     align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
                   >
                     단가
                     {form.type !== 'ON_SITE_STOCK'}
                   </TableCell>
                   <TableCell
                     align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
                   >
                     공급가
                     {form.type !== 'ON_SITE_STOCK'}
                   </TableCell>
                   <TableCell
                     align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
                   >
                     부가세 (체크 시 자동 계산)
                     {form.type !== 'ON_SITE_STOCK'}
                   </TableCell>
                   <TableCell
                     align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
                   >
                     합계
                     {form.type !== 'ON_SITE_STOCK'}
                   </TableCell>
                   <TableCell
                     align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
                   >
                     구분
                     {form.type !== 'SCRAP' && form.type !== 'ON_SITE_STOCK' && (
@@ -889,7 +987,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                   {form.type !== 'ON_SITE_STOCK' && (
                     <TableCell
                       align="center"
-                      sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                      sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
                     >
                       거래선
                       <span className="text-red-500 ml-1">*</span>
@@ -898,7 +996,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
 
                   <TableCell
                     align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
                   >
                     등록
                   </TableCell>
@@ -942,6 +1040,45 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         }
                       />
                     </TableCell>
+
+                    {/* 해당 탭에 날짜  */}
+
+                    {activeTab !== 'ON_SITE_STOCK' && (
+                      <TableCell
+                        align="center"
+                        sx={{
+                          border: '1px solid #9CA3AF',
+                          whiteSpace: 'nowrap',
+                          width: {
+                            xs: 80, // 모바일
+                            sm: 100, // 태블릿
+                            md: 140, // 데스크탑
+                          },
+                        }}
+                      >
+                        <CommonDatePicker
+                          value={
+                            activeTab === 'INCOMING'
+                              ? m.incomingDate ?? null
+                              : activeTab === 'OUTGOING'
+                              ? m.outgoingDate ?? null
+                              : activeTab === 'SCRAP'
+                              ? m.salesDate ?? null
+                              : null
+                          }
+                          onChange={(value) => {
+                            if (activeTab === 'INCOMING') {
+                              updateItemField('MaterialItem', m.checkId, 'incomingDate', value)
+                            } else if (activeTab === 'OUTGOING') {
+                              updateItemField('MaterialItem', m.checkId, 'outgoingDate', value)
+                            } else if (activeTab === 'SCRAP') {
+                              updateItemField('MaterialItem', m.checkId, 'salesDate', value)
+                            }
+                          }}
+                          disabled={m.isModifyType === false}
+                        />
+                      </TableCell>
+                    )}
 
                     <TableCell
                       align="center"
@@ -1459,11 +1596,6 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       align="center"
                       sx={{
                         border: '1px solid #9CA3AF',
-                        width: {
-                          xs: 80, // 모바일 (smaller)
-                          sm: 120, // 태블릿
-                          md: 160, // 데스크탑
-                        },
                       }}
                     >
                       <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
@@ -1494,11 +1626,6 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       sx={{
                         border: '1px solid #9CA3AF',
                         whiteSpace: 'nowrap',
-                        width: {
-                          xs: 80, // 모바일 (smaller)
-                          sm: 120, // 태블릿
-                          md: 160, // 데스크탑
-                        },
                       }}
                     >
                       <TextField
@@ -1516,7 +1643,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
 
                 <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
                   <TableCell
-                    colSpan={3}
+                    colSpan={activeTab === 'ON_SITE_STOCK' ? 3 : 4}
                     align="right"
                     sx={{
                       border: '1px solid #9CA3AF',

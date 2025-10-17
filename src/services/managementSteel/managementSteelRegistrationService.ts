@@ -279,3 +279,39 @@ export async function SteelInfoHistoryService(
   const data = await resData.json()
   return data
 }
+
+//엑셀 다운로드
+
+export async function SteelDetailExcelDownload(id: number) {
+  // if (fields && fields.length > 0) {
+  //   queryParams.append('fields', fields.join(','))
+  // }
+
+  const res = await fetch(`${API.STEELv2}/${id}/download`, {
+    method: 'GET',
+    // headers: {
+    //   Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    // },
+
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
+  }
+
+  const blob = await res.blob()
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = '강재수불부 상세 목록.xlsx'
+  a.click()
+  window.URL.revokeObjectURL(url)
+
+  return res.status
+}

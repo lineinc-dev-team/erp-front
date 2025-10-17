@@ -4,6 +4,7 @@ import {
   SteelFormStore,
   SteelSearchState,
 } from '@/types/managementSteel'
+import { getTodayDateString } from '@/utils/formatters'
 import { create } from 'zustand'
 
 export const useSteelSearchStore = create<{ search: SteelSearchState }>((set) => ({
@@ -129,6 +130,9 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
           total: 0,
           category: '선택',
           files: [],
+          incomingDate: null,
+          outgoingDate: null,
+          salesDate: null,
           memo: '',
         }
         return {
@@ -393,6 +397,9 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
           fileUrl: file?.fileUrl || null,
           originalFileName: file?.originalFileName || null,
           memo: item.memo,
+          incomingDate: getTodayDateString(item.incomingDate),
+          outgoingDate: getTodayDateString(item.outgoingDate),
+          salesDate: getTodayDateString(item.salesDate),
         }
       }),
 

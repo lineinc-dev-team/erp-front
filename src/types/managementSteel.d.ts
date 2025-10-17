@@ -94,6 +94,9 @@ export type MaterialItem = {
   fileUrl?: string
   originalFileName?: string
   files: FileUploadInfo[]
+  incomingDate: Date | null
+  outgoingDate: Date | null
+  salesDate: Date | null
   memo
 }
 
