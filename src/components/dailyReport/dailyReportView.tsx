@@ -27,6 +27,7 @@ import CommonDatePicker from '../common/DatePicker'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
+import { useRouter } from 'next/navigation'
 
 export default function DailyReportView() {
   const openTab = useTabOpener()
@@ -55,6 +56,9 @@ export default function DailyReportView() {
   const updateClientList = DailyList.map((item: any) => {
     return {
       ...item,
+      siteId: item.site?.id,
+      processId: item.siteProcess?.id,
+
       site: item.site?.name || '-',
       employeeWorkQuantitySum: `${item.employeeWorkQuantitySum || 0} / ${
         item.employeeEvidenceSubmitted ? 'Y' : 'N'
@@ -88,6 +92,8 @@ export default function DailyReportView() {
 
   const { setSelectedIds } = useAccountStore()
 
+  const router = useRouter()
+
   // 그리도 라우팅 로직!
   const enhancedColumns = DailyColumnList.map((col): GridColDef => {
     if (col.field === 'memo') {
@@ -106,6 +112,28 @@ export default function DailyReportView() {
                 {text.length > 10 ? `${text.slice(0, 10)}...` : text}
               </span>
             </Tooltip>
+          )
+        },
+      }
+    }
+
+    if (col.field === 'status') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 1,
+        renderCell: (params: GridRenderCellParams) => {
+          const value = params.value as string
+          return (
+            <span
+              style={{
+                color: value === 'N' ? 'red' : 'inherit',
+                fontWeight: value === 'N' ? 'bold' : 'normal',
+              }}
+            >
+              {value}
+            </span>
           )
         },
       }
@@ -149,35 +177,48 @@ export default function DailyReportView() {
         },
       }
     }
-    // if (col.field === 'reportDate') {
-    //   return {
-    //     ...col,
-    //     headerAlign: 'center',
-    //     align: 'center',
-    //     flex: 1,
-    //     cellClassName: 'no-hover-bg', // 커스텀 클래스 지정
-    //     renderCell: (params: GridRenderCellParams) => {
-    //       const clientId = params.row.id
+    if (col.field === 'reportDate') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        flex: 1,
+        cellClassName: 'no-hover-bg', // 커스텀 클래스 지정
+        renderCell: (params: GridRenderCellParams) => {
+          const clientReportDate = params.row.reportDate
+          const clientReportSiteId = params.row.siteId
+          const clientProcessId = params.row.processId
 
-    //       const handleClick = () => {
-    //         if (hasModify) {
-    //           router.push(`/dailyReport/registration/${clientId}`)
-    //         }
-    //       }
+          console.log('clientIdclientId', params.row)
 
-    //       return (
-    //         <div
-    //           onClick={handleClick}
-    //           className={`flex justify-center items-center ${
-    //             hasModify && 'cursor-pointer text-black-500 font-bold'
-    //           }`}
-    //         >
-    //           <span>{params.value}</span>
-    //         </div>
-    //       )
-    //     },
-    //   }
-    // }
+          const handleClick = () => {
+            if (hasModify) {
+              const queryString = new URLSearchParams({
+                date: clientReportDate,
+                site: clientReportSiteId,
+                process: clientProcessId,
+              }).toString()
+
+              router.push(`/dailyReport/registration?${queryString}`)
+            }
+          }
+
+          return (
+            <div
+              onClick={handleClick}
+              className={`flex justify-center items-center ${
+                hasModify
+                  ? 'cursor-pointer text-orange-500 font-bold'
+                  : 'cursor-not-allowed text-gray-400'
+              }`}
+              style={!hasModify ? { pointerEvents: 'none' } : {}}
+            >
+              <span>{params.value}</span>
+            </div>
+          )
+        },
+      }
+    }
 
     if (col.field === 'no') {
       return {
@@ -243,7 +284,7 @@ export default function DailyReportView() {
   const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
 
   // "계정 관리" 메뉴에 대한 권한
-  const { hasCreate } = useMenuPermission(roleId, '노무 관리', enabled)
+  const { hasCreate, hasModify } = useMenuPermission(roleId, '출역일보', enabled)
 
   return (
     <>
@@ -487,9 +528,10 @@ export default function DailyReportView() {
           disableColumnMenu
           hideFooterPagination
           getRowHeight={() => 'auto'}
-          getRowClassName={(params) =>
-            params.row.isSeverancePayEligible === 'Y' ? 'severance-row' : ''
-          }
+          getRowClassName={(params) => {
+            if (params.row.isSeverancePayEligible === 'Y') return 'severance-row'
+            return ''
+          }}
           sx={{
             '& .MuiDataGrid-row:hover': {
               backgroundColor: 'inherit !important', // hover 효과 제거
