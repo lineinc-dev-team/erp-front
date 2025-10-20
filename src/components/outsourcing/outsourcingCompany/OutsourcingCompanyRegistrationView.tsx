@@ -660,6 +660,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
               />
             </div>
           </div>
+
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               계좌정보 <span className="text-red-500 ml-1">*</span>

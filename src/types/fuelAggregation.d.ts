@@ -113,6 +113,10 @@ export type FuelInfo = {
   initialDateAt: string
   weather: string
 
+  gasolinePrice: number
+  dieselPrice: number
+  ureaPrice: number
+
   fuelInfos: fuelDetailItem[]
   checkedFuelItemIds: number[]
 

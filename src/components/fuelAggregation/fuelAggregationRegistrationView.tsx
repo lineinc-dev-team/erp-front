@@ -43,6 +43,7 @@ import { HistoryItem } from '@/types/ordering'
 import CommonFileInput from '../common/FileInput'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
+import AmountInput from '../common/AmountInput'
 // import { useEffect } from 'react'
 // import { AttachedFile, DetailItem } from '@/types/managementSteel'
 
@@ -127,6 +128,9 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     fuelAmount: '주유량',
     memo: '비고',
     originalFileName: '파일 이름',
+    gasolinePrice: '휘발유',
+    dieselPrice: '경유',
+    ureaPrice: '요소수',
   }
 
   const {
@@ -257,6 +261,10 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
       // 각 필드에 값 세팅
       setField('siteId', client.site?.id ?? '')
       setField('siteProcessId', client.process?.id ?? '')
+
+      setField('gasolinePrice', client.gasolinePrice ?? 0)
+      setField('dieselPrice', client.dieselPrice ?? 0)
+      setField('ureaPrice', client.ureaPrice ?? 0)
 
       setField('siteName', client.site?.name ?? '')
       setField('siteProcessName', client.process?.name ?? '')
@@ -841,6 +849,53 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                 onChange={(value) => setField('weather', value)}
                 options={WeatherTypeMethodOptions}
                 disabled
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+              휘발유
+            </label>
+            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
+              <AmountInput
+                value={formatNumber(form.gasolinePrice) ?? ''}
+                onChange={(val) => {
+                  const numericValue = unformatNumber(val)
+                  setField('gasolinePrice', numericValue)
+                }}
+                className=" flex-1"
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+              경유
+            </label>
+            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
+              <AmountInput
+                value={formatNumber(form.dieselPrice) ?? ''}
+                onChange={(val) => {
+                  const numericValue = unformatNumber(val)
+                  setField('dieselPrice', numericValue)
+                }}
+                className=" flex-1"
+              />
+            </div>
+          </div>
+          <div className="flex ">
+            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+              요소수
+            </label>
+            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
+              <AmountInput
+                value={formatNumber(form.ureaPrice) ?? ''}
+                onChange={(val) => {
+                  const numericValue = unformatNumber(val)
+                  setField('ureaPrice', numericValue)
+                }}
+                className=" flex-1"
               />
             </div>
           </div>

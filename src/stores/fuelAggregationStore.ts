@@ -62,6 +62,9 @@ export const useFuelFormStore = create<FuelFormStore>((set, get) => ({
     date: null,
     initialDateAt: '',
     weather: 'BASE',
+    gasolinePrice: 0,
+    dieselPrice: 0,
+    ureaPrice: 0,
     fuelInfos: [],
     checkedFuelItemIds: [],
 
@@ -78,6 +81,9 @@ export const useFuelFormStore = create<FuelFormStore>((set, get) => ({
         date: null,
         initialDateAt: '',
         weather: 'BASE',
+        gasolinePrice: 0,
+        dieselPrice: 0,
+        ureaPrice: 0,
         fuelInfos: [],
         checkedFuelItemIds: [],
 
