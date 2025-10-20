@@ -1247,9 +1247,11 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
             label="삭제"
             variant="danger"
             onClick={() => {
-              MaterialDeleteMutation.mutate({
-                materialManagementIds: [materialDetailId],
-              })
+              if (window.confirm('정말 삭제하시겠습니까?')) {
+                MaterialDeleteMutation.mutate({
+                  materialManagementIds: [materialDetailId],
+                })
+              }
             }}
             className="px-4 font-bold"
           />

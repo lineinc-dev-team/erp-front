@@ -947,6 +947,16 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       showSnackbar(errorMsg, 'warning')
       return
     }
+    if (form.type === 'EQUIPMENT') {
+      if (!equipmentAddAttachedFiles || equipmentAddAttachedFiles.length === 0) {
+        showSnackbar('장비 항목을 1개 이상 입력해주세요.', 'warning')
+        return
+      }
+      if (!articleAddAttachedFiles || articleAddAttachedFiles.length === 0) {
+        showSnackbar('기사 항목을 1개 이상 입력해주세요.', 'warning')
+        return
+      }
+    }
 
     if (isEditMode) {
       if (window.confirm('수정하시겠습니까?')) {
