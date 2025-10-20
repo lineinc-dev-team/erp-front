@@ -916,7 +916,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
               />
 
               <CommonInput
-                placeholder="텍스트 입력"
+                placeholder="계좌번호 입력"
                 value={form.outsourcingCompanyInfo?.accountNumber ?? ''}
                 onChange={(value) =>
                   setField('outsourcingCompanyInfo', {

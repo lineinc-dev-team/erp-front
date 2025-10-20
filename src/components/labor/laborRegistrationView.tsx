@@ -701,6 +701,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
             </label>
             <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
               <div className="flex gap-2 items-center">
+                {/* 작업 구분 선택 */}
                 <CommonSelect
                   className="text-2xl"
                   value={form.workType || 'BASE'}
@@ -708,11 +709,13 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                   options={WorkTypeMethodOptions}
                 />
 
+                {/* 작업 구분 설명 입력 */}
                 <CommonInput
                   value={form.workTypeDescription ?? ''}
                   onChange={(value) => setField('workTypeDescription', value)}
-                  className=" flex-1"
-                  placeholder="텍스트 입력"
+                  className="flex-1"
+                  placeholder={form.workType === 'ETC' ? '텍스트 입력' : ''}
+                  disabled={form.workType !== 'ETC'}
                 />
               </div>
             </div>

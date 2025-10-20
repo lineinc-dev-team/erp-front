@@ -2305,6 +2305,10 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                                     e.target.value,
                                   )
                                 }
+                                disabled={item.typeCode !== 'ETC'} // 🔥 '기타'일 때만 활성화
+                                placeholder={
+                                  item.typeCode === 'ETC' ? '기타 내용을 입력하세요' : ''
+                                }
                               />
 
                               <CommonButton
