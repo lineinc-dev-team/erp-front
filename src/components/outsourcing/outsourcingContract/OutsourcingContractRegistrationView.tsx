@@ -1121,8 +1121,8 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
                     if (matched) {
                       setField('businessNumber', matched.businessNumber)
-                      setField('defaultDeductions', matched.defaultDeductionsCode)
-                      setField('defaultDeductionsDescription', matched.defaultDeductionsDescription)
+                      // setField('defaultDeductions', matched.defaultDeductionsCode)
+                      // setField('defaultDeductionsDescription', matched.defaultDeductionsDescription)
                     } else {
                       setField('businessNumber', '')
                     }

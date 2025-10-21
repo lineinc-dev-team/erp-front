@@ -57,7 +57,6 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     createOutSourcingMutation,
     typeMethodOptions,
     outsourcingCancel,
-    deductionMethodOptions,
     OutsourcingModifyMutation,
     useOutsourcingCompanyHistoryDataQuery,
 
@@ -81,16 +80,16 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
   const params = useParams()
   const outsourcingCompanyId = Number(params?.id)
 
-  const selectedValues = (form.defaultDeductions?.split(',') || []).filter(Boolean)
+  // const selectedValues = (form.defaultDeductions?.split(',') || []).filter(Boolean)
 
-  const handleCheckboxChange = (value: string, checked: boolean) => {
-    const current = (form.defaultDeductions?.split(',') || []).filter(Boolean)
-    const updated = checked
-      ? [...new Set([...current, value])]
-      : current.filter((item) => item !== value)
+  // const handleCheckboxChange = (value: string, checked: boolean) => {
+  //   const current = (form.defaultDeductions?.split(',') || []).filter(Boolean)
+  //   const updated = checked
+  //     ? [...new Set([...current, value])]
+  //     : current.filter((item) => item !== value)
 
-    setField('defaultDeductions', updated.join(','))
-  }
+  //   setField('defaultDeductions', updated.join(','))
+  // }
 
   const { data: outsourcingDetailData } = useQuery({
     queryKey: ['OutsourcingInfo'],
@@ -258,16 +257,16 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
       setField('email', client.email)
       setField('isActive', client.isActive ? '1' : '2')
 
-      if (client.defaultDeductions) {
-        const deductionNames = client.defaultDeductions.split(',').map((s: string) => s.trim())
+      // if (client.defaultDeductions) {
+      //   const deductionNames = client.defaultDeductions.split(',').map((s: string) => s.trim())
 
-        const matchedCodes = deductionMethodOptions
-          .filter((opt) => deductionNames.includes(opt.name))
-          .map((opt) => opt.code)
+      //   const matchedCodes = deductionMethodOptions
+      //     .filter((opt) => deductionNames.includes(opt.name))
+      //     .map((opt) => opt.code)
 
-        setField('defaultDeductions', matchedCodes.join(','))
-      }
-      setField('defaultDeductionsDescription', client.defaultDeductionsDescription)
+      //   setField('defaultDeductions', matchedCodes.join(','))
+      // }
+      // setField('defaultDeductionsDescription', client.defaultDeductionsDescription)
 
       const mappedItemType = idTypeValueToName[client.bankName ?? '']
 
@@ -636,7 +635,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
             </div>
           </div>
 
-          <div className="flex">
+          {/* <div className="flex">
             <label className="w-[119px] 2xl:w-[124px] text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
               공제 항목 기본값
             </label>
@@ -659,7 +658,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                 className="flex-1 text-sm"
               />
             </div>
-          </div>
+          </div> */}
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
