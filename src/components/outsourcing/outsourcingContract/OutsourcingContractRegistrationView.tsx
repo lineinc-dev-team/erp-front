@@ -234,7 +234,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     originalFileName: '파일 추가',
     outsourcingCompanyName: '업체명',
     unitPrice: '단가',
-    subtotal: '소계',
+    // subtotal: '소계',
     taskDescription: '작업내용',
     category: '구분',
     position: '직급(직책)',
@@ -572,13 +572,15 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
               vehicleNumber: item.vehicleNumber,
               category: item.category,
               unitPrice: item.unitPrice,
-              subtotal: item.subtotal,
+              // subtotal: item.subtotal,
               taskDescription: item.taskDescription,
               memo: item.memo,
               subEquipments: (item.subEquipments ?? []).map((sub) => ({
                 id: sub.id,
                 typeCode: sub.typeCode,
                 description: sub.description,
+                unitPrice: sub.unitPrice,
+                memo: sub.memo,
               })),
             }),
           )
@@ -888,7 +890,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
         if (!item.vehicleNumber?.trim()) return '장비의 차량번호를 입력해주세요.'
         if (!item.category?.trim()) return '장비의 구분을 입력해주세요.'
         if (!item.unitPrice) return '장비의 단가를 입력해주세요.'
-        if (!item.subtotal) return '장비의 소계를 입력해주세요.'
+        // if (!item.subtotal) return '장비의 소계를 입력해주세요.'
         if (item.memo.length > 500) return '장비의 비고는 500자 이하로 입력해주세요.'
 
         if (item.subEquipments?.length) {
@@ -2194,7 +2196,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       sx={{ color: 'black' }}
                     />
                   </TableCell>
-                  {['규격', '차량번호', '구분', '단가', '소계', '작업내용', '비고'].map((label) => (
+                  {['규격', '차량번호', '구분', '단가', '작업내용', '비고'].map((label) => (
                     <TableCell
                       key={label}
                       align="center"
@@ -2230,7 +2232,10 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                         onChange={(e) => toggleCheckItem('equipment', m.id, e.target.checked)}
                       />
                     </TableCell>
-                    <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
+                    <TableCell
+                      sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                      align="center"
+                    >
                       <TextField
                         size="small"
                         placeholder="규격 입력"
@@ -2241,7 +2246,10 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                         }
                       />
                     </TableCell>
-                    <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
+                    <TableCell
+                      sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                      align="center"
+                    >
                       <TextField
                         size="small"
                         placeholder="차량번호 입력"
@@ -2322,7 +2330,10 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                         ))}
                     </TableCell>
 
-                    <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
+                    <TableCell
+                      sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                      align="center"
+                    >
                       <TextField
                         size="small"
                         placeholder="숫자만"
@@ -2338,25 +2349,32 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                         }}
                         fullWidth
                       />
+
+                      {m.subEquipments?.map((item) => (
+                        <div key={item.id} className="mt-2">
+                          <TextField
+                            size="small"
+                            placeholder="단가 입력"
+                            value={formatNumber(item.unitPrice ?? 0)}
+                            onChange={(e) => {
+                              const numericValue = unformatNumber(e.target.value)
+                              updateSubEquipmentField(m.id, item.id, 'unitPrice', numericValue)
+                            }}
+                            inputProps={{
+                              inputMode: 'numeric',
+                              pattern: '[0-9]*',
+                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                            }}
+                            fullWidth
+                          />
+                        </div>
+                      ))}
                     </TableCell>
-                    <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
-                      <TextField
-                        size="small"
-                        placeholder="숫자만"
-                        value={formatNumber(m.subtotal)}
-                        onChange={(e) => {
-                          const numericValue = unformatNumber(e.target.value)
-                          updateItemField('equipment', m.id, 'subtotal', numericValue)
-                        }}
-                        inputProps={{
-                          inputMode: 'numeric',
-                          pattern: '[0-9]*',
-                          style: { textAlign: 'right' }, // ← 오른쪽 정렬
-                        }}
-                        fullWidth
-                      />
-                    </TableCell>
-                    <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
+
+                    <TableCell
+                      sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                      align="center"
+                    >
                       <TextField
                         size="small"
                         placeholder="작업내용 입력"
@@ -2367,7 +2385,11 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                         }
                       />
                     </TableCell>
-                    <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
+
+                    <TableCell
+                      sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                      align="center"
+                    >
                       <TextField
                         size="small"
                         placeholder="500자 이하 텍스트 입력"
@@ -2375,6 +2397,20 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                         value={m.memo}
                         onChange={(e) => updateItemField('equipment', m.id, 'memo', e.target.value)}
                       />
+
+                      {m.subEquipments?.map((item) => (
+                        <div key={item.id} className="mt-2">
+                          <TextField
+                            size="small"
+                            placeholder="500자 이하 텍스트 입력"
+                            value={item.memo ?? ''}
+                            onChange={(e) =>
+                              updateSubEquipmentField(m.id, item.id, 'memo', e.target.value)
+                            }
+                            sx={{ width: 200 }}
+                          />
+                        </div>
+                      ))}
                     </TableCell>
                   </TableRow>
                 ))}

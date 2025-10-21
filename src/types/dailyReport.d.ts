@@ -122,12 +122,31 @@ export type FuelsItem = {
   modifyDate?: string
 }
 
+export type outContractItem = {
+  id: number
+  outsourcingCompanyId: number
+  driverId: number
+  equipmentId: number
+  specificationName?: string
+  fuelType: string
+  fuelAmount: number
+  fileUrl?: string
+  originalFileName?: string
+  files: FileUploadInfo[]
+  memo: string
+  modifyDate?: string
+}
+
 export type DailyFormState = {
   siteId: number // 발행부서
   siteProcessId: number // 공정명
 
   reportDate: Date | null // 일자 (YYYY-MM-DD)
   weather: string
+
+  gasolinePrice: number
+  dieselPrice: number
+  ureaPrice: number
 
   // 직원 배열
   employees: EmployeesItem[]
@@ -145,6 +164,9 @@ export type DailyFormState = {
 
   fuelInfos: FuelsItem[]
   checkedFuelsIds: number[]
+
+  outContractInfo: outContractItem[]
+  checkedOutContractIds: number[]
 
   // 파일첨부, 수정이력
   files: AttachedFile[]

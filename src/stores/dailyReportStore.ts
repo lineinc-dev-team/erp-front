@@ -69,6 +69,9 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
     siteProcessId: 0,
     reportDate: null,
     weather: '',
+    gasolinePrice: 0,
+    dieselPrice: 0,
+    ureaPrice: 0,
     employees: [],
     checkedManagerIds: [],
 
@@ -96,6 +99,9 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
     fuelInfos: [],
     checkedFuelsIds: [],
 
+    outContractInfo: [],
+    checkedOutContractIds: [],
+
     fuelProofFile: [],
     fuelProofCheckId: [],
 
@@ -118,6 +124,9 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         siteProcessId: 0,
         reportDate: null,
         weather: '',
+        gasolinePrice: 0,
+        dieselPrice: 0,
+        ureaPrice: 0,
         employees: [],
         checkedManagerIds: [],
         employeeFile: [],
@@ -140,8 +149,12 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
 
         outsourcingEquipments: [],
         checkedEquipmentIds: [],
+
         fuelInfos: [],
         checkedFuelsIds: [],
+
+        outContractInfo: [],
+        checkedOutContractIds: [],
 
         fuelProofFile: [],
         fuelProofCheckId: [],
@@ -992,6 +1005,9 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       siteProcessId: form.siteProcessId,
       reportDate: form.reportDate,
       weather: form.weather,
+      gasolinePrice: form.gasolinePrice,
+      dieselPrice: form.dieselPrice,
+      ureaPrice: form.ureaPrice,
       employees: form.employees.map((emp) => {
         const file = emp.files?.[0]
         return {
@@ -1190,6 +1206,9 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       siteProcessId: form.siteProcessId,
       date: form.reportDate,
       weather: form.weather,
+      gasolinePrice: form.gasolinePrice,
+      dieselPrice: form.dieselPrice,
+      ureaPrice: form.ureaPrice,
       employees: undefined,
       outsourcings: undefined,
       outsourcingEquipments: undefined,

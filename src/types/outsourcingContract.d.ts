@@ -64,6 +64,8 @@ type subEquipmentInfo = {
   id: number
   typeCode: string
   description: string
+  unitPrice: number
+  memo: string
 }
 export type OutsourcingEquipmentInfoAttachedFile = {
   id: number
@@ -71,7 +73,6 @@ export type OutsourcingEquipmentInfoAttachedFile = {
   vehicleNumber: string
   category: string
   unitPrice: number
-  subtotal: number
   taskDescription: string
   memo: string
   subEquipments?: subEquipmentInfo[]

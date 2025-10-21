@@ -251,7 +251,6 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
           vehicleNumber: '',
           category: '',
           unitPrice: 0,
-          subtotal: 0,
           taskDescription: '',
           memo: '',
         }
@@ -559,6 +558,8 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
                         id: Date.now(),
                         typeCode: 'BASE',
                         description: '',
+                        unitPrice: 0,
+                        memo: '',
                       },
                     ]
                   : [
@@ -566,6 +567,8 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
                         id: Date.now(),
                         typeCode: 'BASE',
                         description: '',
+                        unitPrice: 0,
+                        memo: '',
                       },
                     ],
               }
@@ -737,7 +740,6 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         vehicleNumber: item.vehicleNumber,
         category: item.category,
         unitPrice: item.unitPrice,
-        subtotal: item.subtotal,
         taskDescription: item.taskDescription,
         memo: item.memo,
         subEquipments:
@@ -745,6 +747,8 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
             id: sub.id || Date.now(),
             type: sub.typeCode,
             description: sub.description,
+            unitPrice: sub.unitPrice,
+            memo: sub.memo,
           })) || [],
       })),
 
