@@ -291,7 +291,7 @@ export const outsourcingContractListData: GridColDef[] = [
   { field: 'type', headerName: '구분', width: 130 },
   { field: 'contractStartDate', headerName: '계약기간(시작/종료)', width: 130 },
   { field: 'contractAmount', headerName: '계약금액(총액)', width: 180 },
-  { field: 'defaultDeductions', headerName: '공제항목', width: 100 },
+  // { field: 'defaultDeductions', headerName: '공제항목', width: 100 },
   { field: 'hasGuaranteeCertificate', headerName: '보증서', width: 100 },
   { field: 'hasContractCertificate', headerName: '계약서', width: 100 },
   { field: 'taxInvoiceCondition', headerName: '세금계산서발행조건', width: 120 },

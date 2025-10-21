@@ -187,7 +187,6 @@ export const outsourcingContractExcelFieldMap = {
   구분: 'contractType',
   계약기간: 'contractPeriod',
   계약금액: 'contractAmount',
-  공제항목: 'defaultDeductions',
   보증서: 'hasGuaranteeCertificate',
   계약서: 'hasContractCertificate',
   '세금계산서 발행조건': 'taxInvoiceCondition',
