@@ -1,10 +1,10 @@
+import React, { Suspense } from 'react'
 import DailyReportRegistrationView from '@/components/dailyReport/DailyReportRegistrationView'
-import React from 'react'
 
-export default function page() {
+export default function Page() {
   return (
-    <div>
+    <Suspense fallback={<div>로딩 중...</div>}>
       <DailyReportRegistrationView />
-    </div>
+    </Suspense>
   )
 }
