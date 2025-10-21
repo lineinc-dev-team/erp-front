@@ -55,6 +55,7 @@ import {
 import { useManagementCost } from '@/hooks/useManagementCost'
 import { useSearchParams } from 'next/navigation'
 import AmountInput from '../common/AmountInput'
+import { useSiteId } from '@/hooks/useSiteIdNumber'
 
 export default function DailyReportRegistrationView() {
   const {
@@ -139,6 +140,8 @@ export default function DailyReportRegistrationView() {
   } = useDailyReport()
 
   const { showSnackbar } = useSnackbarStore()
+
+  const siteIdList = useSiteId() // 훅 실행해서 값 받기
 
   const { OilTypeMethodOptions } = useFuelAggregation()
 
@@ -771,7 +774,7 @@ export default function DailyReportRegistrationView() {
       setField('weather', 'BASE') // 상세 데이터가 있을 때만 세팅
     }
     if (detailReport?.status === 200 || oilPrice) {
-      setField('weather', detailReport.data.weatherCode) // 상세 데이터가 있을 때만 세팅
+      setField('weather', detailReport?.data?.weatherCode) // 상세 데이터가 있을 때만 세팅
 
       if (!isEditMode) setIsEditMode(true) // 최초 로딩 시 editMode 설정
     }
@@ -1278,11 +1281,12 @@ export default function DailyReportRegistrationView() {
     isFetching: workerListIsFetching,
     isLoading: workerListLoading,
   } = useInfiniteQuery({
-    queryKey: ['WorkDataInfo', selectedCompanyIds[selectId]],
+    queryKey: ['WorkDataInfo', selectedCompanyIds[selectId], siteIdList],
     queryFn: ({ pageParam = 0 }) =>
       OutsourcingWorkerNameScroll({
         pageParam,
         id: selectedCompanyIds[selectId] || 0,
+        siteIdList: Number(siteIdList),
         size: 10,
       }),
     initialPageParam: 0,
@@ -1331,6 +1335,7 @@ export default function DailyReportRegistrationView() {
         const res = await OutsourcingWorkerNameScroll({
           pageParam: 0,
           id: companyId,
+          siteIdList: Number(siteIdList),
           size: 10,
         })
 
@@ -1374,12 +1379,13 @@ export default function DailyReportRegistrationView() {
     isFetching: fuelDriverIsFetching,
     isLoading: fuelDriverLoading,
   } = useInfiniteQuery({
-    queryKey: ['FuelDriverInfo', selectedCompanyIds[selectId]],
+    queryKey: ['FuelDriverInfo', selectedCompanyIds[selectId], siteIdList],
 
     queryFn: ({ pageParam }) =>
       FuelDriverNameScroll({
         pageParam,
         id: selectedCompanyIds[selectId] || 0,
+        siteIdList: Number(siteId),
         size: 10,
       }),
     initialPageParam: 0,
@@ -1418,11 +1424,12 @@ export default function DailyReportRegistrationView() {
     isFetching: fuelEquipmentIsFetching,
     isLoading: fuelEquipmentLoading,
   } = useInfiniteQuery({
-    queryKey: ['FuelEquipmentInfo', selectedCompanyIds[selectId]],
+    queryKey: ['FuelEquipmentInfo', selectedCompanyIds[selectId], siteIdList],
     queryFn: ({ pageParam }) =>
       FuelEquipmentNameScroll({
         pageParam,
         id: selectedCompanyIds[selectId] || 0,
+        siteIdList: Number(siteIdList),
         size: 10,
       }),
     initialPageParam: 0,
@@ -1474,6 +1481,7 @@ export default function DailyReportRegistrationView() {
         const res = await FuelDriverNameScroll({
           pageParam: 0,
           id: companyId,
+          siteIdList: Number(siteId),
           size: 200,
         })
 
@@ -1500,6 +1508,7 @@ export default function DailyReportRegistrationView() {
         const carNumberRes = await FuelEquipmentNameScroll({
           pageParam: 0,
           id: companyId,
+          siteIdList: Number(siteIdList),
           size: 200,
         })
 
@@ -1789,6 +1798,7 @@ export default function DailyReportRegistrationView() {
         const res = await FuelDriverNameScroll({
           pageParam: 0,
           id: companyId,
+          siteIdList: Number(siteId),
           size: 200,
         })
 
@@ -1817,6 +1827,7 @@ export default function DailyReportRegistrationView() {
         const carNumberRes = await FuelEquipmentNameScroll({
           pageParam: 0,
           id: companyId,
+          siteIdList: Number(siteIdList),
           size: 200,
         })
 

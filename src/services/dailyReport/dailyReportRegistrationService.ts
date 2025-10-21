@@ -729,10 +729,11 @@ export async function OutsourcingWorkerNameScroll({
   size = 200,
   keyword = '',
   id = 0,
+  siteIdList = 0,
   sort = '',
 }) {
   const resData = await fetch(
-    `${API.OUTSOURCINGCOMPANY}/${id}/contract-workers?page=${pageParam}&size=${size}&keyword=${keyword}&sort=${sort}`,
+    `${API.OUTSOURCINGCOMPANY}/${id}/contract-workers?page=${pageParam}&size=${size}&siteId=${siteIdList}&keyword=${keyword}&sort=${sort}`,
     {
       method: 'GET',
       headers: {

@@ -90,13 +90,14 @@ export async function FuelDriverNameScroll({
   size = 200,
   keyword = '',
   id = 0,
+  siteIdList = 0,
   sort = '',
 }) {
   if (id === null) {
     return
   }
   const resData = await fetch(
-    `${API.OUTSOURCINGCOMPANY}/${id}/contract-drivers?page=${pageParam}&size=${size}&keyword=${keyword}&sort=${sort}`,
+    `${API.OUTSOURCINGCOMPANY}/${id}/contract-drivers?page=${pageParam}&size=${size}&siteId=${siteIdList}&keyword=${keyword}&sort=${sort}`,
     {
       method: 'GET',
       headers: {
@@ -121,10 +122,11 @@ export async function FuelEquipmentNameScroll({
   size = 20,
   keyword = '',
   id = 0,
+  siteIdList = 0,
   sort = '',
 }) {
   const resData = await fetch(
-    `${API.OUTSOURCINGCOMPANY}/${id}/contract-equipments?page=${pageParam}&size=${size}&keyword=${keyword}&sort=${sort}`,
+    `${API.OUTSOURCINGCOMPANY}/${id}/contract-equipments?page=${pageParam}&size=${size}&siteId=${siteIdList}&keyword=${keyword}&sort=${sort}`,
     {
       method: 'GET',
       headers: {
