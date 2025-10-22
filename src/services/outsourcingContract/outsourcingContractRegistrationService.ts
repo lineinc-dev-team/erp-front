@@ -267,7 +267,7 @@ export async function OutsourcingDriverDetailService(outsourcingContractId: numb
 
 // 외주업체 계약 상세(공사 정보)
 export async function OutsourcingConstructionDetailService(outsourcingContractId: number) {
-  const res = await fetch(`${API.OUTSOURCINGCONTRACT}/${outsourcingContractId}/constructions`, {
+  const res = await fetch(`${API.OUTSOURCINGCONTRACT}/${outsourcingContractId}/constructions-v2`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

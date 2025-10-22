@@ -77,6 +77,12 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     removeSubEquipment,
     addSubEquipment,
     updateSubEquipmentField,
+
+    addContractDetailItem,
+    removeContractDetailItem,
+
+    // 여기 추가
+    updateContractDetailField,
   } = useContractFormStore()
 
   const {
@@ -544,18 +550,23 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
         const contractData = contractConstructionDetailData?.data
 
         if (contractData) {
+          // OutsourcingContractItem[] 구조를 기반으로 변환
           const getContractItems = (contractData.content ?? []).map(
-            (item: OutsourcingContractItem) => ({
-              id: item.id,
-              item: item.item,
-              specification: item.specification,
-              unit: item.unit,
-              unitPrice: item.unitPrice,
-              contractQuantity: item.contractQuantity,
-              contractPrice: item.contractPrice,
-              outsourcingContractQuantity: item.outsourcingContractQuantity,
-              outsourcingContractPrice: item.outsourcingContractPrice,
-              memo: item.memo,
+            (outsourcingItem: OutsourcingContractItem) => ({
+              id: outsourcingItem.id,
+              itemName: outsourcingItem.itemName,
+              items: (outsourcingItem.items ?? []).map((detail) => ({
+                id: detail.id,
+                item: detail.item,
+                specification: detail.specification,
+                unit: detail.unit,
+                unitPrice: detail.unitPrice,
+                contractQuantity: detail.contractQuantity,
+                contractPrice: detail.contractPrice,
+                outsourcingContractQuantity: detail.outsourcingContractQuantity,
+                outsourcingContractPrice: detail.outsourcingContractPrice,
+                memo: detail.memo,
+              })),
             }),
           )
 
@@ -916,19 +927,19 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     }
 
     if (contractAddAttachedFiles.length > 0) {
-      for (const item of contractAddAttachedFiles) {
-        if (!item.item?.trim()) return '공사의 항목을 입력해주세요.'
-        if (!item.specification?.trim()) return '공사의 규격을 입력해주세요.'
-        if (!item.unit?.trim()) return '공사의 단가를 입력해주세요.'
-        if (!item.unitPrice) return '공사의 도급단가를 입력해주세요.'
-        if (!item.contractQuantity) return '공사의 계약금액의 수량을 입력해주세요.'
-        if (!item.contractPrice) return '공사의 계약금액의 금액을 입력해주세요.'
-        if (!item.outsourcingContractQuantity) return '공사의 외주계약금액의 수량을 입력해주세요.'
-        if (!item.outsourcingContractPrice) return '공사의 외주계약금액의 금액을 입력해주세요.'
-        if (item.memo.length > 500) {
-          return '공사의 비고는 500자 이하로 입력해주세요.'
-        }
-      }
+      // for (const item of contractAddAttachedFiles) {
+      //   if (!item.item?.trim()) return '공사의 항목을 입력해주세요.'
+      //   if (!item.specification?.trim()) return '공사의 규격을 입력해주세요.'
+      //   if (!item.unit?.trim()) return '공사의 단가를 입력해주세요.'
+      //   if (!item.unitPrice) return '공사의 도급단가를 입력해주세요.'
+      //   if (!item.contractQuantity) return '공사의 계약금액의 수량을 입력해주세요.'
+      //   if (!item.contractPrice) return '공사의 계약금액의 금액을 입력해주세요.'
+      //   if (!item.outsourcingContractQuantity) return '공사의 외주계약금액의 수량을 입력해주세요.'
+      //   if (!item.outsourcingContractPrice) return '공사의 외주계약금액의 금액을 입력해주세요.'
+      //   if (item.memo.length > 500) {
+      //     return '공사의 비고는 500자 이하로 입력해주세요.'
+      //   }
+      // }
     }
 
     if (attachedFiles.length > 0) {
@@ -1945,6 +1956,14 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                   >
                     비고
                   </TableCell>
+
+                  <TableCell
+                    rowSpan={2}
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                  >
+                    -
+                  </TableCell>
                 </TableRow>
                 <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
                   <TableCell
@@ -1988,160 +2007,288 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       />
                     </TableCell>
 
-                    <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                    <TableCell
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top' }}
+                    >
                       <TextField
                         size="small"
                         placeholder="텍스트 입력(50자)"
-                        value={m.item || ''}
-                        onChange={(e) => updateItemField('workSize', m.id, 'item', e.target.value)}
-                        inputProps={{ maxLength: 50 }}
-                        fullWidth
-                      />
-                    </TableCell>
-                    <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                      <TextField
-                        size="small"
-                        placeholder="텍스트 입력(50자)"
-                        value={m.specification || ''}
+                        value={m.itemName || ''}
                         onChange={(e) =>
-                          updateItemField('workSize', m.id, 'specification', e.target.value)
+                          updateItemField('workSize', m.id, 'itemName', e.target.value)
                         }
                         inputProps={{ maxLength: 50 }}
                         fullWidth
                       />
                     </TableCell>
-                    <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                      <TextField
-                        size="small"
-                        placeholder="10자"
-                        value={m.unit || ''}
-                        onChange={(e) => updateItemField('workSize', m.id, 'unit', e.target.value)}
-                        inputProps={{ maxLength: 10 }}
-                        fullWidth
-                      />
+
+                    <TableCell
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top' }}
+                    >
+                      {m.items.map((item) => (
+                        <div key={item.id} className="flex gap-2 mt-1 items-center">
+                          <TextField
+                            size="small"
+                            placeholder="텍스트 입력(50자)"
+                            value={item.item || ''}
+                            onChange={(e) =>
+                              updateContractDetailField(m.id, item.id, 'item', e.target.value)
+                            }
+                            inputProps={{ maxLength: 50 }}
+                            fullWidth
+                          />
+                        </div>
+                      ))}
                     </TableCell>
-                    <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                      <TextField
-                        size="small"
-                        placeholder="숫자만"
-                        value={formatNumber(m.unitPrice)}
-                        onChange={(e) => {
-                          const numericValue = unformatNumber(e.target.value)
-                          updateItemField('workSize', m.id, 'unitPrice', numericValue)
-                        }}
-                        inputProps={{
-                          inputMode: 'numeric',
-                          pattern: '[0-9]*',
-                          style: { textAlign: 'right' }, // ← 오른쪽 정렬
-                        }}
-                        fullWidth
-                      />
+
+                    <TableCell
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top' }}
+                    >
+                      {m.items.map((item) => (
+                        <div key={item.id} className="flex gap-2 mt-1 items-center">
+                          <TextField
+                            size="small"
+                            placeholder="텍스트 입력(50자)"
+                            value={item.specification || ''}
+                            onChange={(e) =>
+                              updateContractDetailField(
+                                m.id,
+                                item.id,
+                                'specification',
+                                e.target.value,
+                              )
+                            }
+                            inputProps={{ maxLength: 50 }}
+                            fullWidth
+                          />
+                        </div>
+                      ))}
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top' }}
+                    >
+                      {m.items.map((item) => (
+                        <div key={item.id} className="flex gap-2 mt-1 items-center">
+                          <TextField
+                            size="small"
+                            placeholder="10자"
+                            value={item.unit || ''}
+                            onChange={(e) =>
+                              updateContractDetailField(m.id, item.id, 'unit', e.target.value)
+                            }
+                            inputProps={{ maxLength: 10 }}
+                            fullWidth
+                          />
+                        </div>
+                      ))}
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top' }}
+                    >
+                      {m.items.map((item) => (
+                        <div key={item.id} className="flex gap-2 mt-1 items-center">
+                          <TextField
+                            size="small"
+                            placeholder="숫자만"
+                            value={formatNumber(item.unitPrice)}
+                            onChange={(e) => {
+                              const numericValue = unformatNumber(e.target.value)
+
+                              updateContractDetailField(m.id, item.id, 'unitPrice', numericValue)
+                            }}
+                            inputProps={{
+                              inputMode: 'numeric',
+                              pattern: '[0-9]*',
+                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                            }}
+                            fullWidth
+                          />
+                        </div>
+                      ))}
                     </TableCell>
 
                     {/* 도급금액 수량 */}
-                    <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                      <TextField
-                        size="small"
-                        placeholder="숫자만"
-                        value={formatNumber(m.contractQuantity)}
-                        onChange={(e) => {
-                          const numericValue = unformatNumber(e.target.value)
-                          updateItemField('workSize', m.id, 'contractQuantity', numericValue)
-                        }}
-                        inputProps={{
-                          inputMode: 'numeric',
-                          pattern: '[0-9]*',
-                          style: { textAlign: 'right' }, // ← 오른쪽 정렬
-                        }}
-                        fullWidth
-                      />
+                    <TableCell
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top' }}
+                    >
+                      {m.items.map((item) => (
+                        <div key={item.id} className="flex gap-2 mt-1 items-center">
+                          <TextField
+                            size="small"
+                            placeholder="숫자만"
+                            value={formatNumber(item.contractQuantity)}
+                            onChange={(e) => {
+                              const numericValue = unformatNumber(e.target.value)
+
+                              updateContractDetailField(
+                                m.id,
+                                item.id,
+                                'contractQuantity',
+                                numericValue,
+                              )
+                            }}
+                            inputProps={{
+                              inputMode: 'numeric',
+                              pattern: '[0-9]*',
+                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                            }}
+                            fullWidth
+                          />
+                        </div>
+                      ))}
                     </TableCell>
 
                     {/* 도급금액 금액 */}
-                    <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                      <TextField
-                        size="small"
-                        placeholder="숫자만"
-                        value={formatNumber(m.contractPrice)}
-                        onChange={(e) => {
-                          const numericValue = unformatNumber(e.target.value)
-                          updateItemField('workSize', m.id, 'contractPrice', numericValue)
-                        }}
-                        inputProps={{
-                          inputMode: 'numeric',
-                          pattern: '[0-9]*',
-                          style: { textAlign: 'right' }, // ← 오른쪽 정렬
-                        }}
-                        fullWidth
-                      />
+                    <TableCell
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top' }}
+                    >
+                      {m.items.map((item) => (
+                        <div key={item.id} className="flex gap-2 mt-1 items-center">
+                          <TextField
+                            size="small"
+                            placeholder="숫자만"
+                            value={formatNumber(item.contractPrice)}
+                            onChange={(e) => {
+                              const numericValue = unformatNumber(e.target.value)
+
+                              updateContractDetailField(
+                                m.id,
+                                item.id,
+                                'contractPrice',
+                                numericValue,
+                              )
+                            }}
+                            inputProps={{
+                              inputMode: 'numeric',
+                              pattern: '[0-9]*',
+                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                            }}
+                            fullWidth
+                          />
+                        </div>
+                      ))}
                     </TableCell>
 
                     {/* 외주계약금액 수량 */}
-                    <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                      <TextField
-                        size="small"
-                        placeholder="숫자만"
-                        value={formatNumber(m.outsourcingContractQuantity)}
-                        onChange={(e) => {
-                          const numericValue = unformatNumber(e.target.value)
-                          updateItemField(
-                            'workSize',
-                            m.id,
-                            'outsourcingContractQuantity',
-                            numericValue,
-                          )
-                        }}
-                        inputProps={{
-                          inputMode: 'numeric',
-                          pattern: '[0-9]*',
-                          style: { textAlign: 'right' }, // ← 오른쪽 정렬
-                        }}
-                        fullWidth
-                      />
+                    <TableCell
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top' }}
+                    >
+                      {m.items.map((item) => (
+                        <div key={item.id} className="flex gap-2 mt-1 items-center">
+                          <TextField
+                            size="small"
+                            placeholder="숫자만"
+                            value={formatNumber(item.outsourcingContractQuantity)}
+                            onChange={(e) => {
+                              const numericValue = unformatNumber(e.target.value)
+
+                              updateContractDetailField(
+                                m.id,
+                                item.id,
+                                'outsourcingContractQuantity',
+                                numericValue,
+                              )
+                            }}
+                            inputProps={{
+                              inputMode: 'numeric',
+                              pattern: '[0-9]*',
+                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                            }}
+                            fullWidth
+                          />
+                        </div>
+                      ))}
                     </TableCell>
 
                     {/* 외주계약금액 금액 */}
-                    <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                      <TextField
-                        size="small"
-                        placeholder="숫자만"
-                        value={formatNumber(m.outsourcingContractPrice)}
-                        onChange={(e) => {
-                          const numericValue = unformatNumber(e.target.value)
-                          updateItemField(
-                            'workSize',
-                            m.id,
-                            'outsourcingContractPrice',
-                            numericValue,
-                          )
-                        }}
-                        inputProps={{
-                          inputMode: 'numeric',
-                          pattern: '[0-9]*',
-                          style: { textAlign: 'right' }, // ← 오른쪽 정렬
-                        }}
-                        fullWidth
-                      />
+                    <TableCell
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top' }}
+                    >
+                      {m.items.map((item) => (
+                        <div key={item.id} className="flex gap-2 mt-1 items-center">
+                          <TextField
+                            size="small"
+                            placeholder="숫자만"
+                            value={formatNumber(item.outsourcingContractPrice)}
+                            onChange={(e) => {
+                              const numericValue = unformatNumber(e.target.value)
+                              updateContractDetailField(
+                                m.id,
+                                item.id,
+                                'outsourcingContractPrice',
+                                numericValue,
+                              )
+                            }}
+                            inputProps={{
+                              inputMode: 'numeric',
+                              pattern: '[0-9]*',
+                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                            }}
+                            fullWidth
+                          />
+                        </div>
+                      ))}
                     </TableCell>
 
                     {/* 비고 */}
-                    <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                      <TextField
-                        size="small"
-                        placeholder="500자 이하 텍스트 입력"
-                        multiline
-                        rows={2}
-                        value={m.memo || ''}
-                        onChange={(e) => updateItemField('workSize', m.id, 'memo', e.target.value)}
-                        inputProps={{ maxLength: 500 }}
-                        fullWidth
-                      />
+                    <TableCell
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top' }}
+                    >
+                      {m.items.map((item) => (
+                        <div key={item.id} className="flex gap-2 mt-1 items-center">
+                          <TextField
+                            size="small"
+                            placeholder="500자 이하"
+                            multiline
+                            value={item.memo || ''}
+                            onChange={(e) =>
+                              updateContractDetailField(m.id, item.id, 'memo', e.target.value)
+                            }
+                            inputProps={{ maxLength: 500 }}
+                            fullWidth
+                          />
+                        </div>
+                      ))}
+                    </TableCell>
+
+                    <TableCell sx={{ width: '100px', verticalAlign: 'top' }}>
+                      {/* 셀 자체의 최대 너비 제한도 추가 가능 */}
+                      {m.items.map((detail, index) => (
+                        <div key={detail.id} className="flex items-center gap-2 mt-1">
+                          {/* 버튼 조건부 렌더링 */}
+                          {index === 0 ? (
+                            <CommonButton
+                              label="추가"
+                              className="px-7 whitespace-nowrap"
+                              variant="primary"
+                              onClick={() => addContractDetailItem(m.id)}
+                            />
+                          ) : (
+                            <CommonButton
+                              label="삭제"
+                              className="px-7"
+                              variant="danger"
+                              onClick={() => removeContractDetailItem(m.id, detail.id)}
+                            />
+                          )}
+                        </div>
+                      ))}
                     </TableCell>
                   </TableRow>
                 ))}
                 <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
                   <TableCell
-                    colSpan={5}
+                    colSpan={6}
                     align="right"
                     sx={{
                       border: '1px solid #9CA3AF',
@@ -2176,6 +2323,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                   >
                     {getTotalOutsourceAmount().toLocaleString()}
                   </TableCell>
+                  <TableCell sx={{ border: '1px solid #9CA3AF' }} />
                   <TableCell sx={{ border: '1px solid #9CA3AF' }} />
                 </TableRow>
               </TableBody>

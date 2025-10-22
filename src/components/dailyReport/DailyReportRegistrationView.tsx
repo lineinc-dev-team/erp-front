@@ -5311,7 +5311,10 @@ export default function DailyReportRegistrationView() {
                                 onChange={(e) => toggleCheckItem('worker', m.id, e.target.checked)}
                               />
                             </TableCell>
-                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                            <TableCell
+                              align="center"
+                              sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                            >
                               <TextField
                                 size="small"
                                 placeholder="작업명 입력"
@@ -5325,7 +5328,7 @@ export default function DailyReportRegistrationView() {
                             <TableCell
                               align="center"
                               colSpan={1}
-                              sx={{ border: '1px solid #9CA3AF' }}
+                              sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top' }}
                             >
                               {m.workDetails.map((detail) => (
                                 <div key={detail.id} className="flex gap-2 mt-1 items-center">
@@ -5345,7 +5348,7 @@ export default function DailyReportRegistrationView() {
                             <TableCell
                               align="center"
                               colSpan={1}
-                              sx={{ border: '1px solid #9CA3AF' }}
+                              sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top' }}
                             >
                               {m.workDetails.map((detail) => (
                                 <div key={detail.id} className="flex gap-2 mt-1 items-center">
@@ -5367,7 +5370,7 @@ export default function DailyReportRegistrationView() {
                               ))}
                             </TableCell>
 
-                            <TableCell sx={{ width: '100px' }}>
+                            <TableCell sx={{ width: '100px', verticalAlign: 'top' }}>
                               {/* 셀 자체의 최대 너비 제한도 추가 가능 */}
                               {m.workDetails.map((detail, index) => (
                                 <div key={detail.id} className="flex items-center gap-2 mt-1">
@@ -5517,7 +5520,10 @@ export default function DailyReportRegistrationView() {
                               />
                             </TableCell>
 
-                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                            <TableCell
+                              align="center"
+                              sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                            >
                               <TextField
                                 size="small"
                                 placeholder="작업명 입력"
@@ -5531,7 +5537,7 @@ export default function DailyReportRegistrationView() {
                             <TableCell
                               align="center"
                               colSpan={1}
-                              sx={{ border: '1px solid #9CA3AF' }}
+                              sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top' }}
                             >
                               {m.workDetails.map((detail) => (
                                 <div key={detail.id} className="flex gap-2 mt-1 items-center">
@@ -5551,7 +5557,7 @@ export default function DailyReportRegistrationView() {
                             <TableCell
                               align="center"
                               colSpan={1}
-                              sx={{ border: '1px solid #9CA3AF' }}
+                              sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top' }}
                             >
                               {m.workDetails.map((detail) => (
                                 <div key={detail.id} className="flex gap-2 mt-1 items-center">
@@ -5573,7 +5579,7 @@ export default function DailyReportRegistrationView() {
                               ))}
                             </TableCell>
 
-                            <TableCell sx={{ width: '100px' }}>
+                            <TableCell sx={{ width: '100px', verticalAlign: 'top' }}>
                               {/* 셀 자체의 최대 너비 제한도 추가 가능 */}
                               {m.workDetails.map((detail, index) => (
                                 <div key={detail.id} className="flex items-center gap-2 mt-1">

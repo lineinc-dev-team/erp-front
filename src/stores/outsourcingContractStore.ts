@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import {
+  ContractDetailItems,
   OutsourcingArticleInfoAttachedFile,
   OutsourcingContractAttachedFile,
   OutsourcingContractFormStore,
@@ -231,15 +232,21 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
       } else if (type === 'workSize') {
         const contractNewItems: OutsourcingContractItem = {
           id: Date.now(),
-          item: '',
-          specification: '',
-          unit: '',
-          unitPrice: 0,
-          contractQuantity: '',
-          contractPrice: '',
-          outsourcingContractQuantity: '',
-          outsourcingContractPrice: '',
-          memo: '',
+          itemName: '',
+          items: [
+            {
+              id: Date.now(),
+              item: '',
+              specification: '',
+              unit: '',
+              unitPrice: 0,
+              contractQuantity: 0,
+              contractPrice: 0,
+              outsourcingContractQuantity: 0,
+              outsourcingContractPrice: 0,
+              memo: '',
+            },
+          ],
         }
         return {
           form: {
@@ -623,38 +630,119 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
 
   getTotalContractQty: () => {
     const { contractManagers } = get().form
-    return contractManagers.reduce((sum, item) => {
-      const qty = Number(item.contractQuantity)
-      return sum + (isNaN(qty) ? 0 : qty)
+    return contractManagers.reduce((sum, manager) => {
+      const qtySum = manager.items.reduce((innerSum, item) => {
+        const qty = Number(item.contractQuantity)
+        return innerSum + (isNaN(qty) ? 0 : qty)
+      }, 0)
+      return sum + qtySum
     }, 0)
   },
 
   // 도급금액 금액 합계
   getTotalContractAmount: () => {
     const { contractManagers } = get().form
-    return contractManagers.reduce((sum, item) => {
-      const amount = Number(item.contractPrice)
-      return sum + (isNaN(amount) ? 0 : amount)
+    return contractManagers.reduce((sum, manager) => {
+      const itemSum = manager.items.reduce((innerSum, item) => {
+        const amount = Number(item.contractPrice)
+        return innerSum + (isNaN(amount) ? 0 : amount)
+      }, 0)
+      return sum + itemSum
     }, 0)
   },
 
-  // 외주계약금액 수량 합계
+  // 외주계약 수량 총합
   getTotalOutsourceQty: () => {
     const { contractManagers } = get().form
-    return contractManagers.reduce((sum, item) => {
-      const qty = Number(item.outsourcingContractQuantity)
-      return sum + (isNaN(qty) ? 0 : qty)
+    return contractManagers.reduce((sum, manager) => {
+      const qtySum = manager.items.reduce((innerSum, item) => {
+        const qty = Number(item.outsourcingContractQuantity)
+        return innerSum + (isNaN(qty) ? 0 : qty)
+      }, 0)
+      return sum + qtySum
     }, 0)
   },
 
-  // 외주계약금액 금액 합계
+  // 외주계약 금액 총합
   getTotalOutsourceAmount: () => {
     const { contractManagers } = get().form
-    return contractManagers.reduce((sum, item) => {
-      const amount = Number(item.outsourcingContractPrice)
-      return sum + (isNaN(amount) ? 0 : amount)
+    return contractManagers.reduce((sum, manager) => {
+      const amountSum = manager.items.reduce((innerSum, item) => {
+        const amount = Number(item.outsourcingContractPrice)
+        return innerSum + (isNaN(amount) ? 0 : amount)
+      }, 0)
+      return sum + amountSum
     }, 0)
   },
+
+  // 세부 항목(ContractDetailItems) 추가
+  addContractDetailItem: (managerId: number) =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        contractManagers: state.form.contractManagers.map((manager) =>
+          manager.id === managerId
+            ? {
+                ...manager,
+                items: [
+                  ...manager.items,
+                  {
+                    id: Date.now(),
+                    item: '',
+                    specification: '',
+                    unit: '',
+                    unitPrice: 0,
+                    contractQuantity: 0,
+                    contractPrice: 0,
+                    outsourcingContractQuantity: 0,
+                    outsourcingContractPrice: 0,
+                    memo: '',
+                  },
+                ],
+              }
+            : manager,
+        ),
+      },
+    })),
+
+  // 세부 항목 삭제
+  removeContractDetailItem: (managerId: number, itemId: number) =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        contractManagers: state.form.contractManagers.map((manager) =>
+          manager.id === managerId
+            ? {
+                ...manager,
+                items: manager.items.filter((item) => item.id !== itemId),
+              }
+            : manager,
+        ),
+      },
+    })),
+
+  // 세부 항목 수정
+  updateContractDetailField: (
+    managerId: number,
+    itemId: number,
+    field: keyof ContractDetailItems,
+    value: string | number,
+  ) =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        contractManagers: state.form.contractManagers.map((manager) =>
+          manager.id === managerId
+            ? {
+                ...manager,
+                items: manager.items.map((detail) =>
+                  detail.id === itemId ? { ...detail, [field]: value } : detail,
+                ),
+              }
+            : manager,
+        ),
+      },
+    })),
 
   newOutsourcingContractData: () => {
     const form = get().form
@@ -728,17 +816,19 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         })),
       })),
 
-      constructions: form.contractManagers.map((m) => ({
+      constructionsV2: form.contractManagers.map((m) => ({
         id: m.id || Date.now(),
-        item: m.item,
-        specification: m.specification,
-        unit: m.unit,
-        unitPrice: m.unitPrice,
-        contractQuantity: m.contractQuantity,
-        contractPrice: m.contractPrice,
-        outsourcingContractQuantity: m.outsourcingContractQuantity,
-        outsourcingContractPrice: m.outsourcingContractPrice,
-        memo: m.memo,
+        itemName: m.itemName,
+        items: m.items,
+        // item: m.item,
+        // specification: m.specification,
+        // unit: m.unit,
+        // unitPrice: m.unitPrice,
+        // contractQuantity: m.contractQuantity,
+        // contractPrice: m.contractPrice,
+        // outsourcingContractQuantity: m.outsourcingContractQuantity,
+        // outsourcingContractPrice: m.outsourcingContractPrice,
+        // memo: m.memo,
       })),
 
       equipments: form.equipmentManagers.map((item) => ({

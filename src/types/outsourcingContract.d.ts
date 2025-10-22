@@ -30,10 +30,8 @@ export type OutsourcingContractAttachedFile = {
   typeCode?: string
 }
 
-//외주공사 항목 타입
-export type OutsourcingContractItem = {
+export type ContractDetailItems = {
   id: number
-  no?: number
   item: string
   specification: string
   unit: string
@@ -43,6 +41,13 @@ export type OutsourcingContractItem = {
   outsourcingContractQuantity: string | number
   outsourcingContractPrice: string | number
   memo: string
+}
+
+//외주공사 항목 타입
+export type OutsourcingContractItem = {
+  id: number
+  itemName: string
+  items: ContractDetailItems[]
 }
 
 // 장비 중 기사 타입
@@ -287,6 +292,18 @@ type OutsourcingContractFormStore = {
       | 'workSize'
       | 'articleInfo'
       | 'equipment',
+  ) => void
+
+  // 작업내용 에서 구분에 세부 항목추가!!
+  addContractDetailItem: (managerId: number) => void
+  removeContractDetailItem: (managerId: number, itemId: number) => void
+
+  // 여기 추가
+  updateContractDetailField: (
+    managerId: number,
+    itemId: number,
+    field: keyof ContractDetailItems,
+    value: T,
   ) => void
 
   // 공사항목에서만 쓰이는 계산
