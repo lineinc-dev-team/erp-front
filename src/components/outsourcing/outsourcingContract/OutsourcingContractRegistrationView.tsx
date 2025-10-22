@@ -1326,6 +1326,22 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
               />
             </div>
           </div>
+          {form.type === 'CONSTRUCTION' && (
+            <div className="flex">
+              <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+                공종명
+              </label>
+              <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
+                <CommonInput
+                  value={form.workTypeName ?? ''}
+                  onChange={(value) => {
+                    setField('workTypeName', value)
+                  }}
+                  className=" flex-1"
+                />
+              </div>
+            </div>
+          )}
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
@@ -1878,6 +1894,13 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
+                    항목명 <span className="text-red-500 ml-1">*</span>
+                  </TableCell>
+                  <TableCell
+                    rowSpan={2}
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                  >
                     항목 <span className="text-red-500 ml-1">*</span>
                   </TableCell>
                   <TableCell
@@ -2196,27 +2219,29 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       sx={{ color: 'black' }}
                     />
                   </TableCell>
-                  {['규격', '차량번호', '구분', '단가', '작업내용', '비고'].map((label) => (
-                    <TableCell
-                      key={label}
-                      align="center"
-                      sx={{
-                        backgroundColor: '#D1D5DB',
-                        border: '1px solid  #9CA3AF',
-                        color: 'black',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      {label === '비고' || label === '작업내용' ? (
-                        label
-                      ) : (
-                        <div className="flex items-center justify-center">
-                          <span>{label}</span>
-                          <span className="text-red-500 ml-1">*</span>
-                        </div>
-                      )}
-                    </TableCell>
-                  ))}
+                  {['규격', '차량번호', '추가장비', '단가', '유형', '작업내용', '비고'].map(
+                    (label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        {label === '비고' || label === '작업내용' ? (
+                          label
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    ),
+                  )}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -2271,6 +2296,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                           onChange={(e) =>
                             updateItemField('equipment', m.id, 'category', e.target.value)
                           }
+                          disabled
                         />
                         <CommonButton
                           label="추가"
@@ -2375,6 +2401,18 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
                       align="center"
                     >
+                      <CommonSelect
+                        className="text-2xl"
+                        value={m.type || 'BASE'}
+                        onChange={(value) => updateItemField('equipment', m.id, 'type', value)}
+                        options={categoryMethodOptions}
+                      />
+                    </TableCell>
+
+                    <TableCell
+                      sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                      align="center"
+                    >
                       <TextField
                         size="small"
                         placeholder="작업내용 입력"
@@ -2384,6 +2422,25 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                           updateItemField('equipment', m.id, 'taskDescription', e.target.value)
                         }
                       />
+
+                      {m.subEquipments?.map((item) => (
+                        <div key={item.id} className="mt-2">
+                          <TextField
+                            size="small"
+                            placeholder="작업내용"
+                            value={item.taskDescription ?? ''}
+                            onChange={(e) =>
+                              updateSubEquipmentField(
+                                m.id,
+                                item.id,
+                                'taskDescription',
+                                e.target.value,
+                              )
+                            }
+                            sx={{ width: 200 }}
+                          />
+                        </div>
+                      ))}
                     </TableCell>
 
                     <TableCell

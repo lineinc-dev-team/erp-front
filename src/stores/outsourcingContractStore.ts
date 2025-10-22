@@ -93,6 +93,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
     memo: '',
     category: '',
     status: '',
+    workTypeName: '',
     headManagers: [],
     checkedManagerIds: [],
     attachedFiles: [],
@@ -129,6 +130,8 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         taxCalculat: '',
         taxInvoiceIssueDayOfMonth: 0,
         status: '',
+
+        workTypeName: '',
         memo: '',
         category: '',
         headManagers: [],
@@ -249,8 +252,9 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
           id: Date.now(),
           specification: '',
           vehicleNumber: '',
-          category: '',
+          category: '기본장비',
           unitPrice: 0,
+          type: '',
           taskDescription: '',
           memo: '',
         }
@@ -558,6 +562,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
                         id: Date.now(),
                         typeCode: 'BASE',
                         description: '',
+                        taskDescription: '',
                         unitPrice: 0,
                         memo: '',
                       },
@@ -566,6 +571,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
                       {
                         id: Date.now(),
                         typeCode: 'BASE',
+                        taskDescription: '',
                         description: '',
                         unitPrice: 0,
                         memo: '',
@@ -668,6 +674,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
       taxInvoiceIssueDayOfMonth: form.taxInvoiceIssueDayOfMonth,
       category: form.category === '' ? undefined : form.category,
       status: form.status,
+      workTypeName: form.workTypeName,
       memo: form.memo,
       contacts: form.headManagers.map((m) => ({
         id: m.id || Date.now(),

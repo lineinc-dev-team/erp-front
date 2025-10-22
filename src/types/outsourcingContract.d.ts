@@ -64,6 +64,7 @@ type subEquipmentInfo = {
   id: number
   typeCode: string
   description: string
+  taskDescription: string
   unitPrice: number
   memo: string
 }
@@ -73,6 +74,7 @@ export type OutsourcingEquipmentInfoAttachedFile = {
   vehicleNumber: string
   category: string
   unitPrice: number
+  type: string
   taskDescription: string
   memo: string
   subEquipments?: subEquipmentInfo[]
@@ -182,6 +184,7 @@ export type OutsourcingContractFormState = {
   memo: string
   category: string
   status: string
+  workTypeName: string
 
   // 담당자 배열
   headManagers: OutsourcingContractManager[]
