@@ -122,6 +122,51 @@ export type FuelsItem = {
   modifyDate?: string
 }
 
+type WorkDetailInfo = {
+  id: number
+  content: string
+  personnelAndEquipment: string
+}
+
+export type WorkerItem = {
+  id: number
+  workName: string
+  isToday: boolean
+  workDetails: WorkDetailInfo[]
+}
+
+export type MainProcessesItem = {
+  id: number
+  process: string
+  unit: string
+  contractAmount: number
+  previousDayAmount: number
+  todayAmount: number
+  cumulativeAmount: number
+  processRate: number
+}
+
+export type InputStatusesItem = {
+  id: number
+  category: string
+  previousDayCount: number
+  todayCount: number
+  cumulativeCount: number
+  type: string
+}
+
+export type MaterialStatuses = {
+  id: number
+  materialName: string
+  unit: string
+  plannedAmount: number
+  previousDayAmount: number
+  todayAmount: number
+  cumulativeAmount: number
+  remainingAmount: number
+  type: string
+}
+
 export type outContractItem = {
   id: number
   outsourcingCompanyId: number
@@ -164,6 +209,18 @@ export type DailyFormState = {
 
   fuelInfos: FuelsItem[]
   checkedFuelsIds: number[]
+
+  works: WorkerItem[]
+  checkedWorkerIds: number[]
+
+  mainProcesses: MainProcessesItem[]
+  checkedMainProcessIds: number[]
+
+  inputStatuses: InputStatusesItem[]
+  checkedInputStatusIds: number[]
+
+  materialStatuses: MaterialStatuses[]
+  checkedMaterialIds: number[]
 
   outContractInfo: outContractItem[]
   checkedOutContractIds: number[]
@@ -208,6 +265,13 @@ type DailyReportFormStore = {
   resetOutsourcing: () => void
   resetEquipment: () => void
   resetFuel: () => void
+  resetWorker: () => void
+  resetMainProcess: () => void
+
+  resetInputStatus: () => void
+
+  resetMaterialStatus: () => void
+
   resetFile: () => void
 
   resetEmployeesEvidenceFile: () => void
@@ -235,9 +299,15 @@ type DailyReportFormStore = {
       | 'equipment'
       | 'equipmentFile'
       | 'fuel'
+      | 'worker'
+      | 'mainProcesses'
+      | 'inputStatuses'
+      | 'materialStatuses'
       | 'fuelFile'
       | 'ContractWorker'
       | 'attachedFile',
+    subType?: string,
+    isTodayType?: boolean,
   ) => void
 
   addTemporaryCheckedItems: (type: 'directContracts') => void
@@ -253,12 +323,17 @@ type DailyReportFormStore = {
       | 'equipment'
       | 'equipmentFile'
       | 'fuel'
+      | 'worker'
+      | 'mainProcesses'
+      | 'inputStatuses'
+      | 'materialStatuses'
       | 'fuelFile'
       | 'attachedFile',
     id: number,
     field: string,
     value: T,
   ) => void
+
   toggleCheckItem: (
     type:
       | 'Employees'
@@ -270,6 +345,10 @@ type DailyReportFormStore = {
       | 'equipment'
       | 'equipmentFile'
       | 'fuel'
+      | 'worker'
+      | 'mainProcesses'
+      | 'inputStatuses'
+      | 'materialStatuses'
       | 'fuelFile'
       | 'attachedFile',
     id: number,
@@ -286,6 +365,10 @@ type DailyReportFormStore = {
       | 'equipment'
       | 'equipmentFile'
       | 'fuel'
+      | 'worker'
+      | 'mainProcesses'
+      | 'inputStatuses'
+      | 'materialStatuses'
       | 'fuelFile'
       | 'attachedFile',
     checked: boolean,
@@ -301,8 +384,27 @@ type DailyReportFormStore = {
       | 'outsourcings'
       | 'outsourcingFiles'
       | 'fuel'
+      | 'worker'
+      | 'mainProcesses'
+      | 'inputStatuses'
+      | 'materialStatuses'
       | 'fuelFile'
       | 'attachedFile',
+    subType?: string,
+    isToday?: boolean, // ✅ 추가
+  ) => void
+
+  // 작업내용 에서 구분에 세부 항목추가!!
+
+  addWorkDetail: (workId: number) => void
+  removeSubWork: (workId: number, workDetailId: number) => void
+
+  // 여기 추가
+  updateSubWorkField: (
+    workId: number,
+    workDetailId: number,
+    field: keyof WorkDetailInfo,
+    value: T,
   ) => void
 
   //payload 값
@@ -311,6 +413,15 @@ type DailyReportFormStore = {
   modifyDirectContracts: () => void
   modifyOutsourcing: () => void
   modifyEquipment: () => void
+
+  modifyWorkerProcess: () => void
+
+  modifyMainProcess: () => void
+
+  modifyInputStatus: () => void
+
+  modifyMaterialStatus: () => void
+
   modifyFuel: () => void
   modifyFile: () => void
   modifyWeather: (activeTab: string) => void

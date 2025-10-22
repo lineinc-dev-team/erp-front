@@ -549,6 +549,362 @@ export async function GetFuelByFilterService({
   return data
 }
 
+// 공사일보에서 주요공정 상세 조회
+
+// 유류 데이터 조회
+export async function GetMainProcessService({
+  pageParam = 0,
+  size = 10,
+  sort = 'id,asc',
+  siteId = 0,
+  siteProcessId = 0,
+  reportDate = '',
+}) {
+  const query = new URLSearchParams({
+    page: pageParam.toString(),
+    size: size.toString(),
+    sort,
+    siteId: siteId.toString(),
+    siteProcessId: siteProcessId.toString(),
+    reportDate,
+  })
+
+  const res = await fetch(`${API.DAILYREPORT}/main-processes?${query.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
+  }
+
+  const data = await res.json()
+  return data
+}
+
+// 주요공정 수정
+
+export async function ModifyMainProcessReport({
+  siteId,
+  siteProcessId,
+  reportDate,
+}: {
+  siteId: number
+  siteProcessId: number
+  reportDate: string
+}) {
+  const { modifyMainProcess } = useDailyFormStore.getState()
+  const payload = modifyMainProcess()
+
+  const res = await fetch(
+    `${API.DAILYREPORT}/main-processes?siteId=${siteId}&siteProcessId=${siteProcessId}&reportDate=${reportDate}`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      credentials: 'include',
+    },
+  )
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
+  }
+
+  return await res.status
+}
+
+// 투입현황
+export async function GetInputStatusService({
+  pageParam = 0,
+  size = 10,
+  sort = 'id,asc',
+  siteId = 0,
+  siteProcessId = 0,
+  reportDate = '',
+}) {
+  const query = new URLSearchParams({
+    page: pageParam.toString(),
+    size: size.toString(),
+    sort,
+    siteId: siteId.toString(),
+    siteProcessId: siteProcessId.toString(),
+    reportDate,
+  })
+
+  const res = await fetch(`${API.DAILYREPORT}/input-statuses?${query.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
+  }
+
+  const data = await res.json()
+  return data
+}
+
+// 투입현황 수정
+
+export async function ModifyInputStatusReport({
+  siteId,
+  siteProcessId,
+  reportDate,
+}: {
+  siteId: number
+  siteProcessId: number
+  reportDate: string
+}) {
+  const { modifyInputStatus } = useDailyFormStore.getState()
+  const payload = modifyInputStatus()
+
+  const res = await fetch(
+    `${API.DAILYREPORT}/input-statuses?siteId=${siteId}&siteProcessId=${siteProcessId}&reportDate=${reportDate}`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      credentials: 'include',
+    },
+  )
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
+  }
+
+  return await res.status
+}
+
+// 자재현황 조회
+
+export async function GetMaterialStatusService({
+  pageParam = 0,
+  size = 10,
+  sort = 'id,asc',
+  siteId = 0,
+  siteProcessId = 0,
+  reportDate = '',
+}) {
+  const query = new URLSearchParams({
+    page: pageParam.toString(),
+    size: size.toString(),
+    sort,
+    siteId: siteId.toString(),
+    siteProcessId: siteProcessId.toString(),
+    reportDate,
+  })
+
+  const res = await fetch(`${API.DAILYREPORT}/material-statuses?${query.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
+  }
+
+  const data = await res.json()
+  return data
+}
+
+// 자재 현항 수정
+
+export async function ModifyMaterialStatusReport({
+  siteId,
+  siteProcessId,
+  reportDate,
+}: {
+  siteId: number
+  siteProcessId: number
+  reportDate: string
+}) {
+  const { modifyMaterialStatus } = useDailyFormStore.getState()
+  const payload = modifyMaterialStatus()
+
+  const res = await fetch(
+    `${API.DAILYREPORT}/material-statuses?siteId=${siteId}&siteProcessId=${siteProcessId}&reportDate=${reportDate}`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      credentials: 'include',
+    },
+  )
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
+  }
+
+  return await res.status
+}
+
+// 작업 내용 조회
+
+export async function GetWorkerStatusService({
+  pageParam = 0,
+  size = 10,
+  sort = 'id,asc',
+  siteId = 0,
+  siteProcessId = 0,
+  reportDate = '',
+}) {
+  const query = new URLSearchParams({
+    page: pageParam.toString(),
+    size: size.toString(),
+    sort,
+    siteId: siteId.toString(),
+    siteProcessId: siteProcessId.toString(),
+    reportDate,
+  })
+
+  const res = await fetch(`${API.DAILYREPORT}/works?${query.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
+  }
+
+  const data = await res.json()
+  return data
+}
+
+// 작업 내용  수정
+
+export async function ModifyWorkerReport({
+  siteId,
+  siteProcessId,
+  reportDate,
+}: {
+  siteId: number
+  siteProcessId: number
+  reportDate: string
+}) {
+  const { modifyWorkerProcess } = useDailyFormStore.getState()
+  const payload = modifyWorkerProcess()
+
+  const res = await fetch(
+    `${API.DAILYREPORT}/works?siteId=${siteId}&siteProcessId=${siteProcessId}&reportDate=${reportDate}`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      credentials: 'include',
+    },
+  )
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
+  }
+
+  return await res.status
+}
+
 // 유류 데이터 수정
 // export async function ModifyFuelReport({
 //   siteId,

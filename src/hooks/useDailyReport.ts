@@ -12,8 +12,12 @@ import {
   ModifyEmployeesReport,
   ModifyEquipmentReport,
   ModifyFileReport,
+  ModifyInputStatusReport,
+  ModifyMainProcessReport,
+  ModifyMaterialStatusReport,
   // ModifyFuelReport,
   ModifyOutsourcingReport,
+  ModifyWorkerReport,
 } from '@/services/dailyReport/dailyReportRegistrationService'
 import { useDailyFormStore, useDailySearchList } from '@/stores/dailyReportStore'
 import { usePathname } from 'next/navigation'
@@ -263,6 +267,118 @@ export function useDailyReport() {
     },
   })
 
+  // 공사일보(주요공정)
+
+  const MainProcessModifyMutation = useMutation({
+    mutationFn: ({
+      siteId,
+      siteProcessId,
+      reportDate,
+    }: {
+      siteId: number
+      siteProcessId: number
+      reportDate: string
+    }) => ModifyMainProcessReport({ siteId, siteProcessId, reportDate }),
+
+    onSuccess: () => {
+      showSnackbar('공사일보(주요공정)이 수정 되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['MainProcess'] })
+      // reset()
+    },
+
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('공사일보(주요공정) 수정에 실패했습니다.', 'error')
+      }
+    },
+  })
+
+  // 공사일보(투입현황)
+
+  const MainInputStatusMutation = useMutation({
+    mutationFn: ({
+      siteId,
+      siteProcessId,
+      reportDate,
+    }: {
+      siteId: number
+      siteProcessId: number
+      reportDate: string
+    }) => ModifyInputStatusReport({ siteId, siteProcessId, reportDate }),
+
+    onSuccess: () => {
+      showSnackbar('공사일보(투입현황)이 수정 되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['inputStatus'] })
+      // reset()
+    },
+
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('공사일보(투입현황) 수정에 실패했습니다.', 'error')
+      }
+    },
+  })
+
+  // 공사일보(자재현황)
+
+  const MaterialStatusMutation = useMutation({
+    mutationFn: ({
+      siteId,
+      siteProcessId,
+      reportDate,
+    }: {
+      siteId: number
+      siteProcessId: number
+      reportDate: string
+    }) => ModifyMaterialStatusReport({ siteId, siteProcessId, reportDate }),
+
+    onSuccess: () => {
+      showSnackbar('공사일보(자재현황)이 수정 되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['materialStatus'] })
+      // reset()
+    },
+
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('공사일보(자재현황) 수정에 실패했습니다.', 'error')
+      }
+    },
+  })
+
+  // 공사일보(작업현황)
+
+  const WorkerStatusMutation = useMutation({
+    mutationFn: ({
+      siteId,
+      siteProcessId,
+      reportDate,
+    }: {
+      siteId: number
+      siteProcessId: number
+      reportDate: string
+    }) => ModifyWorkerReport({ siteId, siteProcessId, reportDate }),
+
+    onSuccess: () => {
+      showSnackbar('공사일보(작업현황)이 수정 되었습니다.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['workerStatus'] })
+      // reset()
+    },
+
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('공사일보(작업현황) 수정에 실패했습니다.', 'error')
+      }
+    },
+  })
+
   const FuelModifyMutation = useMutation({
     mutationFn: (fuelId: number) => ModifyDailyFuel(fuelId),
 
@@ -460,8 +576,14 @@ export function useDailyReport() {
     withEquipmentFetching,
     withEquipmentLoading,
 
+    MainInputStatusMutation,
+
+    WorkerStatusMutation,
+
     DailyListQuery,
 
+    MainProcessModifyMutation,
+    MaterialStatusMutation,
     useOutsourcingNameByFuel,
   }
 }

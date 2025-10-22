@@ -32,8 +32,12 @@ import {
   GetEquipmentByFilterService,
   GetFuelByFilterService,
   GetFuelPrice,
+  GetInputStatusService,
+  GetMainProcessService,
+  GetMaterialStatusService,
   GetOutsoucingByFilterService,
   GetReportByEvidenceFilterService,
+  GetWorkerStatusService,
   ModifyWeatherReport,
   OutsourcingWorkerNameScroll,
 } from '@/services/dailyReport/dailyReportRegistrationService'
@@ -68,6 +72,10 @@ export default function DailyReportRegistrationView() {
     removeCheckedItems,
     addTemporaryCheckedItems,
     resetEmployees,
+    resetMainProcess,
+    resetWorker,
+    resetInputStatus,
+    resetMaterialStatus,
     resetDirectContracts,
     resetOutsourcing,
     resetEquipment,
@@ -78,7 +86,9 @@ export default function DailyReportRegistrationView() {
     resetOutsourcingEvidenceFile,
     resetEquipmentEvidenceFile,
     resetFuelEvidenceFile,
-
+    addWorkDetail,
+    updateSubWorkField,
+    removeSubWork,
     addItem,
     toggleCheckItem,
     toggleCheckAllItems,
@@ -121,6 +131,8 @@ export default function DailyReportRegistrationView() {
     FuelModifyMutation,
     FileModifyMutation,
 
+    MainInputStatusMutation,
+    WorkerStatusMutation,
     CompleteInfoMutation,
 
     reportCancel,
@@ -137,6 +149,10 @@ export default function DailyReportRegistrationView() {
     withEquipmenthasNextPage,
     withEquipmentFetching,
     withEquipmentLoading,
+
+    MainProcessModifyMutation,
+
+    MaterialStatusMutation,
   } = useDailyReport()
 
   const { showSnackbar } = useSnackbarStore()
@@ -165,16 +181,7 @@ export default function DailyReportRegistrationView() {
   // 체크 박스에 활용
   //   const employees = form.employees
 
-  const tabs = [
-    '직원',
-    '직영/계약직',
-    '외주',
-    '장비',
-    '유류',
-    '외주(공사)',
-    '공사일보',
-    '현장 사진 등록',
-  ]
+  const tabs = ['직원', '직영/계약직', '외주', '장비', '유류', '공사일보', '현장 사진 등록']
   const [activeTab, setActiveTab] = useState('직원')
 
   const handleTabClick = (tab: string) => {
@@ -219,6 +226,50 @@ export default function DailyReportRegistrationView() {
     }
 
     setActiveTab(tab)
+    setIsEditMode(false)
+  }
+
+  // subTab
+
+  const subTabs = ['작업내용', '주요공정', '투입현황', '자재현황']
+  const [activeSubTab, setActiveSubTab] = useState('작업내용')
+
+  const handleSubTabClick = (tab: string) => {
+    let message = ''
+
+    if (!isSaved) {
+      // 저장되지 않은 변경사항이 있는 상태
+      if (isEditMode) {
+        message = '수정한 내용이 저장되지 않았습니다. 이동하시겠습니까?'
+      } else {
+        message = `현재 "${activeSubTab}" 탭의 데이터가 등록되지 않았습니다. 이동하시면 입력한 내용이 사라집니다. 계속하시겠습니까?`
+      }
+    } else if (isSaved) {
+      // 저장 완료된 상태
+      message = `현재 "${activeSubTab}" 탭의 데이터는 저장되었습니다. 이동하시면 화면에 입력된 내용은 초기화됩니다. 계속하시겠습니까?`
+    }
+
+    if (message && !window.confirm(message)) return
+
+    // 이전 탭에 맞는 reset 함수만 실행
+    switch (activeSubTab) {
+      case '작업내용':
+        resetWorker()
+        break
+      case '주요공정':
+        resetMainProcess()
+        break
+      case '투입현황':
+        resetInputStatus()
+        break
+      case '자재현황':
+        resetMaterialStatus()
+        break
+      default:
+        break
+    }
+
+    setActiveSubTab(tab)
     setIsEditMode(false)
   }
 
@@ -579,6 +630,556 @@ export default function DailyReportRegistrationView() {
     setField('fuelInfos', fetched)
     setModifyFuelNumber(allFuels[0]?.fuelAggregationId)
   }
+
+  // 공사일보의 작업 내용 조회
+
+  // 공사일보에서 주요공정
+
+  const {
+    // data: outsourcingData,
+    fetchNextPage: workerFetchNextPage,
+    hasNextPage: workerHasNextPage,
+    isFetching: workerFetching,
+    refetch: workerRefetch, // 조회 버튼에서 직접 실행할 수 있게
+  } = useInfiniteQuery({
+    queryKey: ['workerView', form.siteId, form.siteProcessId, form.reportDate],
+    queryFn: ({ pageParam }) =>
+      GetWorkerStatusService({
+        pageParam,
+        siteId: form.siteId,
+        siteProcessId: form.siteProcessId,
+        reportDate: form.reportDate ? form.reportDate.toISOString().slice(0, 10) : '',
+      }),
+    enabled: false, // 버튼 누르기 전에는 자동 조회 안 되게
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      const nextPage = sliceInfo.page + 1
+      return sliceInfo.hasNext ? nextPage : undefined
+    },
+  })
+
+  const handleWorkerRefetch = async () => {
+    const res = await workerRefetch()
+    if (!res.data) return
+
+    // content 배열 합치기
+    const allWorkerProcess = res.data.pages.flatMap((page) => page.data.content)
+
+    if (allWorkerProcess.length === 0) {
+      // 데이터가 아예 없는 경우
+      setIsEditMode(false)
+      resetWorker()
+      return
+    }
+
+    const fetched = allWorkerProcess.map((item: any) => ({
+      id: item.id,
+      workName: item.workName,
+      isToday: item.isToday,
+      workDetails: item.workDetails.map((detail: any) => ({
+        id: detail.id,
+        content: detail.content,
+        personnelAndEquipment: detail.personnelAndEquipment,
+      })),
+    }))
+
+    setIsEditMode(true)
+    setField('works', fetched)
+  }
+
+  //  전일 내용 복사 로직
+  const handleCopyPreviousDay = async (targetDate: string) => {
+    if (!targetDate) return
+
+    const maxAttempts = 30
+    let attempts = 0
+    let found = false
+    const previousDate = new Date(targetDate)
+    let lastCheckedDateStr = ''
+
+    while (!found && attempts < maxAttempts) {
+      previousDate.setDate(previousDate.getDate() - 1)
+      lastCheckedDateStr = previousDate.toISOString().slice(0, 10)
+
+      const res = await GetWorkerStatusService({
+        pageParam: 0,
+        siteId: form.siteId,
+        siteProcessId: form.siteProcessId,
+        reportDate: lastCheckedDateStr,
+      })
+
+      if (res?.data?.content && res.data.content.length > 0) {
+        const allWorkerProcess = res.data.content
+        const fetched = allWorkerProcess.map((item: any) => ({
+          id: item.id,
+          workName: item.workName,
+          isToday: item.isToday,
+          workDetails: item.workDetails.map((detail: any) => ({
+            id: detail.id,
+            content: detail.content,
+            personnelAndEquipment: detail.personnelAndEquipment,
+          })),
+        }))
+
+        setIsEditMode(true)
+        setField('works', fetched)
+
+        console.log('전일 복사 데이터', fetched)
+
+        if (lastCheckedDateStr !== getTodayDateString(targetDate)) {
+          alert(
+            `${getTodayDateString(
+              targetDate,
+            )} 입력 정보가 없어 ${lastCheckedDateStr} 데이터를 조회했습니다.`,
+          )
+        } else {
+          alert('전일 작업 내용이 복사되었습니다.')
+        }
+
+        found = true
+        break
+      }
+
+      attempts++
+    }
+
+    if (!found) {
+      alert('최근 1개월 이내 데이터가 없습니다.')
+    }
+  }
+
+  const todayWorks = useMemo(() => form.works.filter((w) => w.isToday === true), [form.works])
+  const tomorrowWorks = useMemo(() => form.works.filter((w) => w.isToday === false), [form.works])
+
+  const checkedTodayWorkIds = form.checkedWorkerIds.filter((id) =>
+    todayWorks.some((w) => w.id === id),
+  )
+  const checkedTomorrowWorkIds = form.checkedWorkerIds.filter((id) =>
+    tomorrowWorks.some((w) => w.id === id),
+  )
+
+  const isTodayAllChecked =
+    todayWorks.length > 0 && checkedTodayWorkIds.length === todayWorks.length
+  const isTomorrowAllChecked =
+    tomorrowWorks.length > 0 && checkedTomorrowWorkIds.length === tomorrowWorks.length
+
+  // 공사일보에서 주요공정
+
+  const {
+    // data: outsourcingData,
+    fetchNextPage: processFetchNextPage,
+    hasNextPage: processHasNextPage,
+    isFetching: processFetching,
+    refetch: processRefetch, // 조회 버튼에서 직접 실행할 수 있게
+  } = useInfiniteQuery({
+    queryKey: ['processView', form.siteId, form.siteProcessId, form.reportDate],
+    queryFn: ({ pageParam }) =>
+      GetMainProcessService({
+        pageParam,
+        siteId: form.siteId,
+        siteProcessId: form.siteProcessId,
+        reportDate: form.reportDate ? form.reportDate.toISOString().slice(0, 10) : '',
+      }),
+    enabled: false, // 버튼 누르기 전에는 자동 조회 안 되게
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      const nextPage = sliceInfo.page + 1
+      return sliceInfo.hasNext ? nextPage : undefined
+    },
+  })
+
+  const handleMainProcessRefetch = async () => {
+    const res = await processRefetch()
+    if (!res.data) return
+
+    // content 배열 합치기
+    const allMainProcess = res.data.pages.flatMap((page) => page.data.content)
+
+    if (allMainProcess.length === 0) {
+      // 데이터가 아예 없는 경우
+      setIsEditMode(false)
+      resetMainProcess()
+      return
+    }
+
+    const fetched = allMainProcess.map((item: any) => ({
+      id: item.id,
+      process: item.process,
+      unit: item.unit,
+      contractAmount: item.contractAmount,
+      previousDayAmount: item.previousDayAmount,
+      todayAmount: item.todayAmount,
+      cumulativeAmount: item.cumulativeAmount,
+      processRate: item.processRate,
+    }))
+
+    setIsEditMode(true)
+    setField('mainProcesses', fetched)
+  }
+
+  // 날짜 → YYYY-MM-DD 문자열 변환 헬퍼
+  const formatDateString = (date: Date) => date.toISOString().slice(0, 10)
+
+  // YYYY-MM-DD → MM월 DD일 포맷 변환
+  const formatDisplayDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    const month = (date.getMonth() + 1).toString().padStart(2, '0')
+    const day = date.getDate().toString().padStart(2, '0')
+    return `${month}월 ${day}일`
+  }
+
+  // 전일 내용 복사
+  const handleMainProcessCopy = async (targetDate: string) => {
+    if (!targetDate) return
+
+    let found = false
+    let attempts = 0
+    const maxAttempts = 30 // 최대 1개월 전까지
+    const previousDate = new Date(targetDate)
+    let lastCheckedDateStr = ''
+
+    while (!found && attempts < maxAttempts) {
+      previousDate.setDate(previousDate.getDate() - 1)
+      lastCheckedDateStr = formatDateString(previousDate)
+
+      // 전일(혹은 과거) 데이터 조회
+      const res = await GetMainProcessService({
+        pageParam: 0,
+        siteId: form.siteId,
+        siteProcessId: form.siteProcessId,
+        reportDate: lastCheckedDateStr,
+      })
+
+      if (res?.data?.content && res.data.content.length > 0) {
+        // ✅ 데이터 존재 시 변환
+        const allMainProcess = res.data.content
+        const fetched = allMainProcess.map((item: any) => ({
+          id: item.id,
+          process: item.process,
+          unit: item.unit,
+          contractAmount: item.contractAmount,
+          previousDayAmount: item.previousDayAmount,
+          todayAmount: item.todayAmount,
+          cumulativeAmount: item.cumulativeAmount,
+          processRate: item.processRate,
+        }))
+
+        setIsEditMode(true)
+        setField('mainProcesses', fetched)
+
+        // ✅ 알림 메시지 처리
+        if (attempts === 0) {
+          // 바로 전일 데이터 있음
+          alert('전일 주요공정 내용이 복사되었습니다.')
+        } else {
+          // 며칠 전 데이터 발견
+          alert(
+            `${formatDisplayDate(targetDate)} 입력정보가 없어 ${formatDisplayDate(
+              lastCheckedDateStr,
+            )} 데이터를 조회했습니다.`,
+          )
+        }
+
+        found = true
+        break
+      }
+
+      attempts++
+    }
+
+    // 1개월 내에도 데이터 없을 경우
+    if (!found) {
+      alert('최근 1개월 이내 주요공정 데이터가 없습니다.')
+    }
+  }
+
+  const mainProcessesList = useMemo(() => form.mainProcesses, [form.mainProcesses])
+
+  const checkedProcessIds = form.checkedMainProcessIds
+  const isProcessAllChecked =
+    mainProcessesList.length > 0 && checkedProcessIds.length === mainProcessesList.length
+
+  // 공사일보의 투입현황
+
+  // 기존
+  // const inputStatusesList = useMemo(() => form.inputStatuses, [form.inputStatuses])
+
+  // 투입 현황
+
+  const {
+    // data: outsourcingData,
+    fetchNextPage: inputStatusesFetchNextPage,
+    hasNextPage: inputStatusesHasNextPage,
+    isFetching: inputStatusesFetching,
+    refetch: inputStatusesRefetch, // 조회 버튼에서 직접 실행할 수 있게
+  } = useInfiniteQuery({
+    queryKey: ['inputStatusView', form.siteId, form.siteProcessId, form.reportDate],
+    queryFn: ({ pageParam }) =>
+      GetInputStatusService({
+        pageParam,
+        siteId: form.siteId,
+        siteProcessId: form.siteProcessId,
+        reportDate: form.reportDate ? form.reportDate.toISOString().slice(0, 10) : '',
+      }),
+    enabled: false, // 버튼 누르기 전에는 자동 조회 안 되게
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      const nextPage = sliceInfo.page + 1
+      return sliceInfo.hasNext ? nextPage : undefined
+    },
+  })
+
+  const handleInputStatusRefetch = async () => {
+    const res = await inputStatusesRefetch()
+    if (!res.data) return
+
+    // content 배열 합치기
+    const allInputStatus = res.data.pages.flatMap((page) => page.data.content)
+
+    if (allInputStatus.length === 0) {
+      // 데이터가 아예 없는 경우
+      setIsEditMode(false)
+      resetInputStatus()
+      return
+    }
+
+    const fetched = allInputStatus.map((item: any) => ({
+      id: item.id,
+      category: item.category,
+      previousDayCount: item.previousDayCount,
+      todayCount: item.todayCount,
+      cumulativeCount: item.cumulativeCount,
+      type: item.typeCode,
+    }))
+
+    setIsEditMode(true)
+
+    setField('inputStatuses', fetched)
+  }
+
+  const handleInputProcessCopy = async (targetDate: string) => {
+    if (!targetDate) return
+
+    let found = false
+    let attempts = 0
+    const maxAttempts = 30 // 최대 1개월
+    const previousDate = new Date(targetDate)
+    let lastCheckedDateStr = ''
+
+    while (!found && attempts < maxAttempts) {
+      previousDate.setDate(previousDate.getDate() - 1)
+      lastCheckedDateStr = formatDateString(previousDate)
+
+      const res = await GetInputStatusService({
+        pageParam: 0,
+        siteId: form.siteId,
+        siteProcessId: form.siteProcessId,
+        reportDate: lastCheckedDateStr,
+      })
+
+      if (res?.data?.content && res.data.content.length > 0) {
+        // 🔹 데이터 존재 시 변환
+        const allInputStatus = res.data.content
+        const fetched = allInputStatus.map((item: any) => ({
+          id: item.id,
+          category: item.category,
+          previousDayCount: item.previousDayCount,
+          todayCount: item.todayCount,
+          cumulativeCount: item.cumulativeCount,
+          type: item.typeCode, // PERSONNEL / EQUIPMENT
+        }))
+
+        setIsEditMode(true)
+        setField('inputStatuses', fetched)
+
+        if (attempts === 0) {
+          alert('전일 투입현황 내용이 복사되었습니다.')
+        } else {
+          alert(
+            `${formatDisplayDate(targetDate)} 입력정보가 없어 ${formatDisplayDate(
+              lastCheckedDateStr,
+            )} 데이터를 조회했습니다.`,
+          )
+        }
+
+        found = true
+        break
+      }
+
+      attempts++
+    }
+
+    if (!found) {
+      alert('최근 1개월 이내 투입현황 데이터가 없습니다.')
+    }
+  }
+
+  const personnelList = useMemo(
+    () => form.inputStatuses.filter((item) => item.type === 'PERSONNEL'),
+    [form.inputStatuses],
+  )
+
+  const equipmentList = useMemo(
+    () => form.inputStatuses.filter((item) => item.type === 'EQUIPMENT'),
+    [form.inputStatuses],
+  )
+
+  const checkedInputStatusIds = form.checkedInputStatusIds
+
+  const isPersonnelAllChecked =
+    personnelList.length > 0 &&
+    personnelList.every((item) => checkedInputStatusIds.includes(item.id))
+
+  const isStatusEquipmentAllChecked =
+    equipmentList.length > 0 &&
+    equipmentList.every((item) => checkedInputStatusIds.includes(item.id))
+
+  // 자재현황 리스트 조회
+
+  const {
+    // data: outsourcingData,
+    fetchNextPage: materialStatusesFetchNextPage,
+    hasNextPage: materialStatusesHasNextPage,
+    isFetching: materialStatusesFetching,
+    refetch: materialStatusesRefetch, // 조회 버튼에서 직접 실행할 수 있게
+  } = useInfiniteQuery({
+    queryKey: ['materialStatusView', form.siteId, form.siteProcessId, form.reportDate],
+    queryFn: ({ pageParam }) =>
+      GetMaterialStatusService({
+        pageParam,
+        siteId: form.siteId,
+        siteProcessId: form.siteProcessId,
+        reportDate: form.reportDate ? form.reportDate.toISOString().slice(0, 10) : '',
+      }),
+    enabled: false, // 버튼 누르기 전에는 자동 조회 안 되게
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      const nextPage = sliceInfo.page + 1
+      return sliceInfo.hasNext ? nextPage : undefined
+    },
+  })
+
+  const handleMaterialStatusRefetch = async () => {
+    const res = await materialStatusesRefetch()
+    if (!res.data) return
+
+    // content 배열 합치기
+    const allMaterialStatus = res.data.pages.flatMap((page) => page.data.content)
+
+    if (allMaterialStatus.length === 0) {
+      // 데이터가 아예 없는 경우
+      setIsEditMode(false)
+      resetMaterialStatus()
+      return
+    }
+
+    const fetched = allMaterialStatus.map((item: any) => ({
+      id: item.id,
+      materialName: item.materialName,
+      unit: item.unit,
+      plannedAmount: item.plannedAmount,
+      previousDayAmount: item.previousDayAmount,
+      todayAmount: item.todayAmount,
+      cumulativeAmount: item.cumulativeAmount,
+      remainingAmount: item.remainingAmount,
+      type: item.typeCode,
+    }))
+
+    setIsEditMode(true)
+
+    setField('materialStatuses', fetched)
+  }
+
+  // 전일 자재현황 복사
+  const handleMaterialProcessCopy = async (targetDate: string) => {
+    if (!targetDate) return
+
+    let found = false
+    let attempts = 0
+    const maxAttempts = 30 // 최대 1개월
+    const previousDate = new Date(targetDate)
+    let lastCheckedDateStr = ''
+
+    while (!found && attempts < maxAttempts) {
+      previousDate.setDate(previousDate.getDate() - 1)
+      lastCheckedDateStr = formatDateString(previousDate)
+
+      //  전일(혹은 과거) 자재현황 조회
+      const res = await GetMaterialStatusService({
+        pageParam: 0,
+        siteId: form.siteId,
+        siteProcessId: form.siteProcessId,
+        reportDate: lastCheckedDateStr,
+      })
+
+      if (res?.data?.content && res.data.content.length > 0) {
+        //  데이터 존재 시 변환
+        const allMaterialStatus = res.data.content
+        const fetched = allMaterialStatus.map((item: any) => ({
+          id: item.id,
+          materialName: item.materialName,
+          unit: item.unit,
+          plannedAmount: item.plannedAmount,
+          previousDayAmount: item.previousDayAmount,
+          todayAmount: item.todayAmount,
+          cumulativeAmount: item.cumulativeAmount,
+          remainingAmount: item.remainingAmount,
+          type: item.typeCode, // COMPANY_SUPPLIED / CLIENT_SUPPLIED
+        }))
+
+        setIsEditMode(true)
+        setField('materialStatuses', fetched)
+
+        // 🔹 알림 메시지 처리
+        if (attempts === 0) {
+          alert('전일 자재현황 내용이 복사되었습니다.')
+        } else {
+          alert(
+            `${formatDisplayDate(targetDate)} 입력정보가 없어 ${formatDisplayDate(
+              lastCheckedDateStr,
+            )} 데이터를 조회했습니다.`,
+          )
+        }
+
+        found = true
+        break
+      }
+
+      attempts++
+    }
+
+    // 🔹 1개월 이내에도 데이터 없을 경우
+    if (!found) {
+      alert('최근 1개월 이내 자재현황 데이터가 없습니다.')
+    }
+  }
+
+  const urgentMaterialList = useMemo(
+    () => form.materialStatuses.filter((item) => item.type === 'COMPANY_SUPPLIED'),
+    [form.materialStatuses],
+  )
+
+  const PaymentMaterialList = useMemo(
+    () => form.materialStatuses.filter((item) => item.type === 'CLIENT_SUPPLIED'),
+    [form.materialStatuses],
+  )
+
+  const checkedMaterialIds = form.checkedMaterialIds
+
+  const isUrgentAllChecked =
+    urgentMaterialList.length > 0 &&
+    urgentMaterialList.every((item) => checkedMaterialIds.includes(item.id))
+
+  const isPaymentAllChecked =
+    PaymentMaterialList.length > 0 &&
+    PaymentMaterialList.every((item) => checkedMaterialIds.includes(item.id))
+
+  // 유류 데이터
+
   const fuelData = useMemo(() => form.fuelInfos, [form.fuelInfos])
 
   const checkedFuelIds = form.checkedFuelsIds
@@ -618,7 +1219,6 @@ export default function DailyReportRegistrationView() {
         }
       })
 
-      // ✅ 삭제된 항목을 가장 위로 정렬
       const deletedCompanies = newOptions.filter((c) => c.deleted)
       const normalCompanies = newOptions.filter((c) => !c.deleted && c.id !== 0)
 
@@ -718,11 +1318,21 @@ export default function DailyReportRegistrationView() {
         handleFuelEvidenceRefetch()
       } else if (activeTab === '현장 사진 등록') {
         handleFileRefetch()
+      } else if (activeTab === '공사일보') {
+        if (activeSubTab === '주요공정') {
+          handleMainProcessRefetch()
+        } else if (activeSubTab === '작업내용') {
+          handleWorkerRefetch()
+        } else if (activeSubTab === '투입현황') {
+          handleInputStatusRefetch()
+        } else if (activeSubTab === '자재현황') {
+          handleMaterialStatusRefetch()
+        }
       }
     }
 
     fetchData()
-  }, [activeTab, form.siteId, form.siteProcessId, form.reportDate])
+  }, [activeTab, activeSubTab, form.siteId, form.siteProcessId, form.reportDate])
 
   // 출역일보 전체 데이터 조회
 
@@ -1211,8 +1821,6 @@ export default function DailyReportRegistrationView() {
       const companyId = row.outsourcingCompanyId
       const worker = row.laborId
 
-      console.log('here!', worker)
-
       if (ContarctNameOptionsByCompany[companyId]) {
         return
       }
@@ -1316,8 +1924,6 @@ export default function DailyReportRegistrationView() {
 
   // 상세페이지 데이터 (예: props나 query에서 가져온 값)
   const outsourcings = resultOutsourcing
-
-  console.log('outsourcings24', outsourcings)
 
   // 1. 상세페이지 들어올 때 각 업체별 worker 데이터 API 호출
   useEffect(() => {
@@ -1779,8 +2385,6 @@ export default function DailyReportRegistrationView() {
   }
 
   const previousWeatherRef = useRef(form.weather)
-
-  console.log('isEditModeisEditMode', isEditMode)
 
   useEffect(() => {
     if (!outsourcingfuel.length) return
@@ -4585,468 +5189,1396 @@ export default function DailyReportRegistrationView() {
         </>
       )}
 
-      {activeTab === '외주(공사)' && (
+      {activeTab === '공사일보' && (
         <>
-          <div>
-            <div className="flex justify-between items-center mt-5 mb-2">
-              <span className="font-bold mb-4"> [{activeTab}]</span>
-              <div className="flex gap-4">
-                <CommonButton
-                  label="삭제"
-                  className="px-7"
-                  variant="danger"
-                  onClick={() => removeCheckedItems('fuel')}
-                  disabled={
-                    isHeadOfficeInfo
-                      ? false // 본사 정보이면 무조건 활성화
-                      : detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                        detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
-                  }
-                />
-                <CommonButton
-                  label="추가"
-                  className="px-7"
-                  variant="secondary"
-                  onClick={() => addItem('fuel')}
-                  disabled={
-                    isHeadOfficeInfo
-                      ? false // 본사 정보이면 무조건 활성화
-                      : detailReport?.data?.status === 'AUTO_COMPLETED' ||
-                        detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
-                  }
-                />
-              </div>
+          <div className="flex justify-between mt-10">
+            <div className="flex  ">
+              {subTabs.map((subtab) => (
+                <button
+                  key={subtab}
+                  className={`px-4 py-2 -mb-px border-b-2 cursor-pointer font-medium ${
+                    activeSubTab === subtab
+                      ? 'bg-white border border-gray-400 text-black text-[15px] font-bold rounded-t-md px-8'
+                      : 'bg-gray-200 border border-gray-400 text-gray-400 text-[15px] rounded-t-md px-8'
+                  }`}
+                  onClick={() => handleSubTabClick(subtab)}
+                >
+                  {subtab}
+                </button>
+              ))}
             </div>
+          </div>
 
-            <TableContainer
-              component={Paper}
-              onScroll={(e) => {
-                const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
-                if (scrollHeight - scrollTop <= clientHeight * 1.2) {
-                  if (fuelHasNextPage && !fuelFetching) {
-                    fuelFetchNextPage()
-                  }
-                }
-              }}
-            >
-              <Table size="small">
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
-                      <Checkbox
-                        checked={isFuelAllChecked}
-                        indeterminate={checkedFuelIds.length > 0 && !isFuelAllChecked}
-                        onChange={(e) => toggleCheckAllItems('fuel', e.target.checked)}
-                        sx={{ color: 'black' }}
-                      />
-                    </TableCell>
-                    {[
-                      '업체명',
-                      '항목',
-                      '규격',
-                      '단위',
-                      '수량',
-                      '첨부파일',
-                      '비고',
-                      '등록/수정일',
-                    ].map((label) => (
-                      <TableCell
-                        key={label}
-                        align="center"
-                        sx={{
-                          backgroundColor: '#D1D5DB',
-                          border: '1px solid  #9CA3AF',
-                          color: 'black',
-                          fontWeight: 'bold',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
-                          label
-                        ) : (
-                          <div className="flex items-center justify-center">
-                            <span>{label}</span>
-                            <span className="text-red-500 ml-1">*</span>
-                          </div>
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
+          {activeSubTab === '작업내용' && (
+            <>
+              <div>
+                <div className="flex justify-between items-center mt-5 mb-2">
+                  <span className="font-bold mb-4">[금일]</span>
+                  <div className="flex gap-4">
+                    <CommonButton
+                      label="전일 내용 복사"
+                      className="px-"
+                      variant="secondary"
+                      onClick={() =>
+                        handleCopyPreviousDay(getTodayDateString(form.reportDate) ?? '')
+                      }
+                      disabled={
+                        isHeadOfficeInfo
+                          ? false
+                          : ['AUTO_COMPLETED', 'COMPLETED'].includes(detailReport?.data?.status)
+                      }
+                    />
+                    <CommonButton
+                      label="삭제"
+                      className="px-7"
+                      variant="danger"
+                      onClick={() => removeCheckedItems('worker', '', true)} // true: 금일
+                      disabled={
+                        isHeadOfficeInfo
+                          ? false
+                          : ['AUTO_COMPLETED', 'COMPLETED'].includes(detailReport?.data?.status)
+                      }
+                    />
+                    <CommonButton
+                      label="추가"
+                      className="px-7"
+                      variant="secondary"
+                      onClick={() => addItem('worker', '', true)} // isToday = true
+                      disabled={
+                        isHeadOfficeInfo
+                          ? false
+                          : ['AUTO_COMPLETED', 'COMPLETED'].includes(detailReport?.data?.status)
+                      }
+                    />
+                  </div>
+                </div>
 
-                <TableBody>
-                  {fuelData.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={9} align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                        외주(공사) 데이터가 없습니다.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    fuelData.map((m) => (
-                      <TableRow key={m.id}>
-                        <TableCell
-                          padding="checkbox"
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF' }}
-                        >
+                <TableContainer
+                  component={Paper}
+                  onScroll={(e) => {
+                    const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
+                    if (scrollHeight - scrollTop <= clientHeight * 1.2) {
+                      if (workerHasNextPage && !workerFetching) {
+                        workerFetchNextPage()
+                      }
+                    }
+                  }}
+                >
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                        <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
                           <Checkbox
-                            checked={checkedFuelIds.includes(m.id)}
-                            onChange={(e) => toggleCheckItem('fuel', m.id, e.target.checked)}
+                            checked={isTodayAllChecked}
+                            indeterminate={checkedTodayWorkIds.length > 0 && !isTodayAllChecked}
+                            onChange={(e) => toggleCheckAllItems('worker', e.target.checked)}
+                            sx={{ color: 'black' }}
                           />
                         </TableCell>
-
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <CommonSelect
-                            fullWidth
-                            // value={m.outsourcingCompanyId || 0}
-                            value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
-                            onChange={async (value) => {
-                              const selectedCompany = updatedOutCompanyOptions.find(
-                                (opt) => opt.id === value,
-                              )
-
-                              setSelectedCompanyIds((prev) => ({
-                                ...prev,
-                                [m.id]: selectedCompany ? selectedCompany.id : 0,
-                              }))
-
-                              setSelectId(m.id)
-
-                              updateItemField(
-                                'fuel',
-                                m.id,
-                                'outsourcingCompanyId',
-                                selectedCompany?.id || null,
-                              )
-
-                              updateItemField('fuel', m.id, 'driverId', null)
-                              updateItemField('fuel', m.id, 'equipmentId', null)
-                              updateItemField('fuel', m.id, 'specificationName', '-')
-
-                              setSelectId(m.id)
-
-                              updateItemField(
-                                'fuel',
-                                m.id,
-                                'outsourcingCompanyId',
-                                selectedCompany?.id || null,
-                              )
-
-                              // 해당 row 기사, 차량 초기화
-                              setSelectedDriverIds((prev) => ({
-                                ...prev,
-                                [m.id]: 0,
-                              }))
-
-                              setSelectedCarNumberIds((prev) => ({
-                                ...prev,
-                                [m.id]: 0,
-                              }))
-
-                              // 차량 값도 추가
+                        {['작업명', '내용', '인원 및 장비', '-'].map((label) => (
+                          <TableCell
+                            key={label}
+                            align="center"
+                            sx={{
+                              backgroundColor: '#D1D5DB',
+                              border: '1px solid #9CA3AF',
+                              fontWeight: 'bold',
                             }}
-                            options={updatedOutCompanyOptions}
-                            onScrollToBottom={() => {
-                              if (withEquipmenthasNextPage && !withEquipmentFetching)
-                                withEquipmentFetchNextPage()
-                            }}
-                            loading={withEquipmentLoading}
-                          />
-                        </TableCell>
+                          >
+                            {label}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    </TableHead>
 
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <CommonSelect
-                            fullWidth
-                            value={selectedDriverIds[m.id] || m.driverId || 0}
-                            onChange={async (value) => {
-                              const selectedDriver = (
-                                driverOptionsByCompany[m.outsourcingCompanyId] ?? []
-                              ).find((opt) => opt.id === value)
+                    <TableBody>
+                      {todayWorks.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={10} align="center">
+                            금일 작업내용 데이터가 없습니다.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        todayWorks.map((m) => (
+                          <TableRow key={m.id}>
+                            <TableCell
+                              padding="checkbox"
+                              align="center"
+                              sx={{ border: '1px solid  #9CA3AF' }}
+                            >
+                              <Checkbox
+                                checked={checkedTodayWorkIds.includes(m.id)}
+                                onChange={(e) => toggleCheckItem('worker', m.id, e.target.checked)}
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="작업명 입력"
+                                value={m.workName}
+                                onChange={(e) =>
+                                  updateItemField('worker', m.id, 'workName', e.target.value)
+                                }
+                              />
+                            </TableCell>
 
-                              if (!selectedDriver) return
+                            <TableCell
+                              align="center"
+                              colSpan={1}
+                              sx={{ border: '1px solid #9CA3AF' }}
+                            >
+                              {m.workDetails.map((detail) => (
+                                <div key={detail.id} className="flex gap-2 mt-1 items-center">
+                                  <TextField
+                                    size="small"
+                                    placeholder="작업 내용 입력"
+                                    value={detail.content}
+                                    onChange={(e) =>
+                                      updateSubWorkField(m.id, detail.id, 'content', e.target.value)
+                                    }
+                                    fullWidth
+                                  />
+                                </div>
+                              ))}
+                            </TableCell>
 
-                              updateItemField('fuel', m.id, 'driverId', selectedDriver.id)
-                            }}
-                            options={
-                              driverOptionsByCompany[m.outsourcingCompanyId] ?? [
-                                { id: 0, name: '선택', category: '' },
-                              ]
+                            <TableCell
+                              align="center"
+                              colSpan={1}
+                              sx={{ border: '1px solid #9CA3AF' }}
+                            >
+                              {m.workDetails.map((detail) => (
+                                <div key={detail.id} className="flex gap-2 mt-1 items-center">
+                                  <TextField
+                                    size="small"
+                                    placeholder="인원 및 장비 입력"
+                                    value={detail.personnelAndEquipment}
+                                    onChange={(e) =>
+                                      updateSubWorkField(
+                                        m.id,
+                                        detail.id,
+                                        'personnelAndEquipment',
+                                        e.target.value,
+                                      )
+                                    }
+                                    fullWidth
+                                  />
+                                </div>
+                              ))}
+                            </TableCell>
+
+                            <TableCell sx={{ width: '100px' }}>
+                              {/* 셀 자체의 최대 너비 제한도 추가 가능 */}
+                              {m.workDetails.map((detail, index) => (
+                                <div key={detail.id} className="flex items-center gap-2 mt-1">
+                                  {/* 버튼 조건부 렌더링 */}
+                                  {index === 0 ? (
+                                    <CommonButton
+                                      label="추가"
+                                      className="px-7 whitespace-nowrap"
+                                      variant="primary"
+                                      onClick={() => addWorkDetail(m.id)}
+                                    />
+                                  ) : (
+                                    <CommonButton
+                                      label="삭제"
+                                      className="px-7"
+                                      variant="danger"
+                                      onClick={() => removeSubWork(m.id, detail.id)}
+                                    />
+                                  )}
+                                </div>
+                              ))}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                  {workerFetching && <div className="p-2 text-center">불러오는 중...</div>}
+                </TableContainer>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mt-5 mb-2">
+                  <span className="font-bold mb-4"> [명일]</span>
+                  <div className="flex gap-4">
+                    <CommonButton
+                      label="전일 내용 복사"
+                      className="px-"
+                      variant="secondary"
+                      onClick={() =>
+                        handleCopyPreviousDay(getTodayDateString(form.reportDate) ?? '')
+                      }
+                      disabled={
+                        isHeadOfficeInfo
+                          ? false
+                          : ['AUTO_COMPLETED', 'COMPLETED'].includes(detailReport?.data?.status)
+                      }
+                    />
+                    <CommonButton
+                      label="삭제"
+                      className="px-7"
+                      variant="danger"
+                      onClick={() => removeCheckedItems('worker', '', false)}
+                      disabled={
+                        isHeadOfficeInfo
+                          ? false // 본사 정보이면 무조건 활성화
+                          : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                            detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
+                      }
+                    />
+                    <CommonButton
+                      label="추가"
+                      className="px-7"
+                      variant="secondary"
+                      onClick={() => addItem('worker', '', false)} // isToday = true
+                      disabled={
+                        isHeadOfficeInfo
+                          ? false // 본사 정보이면 무조건 활성화
+                          : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                            detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
+                      }
+                    />
+                  </div>
+                </div>
+
+                <TableContainer
+                  component={Paper}
+                  onScroll={(e) => {
+                    const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
+                    if (scrollHeight - scrollTop <= clientHeight * 1.2) {
+                      if (workerHasNextPage && !workerFetching) {
+                        workerFetchNextPage()
+                      }
+                    }
+                  }}
+                >
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                        <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <Checkbox
+                            checked={isTomorrowAllChecked}
+                            indeterminate={
+                              checkedTomorrowWorkIds.length > 0 && !isTomorrowAllChecked
                             }
-                            onScrollToBottom={() => {
-                              if (fuelDriverHasNextPage && !fuelDriverIsFetching)
-                                fuelDriverFetchNextPage()
-                            }}
-                            loading={fuelDriverLoading}
+                            onChange={(e) => toggleCheckAllItems('worker', e.target.checked)}
+                            sx={{ color: 'black' }}
                           />
                         </TableCell>
-
-                        <TableCell>
-                          <CommonSelect
-                            fullWidth
-                            value={selectedCarNumberIds[m.id] || m.equipmentId || 0}
-                            onChange={async (value) => {
-                              const selectedCarNumber = (
-                                carNumberOptionsByCompany[m.outsourcingCompanyId] ?? []
-                              ).find((opt) => opt.id === value)
-
-                              if (!selectedCarNumber) return
-
-                              updateItemField('fuel', m.id, 'equipmentId', selectedCarNumber.id)
-
-                              updateItemField(
-                                'fuel',
-                                m.id,
-                                'specificationName',
-                                selectedCarNumber.specification || '-',
-                              )
+                        {['작업명', '내용', '인원 및 장비', '-'].map((label) => (
+                          <TableCell
+                            key={label}
+                            align="center"
+                            sx={{
+                              backgroundColor: '#D1D5DB',
+                              border: '1px solid  #9CA3AF',
+                              color: 'black',
+                              fontWeight: 'bold',
+                              whiteSpace: 'nowrap',
                             }}
-                            options={
-                              carNumberOptionsByCompany[m.outsourcingCompanyId] ?? [
-                                { id: 0, name: '선택', category: '' },
-                              ]
-                            }
-                            onScrollToBottom={() => {
-                              if (fuelEquipmentHasNextPage && !fuelEquipmentIsFetching)
-                                fuelEquipmentFetchNextPage()
-                            }}
-                            loading={fuelEquipmentLoading}
-                          />
-                        </TableCell>
+                          >
+                            {label === '내용' || label === '인원 및 장비' || label === '-' ? (
+                              label
+                            ) : (
+                              <div className="flex items-center justify-center">
+                                <span>{label}</span>
+                                <span className="text-red-500 ml-1">*</span>
+                              </div>
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    </TableHead>
 
-                        {/* 규격 */}
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          {m.specificationName ?? '-'}
-                        </TableCell>
+                    <TableBody>
+                      {tomorrowWorks.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={10}
+                            align="center"
+                            sx={{ border: '1px solid #9CA3AF' }}
+                          >
+                            명일 작업내용 데이터가 없습니다.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        tomorrowWorks.map((m) => (
+                          <TableRow key={m.id}>
+                            <TableCell
+                              padding="checkbox"
+                              align="center"
+                              sx={{ border: '1px solid  #9CA3AF' }}
+                            >
+                              <Checkbox
+                                checked={checkedTomorrowWorkIds.includes(m.id)}
+                                onChange={(e) => toggleCheckItem('worker', m.id, e.target.checked)}
+                              />
+                            </TableCell>
 
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="작업명 입력"
+                                value={m.workName}
+                                onChange={(e) =>
+                                  updateItemField('worker', m.id, 'workName', e.target.value)
+                                }
+                              />
+                            </TableCell>
+
+                            <TableCell
+                              align="center"
+                              colSpan={1}
+                              sx={{ border: '1px solid #9CA3AF' }}
+                            >
+                              {m.workDetails.map((detail) => (
+                                <div key={detail.id} className="flex gap-2 mt-1 items-center">
+                                  <TextField
+                                    size="small"
+                                    placeholder="작업 내용 입력"
+                                    value={detail.content}
+                                    onChange={(e) =>
+                                      updateSubWorkField(m.id, detail.id, 'content', e.target.value)
+                                    }
+                                    fullWidth
+                                  />
+                                </div>
+                              ))}
+                            </TableCell>
+
+                            <TableCell
+                              align="center"
+                              colSpan={1}
+                              sx={{ border: '1px solid #9CA3AF' }}
+                            >
+                              {m.workDetails.map((detail) => (
+                                <div key={detail.id} className="flex gap-2 mt-1 items-center">
+                                  <TextField
+                                    size="small"
+                                    placeholder="인원 및 장비 입력"
+                                    value={detail.personnelAndEquipment}
+                                    onChange={(e) =>
+                                      updateSubWorkField(
+                                        m.id,
+                                        detail.id,
+                                        'personnelAndEquipment',
+                                        e.target.value,
+                                      )
+                                    }
+                                    fullWidth
+                                  />
+                                </div>
+                              ))}
+                            </TableCell>
+
+                            <TableCell sx={{ width: '100px' }}>
+                              {/* 셀 자체의 최대 너비 제한도 추가 가능 */}
+                              {m.workDetails.map((detail, index) => (
+                                <div key={detail.id} className="flex items-center gap-2 mt-1">
+                                  {/* 버튼 조건부 렌더링 */}
+                                  {index === 0 ? (
+                                    <CommonButton
+                                      label="추가"
+                                      className="px-7 whitespace-nowrap"
+                                      variant="primary"
+                                      onClick={() => addWorkDetail(m.id)}
+                                    />
+                                  ) : (
+                                    <CommonButton
+                                      label="삭제"
+                                      className="px-7"
+                                      variant="danger"
+                                      onClick={() => removeSubWork(m.id, detail.id)}
+                                    />
+                                  )}
+                                </div>
+                              ))}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+
+                  {workerFetching && <div className="p-2 text-center">불러오는 중...</div>}
+                </TableContainer>
+              </div>
+            </>
+          )}
+
+          {activeSubTab === '주요공정' && (
+            <div>
+              <div className="flex justify-between items-center mt-5 mb-2">
+                <div></div>
+                <div className="flex gap-4">
+                  <CommonButton
+                    label="전일 내용 복사"
+                    className="px-"
+                    variant="secondary"
+                    onClick={() => handleMainProcessCopy(getTodayDateString(form.reportDate) ?? '')}
+                    disabled={
+                      isHeadOfficeInfo
+                        ? false
+                        : ['AUTO_COMPLETED', 'COMPLETED'].includes(detailReport?.data?.status)
+                    }
+                  />
+
+                  <CommonButton
+                    label="삭제"
+                    className="px-7"
+                    variant="danger"
+                    onClick={() => removeCheckedItems('mainProcesses')} // true: 금일
+                    disabled={
+                      isHeadOfficeInfo
+                        ? false
+                        : ['AUTO_COMPLETED', 'COMPLETED'].includes(detailReport?.data?.status)
+                    }
+                  />
+                  <CommonButton
+                    label="추가"
+                    className="px-7"
+                    variant="secondary"
+                    onClick={() => addItem('mainProcesses')} // isToday = true
+                    disabled={
+                      isHeadOfficeInfo
+                        ? false
+                        : ['AUTO_COMPLETED', 'COMPLETED'].includes(detailReport?.data?.status)
+                    }
+                  />
+                </div>
+              </div>
+
+              <TableContainer
+                component={Paper}
+                onScroll={(e) => {
+                  const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
+                  if (scrollHeight - scrollTop <= clientHeight * 1.2) {
+                    if (processHasNextPage && !processFetching) {
+                      processFetchNextPage()
+                    }
+                  }
+                }}
+              >
+                <Table size="small">
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          checked={isProcessAllChecked}
+                          indeterminate={checkedProcessIds.length > 0 && !isProcessAllChecked}
+                          onChange={(e) => toggleCheckAllItems('mainProcesses', e.target.checked)}
+                          sx={{ color: 'black' }}
+                        />
+                      </TableCell>
+                      {['공정', '단위', '계약', '전일', '금일', '누계', '공정율'].map((label) => (
                         <TableCell
+                          key={label}
                           align="center"
-                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                          sx={{
+                            backgroundColor: '#D1D5DB',
+                            border: '1px solid #9CA3AF',
+                            fontWeight: 'bold',
+                          }}
                         >
-                          <TextField
-                            size="small"
-                            placeholder="숫자만"
-                            value={formatNumber(m.fuelAmount)}
-                            onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
-                              updateItemField('fuel', m.id, 'fuelAmount', numericValue)
-                            }}
-                            inputProps={{
-                              inputMode: 'numeric',
-                              pattern: '[0-9]*',
-                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
-                            }}
-                          />
+                          {label}
                         </TableCell>
+                      ))}
+                    </TableRow>
+                  </TableHead>
 
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
-                            <CommonFileInput
-                              acceptedExtensions={[
-                                'pdf',
-                                'txt',
-                                'rtf',
-                                'docx',
-                                'hwp',
-                                'xlsx',
-                                'csv',
-                                'ods',
-                                'pptx',
-                                'ppt',
-                                'odp',
-                                'jpg',
-                                'jpeg',
-                                'png',
-                                'gif',
-                                'tif',
-                                'tiff',
-                                'bmp',
-                                'zip',
-                                '7z',
-                                'mp3',
-                                'wav',
-                                'mp4',
-                                'mov',
-                                'avi',
-                                'wmv',
-                                'dwg',
-                              ]}
-                              multiple={false}
-                              files={m.files} // 각 항목별 files
-                              onChange={(newFiles) => {
-                                updateItemField('fuel', m.id, 'files', newFiles.slice(0, 1))
-                              }}
-                              uploadTarget="WORK_DAILY_REPORT"
-                            />
-                          </div>
-                        </TableCell>
-
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <TextField
-                            size="small"
-                            placeholder="500자 이하 텍스트 입력"
-                            value={m.memo}
-                            onChange={(e) => updateItemField('fuel', m.id, 'memo', e.target.value)}
-                          />
-                        </TableCell>
-
-                        {/* 등록/수정일 (임시: Date.now 기준) */}
-                        <TableCell
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF', width: '260px' }}
-                        >
-                          <CommonInput
-                            placeholder="-"
-                            value={m.modifyDate ?? ''}
-                            onChange={(value) => updateItemField('fuel', m.id, 'modifyDate', value)}
-                            disabled
-                            className="flex-1"
-                          />
+                  <TableBody>
+                    {mainProcessesList.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={10} align="center">
+                          주요공정 데이터가 없습니다.
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                    ) : (
+                      mainProcessesList.map((m) => (
+                        <TableRow key={m.id}>
+                          <TableCell padding="checkbox" align="center">
+                            <Checkbox
+                              checked={checkedProcessIds.includes(m.id)}
+                              onChange={(e) =>
+                                toggleCheckItem('mainProcesses', m.id, e.target.checked)
+                              }
+                            />
+                          </TableCell>
 
-              {fuelFetching && <div className="p-2 text-center">불러오는 중...</div>}
-            </TableContainer>
-          </div>
+                          <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="텍스트 입력"
+                              value={m.process}
+                              onChange={(e) =>
+                                updateItemField('mainProcesses', m.id, 'process', e.target.value)
+                              }
+                            />
+                          </TableCell>
 
-          <div>
-            <div className="flex justify-between items-center mt-10 mb-2">
-              <span className="font-bold border-b-2 mb-4">증빙</span>
-              <div className="flex gap-4">
-                <CommonButton
-                  label="삭제"
-                  className="px-7"
-                  variant="danger"
-                  onClick={() => removeCheckedItems('fuelFile')}
-                />
-                <CommonButton
-                  label="추가"
-                  className="px-7"
-                  variant="secondary"
-                  onClick={() => addItem('fuelFile')}
-                />
-              </div>
+                          <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="텍스트입력"
+                              value={m.unit}
+                              onChange={(e) =>
+                                updateItemField('mainProcesses', m.id, 'unit', e.target.value)
+                              }
+                            />
+                          </TableCell>
+
+                          <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자20자, 소수점1자리"
+                              value={m.contractAmount}
+                              onChange={(e) =>
+                                updateItemField(
+                                  'mainProcesses',
+                                  m.id,
+                                  'contractAmount',
+                                  e.target.value,
+                                )
+                              }
+                            />
+                          </TableCell>
+                          <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자20자, 소수점1자리"
+                              value={m.previousDayAmount}
+                              onChange={(e) =>
+                                updateItemField(
+                                  'mainProcesses',
+                                  m.id,
+                                  'previousDayAmount',
+                                  e.target.value,
+                                )
+                              }
+                            />
+                          </TableCell>
+                          <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자20자, 소수점1자리"
+                              value={m.todayAmount}
+                              onChange={(e) =>
+                                updateItemField(
+                                  'mainProcesses',
+                                  m.id,
+                                  'todayAmount',
+                                  e.target.value,
+                                )
+                              }
+                            />
+                          </TableCell>
+                          <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자20자, 소수점1자리"
+                              value={m.cumulativeAmount}
+                              onChange={(e) =>
+                                updateItemField(
+                                  'mainProcesses',
+                                  m.id,
+                                  'cumulativeAmount',
+                                  e.target.value,
+                                )
+                              }
+                            />
+                          </TableCell>
+
+                          <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자20자, 소수점1자리"
+                              value={m.processRate}
+                              onChange={(e) =>
+                                updateItemField(
+                                  'mainProcesses',
+                                  m.id,
+                                  'processRate',
+                                  e.target.value,
+                                )
+                              }
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+
+                {processFetching && <div className="p-2 text-center">불러오는 중...</div>}
+              </TableContainer>
             </div>
-            <TableContainer component={Paper}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
-                      <Checkbox
-                        checked={isFuelProofAllChecked}
-                        indeterminate={fuelProofCheckIds.length > 0 && !isFuelProofAllChecked}
-                        onChange={(e) => toggleCheckAllItems('fuelFile', e.target.checked)}
-                        sx={{ color: 'black' }}
-                      />
-                    </TableCell>
-                    {['문서명', '첨부', '비고'].map((label) => (
-                      <TableCell
-                        key={label}
-                        align="center"
-                        sx={{
-                          backgroundColor: '#D1D5DB',
-                          border: '1px solid  #9CA3AF',
-                          color: 'black',
-                          fontWeight: 'bold',
-                        }}
-                      >
-                        {label === '비고' || label === '첨부' ? (
-                          label
-                        ) : (
-                          <div className="flex items-center justify-center">
-                            <span>{label}</span>
-                            <span className="text-red-500 ml-1">*</span>
-                          </div>
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {fuelProof.map((m) => (
-                    <TableRow key={m.id} sx={{ border: '1px solid  #9CA3AF' }}>
-                      <TableCell
-                        padding="checkbox"
-                        align="center"
-                        sx={{ border: '1px solid  #9CA3AF' }}
-                      >
-                        <Checkbox
-                          checked={fuelProofCheckIds.includes(m.id)}
-                          onChange={(e) => toggleCheckItem('fuelFile', m.id, e.target.checked)}
-                        />
-                      </TableCell>
-                      <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
-                        <TextField
-                          size="small"
-                          placeholder="텍스트 입력"
-                          sx={{ width: '100%' }}
-                          value={m.name}
-                          onChange={(e) =>
-                            updateItemField('fuelFile', m.id, 'name', e.target.value)
-                          }
-                        />
-                      </TableCell>
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
-                          <CommonFileInput
-                            acceptedExtensions={[
-                              'pdf',
-                              'txt',
-                              'rtf',
-                              'docx',
-                              'hwp',
-                              'xlsx',
-                              'csv',
-                              'ods',
-                              'pptx',
-                              'ppt',
-                              'odp',
-                              'jpg',
-                              'jpeg',
-                              'png',
-                              'gif',
-                              'tif',
-                              'tiff',
-                              'bmp',
-                              'zip',
-                              '7z',
-                              'mp3',
-                              'wav',
-                              'mp4',
-                              'mov',
-                              'avi',
-                              'wmv',
-                              'dwg',
-                            ]}
-                            multiple={false}
-                            files={m.files} // 각 항목별 files
-                            onChange={(newFiles) => {
-                              updateItemField('fuelFile', m.id, 'files', newFiles.slice(0, 1))
-                            }}
-                            uploadTarget="WORK_DAILY_REPORT"
+          )}
+
+          {activeSubTab === '투입현황' && (
+            <>
+              <div>
+                <div className="flex justify-between items-center mt-5 mb-2">
+                  <span className="font-bold mb-4"> [인원]</span>
+                  <div className="flex gap-4">
+                    <CommonButton
+                      label="전일 내용 복사"
+                      className="px-"
+                      variant="secondary"
+                      onClick={() =>
+                        handleInputProcessCopy(getTodayDateString(form.reportDate) ?? '')
+                      }
+                      disabled={
+                        isHeadOfficeInfo
+                          ? false
+                          : ['AUTO_COMPLETED', 'COMPLETED'].includes(detailReport?.data?.status)
+                      }
+                    />
+                    <CommonButton
+                      label="삭제"
+                      className="px-7"
+                      variant="danger"
+                      onClick={() => removeCheckedItems('inputStatuses', 'PERSONNEL')} // true: 금일
+                      disabled={
+                        isHeadOfficeInfo
+                          ? false
+                          : ['AUTO_COMPLETED', 'COMPLETED'].includes(detailReport?.data?.status)
+                      }
+                    />
+                    <CommonButton
+                      label="추가"
+                      className="px-7"
+                      variant="secondary"
+                      onClick={() => addItem('inputStatuses', 'PERSONNEL')} // isToday = true
+                      disabled={
+                        isHeadOfficeInfo
+                          ? false
+                          : ['AUTO_COMPLETED', 'COMPLETED'].includes(detailReport?.data?.status)
+                      }
+                    />
+                  </div>
+                </div>
+
+                <TableContainer
+                  component={Paper}
+                  onScroll={(e) => {
+                    const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
+                    if (scrollHeight - scrollTop <= clientHeight * 1.2) {
+                      if (inputStatusesHasNextPage && !inputStatusesFetching) {
+                        inputStatusesFetchNextPage()
+                      }
+                    }
+                  }}
+                >
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                        <TableCell padding="checkbox">
+                          <Checkbox
+                            checked={isPersonnelAllChecked}
+                            indeterminate={
+                              checkedInputStatusIds.length > 0 && !isPersonnelAllChecked
+                            }
+                            onChange={(e) => toggleCheckAllItems('mainProcesses', e.target.checked)}
+                            sx={{ color: 'black' }}
                           />
-                        </div>
-                      </TableCell>
-                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                        <TextField
-                          size="small"
-                          placeholder="500자 이하 텍스트 입력"
-                          sx={{ width: '100%' }}
-                          value={m.memo}
-                          onChange={(e) =>
-                            updateItemField('fuelFile', m.id, 'memo', e.target.value)
-                          }
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </div>
+                        </TableCell>
+                        {['구분', '전일', '금일', '누계'].map((label) => (
+                          <TableCell
+                            key={label}
+                            align="center"
+                            sx={{
+                              backgroundColor: '#D1D5DB',
+                              border: '1px solid #9CA3AF',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            {label}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    </TableHead>
+
+                    <TableBody>
+                      {personnelList.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={10} align="center">
+                            투입현황 데이터가 없습니다.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        personnelList.map((m) => (
+                          <TableRow key={m.id}>
+                            <TableCell padding="checkbox" align="center">
+                              <Checkbox
+                                checked={checkedInputStatusIds.includes(m.id)}
+                                onChange={(e) =>
+                                  toggleCheckItem('inputStatuses', m.id, e.target.checked)
+                                }
+                              />
+                            </TableCell>
+
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="텍스트입력"
+                                value={m.category}
+                                onChange={(e) =>
+                                  updateItemField('inputStatuses', m.id, 'category', e.target.value)
+                                }
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="숫자20자, 소수점1자리"
+                                value={m.previousDayCount}
+                                onChange={(e) =>
+                                  updateItemField(
+                                    'inputStatuses',
+                                    m.id,
+                                    'previousDayCount',
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="숫자20자, 소수점1자리"
+                                value={m.todayCount}
+                                onChange={(e) =>
+                                  updateItemField(
+                                    'inputStatuses',
+                                    m.id,
+                                    'todayCount',
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="숫자20자, 소수점1자리"
+                                value={m.cumulativeCount}
+                                onChange={(e) =>
+                                  updateItemField(
+                                    'inputStatuses',
+                                    m.id,
+                                    'cumulativeCount',
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+
+                  {inputStatusesFetching && <div className="p-2 text-center">불러오는 중...</div>}
+                </TableContainer>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mt-5 mb-2">
+                  <span className="font-bold mb-4"> [장비]</span>
+                  <div className="flex gap-4">
+                    <CommonButton
+                      label="전일 내용 복사"
+                      className="px-"
+                      variant="secondary"
+                      onClick={() =>
+                        handleInputProcessCopy(getTodayDateString(form.reportDate) ?? '')
+                      }
+                      disabled={
+                        isHeadOfficeInfo
+                          ? false
+                          : ['AUTO_COMPLETED', 'COMPLETED'].includes(detailReport?.data?.status)
+                      }
+                    />
+                    <CommonButton
+                      label="삭제"
+                      className="px-7"
+                      variant="danger"
+                      onClick={() => removeCheckedItems('inputStatuses', 'EQUIPMENT')} // true: 금일
+                      disabled={
+                        isHeadOfficeInfo
+                          ? false
+                          : ['AUTO_COMPLETED', 'COMPLETED'].includes(detailReport?.data?.status)
+                      }
+                    />
+                    <CommonButton
+                      label="추가"
+                      className="px-7"
+                      variant="secondary"
+                      onClick={() => addItem('inputStatuses', 'EQUIPMENT')} // isToday = true
+                      disabled={
+                        isHeadOfficeInfo
+                          ? false
+                          : ['AUTO_COMPLETED', 'COMPLETED'].includes(detailReport?.data?.status)
+                      }
+                    />
+                  </div>
+                </div>
+
+                <TableContainer
+                  component={Paper}
+                  onScroll={(e) => {
+                    const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
+                    if (scrollHeight - scrollTop <= clientHeight * 1.2) {
+                      if (inputStatusesHasNextPage && !inputStatusesFetching) {
+                        inputStatusesFetchNextPage()
+                      }
+                    }
+                  }}
+                >
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                        <TableCell padding="checkbox">
+                          <Checkbox
+                            checked={isStatusEquipmentAllChecked}
+                            indeterminate={
+                              checkedInputStatusIds.length > 0 && !isStatusEquipmentAllChecked
+                            }
+                            onChange={(e) => toggleCheckAllItems('mainProcesses', e.target.checked)}
+                            sx={{ color: 'black' }}
+                          />
+                        </TableCell>
+                        {['구분', '전일', '금일', '누계'].map((label) => (
+                          <TableCell
+                            key={label}
+                            align="center"
+                            sx={{
+                              backgroundColor: '#D1D5DB',
+                              border: '1px solid #9CA3AF',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            {label}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    </TableHead>
+
+                    <TableBody>
+                      {equipmentList.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={10} align="center">
+                            투입현황 데이터가 없습니다.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        equipmentList.map((m) => (
+                          <TableRow key={m.id}>
+                            <TableCell padding="checkbox" align="center">
+                              <Checkbox
+                                checked={checkedInputStatusIds.includes(m.id)}
+                                onChange={(e) =>
+                                  toggleCheckItem('inputStatuses', m.id, e.target.checked)
+                                }
+                              />
+                            </TableCell>
+
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="텍스트입력"
+                                value={m.category}
+                                onChange={(e) =>
+                                  updateItemField('inputStatuses', m.id, 'category', e.target.value)
+                                }
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="숫자20자, 소수점1자리"
+                                value={m.previousDayCount}
+                                onChange={(e) =>
+                                  updateItemField(
+                                    'inputStatuses',
+                                    m.id,
+                                    'previousDayCount',
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="숫자20자, 소수점1자리"
+                                value={m.todayCount}
+                                onChange={(e) =>
+                                  updateItemField(
+                                    'inputStatuses',
+                                    m.id,
+                                    'todayCount',
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="숫자20자, 소수점1자리"
+                                value={m.cumulativeCount}
+                                onChange={(e) =>
+                                  updateItemField(
+                                    'inputStatuses',
+                                    m.id,
+                                    'cumulativeCount',
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+
+                  {inputStatusesFetching && <div className="p-2 text-center">불러오는 중...</div>}
+                </TableContainer>
+              </div>
+            </>
+          )}
+
+          {activeSubTab === '자재현황' && (
+            <>
+              <div>
+                <div className="flex justify-between items-center mt-5 mb-2">
+                  <span className="font-bold mb-4"> [시급자재]</span>
+                  <div className="flex gap-4">
+                    <CommonButton
+                      label="전일 내용 복사"
+                      className="px-"
+                      variant="secondary"
+                      onClick={() =>
+                        handleMaterialProcessCopy(getTodayDateString(form.reportDate) ?? '')
+                      }
+                      disabled={
+                        isHeadOfficeInfo
+                          ? false
+                          : ['AUTO_COMPLETED', 'COMPLETED'].includes(detailReport?.data?.status)
+                      }
+                    />
+
+                    <CommonButton
+                      label="삭제"
+                      className="px-7"
+                      variant="danger"
+                      onClick={() => removeCheckedItems('materialStatuses', 'COMPANY_SUPPLIED')} // true: 금일
+                      disabled={
+                        isHeadOfficeInfo
+                          ? false
+                          : ['AUTO_COMPLETED', 'COMPLETED'].includes(detailReport?.data?.status)
+                      }
+                    />
+                    <CommonButton
+                      label="추가"
+                      className="px-7"
+                      variant="secondary"
+                      onClick={() => addItem('materialStatuses', 'COMPANY_SUPPLIED')} // isToday = true
+                      disabled={
+                        isHeadOfficeInfo
+                          ? false
+                          : ['AUTO_COMPLETED', 'COMPLETED'].includes(detailReport?.data?.status)
+                      }
+                    />
+                  </div>
+                </div>
+
+                <TableContainer
+                  component={Paper}
+                  onScroll={(e) => {
+                    const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
+                    if (scrollHeight - scrollTop <= clientHeight * 1.2) {
+                      if (materialStatusesHasNextPage && !materialStatusesFetching) {
+                        materialStatusesFetchNextPage()
+                      }
+                    }
+                  }}
+                >
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                        <TableCell padding="checkbox">
+                          <Checkbox
+                            checked={isUrgentAllChecked}
+                            indeterminate={checkedMaterialIds.length > 0 && !isUrgentAllChecked}
+                            onChange={(e) =>
+                              toggleCheckAllItems('materialStatuses', e.target.checked)
+                            }
+                            sx={{ color: 'black' }}
+                          />
+                        </TableCell>
+                        {['품명', '단위', '계획', '전일', '금일', '누계', '잔여'].map((label) => (
+                          <TableCell
+                            key={label}
+                            align="center"
+                            sx={{
+                              backgroundColor: '#D1D5DB',
+                              border: '1px solid #9CA3AF',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            {label}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    </TableHead>
+
+                    <TableBody>
+                      {urgentMaterialList.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={10} align="center">
+                            자재현황 데이터가 없습니다.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        urgentMaterialList.map((m) => (
+                          <TableRow key={m.id}>
+                            <TableCell padding="checkbox" align="center">
+                              <Checkbox
+                                checked={checkedMaterialIds.includes(m.id)}
+                                onChange={(e) =>
+                                  toggleCheckItem('materialStatuses', m.id, e.target.checked)
+                                }
+                              />
+                            </TableCell>
+
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="텍스트입력"
+                                value={m.materialName}
+                                onChange={(e) =>
+                                  updateItemField(
+                                    'materialStatuses',
+                                    m.id,
+                                    'materialName',
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="숫자20자, 소수점1자리"
+                                value={m.unit}
+                                onChange={(e) =>
+                                  updateItemField('materialStatuses', m.id, 'unit', e.target.value)
+                                }
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="숫자20자, 소수점1자리"
+                                value={m.plannedAmount}
+                                onChange={(e) =>
+                                  updateItemField(
+                                    'materialStatuses',
+                                    m.id,
+                                    'plannedAmount',
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="숫자20자, 소수점1자리"
+                                value={m.previousDayAmount}
+                                onChange={(e) =>
+                                  updateItemField(
+                                    'materialStatuses',
+                                    m.id,
+                                    'previousDayAmount',
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="숫자20자, 소수점1자리"
+                                value={m.todayAmount}
+                                onChange={(e) =>
+                                  updateItemField(
+                                    'materialStatuses',
+                                    m.id,
+                                    'todayAmount',
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="숫자20자, 소수점1자리"
+                                value={m.cumulativeAmount}
+                                onChange={(e) =>
+                                  updateItemField(
+                                    'materialStatuses',
+                                    m.id,
+                                    'cumulativeAmount',
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="숫자20자, 소수점1자리"
+                                value={m.remainingAmount}
+                                onChange={(e) =>
+                                  updateItemField(
+                                    'materialStatuses',
+                                    m.id,
+                                    'remainingAmount',
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+
+                  {inputStatusesFetching && <div className="p-2 text-center">불러오는 중...</div>}
+                </TableContainer>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mt-5 mb-2">
+                  <span className="font-bold mb-4"> [지급자재]</span>
+                  <div className="flex gap-4">
+                    <CommonButton
+                      label="전일 내용 복사"
+                      className="px-"
+                      variant="secondary"
+                      onClick={() =>
+                        handleMaterialProcessCopy(getTodayDateString(form.reportDate) ?? '')
+                      }
+                      disabled={
+                        isHeadOfficeInfo
+                          ? false
+                          : ['AUTO_COMPLETED', 'COMPLETED'].includes(detailReport?.data?.status)
+                      }
+                    />
+
+                    <CommonButton
+                      label="삭제"
+                      className="px-7"
+                      variant="danger"
+                      onClick={() => removeCheckedItems('materialStatuses', 'CLIENT_SUPPLIED')} // true: 금일
+                      disabled={
+                        isHeadOfficeInfo
+                          ? false
+                          : ['AUTO_COMPLETED', 'COMPLETED'].includes(detailReport?.data?.status)
+                      }
+                    />
+                    <CommonButton
+                      label="추가"
+                      className="px-7"
+                      variant="secondary"
+                      onClick={() => addItem('materialStatuses', 'CLIENT_SUPPLIED')} // isToday = true
+                      disabled={
+                        isHeadOfficeInfo
+                          ? false
+                          : ['AUTO_COMPLETED', 'COMPLETED'].includes(detailReport?.data?.status)
+                      }
+                    />
+                  </div>
+                </div>
+
+                <TableContainer
+                  component={Paper}
+                  onScroll={(e) => {
+                    const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
+                    if (scrollHeight - scrollTop <= clientHeight * 1.2) {
+                      if (materialStatusesHasNextPage && !materialStatusesFetching) {
+                        materialStatusesFetchNextPage()
+                      }
+                    }
+                  }}
+                >
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                        <TableCell padding="checkbox">
+                          <Checkbox
+                            checked={isPaymentAllChecked}
+                            indeterminate={checkedMaterialIds.length > 0 && !isPaymentAllChecked}
+                            onChange={(e) =>
+                              toggleCheckAllItems('materialStatuses', e.target.checked)
+                            }
+                            sx={{ color: 'black' }}
+                          />
+                        </TableCell>
+                        {['품명', '단위', '계획', '전일', '금일', '누계', '잔여'].map((label) => (
+                          <TableCell
+                            key={label}
+                            align="center"
+                            sx={{
+                              backgroundColor: '#D1D5DB',
+                              border: '1px solid #9CA3AF',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            {label}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    </TableHead>
+
+                    <TableBody>
+                      {PaymentMaterialList.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={10} align="center">
+                            자재현황 데이터가 없습니다.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        PaymentMaterialList.map((m) => (
+                          <TableRow key={m.id}>
+                            <TableCell padding="checkbox" align="center">
+                              <Checkbox
+                                checked={checkedMaterialIds.includes(m.id)}
+                                onChange={(e) =>
+                                  toggleCheckItem('materialStatuses', m.id, e.target.checked)
+                                }
+                              />
+                            </TableCell>
+
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="텍스트입력"
+                                value={m.materialName}
+                                onChange={(e) =>
+                                  updateItemField(
+                                    'materialStatuses',
+                                    m.id,
+                                    'materialName',
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="숫자20자, 소수점1자리"
+                                value={m.unit}
+                                onChange={(e) =>
+                                  updateItemField('materialStatuses', m.id, 'unit', e.target.value)
+                                }
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="숫자20자, 소수점1자리"
+                                value={m.plannedAmount}
+                                onChange={(e) =>
+                                  updateItemField(
+                                    'materialStatuses',
+                                    m.id,
+                                    'plannedAmount',
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="숫자20자, 소수점1자리"
+                                value={m.previousDayAmount}
+                                onChange={(e) =>
+                                  updateItemField(
+                                    'materialStatuses',
+                                    m.id,
+                                    'previousDayAmount',
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="숫자20자, 소수점1자리"
+                                value={m.todayAmount}
+                                onChange={(e) =>
+                                  updateItemField(
+                                    'materialStatuses',
+                                    m.id,
+                                    'todayAmount',
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="숫자20자, 소수점1자리"
+                                value={m.cumulativeAmount}
+                                onChange={(e) =>
+                                  updateItemField(
+                                    'materialStatuses',
+                                    m.id,
+                                    'cumulativeAmount',
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                              <TextField
+                                size="small"
+                                placeholder="숫자20자, 소수점1자리"
+                                value={m.remainingAmount}
+                                onChange={(e) =>
+                                  updateItemField(
+                                    'materialStatuses',
+                                    m.id,
+                                    'remainingAmount',
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+
+                  {inputStatusesFetching && <div className="p-2 text-center">불러오는 중...</div>}
+                </TableContainer>
+              </div>
+            </>
+          )}
         </>
       )}
 
@@ -5401,6 +6933,134 @@ export default function DailyReportRegistrationView() {
                     }
                   },
                 })
+              } else if (activeTab === '공사일보') {
+                // if (!validateFuel()) return
+
+                if (activeSubTab === '주요공정') {
+                  MainProcessModifyMutation.mutate(
+                    {
+                      siteId: form.siteId || 0,
+                      siteProcessId: form.siteProcessId || 0,
+                      reportDate: getTodayDateString(form.reportDate) || '',
+                    },
+                    {
+                      onSuccess: async () => {
+                        handleMainProcessRefetch() // 주요공정 데이터 재조회
+                        setSaved(true)
+                        // 날씨가 바뀌었을 경우만 호출
+                        try {
+                          await ModifyWeatherReport({
+                            siteId: form.siteId || 0,
+                            siteProcessId: form.siteProcessId || 0,
+                            reportDate: getTodayDateString(form.reportDate) || '',
+                            activeTab: activeTab,
+                          })
+                          // 성공 후 현재 form.weather를 previousWeatherRef에 업데이트
+                          previousWeatherRef.current = form.weather
+                        } catch (error: unknown) {
+                          if (error instanceof Error) {
+                            showSnackbar(error.message, 'error')
+                          } else {
+                            showSnackbar('날씨 수정에 실패했습니다.', 'error')
+                          }
+                        }
+                      },
+                    },
+                  )
+                } else if (activeSubTab === '작업내용') {
+                  WorkerStatusMutation.mutate(
+                    {
+                      siteId: form.siteId || 0,
+                      siteProcessId: form.siteProcessId || 0,
+                      reportDate: getTodayDateString(form.reportDate) || '',
+                    },
+                    {
+                      onSuccess: async () => {
+                        handleWorkerRefetch() // 주요공정 데이터 재조회
+                        setSaved(true)
+                        // 날씨가 바뀌었을 경우만 호출
+                        try {
+                          await ModifyWeatherReport({
+                            siteId: form.siteId || 0,
+                            siteProcessId: form.siteProcessId || 0,
+                            reportDate: getTodayDateString(form.reportDate) || '',
+                            activeTab: activeTab,
+                          })
+                          // 성공 후 현재 form.weather를 previousWeatherRef에 업데이트
+                          previousWeatherRef.current = form.weather
+                        } catch (error: unknown) {
+                          if (error instanceof Error) {
+                            showSnackbar(error.message, 'error')
+                          } else {
+                            showSnackbar('날씨 수정에 실패했습니다.', 'error')
+                          }
+                        }
+                      },
+                    },
+                  )
+                } else if (activeSubTab === '투입현황') {
+                  MainInputStatusMutation.mutate(
+                    {
+                      siteId: form.siteId || 0,
+                      siteProcessId: form.siteProcessId || 0,
+                      reportDate: getTodayDateString(form.reportDate) || '',
+                    },
+                    {
+                      onSuccess: async () => {
+                        handleInputStatusRefetch() // 주요공정 데이터 재조회
+                        setSaved(true)
+                        // 날씨가 바뀌었을 경우만 호출
+                        try {
+                          await ModifyWeatherReport({
+                            siteId: form.siteId || 0,
+                            siteProcessId: form.siteProcessId || 0,
+                            reportDate: getTodayDateString(form.reportDate) || '',
+                            activeTab: activeTab,
+                          })
+                          // 성공 후 현재 form.weather를 previousWeatherRef에 업데이트
+                          previousWeatherRef.current = form.weather
+                        } catch (error: unknown) {
+                          if (error instanceof Error) {
+                            showSnackbar(error.message, 'error')
+                          } else {
+                            showSnackbar('날씨 수정에 실패했습니다.', 'error')
+                          }
+                        }
+                      },
+                    },
+                  )
+                } else if (activeSubTab === '자재현황') {
+                  MaterialStatusMutation.mutate(
+                    {
+                      siteId: form.siteId || 0,
+                      siteProcessId: form.siteProcessId || 0,
+                      reportDate: getTodayDateString(form.reportDate) || '',
+                    },
+                    {
+                      onSuccess: async () => {
+                        handleMaterialStatusRefetch() // 주요공정 데이터 재조회
+                        setSaved(true)
+                        // 날씨가 바뀌었을 경우만 호출
+                        try {
+                          await ModifyWeatherReport({
+                            siteId: form.siteId || 0,
+                            siteProcessId: form.siteProcessId || 0,
+                            reportDate: getTodayDateString(form.reportDate) || '',
+                            activeTab: activeTab,
+                          })
+                          // 성공 후 현재 form.weather를 previousWeatherRef에 업데이트
+                          previousWeatherRef.current = form.weather
+                        } catch (error: unknown) {
+                          if (error instanceof Error) {
+                            showSnackbar(error.message, 'error')
+                          } else {
+                            showSnackbar('날씨 수정에 실패했습니다.', 'error')
+                          }
+                        }
+                      },
+                    },
+                  )
+                }
               } else if (activeTab === '현장 사진 등록') {
                 if (!validateFile()) return
 
@@ -5477,6 +7137,37 @@ export default function DailyReportRegistrationView() {
                     setSaved(true)
                   },
                 })
+              } else if (activeTab === '공사일보') {
+                // if (!validateFuel()) return
+                if (activeSubTab === '주요공정') {
+                  createDailyMutation.mutate(undefined, {
+                    onSuccess: () => {
+                      handleMainProcessRefetch() // 등록 성공 후 실행
+                      setSaved(true)
+                    },
+                  })
+                } else if (activeSubTab === '작업내용') {
+                  createDailyMutation.mutate(undefined, {
+                    onSuccess: () => {
+                      handleWorkerRefetch() // 등록 성공 후 실행
+                      setSaved(true)
+                    },
+                  })
+                } else if (activeSubTab === '투입현황') {
+                  createDailyMutation.mutate(undefined, {
+                    onSuccess: () => {
+                      handleInputStatusRefetch() // 등록 성공 후 실행
+                      setSaved(true)
+                    },
+                  })
+                } else if (activeSubTab === '자재현황') {
+                  createDailyMutation.mutate(undefined, {
+                    onSuccess: () => {
+                      handleMaterialStatusRefetch() // 등록 성공 후 실행
+                      setSaved(true)
+                    },
+                  })
+                }
               } else if (activeTab === '현장 사진 등록') {
                 if (!validateFile()) return
                 createDailyMutation.mutate(undefined, {

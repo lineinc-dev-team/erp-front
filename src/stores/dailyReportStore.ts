@@ -8,7 +8,12 @@ import {
   EmployeesItem,
   EquipmentsItem,
   FuelsItem,
+  InputStatusesItem,
+  MainProcessesItem,
+  MaterialStatuses,
   OutsourcingsItem,
+  WorkDetailInfo,
+  WorkerItem,
 } from '@/types/dailyReport'
 
 export const useDailySearchList = create<{ search: DailyDataSearchState }>((set) => ({
@@ -99,6 +104,19 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
     fuelInfos: [],
     checkedFuelsIds: [],
 
+    // 공사일보 데이터 타입
+    works: [],
+    checkedWorkerIds: [],
+
+    mainProcesses: [],
+    checkedMainProcessIds: [],
+
+    inputStatuses: [],
+    checkedInputStatusIds: [],
+
+    materialStatuses: [],
+    checkedMaterialIds: [],
+
     outContractInfo: [],
     checkedOutContractIds: [],
 
@@ -152,6 +170,19 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
 
         fuelInfos: [],
         checkedFuelsIds: [],
+
+        // 공사일보 데이터 타입
+        works: [],
+        checkedWorkerIds: [],
+
+        mainProcesses: [],
+        checkedMainProcessIds: [],
+
+        inputStatuses: [],
+        checkedInputStatusIds: [],
+
+        materialStatuses: [],
+        checkedMaterialIds: [],
 
         outContractInfo: [],
         checkedOutContractIds: [],
@@ -253,12 +284,44 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       },
     })),
 
+  resetWorker: () =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        works: [],
+      },
+    })),
+
+  resetMainProcess: () =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        mainProcesses: [],
+      },
+    })),
+
+  resetInputStatus: () =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        inputStatuses: [],
+      },
+    })),
+
+  resetMaterialStatus: () =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        materialStatuses: [],
+      },
+    })),
+
   setField: (field, value) =>
     set((state) => ({
       form: { ...state.form, [field]: value },
     })),
 
-  addItem: (type) =>
+  addItem: (type, subType, isTodayType) =>
     set((state) => {
       if (type === 'Employees') {
         const newItem: EmployeesItem = {
@@ -270,6 +333,62 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           memo: '',
         }
         return { form: { ...state.form, employees: [...state.form.employees, newItem] } }
+      } else if (type === 'mainProcesses') {
+        const newItem: MainProcessesItem = {
+          id: Date.now(),
+          process: '',
+          unit: '',
+          contractAmount: 0,
+          previousDayAmount: 0,
+          todayAmount: 0,
+          cumulativeAmount: 0,
+          processRate: 0,
+        }
+        return { form: { ...state.form, mainProcesses: [...state.form.mainProcesses, newItem] } }
+      } else if (type === 'inputStatuses') {
+        const newItem: InputStatusesItem = {
+          id: Date.now(),
+          category: '',
+          previousDayCount: 0,
+          todayCount: 0,
+          cumulativeCount: 0,
+          type: subType ?? '',
+        }
+        return { form: { ...state.form, inputStatuses: [...state.form.inputStatuses, newItem] } }
+      } else if (type === 'materialStatuses') {
+        const newItem: MaterialStatuses = {
+          id: Date.now(),
+          materialName: '',
+          unit: '',
+          plannedAmount: 0,
+          previousDayAmount: 0,
+          todayAmount: 0,
+          cumulativeAmount: 0,
+          remainingAmount: 0,
+          type: subType ?? '',
+        }
+        return {
+          form: { ...state.form, materialStatuses: [...state.form.materialStatuses, newItem] },
+        }
+      } else if (type === 'worker') {
+        const newItem: WorkerItem = {
+          id: Date.now(),
+          workName: '',
+          isToday: isTodayType ?? true,
+          workDetails: [
+            {
+              id: Date.now(),
+              content: '',
+              personnelAndEquipment: '',
+            },
+          ],
+        }
+        return {
+          form: {
+            ...state.form,
+            works: [...state.form.works, newItem],
+          },
+        }
       } else if (type === 'EmployeeFiles') {
         const newItem: DailyProofAttachedFile = {
           id: Date.now(),
@@ -441,6 +560,40 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
             ),
           },
         }
+      } else if (type === 'mainProcesses') {
+        return {
+          form: {
+            ...state.form,
+            mainProcesses: state.form.mainProcesses.map((m) =>
+              m.id === id ? { ...m, [field]: value } : m,
+            ),
+          },
+        }
+      } else if (type === 'inputStatuses') {
+        return {
+          form: {
+            ...state.form,
+            inputStatuses: state.form.inputStatuses.map((m) =>
+              m.id === id ? { ...m, [field]: value } : m,
+            ),
+          },
+        }
+      } else if (type === 'materialStatuses') {
+        return {
+          form: {
+            ...state.form,
+            materialStatuses: state.form.materialStatuses.map((m) =>
+              m.id === id ? { ...m, [field]: value } : m,
+            ),
+          },
+        }
+      } else if (type === 'worker') {
+        return {
+          form: {
+            ...state.form,
+            works: state.form.works.map((m) => (m.id === id ? { ...m, [field]: value } : m)),
+          },
+        }
       } else if (type === 'EmployeeFiles') {
         return {
           form: {
@@ -542,6 +695,42 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
             checkedManagerIds: checked
               ? [...state.form.checkedManagerIds, id]
               : state.form.checkedManagerIds.filter((cid) => cid !== id),
+          },
+        }
+      } else if (type === 'mainProcesses') {
+        return {
+          form: {
+            ...state.form,
+            checkedMainProcessIds: checked
+              ? [...state.form.checkedMainProcessIds, id]
+              : state.form.checkedMainProcessIds.filter((cid) => cid !== id),
+          },
+        }
+      } else if (type === 'inputStatuses') {
+        return {
+          form: {
+            ...state.form,
+            checkedInputStatusIds: checked
+              ? [...state.form.checkedInputStatusIds, id]
+              : state.form.checkedInputStatusIds.filter((cid) => cid !== id),
+          },
+        }
+      } else if (type === 'materialStatuses') {
+        return {
+          form: {
+            ...state.form,
+            checkedMaterialIds: checked
+              ? [...state.form.checkedMaterialIds, id]
+              : state.form.checkedMaterialIds.filter((cid) => cid !== id),
+          },
+        }
+      } else if (type === 'worker') {
+        return {
+          form: {
+            ...state.form,
+            checkedWorkerIds: checked
+              ? [...state.form.checkedWorkerIds, id]
+              : state.form.checkedWorkerIds.filter((cid) => cid !== id),
           },
         }
       } else if (type === 'EmployeeFiles') {
@@ -646,6 +835,34 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
             checkedManagerIds: checked ? state.form.employees.map((m) => m.id) : [],
           },
         }
+      } else if (type === 'mainProcesses') {
+        return {
+          form: {
+            ...state.form,
+            checkedMainProcessIds: checked ? state.form.mainProcesses.map((m) => m.id) : [],
+          },
+        }
+      } else if (type === 'inputStatuses') {
+        return {
+          form: {
+            ...state.form,
+            checkedInputStatusIds: checked ? state.form.inputStatuses.map((m) => m.id) : [],
+          },
+        }
+      } else if (type === 'materialStatuses') {
+        return {
+          form: {
+            ...state.form,
+            checkedMaterialIds: checked ? state.form.materialStatuses.map((m) => m.id) : [],
+          },
+        }
+      } else if (type === 'worker') {
+        return {
+          form: {
+            ...state.form,
+            checkedWorkerIds: checked ? state.form.works.map((m) => m.id) : [],
+          },
+        }
       } else if (type === 'EmployeeFiles') {
         return {
           form: {
@@ -723,7 +940,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       }
     }),
 
-  removeCheckedItems: (type) =>
+  removeCheckedItems: (type, subType, isToday) =>
     set((state) => {
       if (type === 'Employees') {
         return {
@@ -733,6 +950,56 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
               (m) => !state.form.checkedManagerIds.includes(m.id),
             ),
             checkedManagerIds: [],
+          },
+        }
+      } else if (type === 'mainProcesses') {
+        return {
+          form: {
+            ...state.form,
+            mainProcesses: state.form.mainProcesses.filter(
+              (m) => !state.form.checkedMainProcessIds.includes(m.id),
+            ),
+            checkedMainProcessIds: [],
+          },
+        }
+      } else if (type === 'materialStatuses') {
+        return {
+          form: {
+            ...state.form,
+            materialStatuses: state.form.materialStatuses.filter(
+              (m) => !state.form.checkedMaterialIds.includes(m.id),
+            ),
+            checkedMaterialIds: [],
+          },
+        }
+      } else if (type === 'inputStatuses') {
+        const updatedInputStatuses = state.form.inputStatuses.filter(
+          (m) =>
+            // ① 선택되지 않았거나
+            !state.form.checkedInputStatusIds.includes(m.id) ||
+            // ② 다른 타입(subType이 다름)
+            m.type !== subType,
+        )
+
+        return {
+          form: {
+            ...state.form,
+            inputStatuses: updatedInputStatuses,
+            // 선택 해제도 해당 subType만 초기화
+            checkedInputStatusIds: [],
+          },
+        }
+      } else if (type === 'worker') {
+        // ✅ 금일 / 명일 구분 삭제
+        const updatedWorks = state.form.works.filter(
+          (m) => !state.form.checkedWorkerIds.includes(m.id) || m.isToday !== isToday,
+        )
+
+        return {
+          form: {
+            ...state.form,
+            works: updatedWorks,
+            checkedWorkerIds: [],
           },
         }
       } else if (type === 'EmployeeFiles') {
@@ -837,6 +1104,65 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         }
       }
     }),
+
+  addWorkDetail: (workId: number) =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        works: state.form.works.map((work) =>
+          work.id === workId
+            ? {
+                ...work,
+                workDetails: [
+                  ...work.workDetails,
+                  {
+                    id: Date.now(),
+                    content: '',
+                    personnelAndEquipment: '',
+                  },
+                ],
+              }
+            : work,
+        ),
+      },
+    })),
+  removeSubWork: (workId: number, workDetailId: number) =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        works: state.form.works.map((work) =>
+          work.id === workId
+            ? {
+                ...work,
+                workDetails: work.workDetails.filter((w) => w.id !== workDetailId),
+              }
+            : work,
+        ),
+      },
+    })),
+  // 장비에서 구분 추가 로직
+  updateSubWorkField: (
+    workId: number,
+    workDetailId: number,
+    field: keyof WorkDetailInfo,
+    value: string,
+  ) => {
+    set((state) => ({
+      form: {
+        ...state.form,
+        works: state.form.works.map((work) =>
+          work.id === workId
+            ? {
+                ...work,
+                workDetails: work.workDetails.map((detail) =>
+                  detail.id === workDetailId ? { ...detail, [field]: value } : detail,
+                ),
+              }
+            : work,
+        ),
+      },
+    }))
+  },
 
   // newDailyReportData: () => {
   //   const form = get().form
@@ -1080,6 +1406,49 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           memo: item.memo,
         }
       }),
+
+      works: form.works.map((item) => {
+        return {
+          workName: item.workName,
+          isToday: item.isToday,
+          workDetails: item.workDetails,
+        }
+      }),
+
+      mainProcesses: form.mainProcesses.map((item) => {
+        return {
+          process: item.process,
+          unit: item.unit,
+          contractAmount: item.contractAmount,
+          previousDayAmount: item.previousDayAmount,
+          todayAmount: item.todayAmount,
+          cumulativeAmount: item.cumulativeAmount,
+          processRate: item.processRate,
+        }
+      }),
+
+      inputStatuses: form.inputStatuses.map((item) => {
+        return {
+          category: item.category,
+          previousDayCount: item.previousDayCount,
+          todayCount: item.todayCount,
+          cumulativeCount: item.cumulativeCount,
+          type: item.type,
+        }
+      }),
+
+      materialStatuses: form.materialStatuses.map((item) => {
+        return {
+          materialName: item.materialName,
+          unit: item.unit,
+          plannedAmount: item.plannedAmount,
+          previousDayAmount: item.previousDayAmount,
+          todayAmount: item.todayAmount,
+          cumulativeAmount: item.cumulativeAmount,
+          remainingAmount: item.remainingAmount,
+          type: item.type,
+        }
+      }),
       evidenceFiles, // 수정된 evidenceFiles
     }
   },
@@ -1108,6 +1477,9 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       outsourcings: undefined,
       outsourcingEquipments: undefined,
       fuelInfos: undefined,
+
+      works: undefined,
+      mainProcesses: undefined,
     }
   },
 
@@ -1139,6 +1511,8 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       outsourcings: undefined,
       outsourcingEquipments: undefined,
       fuelInfos: undefined,
+      works: undefined,
+      mainProcesses: undefined,
     }
   },
 
@@ -1195,6 +1569,120 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         originalFileName: item.files?.[0]?.originalFileName ?? null,
       })),
       fuelInfos: undefined,
+      works: undefined,
+      mainProcesses: undefined,
+    }
+  },
+
+  modifyWorkerProcess: () => {
+    const form = get().form
+    return {
+      files: undefined,
+      siteId: undefined,
+      siteProcessId: undefined,
+      reportDate: undefined,
+      weather: undefined,
+      employees: undefined,
+      outsourcings: undefined,
+      outsourcingEquipments: undefined,
+      fuelInfos: undefined,
+      works: form.works.map((item) => {
+        return {
+          workName: item.workName,
+          isToday: item.isToday,
+          workDetails: item.workDetails,
+        }
+      }),
+      mainProcesses: undefined,
+    }
+  },
+
+  modifyMainProcess: () => {
+    const form = get().form
+    return {
+      files: undefined,
+      siteId: undefined,
+      siteProcessId: undefined,
+      reportDate: undefined,
+      weather: undefined,
+      employees: undefined,
+      outsourcings: undefined,
+      outsourcingEquipments: undefined,
+      fuelInfos: undefined,
+      works: undefined,
+      mainProcesses: form.mainProcesses.map((item: MainProcessesItem) => ({
+        id: item.id,
+        process: item.process,
+        unit: item.unit,
+        contractAmount: item.contractAmount,
+        previousDayAmount: item.previousDayAmount,
+        todayAmount: item.todayAmount,
+        cumulativeAmount: item.cumulativeAmount,
+        processRate: item.processRate,
+      })),
+    }
+  },
+
+  modifyInputStatus: () => {
+    const form = get().form
+    return {
+      files: undefined,
+      siteId: undefined,
+      siteProcessId: undefined,
+      reportDate: undefined,
+      weather: undefined,
+      employees: undefined,
+      outsourcings: undefined,
+      outsourcingEquipments: undefined,
+      fuelInfos: undefined,
+      works: undefined,
+      mainProcesses: undefined,
+
+      materialStatuses: undefined,
+
+      inputStatuses: form.inputStatuses.map((item) => {
+        return {
+          id: item.id,
+          category: item.category,
+          previousDayCount: item.previousDayCount,
+          todayCount: item.todayCount,
+          cumulativeCount: item.cumulativeCount,
+          type: item.type,
+        }
+      }),
+    }
+  },
+
+  modifyMaterialStatus: () => {
+    const form = get().form
+    return {
+      files: undefined,
+      siteId: undefined,
+      siteProcessId: undefined,
+      reportDate: undefined,
+      weather: undefined,
+      employees: undefined,
+      outsourcings: undefined,
+      outsourcingEquipments: undefined,
+      fuelInfos: undefined,
+      works: undefined,
+      mainProcesses: undefined,
+
+      inputStatuses: undefined,
+
+      materialStatuses: form.materialStatuses.map((item) => {
+        return {
+          id: item.id,
+          materialName: item.materialName,
+          unit: item.unit,
+          plannedAmount: item.plannedAmount,
+          previousDayAmount: item.previousDayAmount,
+          todayAmount: item.todayAmount,
+          cumulativeAmount: item.cumulativeAmount,
+          remainingAmount: item.remainingAmount,
+          type: item.type,
+        }
+      }),
     }
   },
 
