@@ -165,7 +165,17 @@ export function useManagementCost() {
   })
 
   const companyOptions = useMemo(() => {
-    const defaultOption = { id: -1, name: '선택', businessNumber: '', deleted: false }
+    const defaultOption = [
+      { id: -1, name: '선택', businessNumber: '', deleted: false },
+      {
+        id: 0,
+        name: '라인공영',
+        businessNumber: '',
+        deleted: false,
+      },
+    ]
+
+    // API에서 가져온 옵션
     const options = (comPanyNameInfo?.pages || [])
       .flatMap((page) => page.data.content)
       .map((user) => ({
@@ -179,7 +189,7 @@ export function useManagementCost() {
         deleted: false,
       }))
 
-    return [defaultOption, ...options]
+    return [...defaultOption, ...options]
   }, [comPanyNameInfo])
 
   // 항목이 기타일 시 보여주는 설명 쿼리

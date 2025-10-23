@@ -181,7 +181,7 @@ export default function DailyReportRegistrationView() {
   // 체크 박스에 활용
   //   const employees = form.employees
 
-  const tabs = ['직원', '직영/계약직', '외주', '장비', '유류', '공사일보', '현장 사진 등록']
+  const tabs = ['직원', '직영', '장비', '유류', '공사일보', '현장 사진 등록']
   const [activeTab, setActiveTab] = useState('직원')
 
   const handleTabClick = (tab: string) => {
@@ -206,7 +206,7 @@ export default function DailyReportRegistrationView() {
       case '직원':
         resetEmployees()
         break
-      case '직영/계약직':
+      case '직영':
         resetDirectContracts()
         break
       case '외주':
@@ -1303,7 +1303,7 @@ export default function DailyReportRegistrationView() {
         handleEmployeesRefetch()
         handleEmployeesEvidenceRefetch()
       }
-      if (activeTab === '직영/계약직') {
+      if (activeTab === '직영') {
         handleContractRefetch()
         handleContractEvidenceRefetch()
       }
@@ -1642,7 +1642,7 @@ export default function DailyReportRegistrationView() {
     if (detailReport?.status === 200 && detailReport.data?.id) {
       if (activeTab === '직원') {
         handleEmployeesEvidenceRefetch()
-      } else if (activeTab === '직영/계약직') {
+      } else if (activeTab === '직영') {
         handleContractEvidenceRefetch()
       } else if (activeTab === '외주') {
         handleOutSourcingEvidenceRefetch()
@@ -2989,7 +2989,7 @@ export default function DailyReportRegistrationView() {
 
       {/* 직영/계약직 */}
 
-      {activeTab === '직영/계약직' && (
+      {activeTab === '직영' && (
         <>
           <div>
             <div className="flex justify-between items-center mt-10 mb-2">
@@ -3095,7 +3095,7 @@ export default function DailyReportRegistrationView() {
                   {contractData.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={11} align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                        직영/계약직 데이터가 없습니다.
+                        직영 데이터가 없습니다.
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -3138,7 +3138,7 @@ export default function DailyReportRegistrationView() {
                           ) : (
                             <CommonSelect
                               fullWidth
-                              value={selectedCompanyIds[m.checkId] || m.outsourcingCompanyId || -1}
+                              value={selectedCompanyIds[m.checkId] || m.outsourcingCompanyId || 0}
                               onChange={async (value) => {
                                 const selectedCompany = companyOptions.find(
                                   (opt) => opt.id === value,
@@ -3148,7 +3148,7 @@ export default function DailyReportRegistrationView() {
                                 // 해당 row만 업데이트
                                 setSelectedCompanyIds((prev) => ({
                                   ...prev,
-                                  [m.id]: selectedCompany.id,
+                                  [m.checkId]: selectedCompany.id,
                                 }))
 
                                 setSelectId(m.checkId)
@@ -3170,7 +3170,7 @@ export default function DailyReportRegistrationView() {
                                 // 해당 row 워커만 초기화
                                 setSelectContractIds((prev) => ({
                                   ...prev,
-                                  [m.id]: 0,
+                                  [m.checkId]: 0,
                                 }))
                               }}
                               options={companyOptions}
@@ -6814,7 +6814,7 @@ export default function DailyReportRegistrationView() {
                     },
                   },
                 )
-              } else if (activeTab === '직영/계약직') {
+              } else if (activeTab === '직영') {
                 if (!validateContract()) return
 
                 ContractModifyMutation.mutate(
@@ -7111,7 +7111,7 @@ export default function DailyReportRegistrationView() {
                     setSaved(true)
                   },
                 })
-              } else if (activeTab === '직영/계약직') {
+              } else if (activeTab === '직영') {
                 if (!validateContract()) return
                 createDailyMutation.mutate(undefined, {
                   onSuccess: () => {

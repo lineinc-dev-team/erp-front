@@ -423,7 +423,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
   const dailyContract = useMemo(() => {
     const result = Array(31).fill(0)
     allSumeRows
-      .filter((row) => row.type === '직영/계약직')
+      .filter((row) => row.type === '직영')
       .forEach((row) => {
         row.dailyWork.forEach((val: any, idx: number) => {
           result[idx] += Number(val)
@@ -450,7 +450,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
   const laborTotalsByType = useMemo(() => {
     if (!form.laborStateMentInfo) return {}
 
-    const types = ['정직원', '직영/계약직', '기타']
+    const types = ['정직원', '직영', '기타']
 
     const result: Record<string, any> = {}
 
@@ -656,7 +656,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
   )
 
   const totalEmployment = laborTotalsByType['정직원']
-  const totalContract = laborTotalsByType['직영/계약직']
+  const totalContract = laborTotalsByType['직영']
   const totalEtc = laborTotalsByType['기타']
 
   return (
@@ -1478,10 +1478,10 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
               </TableRow>
             </TableBody>
           )}
-          {laborStateMentList.filter((item) => item.type === '직영/계약직').length > 0 && (
+          {laborStateMentList.filter((item) => item.type === '직영').length > 0 && (
             <TableBody>
               {laborStateMentList
-                .filter((item) => item.type === '직영/계약직')
+                .filter((item) => item.type === '직영')
                 .map((row) => {
                   const firstHalf = row.dailyWork.slice(0, 16)
                   const secondHalf = row.dailyWork.slice(16)

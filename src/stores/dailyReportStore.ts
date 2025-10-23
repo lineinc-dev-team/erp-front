@@ -428,7 +428,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           // id: Date.now(),
           id: null,
           checkId: Date.now(),
-          outsourcingCompanyId: 0,
+          outsourcingCompanyId: -1,
           laborId: 0,
           position: '',
           workContent: '',

@@ -253,7 +253,7 @@ export function useDailyReport() {
     }) => ModifyContractReport({ siteId, siteProcessId, reportDate }),
 
     onSuccess: () => {
-      showSnackbar('출역일보(직영/계약직)이 수정 되었습니다.', 'success')
+      showSnackbar('출역일보(직영)이 수정 되었습니다.', 'success')
       queryClient.invalidateQueries({ queryKey: ['DailyContract'] })
       // reset()
     },
@@ -262,7 +262,7 @@ export function useDailyReport() {
       if (error instanceof Error) {
         showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
       } else {
-        showSnackbar('출역일보(직영/계약직) 수정에 실패했습니다.', 'error')
+        showSnackbar('출역일보(직영) 수정에 실패했습니다.', 'error')
       }
     },
   })

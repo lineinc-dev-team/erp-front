@@ -253,7 +253,7 @@ export const laborStateMentExcelFieldMap = {
   공정: 'processName',
   조회월: 'yearMonth',
   정직원: 'regularEmployeeCount',
-  '직영/계약직': 'directContractCount',
+  직영: 'directContractCount',
   기타: 'etcCount',
   '노무비 합계': 'totalLaborCost',
   '공제 합계': 'totalDeductions',
