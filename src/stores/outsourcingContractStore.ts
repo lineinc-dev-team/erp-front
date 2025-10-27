@@ -567,7 +567,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
                       ...equipment.subEquipments,
                       {
                         id: Date.now(),
-                        typeCode: 'BASE',
+                        type: 'BASE',
                         description: '',
                         taskDescription: '',
                         unitPrice: 0,
@@ -577,7 +577,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
                   : [
                       {
                         id: Date.now(),
-                        typeCode: 'BASE',
+                        type: 'BASE',
                         taskDescription: '',
                         description: '',
                         unitPrice: 0,
@@ -838,11 +838,13 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         category: item.category,
         unitPrice: item.unitPrice,
         taskDescription: item.taskDescription,
+        type: item.type,
         memo: item.memo,
         subEquipments:
           item.subEquipments?.map((sub) => ({
             id: sub.id || Date.now(),
-            type: sub.typeCode,
+            type: sub.type,
+            taskDescription: sub.taskDescription,
             description: sub.description,
             unitPrice: sub.unitPrice,
             memo: sub.memo,

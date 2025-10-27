@@ -1,3 +1,4 @@
+import { SubEquipmentItems } from './dailyReport.d'
 export type DailyAttachedFile = {
   id: number
   description: string
@@ -45,6 +46,7 @@ export type DailyDataSearchState = {
 export type EmployeesItem = {
   id: number
   laborId?: number
+  grade: string
   name?: string
   type?: string
   workContent: string
@@ -75,19 +77,63 @@ export type directContractsItem = {
   temporaryLaborName: string
   modifyDate?: string
 }
+// 외주(공사) 타입 설정
 
-export type OutsourcingsItem = {
+export interface OutsourcingConstructionItem {
+  id: number
+  outsourcingCompanyContractConstructionId: number
+  specification: string
+  unit: string
+  quantity: number
+  contractFileUrl: string
+  contractOriginalFileName: string
+  files?: FileUploadInfo[]
+  memo: string
+}
+
+// 그룹 (groups)
+export interface OutsourcingConstructionGroup {
+  id: number
+  outsourcingCompanyContractConstructionGroupId: number
+  items: OutsourcingConstructionItem[]
+}
+
+export interface OutsourcingsItem {
   id: number
   outsourcingCompanyId: number
-  outsourcingCompanyContractWorkerId: number
-  category?: string
-  workContent: string
-  workQuantity: number
-  fileUrl?: string
-  originalFileName?: string
-  files: FileUploadInfo[]
+  outsourcingCompanyContractConstructionGroupId: number
+  outsourcingCompanyContractConstructionId: number
+  specification: string
+  unit: string
+  quantity: number
   memo: string
-  modifyDate?: string
+  groups: OutsourcingConstructionGroup[]
+  items?: OutsourcingConstructionItem[]
+}
+
+// export type OutsourcingsItem = {
+//   id: number
+//   outsourcingCompanyId: number
+//   outsourcingCompanyContractWorkerId: number
+//   category?: string
+//   workContent: string
+//   workQuantity: number
+//   fileUrl?: string
+//   originalFileName?: string
+//   files: FileUploadInfo[]
+//   memo: string
+//   modifyDate?: string
+// }
+
+export type SubEquipmentItems = {
+  id: number
+  outsourcingCompanyContractSubEquipmentId: T
+  type: string
+  typeCode?: string
+  workContent: string
+  unitPrice: number
+  workHours: number
+  memo: string
 }
 
 export type EquipmentsItem = {
@@ -101,6 +147,7 @@ export type EquipmentsItem = {
   unitPrice: number
   workHours: number
   memo: string
+  subEquipments?: SubEquipmentItems[]
   fileUrl?: string
   originalFileName?: string
   files: FileUploadInfo[]
@@ -201,7 +248,7 @@ export type DailyFormState = {
   directContracts: directContractsItem[]
   checkeddirectContractsIds: number[]
 
-  outsourcings: OutsourcingsItem[]
+  outsourcingConstructions: OutsourcingsItem[]
   checkedOutsourcingIds: number[]
 
   outsourcingEquipments: EquipmentsItem[]
@@ -282,6 +329,18 @@ type DailyReportFormStore = {
   resetEquipmentEvidenceFile: () => void
 
   resetFuelEvidenceFile: () => void
+
+  // 작업내용 에서 구분에 세부 항목추가!!
+  addContractDetailItem: (managerId: number, backendSubEquipments: T) => void
+  removeContractDetailItem: (managerId: number, itemId: number) => void
+
+  // 여기 추가
+  updateContractDetailField: (
+    managerId: number,
+    itemId: number,
+    field: keyof SubEquipmentItems,
+    value: T,
+  ) => void
 
   setField: <K extends keyof Omit<DailyFormState, 'reset' | 'setField'>>(
     field: K,
@@ -404,6 +463,33 @@ type DailyReportFormStore = {
     workId: number,
     workDetailId: number,
     field: keyof WorkDetailInfo,
+    value: T,
+  ) => void
+
+  // 외주(공사) 데이터 조회
+
+  addSubGroups: (contractGroupId: number) => void
+  removeSubGroups: (contractGroupId: number, subContractIndex: number) => void
+
+  // 여기 추가
+  updateSubGroupsField: (
+    contractGroupId: number,
+    subContractIndex: number,
+    field: keyof OutsourcingConstructionItem,
+    value: T,
+  ) => void
+
+  // 외주 공사에 items 필드 세팅
+
+  addSubitems: (contractItemsId: number) => void
+  removeSubitems: (equipmentId: number, subEquipmentIndex: number) => void
+
+  // // 여기 추가
+  updateSubitemsField: (
+    equipmentId: number,
+    groupId: number,
+    subEquipmentId: number,
+    field: keyof OutsourcingConstructionItem,
     value: T,
   ) => void
 

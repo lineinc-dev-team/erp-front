@@ -44,6 +44,7 @@ import CommonFileInput from '../common/FileInput'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 import AmountInput from '../common/AmountInput'
+import { useSiteId } from '@/hooks/useSiteIdNumber'
 // import { useEffect } from 'react'
 // import { AttachedFile, DetailItem } from '@/types/managementSteel'
 
@@ -142,6 +143,8 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
   } = useFuelHistoryDataQuery(fuelDetailId, isEditMode)
 
   const historyList = useFuelFormStore((state) => state.form.changeHistories)
+
+  const siteIdList = useSiteId() // 훅 실행해서 값 받기
 
   // const [updatedSiteOptions, setUpdatedSiteOptions] = useState(sitesOptions)
 
@@ -433,8 +436,6 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
         client.fuelInfos.forEach((fuel: any) => {
           const company = fuel.outsourcingCompany
 
-          console.log('companyIdcompanyIdcompanyId24company.id', company.id)
-
           if (!company) return
 
           const isDeleted = company.deleted
@@ -489,12 +490,13 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     isFetching: fuelDriverIsFetching,
     isLoading: fuelDriverLoading,
   } = useInfiniteQuery({
-    queryKey: ['FuelDriverInfo', selectedCompanyIds[selectId] || 0],
+    queryKey: ['FuelDriverInfo', selectedCompanyIds[selectId] || 0, siteIdList],
 
     queryFn: ({ pageParam }) =>
       FuelDriverNameScroll({
         pageParam,
         id: selectedCompanyIds[selectId] || 0,
+        siteIdList: Number(siteIdList),
         size: 200,
       }),
     initialPageParam: 0,
@@ -512,7 +514,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
       .flatMap((page) => page.data.content)
       .map((user) => ({
         id: user.id,
-        name: user.name + (user.deleted ? ' (삭제됨)' : ''),
+        name: user.name,
         deleted: user.deleted,
       }))
 
@@ -535,11 +537,12 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     isFetching: fuelEquipmentIsFetching,
     isLoading: fuelEquipmentLoading,
   } = useInfiniteQuery({
-    queryKey: ['FuelEquipmentInfo', selectedCompanyIds[selectId]],
+    queryKey: ['FuelEquipmentInfo', selectedCompanyIds[selectId], siteIdList],
     queryFn: ({ pageParam }) =>
       FuelEquipmentNameScroll({
         pageParam,
         id: selectedCompanyIds[selectId] || 0,
+        siteIdList: Number(siteIdList),
         size: 200,
       }),
     initialPageParam: 0,
@@ -560,7 +563,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
       .map((user) => ({
         id: user.id,
         specification: user.specification,
-        vehicleNumber: user.vehicleNumber + (user.deleted ? ' (삭제됨)' : ''),
+        vehicleNumber: user.vehicleNumber,
         category: user.category,
         deleted: user.deleted,
       }))
@@ -592,6 +595,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
         const res = await FuelDriverNameScroll({
           pageParam: 0,
           id: companyId,
+          siteIdList: Number(siteIdList),
           size: 200,
         })
 
@@ -620,6 +624,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
         const carNumberRes = await FuelEquipmentNameScroll({
           pageParam: 0,
           id: companyId,
+          siteIdList: Number(siteIdList),
           size: 200,
         })
 
@@ -1005,7 +1010,6 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                           selectedCompany?.id || null,
                         )
 
-                        // ✅ 기사, 차량, 규격, 타입 모두 초기화
                         updateItemField('FuelInfo', m.id, 'driverId', null)
                         updateItemField('FuelInfo', m.id, 'equipmentId', null)
                         updateItemField('FuelInfo', m.id, 'specificationName', '')

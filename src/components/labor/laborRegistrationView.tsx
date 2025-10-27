@@ -42,6 +42,7 @@ import { CommonResidentNumberInput } from '@/utils/commonResidentNumberInput'
 import { HistoryItem } from '@/types/ordering'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
+import { useUserMg } from '@/hooks/useUserMg'
 
 export default function LaborRegistrationView({ isEditMode = false }) {
   const {
@@ -55,6 +56,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     toggleCheckItem,
     toggleCheckAllItems,
   } = useLaborFormStore()
+
+  const { gradeOptions } = useUserMg()
 
   const { showSnackbar } = useSnackbarStore()
 
@@ -524,32 +527,50 @@ export default function LaborRegistrationView({ isEditMode = false }) {
         <span className="font-bold border-b-2 mb-4">기본 정보</span>
         <div className="grid grid-cols-2 mt-1">
           <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               구분 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
-              <div className="flex gap-2 items-center">
+              <div className="flex items-center gap-4">
+                {/* 구분 선택 */}
                 <CommonSelect
-                  className="text-2xl"
+                  className="text-2xl w-24"
                   value={form.type || 'BASE'}
-                  onChange={(value) => setField('type', value)}
+                  onChange={(value) => {
+                    setField('type', value)
+                    setField('typeDescription', '')
+                  }}
                   options={LaborTypeMethodOptions}
                   disabled={isEditMode}
                 />
 
-                <CommonInput
-                  value={form.typeDescription ?? ''}
-                  onChange={(value) => setField('typeDescription', value)}
-                  className=" flex-1"
-                  disabled={
-                    form.type === 'ETC' || form.type === 'DIRECT_REGISTRATION' ? false : true
-                  }
-                  placeholder={
-                    form.type === 'ETC' || form.type === 'DIRECT_REGISTRATION'
-                      ? ' 내용을 입력하세요'
-                      : ''
-                  }
-                />
+                {/* 정직원일 때 직급 표시 */}
+                {form.type === 'REGULAR_EMPLOYEE' && (
+                  <div className="flex items-center w-full  ">
+                    <label className="w-20 text-[16px] flex items-center justify-center font-bold text-center">
+                      직급 <span className="text-red-500 ml-1 size-">*</span>
+                    </label>
+                    <div className="  py-2 w-full flex justify-center items-center">
+                      <CommonSelect
+                        fullWidth
+                        value={form.gradeId}
+                        onChange={(value) => setField('gradeId', value)}
+                        options={gradeOptions}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 기타 타입일 때만 typeDescription 입력 */}
+                {form.type !== 'REGULAR_EMPLOYEE' && (
+                  <CommonInput
+                    value={form.typeDescription ?? ''}
+                    onChange={(value) => setField('typeDescription', value)}
+                    className="flex-1"
+                    placeholder="내용을 입력하세요"
+                    disabled={form.type !== 'ETC'}
+                  />
+                )}
               </div>
             </div>
           </div>

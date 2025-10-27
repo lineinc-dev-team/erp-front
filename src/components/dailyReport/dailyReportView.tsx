@@ -76,13 +76,17 @@ export default function DailyReportView() {
         item.equipmentEvidenceSubmitted ? 'Y' : 'N'
       }`,
 
+      fuelEvidenceSubmitted: ` ${item.fuelEvidenceSubmitted ? 'Y' : 'N'}`,
+
+      isConstructionReport: item.isConstructionReport ? 'Y' : 'N',
+
+      sitePhotoSubmitted: item.sitePhotoSubmitted ? 'Y' : 'N',
+
       gasolineTotalAmount: formatNumber(item.gasolineTotalAmount),
 
       dieselTotalAmount: formatNumber(item.dieselTotalAmount),
       ureaTotalAmount: formatNumber(item.ureaTotalAmount),
       etcTotalAmount: formatNumber(item.etcTotalAmount),
-
-      fuelEvidenceSubmitted: `${item.fuelEvidenceSubmitted ? 'Y' : 'N'}`,
 
       siteProcess: item.siteProcess.name || '-',
       reportDate: item.reportDate ? `${getTodayDateString(item.reportDate)}` : '-',

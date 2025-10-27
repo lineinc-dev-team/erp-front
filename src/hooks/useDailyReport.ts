@@ -509,7 +509,7 @@ export function useDailyReport() {
   })
 
   const employeeInfoOptions = useMemo(() => {
-    const defaultOptions = [{ id: 0, name: '선택', type: '' }]
+    const defaultOptions = [{ id: 0, name: '선택', type: '', grade: '' }]
 
     const options = (employeeInfo?.pages || [])
       .flatMap((page) => page.data.content)
@@ -517,6 +517,7 @@ export function useDailyReport() {
         id: user.id,
         name: user.name,
         type: user.type,
+        grade: user.grade,
       }))
 
     return [...defaultOptions, ...options]

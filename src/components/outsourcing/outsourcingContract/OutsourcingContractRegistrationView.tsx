@@ -233,7 +233,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     memo: '비고',
     description: '상세내용',
     businessNumber: '사업자등록번호',
-    typeName: '구분명',
+    typeName: '유형',
     typeDescription: '구분 설명',
     defaultDeductionsName: '기본공제 항목',
     defaultDeductionsDescription: '기본공제 항목 설명',
@@ -246,6 +246,8 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     position: '직급(직책)',
     landlineNumber: '전화번호',
     name: '이름',
+    itemName: '항목명',
+    workTypeName: '공종명',
     department: '부서',
     email: '이메일',
     phoneNumber: '개인 휴대폰',
@@ -497,6 +499,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       setField('type', client?.typeCode)
       setField('typeDescription', client?.typeDescription)
 
+      setField('workTypeName', client?.workTypeName)
       // 계약 기간
       setField('contractStartDate', new Date(client.contractStartDate) || null)
       setField('contractEndDate', new Date(client.contractEndDate) || null)
@@ -518,7 +521,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       setField('taxInvoiceIssueDayOfMonth', client.taxInvoiceIssueDayOfMonth || 0)
 
       // 유형(설비 등일 때)
-      setField('category', client.categoryCode || '')
+      // setField('category', client.categoryCode || '')
 
       // 상태
       setField('status', client.statusCode || '')
@@ -583,12 +586,14 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
               vehicleNumber: item.vehicleNumber,
               category: item.category,
               unitPrice: item.unitPrice,
+              type: item.typeCode,
               // subtotal: item.subtotal,
               taskDescription: item.taskDescription,
               memo: item.memo,
               subEquipments: (item.subEquipments ?? []).map((sub) => ({
                 id: sub.id,
-                typeCode: sub.typeCode,
+                type: sub.typeCode,
+                taskDescription: sub.taskDescription,
                 description: sub.description,
                 unitPrice: sub.unitPrice,
                 memo: sub.memo,
@@ -849,9 +854,9 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       return '계약 종료일은 시작일 이후여야 합니다.'
     if (!form.contractAmount) return '계약금액을 입력해주세요.'
 
-    if (!(form.defaultDeductions?.split(',').filter(Boolean)?.length > 0)) {
-      return '기본공제 항목을 선택해주세요.'
-    }
+    // if (!(form.defaultDeductions?.split(',').filter(Boolean)?.length > 0)) {
+    //   return '기본공제 항목을 선택해주세요.'
+    // }
 
     if (!form.taxCalculat?.trim()) return '세금계산서 발행조건을 입력하세요.'
 
@@ -859,9 +864,9 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       return '세금계산서 발행일을 입력해주세요.'
     }
 
-    if (form.type === 'EQUIPMENT' && !form.category?.trim()) {
-      return '유형을 선택해주세요.'
-    }
+    // if (form.type === 'EQUIPMENT' && !form.category?.trim()) {
+    //   return '유형을 선택해주세요.'
+    // }
 
     if (!form.status) return '상태를 입력해주세요.'
 
@@ -906,7 +911,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
         if (item.subEquipments?.length) {
           for (const sub of item.subEquipments) {
-            if (!sub.typeCode?.trim() || sub.typeCode === 'BASE') {
+            if (!sub.type?.trim() || sub.type === 'BASE') {
               return '하위 장비의 유형을 입력해주세요.'
             }
             if (sub.description.length > 500) {
@@ -1308,7 +1313,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
             </div>
           </div>
 
-          {form.type === 'EQUIPMENT' && (
+          {/* {form.type === 'EQUIPMENT' && (
             <div className="flex">
               <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
                 유형 <span className="text-red-500 ml-1">*</span>
@@ -1322,7 +1327,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                 />
               </div>
             </div>
-          )}
+          )} */}
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
@@ -2011,16 +2016,18 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       align="center"
                       sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top' }}
                     >
-                      <TextField
-                        size="small"
-                        placeholder="텍스트 입력(50자)"
-                        value={m.itemName || ''}
-                        onChange={(e) =>
-                          updateItemField('workSize', m.id, 'itemName', e.target.value)
-                        }
-                        inputProps={{ maxLength: 50 }}
-                        fullWidth
-                      />
+                      <div className="flex gap-2 mt-1 items-center">
+                        <TextField
+                          size="small"
+                          placeholder="텍스트 입력(50자)"
+                          value={m.itemName || ''}
+                          onChange={(e) =>
+                            updateItemField('workSize', m.id, 'itemName', e.target.value)
+                          }
+                          inputProps={{ maxLength: 50 }}
+                          fullWidth
+                        />
+                      </div>
                     </TableCell>
 
                     <TableCell
@@ -2261,22 +2268,28 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       ))}
                     </TableCell>
 
-                    <TableCell sx={{ width: '100px', verticalAlign: 'top' }}>
-                      {/* 셀 자체의 최대 너비 제한도 추가 가능 */}
+                    <TableCell
+                      sx={{
+                        width: '100px',
+                        verticalAlign: 'top',
+                        paddingTop: '0px',
+                        paddingBottom: '0px',
+                      }}
+                    >
                       {m.items.map((detail, index) => (
                         <div key={detail.id} className="flex items-center gap-2 mt-1">
                           {/* 버튼 조건부 렌더링 */}
                           {index === 0 ? (
                             <CommonButton
                               label="추가"
-                              className="px-7 whitespace-nowrap"
+                              className="px-7 whitespace-nowrap mt-2"
                               variant="primary"
                               onClick={() => addContractDetailItem(m.id)}
                             />
                           ) : (
                             <CommonButton
                               label="삭제"
-                              className="px-7"
+                              className="px-7 mt-[10px]"
                               variant="danger"
                               onClick={() => removeContractDetailItem(m.id, detail.id)}
                             />
@@ -2470,9 +2483,9 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                             <div className="flex gap-6 ">
                               <CommonSelect
                                 className="text-2xl w-[110px]"
-                                value={item.typeCode || 'BASE'}
+                                value={item.type || 'BASE'}
                                 onChange={(value) =>
-                                  updateSubEquipmentField(m.id, item.id, 'typeCode', value)
+                                  updateSubEquipmentField(m.id, item.id, 'type', value)
                                 }
                                 options={EquipmentType}
                               />
@@ -2487,10 +2500,8 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                                     e.target.value,
                                   )
                                 }
-                                disabled={item.typeCode !== 'ETC'} // 🔥 '기타'일 때만 활성화
-                                placeholder={
-                                  item.typeCode === 'ETC' ? '기타 내용을 입력하세요' : ''
-                                }
+                                disabled={item.type !== 'ETC'} // 🔥 '기타'일 때만 활성화
+                                placeholder={item.type === 'ETC' ? '기타 내용을 입력하세요' : ''}
                               />
 
                               <CommonButton

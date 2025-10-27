@@ -166,7 +166,6 @@ export const outsourcingCompanyExcelFieldMap = {
   이메일: 'email',
   담당자명: 'contactName',
   '직급,부서': 'contactPositionAndDepartment',
-  '공제항목 기본값': 'defaultDeductions',
   사용여부: 'isActive',
   '등록일, 수정일': 'createdAtAndUpdatedAt',
   첨부파일유무: 'hasFile',

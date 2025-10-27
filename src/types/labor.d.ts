@@ -76,6 +76,7 @@ export type LaborFormState = {
   currentPage: number
   type: string
   typeDescription: string
+  gradeId: number
   outsourcingCompanyId: number
   outsourcingCompanyName: string
   name: string

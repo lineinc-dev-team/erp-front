@@ -11,8 +11,8 @@ export const useOutSourcingClientId = () => {
   if (pathname.startsWith('/fuelAggregation/registration')) {
     return fuelForm.fuelInfos.length > 0 ? fuelForm.fuelInfos[0].outsourcingCompanyId : 0
   } else if (pathname.startsWith('/dailyReport/registration')) {
-    if (dailyForm.outsourcings.length > 0) {
-      return dailyForm.outsourcings[0].outsourcingCompanyId
+    if (dailyForm.outsourcingConstructions.length > 0) {
+      return dailyForm.outsourcingConstructions[0].outsourcingCompanyId
     } else if (dailyForm.outsourcingEquipments.length > 0) {
       return dailyForm.outsourcingEquipments[0].outsourcingCompanyId
     } else if (dailyForm.fuelInfos.length > 0) {
@@ -44,7 +44,7 @@ export const useOutSourcingInfoClientId = (
 
   if (pathname.startsWith('/dailyReport/registration')) {
     const matched =
-      dailyForm.outsourcings.find((item) => item.id === Number(rowId)) ||
+      dailyForm.outsourcingConstructions.find((item) => item.id === Number(rowId)) ||
       dailyForm.outsourcingEquipments.find((item) => item.id === Number(rowId)) ||
       dailyForm.fuelInfos.find((item) => item.id === Number(rowId))
 

@@ -11,7 +11,9 @@ import {
   InputStatusesItem,
   MainProcessesItem,
   MaterialStatuses,
+  OutsourcingConstructionItem,
   OutsourcingsItem,
+  SubEquipmentItems,
   WorkDetailInfo,
   WorkerItem,
 } from '@/types/dailyReport'
@@ -89,7 +91,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
     contractProofFile: [],
     contractProofCheckId: [],
 
-    outsourcings: [],
+    outsourcingConstructions: [],
     checkedOutsourcingIds: [],
 
     outsourcingProofFile: [],
@@ -156,7 +158,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         contractProofFile: [],
         contractProofCheckId: [],
 
-        outsourcings: [],
+        outsourcingConstructions: [],
         checkedOutsourcingIds: [],
 
         outsourcingProofFile: [],
@@ -256,7 +258,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
     set((state) => ({
       form: {
         ...state.form,
-        outsourcings: [],
+        outsourcingConstructions: [],
       },
     })),
 
@@ -327,6 +329,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         const newItem: EmployeesItem = {
           id: Date.now(),
           laborId: 0,
+          grade: '',
           workContent: '',
           workQuantity: 0,
           files: [],
@@ -446,15 +449,27 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       } else if (type === 'outsourcings') {
         const newItem: OutsourcingsItem = {
           id: Date.now(),
-          outsourcingCompanyId: 0,
-          outsourcingCompanyContractWorkerId: 0,
-          category: '',
-          workContent: '',
-          workQuantity: 0,
-          files: [],
+          outsourcingCompanyId: -1,
+          outsourcingCompanyContractConstructionGroupId: 0,
+          outsourcingCompanyContractConstructionId: 0,
+          specification: '',
+          unit: '',
+          quantity: 0,
           memo: '',
+          groups: [],
+          // outsourcingCompanyContractWorkerId: 0,
+          // category: '',
+          // workContent: '',
+          // workQuantity: 0,
+          // files: [],
+          // memo: '',
         }
-        return { form: { ...state.form, outsourcings: [...state.form.outsourcings, newItem] } }
+        return {
+          form: {
+            ...state.form,
+            outsourcingConstructions: [...state.form.outsourcingConstructions, newItem],
+          },
+        }
       } else if (type === 'equipment') {
         const newItem: EquipmentsItem = {
           id: Date.now(),
@@ -468,6 +483,16 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           workHours: 0,
           files: [],
           memo: '',
+          // subEquipments: [
+          //   {
+          //     id: Date.now(),
+          //     outsourcingCompanyContractSubEquipmentId: 0,
+          //     workContent: '',
+          //     unitPrice: 0,
+          //     workHours: 0,
+          //     memo: '',
+          //   },
+          // ],
         }
         return {
           form: {
@@ -653,7 +678,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         return {
           form: {
             ...state.form,
-            outsourcings: state.form.outsourcings.map((m) =>
+            outsourcingConstructions: state.form.outsourcingConstructions.map((m) =>
               m.id === id ? { ...m, [field]: value } : m,
             ),
           },
@@ -913,7 +938,9 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         return {
           form: {
             ...state.form,
-            checkedOutsourcingIds: checked ? state.form.outsourcings.map((m) => m.id) : [],
+            checkedOutsourcingIds: checked
+              ? state.form.outsourcingConstructions.map((m) => m.id)
+              : [],
           },
         }
       } else if (type === 'equipment') {
@@ -1066,7 +1093,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         return {
           form: {
             ...state.form,
-            outsourcings: state.form.outsourcings.filter(
+            outsourcingConstructions: state.form.outsourcingConstructions.filter(
               (m) => !state.form.checkedOutsourcingIds.includes(m.id),
             ),
             checkedOutsourcingIds: [],
@@ -1163,6 +1190,306 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       },
     }))
   },
+
+  addSubGroups: (equipmentId: number) =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        outsourcingConstructions: state.form.outsourcingConstructions.map((contractGroup) =>
+          contractGroup.id === equipmentId
+            ? {
+                ...contractGroup,
+                groups: contractGroup.groups
+                  ? [
+                      ...contractGroup.groups,
+                      {
+                        id: Date.now(),
+                        outsourcingCompanyContractConstructionGroupId: Date.now(),
+                        outsourcingCompanyContractConstructionId: Date.now(),
+                        specification: '',
+                        unit: '',
+                        quantity: 0,
+                        contractFileUrl: '',
+                        contractOriginalFileName: '',
+                        memo: '',
+                        items: [],
+                      },
+                    ]
+                  : [
+                      {
+                        id: Date.now(),
+                        outsourcingCompanyContractConstructionGroupId: Date.now(),
+                        outsourcingCompanyContractConstructionId: Date.now(),
+                        specification: '',
+                        unit: '',
+                        quantity: 0,
+                        contractFileUrl: '',
+                        contractOriginalFileName: '',
+                        memo: '',
+                        items: [],
+                      },
+                    ],
+              }
+            : contractGroup,
+        ),
+      },
+    })),
+
+  removeSubGroups: (equipmentId: number, subEquipmentId: number) =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        outsourcingConstructions: state.form.outsourcingConstructions.map((equipment) =>
+          equipment.id === equipmentId
+            ? {
+                ...equipment,
+                groups: equipment.groups?.filter((sub) => sub.id !== subEquipmentId) ?? [],
+              }
+            : equipment,
+        ),
+      },
+    })),
+  // 장비에서 구분 추가 로직
+  updateSubGroupsField: <K extends keyof OutsourcingConstructionItem>(
+    equipmentId: number,
+    subEquipmentId: number,
+    field: K,
+    value: OutsourcingConstructionItem[K],
+  ) => {
+    set((state) => ({
+      form: {
+        ...state.form,
+        outsourcingConstructions: state.form.outsourcingConstructions.map((equipment) =>
+          equipment.id === equipmentId
+            ? {
+                ...equipment,
+                groups: equipment.groups?.map((sub) =>
+                  sub.id === subEquipmentId ? { ...sub, [field]: value } : sub,
+                ),
+              }
+            : equipment,
+        ),
+      },
+    }))
+  },
+
+  addSubitems: (equipmentId: number) =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        outsourcingConstructions: state.form.outsourcingConstructions.map((contractGroup) => {
+          if (contractGroup.id !== equipmentId) return contractGroup
+
+          const groups = contractGroup.groups || []
+
+          // ✅ 그룹이 여러 개여도 첫 번째 그룹에만 아이템 추가
+          const updatedGroups = groups.map((group, idx) => {
+            if (idx !== 0) return group // 첫 번째 그룹만 수정
+            return {
+              ...group,
+              items: [
+                ...group.items,
+                {
+                  id: Date.now(),
+                  outsourcingCompanyContractConstructionId: Date.now(),
+                  specification: '',
+                  unit: '',
+                  quantity: 0,
+                  contractFileUrl: '',
+                  contractOriginalFileName: '',
+                  memo: '',
+                },
+              ],
+            }
+          })
+
+          return {
+            ...contractGroup,
+            groups: updatedGroups,
+          }
+        }),
+      },
+    })),
+
+  removeSubitems: (equipmentId: number, subEquipmentId: number) =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        outsourcingConstructions: state.form.outsourcingConstructions.map((equipment) => {
+          if (equipment.id !== equipmentId) return equipment
+
+          // ✅ 각 그룹의 items 배열 안에서 subEquipmentId 일치하는 항목만 제거
+          const updatedGroups = equipment.groups.map((group) => ({
+            ...group,
+            items: group.items.filter((item) => item.id !== subEquipmentId),
+          }))
+
+          return {
+            ...equipment,
+            groups: updatedGroups,
+          }
+        }),
+      },
+    })),
+
+  // items 의  업ㄷ베이트 함수
+
+  updateSubitemsField: (
+    equipmentId: number,
+    groupId: number,
+    itemId: number,
+    field: keyof OutsourcingConstructionItem,
+    value: string,
+  ) => {
+    set((state) => ({
+      form: {
+        ...state.form,
+        outsourcingConstructions: state.form.outsourcingConstructions.map((equipment) => {
+          if (equipment.id !== equipmentId) return equipment
+
+          const updatedGroups = equipment.groups.map((group) => {
+            if (group.id !== groupId) return group
+
+            // ✅ 해당 group의 items 중 itemId에 해당하는 항목만 업데이트
+            const updatedItems = group.items.map((item) =>
+              item.id === itemId ? { ...item, [field]: value } : item,
+            )
+
+            return { ...group, items: updatedItems }
+          })
+
+          return { ...equipment, groups: updatedGroups }
+        }),
+      },
+    }))
+  },
+
+  // 세부 항목(ContractDetailItems) 추가
+  // addContractDetailItem: (managerId: number) =>
+  //   set((state) => ({
+  //     form: {
+  //       ...state.form,
+  //       outsourcingEquipments: state.form.outsourcingEquipments.map((manager) =>
+  //         manager.id === managerId
+  //           ? {
+  //               ...manager,
+  //               subEquipments: manager.subEquipments
+  //                 ? [
+  //                     ...manager.subEquipments,
+  //                     {
+  //                       id: Date.now(), // 임시 ID
+  //                       outsourcingCompanyContractSubEquipmentId: null,
+  //                       workContent: '',
+  //                       unitPrice: 0,
+  //                       workHours: 0,
+  //                       memo: '',
+  //                     },
+  //                   ]
+  //                 : [
+  //                     {
+  //                       id: Date.now(), // 임시 ID
+  //                       outsourcingCompanyContractSubEquipmentId: null,
+  //                       workContent: '',
+  //                       unitPrice: 0,
+  //                       workHours: 0,
+  //                       memo: '',
+  //                     },
+  //                   ],
+  //             }
+  //           : manager,
+  //       ),
+  //     },
+  //   })),
+
+  // store 안
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  addContractDetailItem: (managerId: number, backendSubEquipments: any[]) =>
+    set((state) => {
+      return {
+        form: {
+          ...state.form,
+          outsourcingEquipments: state.form.outsourcingEquipments.map((manager) => {
+            if (manager.id !== managerId) return manager
+
+            // 백엔드 데이터가 존재하는 경우 → subEquipments 생성
+            const newSubEquipments =
+              backendSubEquipments && backendSubEquipments.length > 0
+                ? backendSubEquipments.map((item) => ({
+                    id: item.id ?? Date.now(), // 서버에서 받은 id or 임시 id
+                    outsourcingCompanyContractSubEquipmentId: item.id ?? 1,
+                    type: item.type,
+                    typeCode: item.typeCode,
+                    workContent: item.workContent ?? item?.taskDescription ?? '',
+                    unitPrice: item.unitPrice ?? item?.unitPrice ?? 0,
+                    workHours: item.workHours ?? 0,
+                    memo: item.memo ?? item?.memo ?? '',
+                  }))
+                : [
+                    {
+                      id: Date.now(),
+                      outsourcingCompanyContractSubEquipmentId: 1,
+                      type: '',
+                      typeCode: '',
+                      workContent: '',
+                      unitPrice: 0,
+                      workHours: 0,
+                      memo: '',
+                    },
+                  ]
+
+            return {
+              ...manager,
+              subEquipments: manager.subEquipments
+                ? [...manager.subEquipments, ...newSubEquipments]
+                : [...newSubEquipments],
+            }
+          }),
+        },
+      }
+    }),
+
+  // 세부 항목 삭제
+  removeContractDetailItem: (managerId: number, itemId: number) =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        outsourcingEquipments: state.form.outsourcingEquipments.map((manager) =>
+          manager.id === managerId
+            ? {
+                ...manager,
+                subEquipments:
+                  manager.subEquipments &&
+                  manager.subEquipments.filter((item) => item.id !== itemId),
+              }
+            : manager,
+        ),
+      },
+    })),
+
+  // 세부 항목 수정
+  updateContractDetailField: (
+    managerId: number,
+    itemId: number,
+    field: keyof SubEquipmentItems,
+    value: string | number,
+  ) =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        outsourcingEquipments: state.form.outsourcingEquipments.map((manager) =>
+          manager.id === managerId
+            ? {
+                ...manager,
+                subEquipments:
+                  manager.subEquipments &&
+                  manager.subEquipments.map((detail) =>
+                    detail.id === itemId ? { ...detail, [field]: value } : detail,
+                  ),
+              }
+            : manager,
+        ),
+      },
+    })),
 
   // newDailyReportData: () => {
   //   const form = get().form
@@ -1338,6 +1665,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         const file = emp.files?.[0]
         return {
           laborId: emp.laborId,
+          grade: emp.grade,
           workContent: emp.workContent,
           workQuantity: emp.workQuantity,
           fileUrl: file?.fileUrl || null,
@@ -1363,20 +1691,21 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         }
       }),
 
-      outsourcings: form.outsourcings.map((item) => {
-        const file = item.files[0]
+      // outsourcingConstructions: form.outsourcingConstructions.map((item) => {
+      //   const file = item.files[0]
 
-        return {
-          outsourcingCompanyId: item.outsourcingCompanyId,
-          outsourcingCompanyContractWorkerId: item.outsourcingCompanyContractWorkerId,
-          category: item.category,
-          workContent: item.workContent,
-          workQuantity: item.workContent,
-          fileUrl: file?.fileUrl || null,
-          originalFileName: file?.originalFileName || null,
-          memo: item.memo,
-        }
-      }),
+      //   return {
+      //     outsourcingCompanyId: item.outsourcingCompanyId,
+      //     outsourcingCompanyContractWorkerId: item.outsourcingCompanyContractWorkerId,
+      //     category: item.category,
+      //     workContent: item.workContent,
+      //     workQuantity: item.workContent,
+      //     fileUrl: file?.fileUrl || null,
+      //     originalFileName: file?.originalFileName || null,
+      //     memo: item.memo,
+      //   }
+      // }),
+
       outsourcingEquipments: form.outsourcingEquipments.map((item) => {
         const file = item.files[0]
 
@@ -1390,6 +1719,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           fileUrl: file?.fileUrl || null,
           originalFileName: file?.originalFileName || null,
           memo: item.memo,
+          subEquipments: item.subEquipments,
         }
       }),
       fuelInfos: form.fuelInfos.map((item) => {
@@ -1465,6 +1795,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
 
       employees: form.employees.map((emp: EmployeesItem) => ({
         id: emp.id,
+        grade: emp.grade,
         laborId: emp.laborId,
         workContent: emp.workContent,
         workQuantity: emp.workQuantity,
@@ -1527,17 +1858,18 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       weather: undefined,
       employees: undefined,
 
-      outsourcings: form.outsourcings.map((item: OutsourcingsItem) => ({
+      outsourcings: form.outsourcingConstructions.map((item: OutsourcingsItem) => ({
         id: item.id, // 수정이면 기존 id, 신규면 0 또는 undefined
         outsourcingCompanyId: item.outsourcingCompanyId,
-        outsourcingCompanyContractWorkerId: item.outsourcingCompanyContractWorkerId,
-        category: item.category,
-        workContent: item.workContent,
-        workQuantity: item.workQuantity,
-        memo: item.memo,
+        outsourcingCompanyContractWorkerId: item.outsourcingCompanyContractConstructionGroupId,
+        outsourcingCompanyContractConstructionId: item.outsourcingCompanyContractConstructionId,
+        // category: item.category,
+        // workContent: item.workContent,
+        // workQuantity: item.workQuantity,
+        // memo: item.memo,
 
-        fileUrl: item.files?.[0]?.fileUrl ?? null,
-        originalFileName: item.files?.[0]?.originalFileName ?? null,
+        // fileUrl: item.files?.[0]?.fileUrl ?? null,
+        // originalFileName: item.files?.[0]?.originalFileName ?? null,
       })),
 
       outsourcingEquipments: undefined,
@@ -1564,7 +1896,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         unitPrice: item.unitPrice,
         workHours: item.workHours,
         memo: item.memo,
-
+        subEquipments: item.subEquipments,
         fileUrl: item.files?.[0]?.fileUrl ?? null,
         originalFileName: item.files?.[0]?.originalFileName ?? null,
       })),
