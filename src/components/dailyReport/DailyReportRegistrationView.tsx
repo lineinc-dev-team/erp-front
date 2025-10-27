@@ -2506,9 +2506,9 @@ export default function DailyReportRegistrationView() {
       if (!e.specificationName || e.specificationName.trim() === '') {
         return showSnackbar('장비의 규격을 입력해주세요.', 'warning')
       }
-      if (!e.type || e.type.trim() === '') {
-        return showSnackbar('장비의 구분을 입력해주세요.', 'warning')
-      }
+      // if (!e.type || e.type.trim() === '') {
+      //   return showSnackbar('장비의 구분을 입력해주세요.', 'warning')
+      // }
       // if (!e.workContent || e.workContent.trim() === '') {
       //   return showSnackbar('장비의 작업내용을 입력해주세요.', 'warning')
       // }
