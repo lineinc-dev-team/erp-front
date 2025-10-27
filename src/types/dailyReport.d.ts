@@ -87,6 +87,8 @@ export interface OutsourcingConstructionItem {
   quantity: number
   contractFileUrl: string
   contractOriginalFileName: string
+  fileUrl?: string
+  originalFileName?: string
   files?: FileUploadInfo[]
   memo: string
 }
@@ -101,14 +103,7 @@ export interface OutsourcingConstructionGroup {
 export interface OutsourcingsItem {
   id: number
   outsourcingCompanyId: number
-  outsourcingCompanyContractConstructionGroupId: number
-  outsourcingCompanyContractConstructionId: number
-  specification: string
-  unit: string
-  quantity: number
-  memo: string
   groups: OutsourcingConstructionGroup[]
-  items?: OutsourcingConstructionItem[]
 }
 
 // export type OutsourcingsItem = {
@@ -467,6 +462,17 @@ type DailyReportFormStore = {
   ) => void
 
   // 외주(공사) 데이터 조회
+
+  // 새로운 외주 업데이트 필드
+
+  UpdateOutsourcingItemField: (
+    type: string,
+    mId: number,
+    groupId: number,
+    itemId: number,
+    field: keyof OutsourcingsItem['groups'][0]['items'][0],
+    value: T,
+  ) => void
 
   addSubGroups: (contractGroupId: number) => void
   removeSubGroups: (contractGroupId: number, subContractIndex: number) => void

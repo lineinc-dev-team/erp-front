@@ -1327,3 +1327,81 @@ export async function GetFuelPrice({ siteId = 0, siteProcessId = 0, reportDate =
   const data = await res.json()
   return data
 }
+
+// 외주(공사) 항목명, 항목 조회
+
+export async function GetContractGroup({
+  id,
+  siteId = 0,
+  pageParam = 0,
+  size = 10,
+}: {
+  id: number
+  siteId?: number
+  pageParam?: number
+  size?: number
+}) {
+  const query = new URLSearchParams({
+    siteId: siteId.toString(),
+    page: pageParam.toString(),
+    size: size.toString(),
+  })
+
+  const res = await fetch(
+    `${API.OUTSOURCINGCOMPANY}/${id}/contract-construction-groups?${query.toString()}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    },
+  )
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      window.location.href = '/'
+      return
+    }
+    throw new Error(`서버 에러: ${res.status}`)
+  }
+
+  const data = await res.json()
+  return data
+}
+
+// 외주(공사) 규격 데이터  조회
+
+export async function GetContractSpecifications({
+  id,
+  constructionGroupId = 0,
+  itemName = '',
+}: {
+  id: number
+  constructionGroupId?: number
+  itemName?: string
+}) {
+  const query = new URLSearchParams({
+    constructionGroupId: constructionGroupId.toString(),
+    itemName,
+  })
+
+  const res = await fetch(`${API.OUTSOURCINGCOMPANY}/${id}/specifications?${query.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      window.location.href = '/'
+      return
+    }
+    throw new Error(`서버 에러: ${res.status}`)
+  }
+
+  const data = await res.json()
+  return data
+}

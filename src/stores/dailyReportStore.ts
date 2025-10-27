@@ -449,21 +449,28 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       } else if (type === 'outsourcings') {
         const newItem: OutsourcingsItem = {
           id: Date.now(),
-          outsourcingCompanyId: -1,
-          outsourcingCompanyContractConstructionGroupId: 0,
-          outsourcingCompanyContractConstructionId: 0,
-          specification: '',
-          unit: '',
-          quantity: 0,
-          memo: '',
-          groups: [],
-          // outsourcingCompanyContractWorkerId: 0,
-          // category: '',
-          // workContent: '',
-          // workQuantity: 0,
-          // files: [],
-          // memo: '',
+          outsourcingCompanyId: 0, // 업체명
+          groups: [
+            {
+              id: Date.now(),
+              outsourcingCompanyContractConstructionGroupId: 0, // 항목명
+              items: [
+                {
+                  id: Date.now(),
+                  outsourcingCompanyContractConstructionId: 0, // 항목
+                  specification: '', // 규격 데이터
+                  unit: '', // 단위
+                  quantity: 0, // 수량
+                  memo: '', // 비고
+                  contractFileUrl: '', // 첨부파일 (URL)
+                  contractOriginalFileName: '', // 첨부파일명
+                  files: [],
+                },
+              ],
+            },
+          ],
         }
+
         return {
           form: {
             ...state.form,
@@ -573,6 +580,41 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       }
       return state
     }),
+
+  // 외주 업체에 대한 업데이트
+
+  UpdateOutsourcingItemField: (
+    type: string,
+    mId: number,
+    groupId: number,
+    itemId: number,
+    field: keyof OutsourcingsItem['groups'][0]['items'][0],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    value: any,
+  ) => {
+    set((state) => {
+      if (type === 'outsourcings') {
+        return {
+          form: {
+            ...state.form,
+            outsourcingConstructions: state.form.outsourcingConstructions.map((m) => {
+              if (m.id !== mId) return m
+              const groups = m.groups.map((g) => {
+                if (g.id !== groupId) return g
+                const items = g.items.map((i) => {
+                  if (i.id !== itemId) return i
+                  return { ...i, [field]: value }
+                })
+                return { ...g, items }
+              })
+              return { ...m, groups }
+            }),
+          },
+        }
+      }
+      return state
+    })
+  },
 
   updateItemField: (type, id, field, value) =>
     set((state) => {
@@ -1673,20 +1715,31 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         }
       }),
 
-      // outsourcingConstructions: form.outsourcingConstructions.map((item) => {
-      //   const file = item.files[0]
+      outsourcingConstructions: form.outsourcingConstructions.map((item) => {
+        // const file = item.files[0]
 
-      //   return {
-      //     outsourcingCompanyId: item.outsourcingCompanyId,
-      //     outsourcingCompanyContractWorkerId: item.outsourcingCompanyContractWorkerId,
-      //     category: item.category,
-      //     workContent: item.workContent,
-      //     workQuantity: item.workContent,
-      //     fileUrl: file?.fileUrl || null,
-      //     originalFileName: file?.originalFileName || null,
-      //     memo: item.memo,
-      //   }
-      // }),
+        return {
+          outsourcingCompanyId: item.outsourcingCompanyId,
+          groups: item.groups.map((groupItems) => {
+            return {
+              outsourcingCompanyContractConstructionGroupId:
+                groupItems.outsourcingCompanyContractConstructionGroupId,
+              items: groupItems.items.map((lastItems) => {
+                return {
+                  outsourcingCompanyContractConstructionId:
+                    lastItems.outsourcingCompanyContractConstructionId,
+                  specification: lastItems.specification,
+                  unit: lastItems.unit,
+                  quantity: lastItems.quantity,
+                  // fileUrl: file?.fileUrl || null,
+                  // originalFileName: file?.originalFileName || null,
+                  memo: lastItems.memo,
+                }
+              }),
+            }
+          }),
+        }
+      }),
 
       outsourcingEquipments: form.outsourcingEquipments.map((item) => {
         const file = item.files[0]
@@ -1843,8 +1896,8 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       outsourcings: form.outsourcingConstructions.map((item: OutsourcingsItem) => ({
         id: item.id, // 수정이면 기존 id, 신규면 0 또는 undefined
         outsourcingCompanyId: item.outsourcingCompanyId,
-        outsourcingCompanyContractWorkerId: item.outsourcingCompanyContractConstructionGroupId,
-        outsourcingCompanyContractConstructionId: item.outsourcingCompanyContractConstructionId,
+        // outsourcingCompanyContractWorkerId: item.outsourcingCompanyContractConstructionGroupId,
+        // outsourcingCompanyContractConstructionId: item.outsourcingCompanyContractConstructionId,
         // category: item.category,
         // workContent: item.workContent,
         // workQuantity: item.workQuantity,
