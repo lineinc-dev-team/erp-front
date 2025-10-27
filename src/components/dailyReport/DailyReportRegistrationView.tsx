@@ -62,7 +62,6 @@ import { useManagementCost } from '@/hooks/useManagementCost'
 import { useSearchParams } from 'next/navigation'
 import AmountInput from '../common/AmountInput'
 import { useSiteId } from '@/hooks/useSiteIdNumber'
-import { EquipmentType } from '@/config/erp.confing'
 import CommonSelectByName from '../common/CommonSelectByName'
 
 export default function DailyReportRegistrationView() {
@@ -336,8 +335,6 @@ export default function DailyReportRegistrationView() {
       return
     }
 
-    console.log('allContentsallContents', allContents)
-
     // 데이터가 있는 경우
     const fetched = allContents.map((item: any) => ({
       id: item.id,
@@ -571,11 +568,12 @@ export default function DailyReportRegistrationView() {
       outsourcingCompanyContractEquipmentId: item.outsourcingCompanyContractEquipment?.id ?? 0,
       // specificationName: item.outsourcingCompanyContractEquipment.specification ?? '',
 
+      unitPrice: item.unitPrice,
+      taskDescription: item.taskDescription,
       specificationName: item.outsourcingCompanyContractEquipment.category ?? '',
 
       type: item.outsourcingCompanyContractEquipment?.category ?? '',
       workContent: item.workContent,
-      unitPrice: item.unitPrice,
       workHours: item.workHours,
       memo: item.memo,
       subEquipments: (item.outsourcingCompanyContractSubEquipments ?? []).map((sub: any) => ({
@@ -2049,12 +2047,10 @@ export default function DailyReportRegistrationView() {
       !!selectedItemName[selectId], // 필요한 값 모두 있을 때만 요청
   })
 
-  // ✅ 각 회사별로 옵션 목록을 저장하는 state
   const [specificationOptionsByCompany, setSpecificationOptionsByCompany] = useState<{
     [companyId: number]: { id: number; name: string }[]
   }>({})
 
-  // ✅ contractSpecificationList가 변경될 때마다 옵션 세팅
   useEffect(() => {
     if (!contractSpecificationList || !contractSpecificationList.data) return
 
@@ -2222,6 +2218,8 @@ export default function DailyReportRegistrationView() {
         specification: user.specification,
         vehicleNumber: user.vehicleNumber,
         category: user.category,
+        unitPrice: user.unitPrice,
+        taskDescription: user.taskDescription,
       }))
 
     setCarNumberOptionsByCompany((prev) => ({
@@ -2236,6 +2234,15 @@ export default function DailyReportRegistrationView() {
   const outsourcingfuel = fuelData
 
   const equipmentDataResult = equipmentData
+
+  interface EquipmentTypeOption {
+    code: string
+    name: string
+  }
+
+  const [testArray, setTestArray] = useState<EquipmentTypeOption[]>([
+    { code: 'BASE', name: '선택' },
+  ])
 
   useEffect(() => {
     if (!equipmentDataResult.length) return
@@ -2286,19 +2293,18 @@ export default function DailyReportRegistrationView() {
           size: 200,
         })
 
-        console.log('차량번호 말고 기사명', carNumberRes)
-
         const carOptions = carNumberRes.data.content.map((user: any) => ({
           id: user.id,
           specification: user.specification,
           vehicleNumber: user.vehicleNumber,
           category: user.category,
+          unitPrice: user.unitPrice,
+          taskDescription: user.taskDescription,
           subEquipments:
             user.subEquipments &&
             user.subEquipments.length > 0 &&
             user.subEquipments.map((item: any) => ({
               id: item.id,
-
               type: item.typeCode,
               typeCode: item.typeCode,
               workContent: item.description ?? '24',
@@ -2307,6 +2313,18 @@ export default function DailyReportRegistrationView() {
               unitPrice: item.unitPrice ?? 200,
             })),
         }))
+
+        if (!carNumberRes?.data?.content) return
+
+        const uniqueTypes: any[] = Array.from(
+          new Map(
+            carNumberRes.data.content
+              .flatMap((user: any) => user.subEquipments ?? [])
+              .map((item: any) => [item.typeCode, { code: item.typeCode, name: item.type }]),
+          ).values(),
+        )
+
+        setTestArray([{ code: 'BASE', name: '선택' }, ...uniqueTypes])
 
         setCarNumberOptionsByCompany((prev) => {
           const exists = carOptions.some((opt: any) => opt.id === carNumberId)
@@ -2319,6 +2337,8 @@ export default function DailyReportRegistrationView() {
                 specification: '',
                 vehicleNumber: '선택',
                 category: '',
+                unitPrice: '',
+                taskDescription: '',
                 subEquipments: [],
                 deleted: false,
               },
@@ -5158,12 +5178,12 @@ export default function DailyReportRegistrationView() {
                                 selectedCarNumber.category || '',
                               )
 
-                              updateItemField(
-                                'equipment',
-                                m.id,
-                                'workContent',
-                                selectedCarNumber.workContent || '',
-                              )
+                              // updateItemField(
+                              //   'equipment',
+                              //   m.id,
+                              //   'workContent',
+                              //   selectedCarNumber.workContent || '',
+                              // )
 
                               updateItemField(
                                 'equipment',
@@ -5175,15 +5195,22 @@ export default function DailyReportRegistrationView() {
                               updateItemField(
                                 'equipment',
                                 m.id,
-                                'type',
-                                selectedCarNumber.category || '-', // type 없으면 '-'
+                                'workContent',
+                                selectedCarNumber.taskDescription || 0,
                               )
 
+                              // updateItemField(
+                              //   'equipment',
+                              //   m.id,
+                              //   'type',
+                              //   selectedCarNumber.category || '-', // type 없으면 '-'
+                              // )
+
                               if (
-                                selectedCarNumber.subEquipments &&
-                                selectedCarNumber.subEquipments.length > 0
+                                selectedCarNumber?.subEquipments &&
+                                selectedCarNumber?.subEquipments?.length > 0
                               ) {
-                                const formattedSubEquipments = selectedCarNumber.subEquipments.map(
+                                const formattedSubEquipments = selectedCarNumber.subEquipments?.map(
                                   (sub: any) => ({
                                     id: sub.id,
                                     outsourcingCompanyContractSubEquipmentId: sub?.id,
@@ -5195,15 +5222,22 @@ export default function DailyReportRegistrationView() {
                                   }),
                                 )
 
+                                console.log(
+                                  '2455',
+                                  formattedSubEquipments,
+                                  selectedCarNumber,
+                                  carNumberOptionsByCompany[m.outsourcingCompanyId],
+                                )
+
                                 updateItemField(
                                   'equipment',
                                   m.id,
                                   'subEquipments',
                                   formattedSubEquipments,
                                 )
-                              } else {
-                                updateItemField('equipment', m.id, 'subEquipments', [])
                               }
+
+                              updateItemField('equipment', m.id, 'subEquipments', [])
                             }}
                             options={
                               carNumberOptionsByCompany[m.outsourcingCompanyId] ?? [
@@ -5259,10 +5293,45 @@ export default function DailyReportRegistrationView() {
                                   <CommonSelect
                                     className="flex-1 text-2xl"
                                     value={item.type || 'BASE'}
-                                    onChange={(value) =>
+                                    onChange={(value) => {
                                       updateContractDetailField(m.id, item.id, 'type', value)
-                                    }
-                                    options={EquipmentType}
+
+                                      const selectedCarNumber = (
+                                        carNumberOptionsByCompany[m.outsourcingCompanyId] ?? []
+                                      ).find((opt) => opt.id === value)
+
+                                      if (
+                                        selectedCarNumber?.subEquipments &&
+                                        selectedCarNumber?.subEquipments?.length > 0
+                                      ) {
+                                        const formattedSubEquipments =
+                                          selectedCarNumber.subEquipments?.map((sub: any) => ({
+                                            id: sub.id,
+                                            outsourcingCompanyContractSubEquipmentId: sub?.id,
+                                            type: sub.type || sub.typeCode || '-',
+                                            workContent:
+                                              sub.workContent || sub.taskDescription || '',
+                                            unitPrice: sub.unitPrice || 0,
+                                            workHours: sub.workHours || 0,
+                                            memo: sub.memo || '',
+                                          }))
+
+                                        console.log(
+                                          '2455',
+                                          formattedSubEquipments,
+                                          selectedCarNumber,
+                                          carNumberOptionsByCompany[m.outsourcingCompanyId],
+                                        )
+
+                                        updateItemField(
+                                          'equipment',
+                                          m.id,
+                                          'subEquipments',
+                                          formattedSubEquipments,
+                                        )
+                                      }
+                                    }}
+                                    options={testArray}
                                   />
                                   <CommonButton
                                     label="삭제"

@@ -1454,7 +1454,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           if (manager.id !== managerId) return manager
 
           const newItem = {
-            id: item?.id ?? crypto.randomUUID(), // ✅ 고유 ID 생성
+            id: item?.id ?? crypto.randomUUID(),
             outsourcingCompanyContractSubEquipmentId: item?.id ?? 1,
             type: item?.type ?? '',
             typeCode: item?.typeCode ?? '',
