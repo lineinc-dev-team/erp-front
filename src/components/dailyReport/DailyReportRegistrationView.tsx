@@ -198,7 +198,7 @@ export default function DailyReportRegistrationView() {
   // 체크 박스에 활용
   //   const employees = form.employees
 
-  const tabs = ['직원', '직영/용역', '장비', '유류', '외주(공사)', '공사일보', '현장 사진 등록']
+  const tabs = ['직원', '직영/용역', '장비', '유류', '공사일보', '현장 사진 등록']
   const [activeTab, setActiveTab] = useState('직원')
 
   const handleTabClick = (tab: string) => {
@@ -573,7 +573,6 @@ export default function DailyReportRegistrationView() {
       memo: item.memo,
       subEquipments: (item.outsourcingCompanyContractSubEquipments ?? []).map((sub: any) => ({
         id: sub.id, // ← 백엔드의 고유 ID
-        outsourcingCompanyContractSubEquipmentId: sub.outsourcingCompanyContractSubEquipmentId,
         subEquipmentId: sub.subEquipment?.id ?? 0,
         type: sub.subEquipment?.typeCode ?? '', // "죽통임대"
         typeCode: sub.subEquipment?.typeCode ?? '', // "BIT_USAGE_FEE"
@@ -2215,6 +2214,7 @@ export default function DailyReportRegistrationView() {
             user.subEquipments.length > 0 &&
             user.subEquipments.map((item: any) => ({
               id: item.id,
+
               type: item.typeCode,
               typeCode: item.typeCode,
               workContent: item.description ?? '24',
@@ -5081,6 +5081,7 @@ export default function DailyReportRegistrationView() {
                                 const formattedSubEquipments = selectedCarNumber.subEquipments.map(
                                   (sub: any) => ({
                                     id: sub.id,
+                                    outsourcingCompanyContractSubEquipmentId: sub?.id,
                                     type: sub.type || sub.typeCode || '-',
                                     workContent: sub.workContent || sub.taskDescription || '',
                                     unitPrice: sub.unitPrice || 0,

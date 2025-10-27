@@ -1403,50 +1403,32 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
 
   // store 안
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  addContractDetailItem: (managerId: number, backendSubEquipments: any[]) =>
-    set((state) => {
-      return {
-        form: {
-          ...state.form,
-          outsourcingEquipments: state.form.outsourcingEquipments.map((manager) => {
-            if (manager.id !== managerId) return manager
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  addContractDetailItem: (managerId: number, item: any) =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        outsourcingEquipments: state.form.outsourcingEquipments.map((manager) => {
+          if (manager.id !== managerId) return manager
 
-            // 백엔드 데이터가 존재하는 경우 → subEquipments 생성
-            const newSubEquipments =
-              backendSubEquipments && backendSubEquipments.length > 0
-                ? backendSubEquipments.map((item) => ({
-                    id: item.id ?? Date.now(), // 서버에서 받은 id or 임시 id
-                    outsourcingCompanyContractSubEquipmentId: item.id ?? 1,
-                    type: item.type,
-                    typeCode: item.typeCode,
-                    workContent: item.workContent ?? item?.taskDescription ?? '',
-                    unitPrice: item.unitPrice ?? item?.unitPrice ?? 0,
-                    workHours: item.workHours ?? 0,
-                    memo: item.memo ?? item?.memo ?? '',
-                  }))
-                : [
-                    {
-                      id: Date.now(),
-                      outsourcingCompanyContractSubEquipmentId: 1,
-                      type: '',
-                      typeCode: '',
-                      workContent: '',
-                      unitPrice: 0,
-                      workHours: 0,
-                      memo: '',
-                    },
-                  ]
+          const newItem = {
+            id: item?.id ?? crypto.randomUUID(), // ✅ 고유 ID 생성
+            outsourcingCompanyContractSubEquipmentId: item?.id ?? 1,
+            type: item?.type ?? '',
+            typeCode: item?.typeCode ?? '',
+            workContent: item?.workContent ?? item?.taskDescription ?? '',
+            unitPrice: item?.unitPrice ?? 0,
+            workHours: item?.workHours ?? 0,
+            memo: item?.memo ?? '',
+          }
 
-            return {
-              ...manager,
-              subEquipments: manager.subEquipments
-                ? [...manager.subEquipments, ...newSubEquipments]
-                : [...newSubEquipments],
-            }
-          }),
-        },
-      }
-    }),
+          return {
+            ...manager,
+            subEquipments: manager.subEquipments ? [...manager.subEquipments, newItem] : [newItem],
+          }
+        }),
+      },
+    })),
 
   // 세부 항목 삭제
   removeContractDetailItem: (managerId: number, itemId: number) =>
