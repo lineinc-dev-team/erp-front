@@ -564,30 +564,33 @@ export default function DailyReportRegistrationView() {
     const fetched = allEquipmentContents.map((item: any) => ({
       id: item.id,
       outsourcingCompanyId: item.outsourcingCompany?.id ?? 0,
-      outsourcingCompanyContractDriverId: item.outsourcingCompanyContractDriver.id ?? 0,
+      outsourcingCompanyContractDriverId: item.outsourcingCompanyContractDriver?.id ?? 0,
       outsourcingCompanyContractEquipmentId: item.outsourcingCompanyContractEquipment?.id ?? 0,
-      // specificationName: item.outsourcingCompanyContractEquipment.specification ?? '',
 
-      unitPrice: item.unitPrice,
-      taskDescription: item.taskDescription,
-      specificationName: item.outsourcingCompanyContractEquipment.category ?? '',
-
+      taskDescription: item.outsourcingCompanyContractEquipment?.taskDescription ?? '',
+      specificationName: item.outsourcingCompanyContractEquipment?.category ?? '',
       type: item.outsourcingCompanyContractEquipment?.category ?? '',
       workContent: item.workContent,
+      unitPrice: item?.unitPrice ?? 0,
       workHours: item.workHours,
+
       memo: item.memo,
-      subEquipments: (item.outsourcingCompanyContractSubEquipments ?? []).map((sub: any) => ({
-        id: sub.id, // ← 백엔드의 고유 ID
-        subEquipmentId: sub.subEquipment?.id ?? 0,
-        type: sub.subEquipment?.typeCode ?? '', // "죽통임대"
-        typeCode: sub.subEquipment?.typeCode ?? '', // "BIT_USAGE_FEE"
-        description: sub.subEquipment?.description ?? '', // "비트손료"
-        taskDescription: sub.subEquipment?.taskDescription ?? '', // "죽통 임대료"
-        memo: sub.memo ?? '',
-        workContent: sub.workContent ?? '',
-        unitPrice: sub.unitPrice ?? sub.subEquipment?.unitPrice ?? 0,
-        workHours: sub.workHours ?? 0,
-      })),
+
+      // 하위 장비 정보
+      subEquipments: (item.outsourcingCompanyContractSubEquipments ?? []).map(
+        (contractSubEquipment: any) => ({
+          id: contractSubEquipment.id ?? 0,
+          outsourcingCompanyContractSubEquipmentId: contractSubEquipment.subEquipment.id ?? 0,
+          type: contractSubEquipment.subEquipment.type ?? '', // 예: "죽통임대"
+          typeCode: contractSubEquipment.subEquipment.typeCode ?? '', // 예: "BIT_USAGE_FEE"
+          description: contractSubEquipment.subEquipment.description ?? '',
+          taskDescription: contractSubEquipment.subEquipment.taskDescription ?? '',
+          memo: contractSubEquipment.subEquipment.memo ?? '',
+          workContent: contractSubEquipment.workContent ?? '',
+          unitPrice: contractSubEquipment.unitPrice ?? 0,
+          workHours: contractSubEquipment.workHours ?? 0,
+        }),
+      ),
 
       // type: item.outsourcingCompanyContractEquipment.category ?? '',
       // workContent: item.workContent,
@@ -2236,12 +2239,14 @@ export default function DailyReportRegistrationView() {
   const equipmentDataResult = equipmentData
 
   interface EquipmentTypeOption {
-    code: string
+    id: number
     name: string
+    taskDescription: string
+    unitPrice: number
   }
 
   const [testArray, setTestArray] = useState<EquipmentTypeOption[]>([
-    { code: 'BASE', name: '선택' },
+    { id: 0, name: '선택', taskDescription: '', unitPrice: 0 },
   ])
 
   useEffect(() => {
@@ -2305,6 +2310,7 @@ export default function DailyReportRegistrationView() {
             user.subEquipments.length > 0 &&
             user.subEquipments.map((item: any) => ({
               id: item.id,
+              outsourcingCompanyContractSubEquipmentId: item.id,
               type: item.typeCode,
               typeCode: item.typeCode,
               workContent: item.description ?? '24',
@@ -2320,11 +2326,19 @@ export default function DailyReportRegistrationView() {
           new Map(
             carNumberRes.data.content
               .flatMap((user: any) => user.subEquipments ?? [])
-              .map((item: any) => [item.typeCode, { code: item.typeCode, name: item.type }]),
+              .map((item: any) => [
+                item.typeCode,
+                {
+                  id: item.id,
+                  name: item.type,
+                  taskDescription: item.taskDescription,
+                  unitPrice: item.unitPrice,
+                },
+              ]),
           ).values(),
         )
 
-        setTestArray([{ code: 'BASE', name: '선택' }, ...uniqueTypes])
+        setTestArray([{ id: 0, name: '선택' }, ...uniqueTypes])
 
         setCarNumberOptionsByCompany((prev) => {
           const exists = carOptions.some((opt: any) => opt.id === carNumberId)
@@ -5292,47 +5306,37 @@ export default function DailyReportRegistrationView() {
                                 >
                                   <CommonSelect
                                     className="flex-1 text-2xl"
-                                    value={item.type || 'BASE'}
+                                    value={item.outsourcingCompanyContractSubEquipmentId || 0}
                                     onChange={(value) => {
-                                      updateContractDetailField(m.id, item.id, 'type', value)
+                                      updateContractDetailField(
+                                        m.id,
+                                        item.id,
+                                        'outsourcingCompanyContractSubEquipmentId',
+                                        value,
+                                      )
 
-                                      const selectedCarNumber = (
-                                        carNumberOptionsByCompany[m.outsourcingCompanyId] ?? []
-                                      ).find((opt) => opt.id === value)
+                                      const selected = testArray.find((t) => t.id)
 
-                                      if (
-                                        selectedCarNumber?.subEquipments &&
-                                        selectedCarNumber?.subEquipments?.length > 0
-                                      ) {
-                                        const formattedSubEquipments =
-                                          selectedCarNumber.subEquipments?.map((sub: any) => ({
-                                            id: sub.id,
-                                            outsourcingCompanyContractSubEquipmentId: sub?.id,
-                                            type: sub.type || sub.typeCode || '-',
-                                            workContent:
-                                              sub.workContent || sub.taskDescription || '',
-                                            unitPrice: sub.unitPrice || 0,
-                                            workHours: sub.workHours || 0,
-                                            memo: sub.memo || '',
-                                          }))
-
-                                        console.log(
-                                          '2455',
-                                          formattedSubEquipments,
-                                          selectedCarNumber,
-                                          carNumberOptionsByCompany[m.outsourcingCompanyId],
-                                        )
-
-                                        updateItemField(
-                                          'equipment',
+                                      if (selected) {
+                                        updateContractDetailField(
                                           m.id,
-                                          'subEquipments',
-                                          formattedSubEquipments,
+                                          item.id,
+                                          'workContent',
+                                          selected.taskDescription || '',
                                         )
+                                        updateContractDetailField(
+                                          m.id,
+                                          item.id,
+                                          'unitPrice',
+                                          selected.unitPrice || 0,
+                                        )
+
+                                        console.log('itemitemitem', selected.unitPrice, testArray)
                                       }
                                     }}
                                     options={testArray}
                                   />
+
                                   <CommonButton
                                     label="삭제"
                                     className="px-6 whitespace-nowrap"

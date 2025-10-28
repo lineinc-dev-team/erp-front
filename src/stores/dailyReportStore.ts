@@ -1454,11 +1454,11 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           if (manager.id !== managerId) return manager
 
           const newItem = {
-            id: item?.id ?? crypto.randomUUID(),
-            outsourcingCompanyContractSubEquipmentId: item?.id ?? 1,
+            id: Date.now(),
+            outsourcingCompanyContractSubEquipmentId: item?.id ?? null,
             type: item?.type ?? '',
             typeCode: item?.typeCode ?? '',
-            workContent: item?.workContent ?? item?.taskDescription ?? '',
+            workContent: item?.taskDescription ?? '',
             unitPrice: item?.unitPrice ?? 0,
             workHours: item?.workHours ?? 0,
             memo: item?.memo ?? '',
