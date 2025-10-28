@@ -113,7 +113,7 @@ export default function DailyReportRegistrationView() {
     // 직원 정보
   } = useDailyFormStore()
 
-  const { WeatherTypeMethodOptions, createFuelMutation } = useFuelAggregation()
+  const { WeatherTypeMethodOptions } = useFuelAggregation()
 
   const [isEditMode, setIsEditMode] = useState(false)
   const {
@@ -149,6 +149,8 @@ export default function DailyReportRegistrationView() {
     FileModifyMutation,
 
     MainInputStatusMutation,
+
+    createAlreadyFuelMutation,
     WorkerStatusMutation,
     CompleteInfoMutation,
 
@@ -671,7 +673,6 @@ export default function DailyReportRegistrationView() {
       return
     }
 
-    console.log('allFuelsallFuels', allFuels)
     const fetched = allFuels.map((item: any) => ({
       id: item.fuelInfoId,
       outsourcingCompanyId: item.outsourcingCompany?.id ?? 0,
@@ -2322,23 +2323,16 @@ export default function DailyReportRegistrationView() {
 
         if (!carNumberRes?.data?.content) return
 
-        const uniqueTypes: any[] = Array.from(
-          new Map(
-            carNumberRes.data.content
-              .flatMap((user: any) => user.subEquipments ?? [])
-              .map((item: any) => [
-                item.typeCode,
-                {
-                  id: item.id,
-                  name: item.type,
-                  taskDescription: item.taskDescription,
-                  unitPrice: item.unitPrice,
-                },
-              ]),
-          ).values(),
-        )
+        const allTypes = carNumberRes.data.content
+          .flatMap((user: any) => user.subEquipments ?? [])
+          .map((item: any) => ({
+            id: item.id,
+            name: item.type,
+            taskDescription: item.taskDescription,
+            unitPrice: item.unitPrice,
+          }))
 
-        setTestArray([{ id: 0, name: '선택' }, ...uniqueTypes])
+        setTestArray([{ id: 0, name: '선택' }, ...allTypes])
 
         setCarNumberOptionsByCompany((prev) => {
           const exists = carOptions.some((opt: any) => opt.id === carNumberId)
@@ -2696,6 +2690,13 @@ export default function DailyReportRegistrationView() {
     })
   }, [outsourcingfuel])
 
+  //  ui 그림
+
+  const cellStyle = {
+    border: '1px solid #9CA3AF',
+    verticalAlign: 'top',
+    padding: '8px',
+  }
   return (
     <>
       <div className="flex gap-10 items-center justify-between">
@@ -5068,10 +5069,7 @@ export default function DailyReportRegistrationView() {
                           />
                         </TableCell>
 
-                        <TableCell
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
-                        >
+                        <TableCell align="center" sx={cellStyle}>
                           <CommonSelect
                             fullWidth
                             value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
@@ -5118,10 +5116,7 @@ export default function DailyReportRegistrationView() {
                           />
                         </TableCell>
 
-                        <TableCell
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
-                        >
+                        <TableCell align="center" sx={cellStyle}>
                           <CommonSelect
                             fullWidth
                             value={
@@ -5154,10 +5149,7 @@ export default function DailyReportRegistrationView() {
                           />
                         </TableCell>
 
-                        <TableCell
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
-                        >
+                        <TableCell align="center" sx={cellStyle}>
                           <CommonSelect
                             fullWidth
                             value={
@@ -5166,10 +5158,6 @@ export default function DailyReportRegistrationView() {
                               0
                             }
                             onChange={async (value) => {
-                              console.log(
-                                '장비명 데이터 확인 !!!',
-                                carNumberOptionsByCompany[m.outsourcingCompanyId],
-                              )
                               const selectedCarNumber = (
                                 carNumberOptionsByCompany[m.outsourcingCompanyId] ?? []
                               ).find((opt) => opt.id === value)
@@ -5267,14 +5255,7 @@ export default function DailyReportRegistrationView() {
                         </TableCell>
 
                         {/* 규격 */}
-                        <TableCell
-                          align="center"
-                          sx={{
-                            border: '1px solid  #9CA3AF',
-                            verticalAlign: 'top',
-                            padding: '8px',
-                          }}
-                        >
+                        <TableCell align="center" sx={cellStyle}>
                           {/* 규격명 + 추가 버튼 */}
                           <div className="flex items-center justify-between mb-2">
                             <TextField
@@ -5315,7 +5296,9 @@ export default function DailyReportRegistrationView() {
                                         value,
                                       )
 
-                                      const selected = testArray.find((t) => t.id)
+                                      const selected = testArray.find((t) => t.id === value)
+
+                                      console.log('testArraytestArray', testArray)
 
                                       if (selected) {
                                         updateContractDetailField(
@@ -5330,8 +5313,6 @@ export default function DailyReportRegistrationView() {
                                           'unitPrice',
                                           selected.unitPrice || 0,
                                         )
-
-                                        console.log('itemitemitem', selected.unitPrice, testArray)
                                       }
                                     }}
                                     options={testArray}
@@ -5361,10 +5342,7 @@ export default function DailyReportRegistrationView() {
                           {m.type ?? '-'}
                         </TableCell> */}
 
-                        <TableCell
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
-                        >
+                        <TableCell align="center" sx={cellStyle}>
                           <TextField
                             size="small"
                             placeholder="작업 내용 입력"
@@ -5396,14 +5374,7 @@ export default function DailyReportRegistrationView() {
                             ))}
                         </TableCell>
 
-                        <TableCell
-                          align="center"
-                          sx={{
-                            border: '1px solid  #9CA3AF',
-                            padding: '8px',
-                            verticalAlign: 'top',
-                          }}
-                        >
+                        <TableCell align="center" sx={cellStyle}>
                           <TextField
                             size="small"
                             placeholder="작업 내용 입력"
@@ -8045,7 +8016,7 @@ export default function DailyReportRegistrationView() {
 
                 if (modifyFuelNumber === 0) {
                   // modifyFuelNumber가 0이면 신규 등록 mutation
-                  createFuelMutation.mutate(undefined, {
+                  createAlreadyFuelMutation.mutate(undefined, {
                     onSuccess: () => {
                       handleFuelRefetch() // 등록 성공 후 실행
                       setSaved(true)

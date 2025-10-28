@@ -4,6 +4,7 @@ import { useEffect, useMemo } from 'react'
 import {
   CompleteInfoData,
   CreatedailyReport,
+  DailyAlreadyFuelInfo,
   DailyListInfoService,
   GetEmployeeInfoService,
   GetWithEquipmentService,
@@ -545,6 +546,23 @@ export function useDailyReport() {
     window.location.reload() // push 후 강제 새로고침
   }
 
+  // 유류집계 관리등록
+  const createAlreadyFuelMutation = useMutation({
+    mutationFn: DailyAlreadyFuelInfo,
+    onSuccess: () => {
+      showSnackbar('출역일보(유류집계)가 등록 되었습니다.', 'success')
+      // 초기화 로직
+      queryClient.invalidateQueries({ queryKey: ['Al'] })
+    },
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        showSnackbar(error.message, 'error') // 여기서 서버 메시지 그대로 노출
+      } else {
+        showSnackbar('출역일보 등록이 실패했습니다.', 'error')
+      }
+    },
+  })
+
   return {
     createDailyMutation,
     EmployeesModifyMutation,
@@ -586,5 +604,7 @@ export function useDailyReport() {
     MainProcessModifyMutation,
     MaterialStatusMutation,
     useOutsourcingNameByFuel,
+
+    createAlreadyFuelMutation,
   }
 }
