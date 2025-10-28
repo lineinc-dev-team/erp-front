@@ -63,6 +63,7 @@ const menuNameToBasePath: Record<string, string> = {
   출역일보: '/dailyReport',
   '노무명세서 관리': '/laborStatement',
   '계정 관리': '/account',
+  '현장/본사 관리비 관리': '/siteManagement',
 }
 
 const menuNameToIcon: Record<string, React.ReactNode> = {
@@ -78,6 +79,7 @@ const menuNameToIcon: Record<string, React.ReactNode> = {
   '노무 관리': <AccessTimeIcon />, // 근무/노무 → 출퇴근 기록 아이콘
   '노무명세서 관리': <WorkHistory />, // 근무/노무 → 출퇴근 기록 아이콘
   '계정 관리': <AccountCircle />, // 사용자 계정 → 프로필 아이콘
+  '현장/본사 관리비 관리': <Assignment />, // 사용자 계정 → 프로필 아이콘
 
   출역일보: <Today />,
 }

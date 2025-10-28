@@ -140,6 +140,21 @@ export const SteelColumnList: GridColDef[] = [
   { field: 'createdAt', headerName: '등록일', width: 100 },
 ]
 
+export const SiteManamentColumnList: GridColDef[] = [
+  { field: 'no', headerName: 'No', width: 10 },
+  { field: 'siteName', headerName: '현장명', width: 130 },
+  { field: 'siteProcessName', headerName: '공정명', width: 130 },
+  { field: 'employeeSalary', headerName: '직원급여', width: 180 },
+  { field: 'regularRetirementPension', headerName: '퇴직연금(정규직)', width: 100 },
+  { field: 'retirementDeduction', headerName: '퇴직공제부금', width: 120 },
+  { field: 'majorInsurance', headerName: '4대보험', width: 120 },
+  { field: 'contractGuaranteeFee', headerName: '보증수수료(계약보증)', width: 100 },
+  { field: 'equipmentGuaranteeFee', headerName: '보증수수료(현장별건설기계)', width: 100 },
+  { field: 'nationalTaxPayment', headerName: '국세납부', width: 100 },
+  { field: 'siteManagementTotal', headerName: '계', width: 100 },
+  { field: 'headquartersManagementCost', headerName: '본사관리비', width: 100 },
+]
+
 export const MaterialColumnList: GridColDef[] = [
   { field: 'no', headerName: 'No', width: 10 },
   // { field: 'backendId', headerName: 'No', width: 70 },

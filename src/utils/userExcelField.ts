@@ -110,6 +110,24 @@ export const SteelExcelFieldMap = {
 export type SteelExcelFieldLabel = keyof typeof SteelExcelFieldMap
 export type SteelExcelFieldKey = (typeof SteelExcelFieldMap)[SteelExcelFieldLabel]
 
+export const SiteManamentExcelFieldMap = {
+  No: 'id',
+  현장명: 'siteName',
+  공정명: 'siteProcessName',
+  '퇴직연금(정규직)': 'regularRetirementPension',
+  퇴직공제부금: 'retirementDeduction',
+  '4대보험': 'majorInsurance',
+  '보증수수료(계약보증)': 'contractGuaranteeFee',
+  '보증수수료(현장별건설기계)': 'equipmentGuaranteeFee',
+  국세납부: 'nationalTaxPayment',
+  계: 'siteManagementTotal',
+  본사관리비: 'headquartersManagementCost',
+} as const
+
+export type SiteManamentExcelFieldLabel = keyof typeof SiteManamentExcelFieldMap
+export type SiteManamentExcelFieldKey =
+  (typeof SiteManamentExcelFieldMap)[SiteManamentExcelFieldLabel]
+
 // 자재관리 컬럼
 export const MaterialExcelFieldMap = {
   No: 'id',
