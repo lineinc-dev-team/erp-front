@@ -29,7 +29,6 @@ import {
   GetContractByFilterService,
   GetContractGroup,
   GetContractNameInfoService,
-  GetContractSpecifications,
   GetEmployeesByFilterService,
   GetEquipmentByFilterService,
   GetFuelByFilterService,
@@ -62,7 +61,6 @@ import { useManagementCost } from '@/hooks/useManagementCost'
 import { useSearchParams } from 'next/navigation'
 import AmountInput from '../common/AmountInput'
 import { useSiteId } from '@/hooks/useSiteIdNumber'
-import CommonSelectByName from '../common/CommonSelectByName'
 
 export default function DailyReportRegistrationView() {
   const {
@@ -72,7 +70,7 @@ export default function DailyReportRegistrationView() {
     setSaved,
     setField,
     updateItemField,
-    UpdateOutsourcingItemField,
+
     removeCheckedItems,
     addTemporaryCheckedItems,
     resetEmployees,
@@ -99,16 +97,6 @@ export default function DailyReportRegistrationView() {
 
     // 외주공사 추가 함수
 
-    addSubGroups,
-    // removeSubGroups,
-    // updateSubGroupsField,
-
-    // addSubitems,
-    // removeSubitems,
-    // updateSubitemsField,
-
-    addContractDetailItem,
-    removeContractDetailItem,
     updateContractDetailField,
     // 직원 정보
   } = useDailyFormStore()
@@ -180,13 +168,7 @@ export default function DailyReportRegistrationView() {
 
   const { OilTypeMethodOptions } = useFuelAggregation()
 
-  const [selectedCompanyIds, setSelectedCompanyIds] = useState<{ [rowId: number]: number }>({})
-
-  // 외주공사에서 사용하는 id 와 이름
-  const [selectedConstructionGroupId, setSelectedConstructionGroupId] = useState<{
-    [rowId: number]: number
-  }>({})
-  const [selectedItemName, setSelectedItemName] = useState<{ [rowId: number]: string }>({})
+  const [selectedCompanyIds, setSelectedCompanyIds] = useState<Record<number, number>>({})
 
   const [selectId, setSelectId] = useState(0)
 
@@ -206,7 +188,7 @@ export default function DailyReportRegistrationView() {
   // 체크 박스에 활용
   //   const employees = form.employees
   //'외주(공사)',
-  const tabs = ['직원', '직영/용역', '장비', '유류', '공사일보', '현장 사진 등록']
+  const tabs = ['직원', '직영/용역', '장비', '외주(공사)', '유류', '공사일보', '현장 사진 등록']
   const [activeTab, setActiveTab] = useState('직원')
 
   const handleTabClick = (tab: string) => {
@@ -486,30 +468,45 @@ export default function DailyReportRegistrationView() {
       return
     }
 
-    // const fetched = allOutsourcingContents.map((item: any) => ({
-    //   id: item.id,
-    //   outsourcingCompanyId: item.outsourcingCompany?.id ?? 0,
-    //   // outsourcingCompanyContractWorkerId: item.outsourcingCompanyWorker?.id ?? 0,
-    //   outsourcingCompanyContractConstructionGroupId: item.outsourcingCompanyContractConstructionGroupId,
-    //   category: item.category ?? '',
-    //   workContent: item.workContent,
-    //   workQuantity: item.workQuantity,
-    //   memo: item.memo,
-    //   files:
-    //     item.fileUrl && item.originalFileName
-    //       ? [
-    //           {
-    //             fileUrl: item.fileUrl,
-    //             originalFileName: item.originalFileName,
-    //           },
-    //         ]
-    //       : [],
+    const fetched = allOutsourcingContents.map((item: any) => ({
+      id: item.id,
+      checkId: item.id,
+      outsourcingCompanyId: item.outsourcingCompany?.id ?? 0,
+      groups: item.groups.map((groupItem: any) => ({
+        id: groupItem.id,
+        checkId: groupItem.id,
+        outsourcingCompanyContractConstructionGroupId:
+          groupItem.outsourcingCompanyContractConstructionGroup?.id ?? 0,
 
-    //   modifyDate: `${getTodayDateString(item.createdAt)} / ${getTodayDateString(item.updatedAt)}`,
-    // }))
+        items: groupItem.items.map((it: any) => ({
+          id: it.id,
+          checkId: it.id,
+          specification: it.specification ?? '',
+          quantity: it.quantity ?? 0,
+          unit: it.unit ?? '',
+          memo: it.memo ?? '',
+          files:
+            it.fileUrl && it.originalFileName
+              ? [
+                  {
+                    fileUrl: it.fileUrl,
+                    originalFileName: it.originalFileName,
+                  },
+                ]
+              : [],
+
+          outsourcingCompanyContractConstructionId:
+            it.outsourcingCompanyContractConstruction?.outsourcingCompanyContractConstructionId ??
+            0,
+        })),
+        isSubVisible: true, // <- 서브 항목 렌더링 여부 플래그 추가
+      })),
+    }))
+
+    console.log('setSelectedCompanyIdssetSelectedCompanyIds', fetched)
 
     setIsEditMode(true)
-    // setField('outsourcingConstructions', fetched)
+    setField('outsourcingConstructions', fetched)
   }
 
   // 외주(공사)
@@ -551,40 +548,34 @@ export default function DailyReportRegistrationView() {
     const res = await equipmentRefetch()
     if (!res.data) return
 
-    // content 배열 합치기
     const allEquipmentContents = res.data.pages.flatMap((page) => page.data.content)
 
     if (allEquipmentContents.length === 0) {
-      // 데이터가 아예 없는 경우
       setIsEditMode(false)
       resetEquipment()
       return
     }
-
-    console.log('allEquipmentContentsallEquipmentContents', allEquipmentContents)
 
     const fetched = allEquipmentContents.map((item: any) => ({
       id: item.id,
       outsourcingCompanyId: item.outsourcingCompany?.id ?? 0,
       outsourcingCompanyContractDriverId: item.outsourcingCompanyContractDriver?.id ?? 0,
       outsourcingCompanyContractEquipmentId: item.outsourcingCompanyContractEquipment?.id ?? 0,
-
       taskDescription: item.outsourcingCompanyContractEquipment?.taskDescription ?? '',
       specificationName: item.outsourcingCompanyContractEquipment?.category ?? '',
       type: item.outsourcingCompanyContractEquipment?.category ?? '',
       workContent: item.workContent,
       unitPrice: item?.unitPrice ?? 0,
       workHours: item.workHours,
-
       memo: item.memo,
 
-      // 하위 장비 정보
+      // 하위 장비
       subEquipments: (item.outsourcingCompanyContractSubEquipments ?? []).map(
         (contractSubEquipment: any) => ({
           id: contractSubEquipment.id ?? 0,
           outsourcingCompanyContractSubEquipmentId: contractSubEquipment.subEquipment.id ?? 0,
-          type: contractSubEquipment.subEquipment.type ?? '', // 예: "죽통임대"
-          typeCode: contractSubEquipment.subEquipment.typeCode ?? '', // 예: "BIT_USAGE_FEE"
+          type: contractSubEquipment.subEquipment.type ?? '',
+          typeCode: contractSubEquipment.subEquipment.typeCode ?? '',
           description: contractSubEquipment.subEquipment.description ?? '',
           taskDescription: contractSubEquipment.subEquipment.taskDescription ?? '',
           memo: contractSubEquipment.subEquipment.memo ?? '',
@@ -593,21 +584,6 @@ export default function DailyReportRegistrationView() {
           workHours: contractSubEquipment.workHours ?? 0,
         }),
       ),
-
-      // type: item.outsourcingCompanyContractEquipment.category ?? '',
-      // workContent: item.workContent,
-      // unitPrice: item.unitPrice,
-      // workHours: item.workHours,
-      // memo: item.memo,
-      // subEquipment: (item.outsourcingCompanyContractSubEquipments.subEquipment ?? []).map((sub: any) => ({
-      //   outsourcingCompanyContractSubEquipmentId: sub.id,
-      //   type: sub.type,
-      //   typeCode: sub.typeCode,
-      //   description: sub.description,
-      //   unitPrice: sub.unitPrice,
-      //   taskDescription: sub.taskDescription,
-      //   memo: sub.memo,
-      // })),
 
       files:
         item.fileUrl && item.originalFileName
@@ -622,11 +598,23 @@ export default function DailyReportRegistrationView() {
       modifyDate: `${getTodayDateString(item.createdAt)} / ${getTodayDateString(item.updatedAt)}`,
     }))
 
-    console.log('장비 데이터 가져오기!!!', fetched)
+    // 여기서 testArrayByRow 세팅
+    const subEquipmentsByRow: Record<number, EquipmentTypeOption[]> = {}
+    fetched.forEach((item) => {
+      const subEquipments: EquipmentTypeOption[] = (item.subEquipments ?? []).map((sub: any) => ({
+        id: sub.outsourcingCompanyContractSubEquipmentId ?? sub.id,
+        name: sub.type || sub.typeCode || '-',
+        taskDescription: sub.workContent || sub.taskDescription || '',
+        unitPrice: sub.unitPrice ?? 0,
+      }))
+      subEquipmentsByRow[item.outsourcingCompanyContractEquipmentId] = subEquipments
+    })
+    setTestArrayByRow(subEquipmentsByRow)
 
     setIsEditMode(true)
     setField('outsourcingEquipments', fetched)
   }
+
   // 장비
   const equipmentData = useMemo(() => form.outsourcingEquipments, [form.outsourcingEquipments])
   const checkedEquipmentIds = form.checkedEquipmentIds
@@ -779,6 +767,8 @@ export default function DailyReportRegistrationView() {
         reportDate: lastCheckedDateStr,
       })
 
+      console.log('2455', res)
+
       if (res?.data?.content && res.data.content.length > 0) {
         const allWorkerProcess = res.data.content
         const fetched = allWorkerProcess.map((item: any) => ({
@@ -823,22 +813,24 @@ export default function DailyReportRegistrationView() {
       return
     }
 
-    // 금일 데이터를 깊은 복사 (참조 공유 방지)
     const copied = todayWorks.map((work) => ({
       ...work,
-      id: Date.now() + Math.random(), // 새로운 ID로 대체 (충돌 방지)
+      id: Date.now() + Math.random(), // 새로운 ID
       isToday: false, // 명일 데이터로 설정
       workDetails: work.workDetails.map((detail) => ({
         ...detail,
-        id: Date.now() + Math.random(), // 세부항목도 새로운 id 부여
+        id: Date.now() + Math.random(), // 세부 항목도 새로운 ID 부여
       })),
     }))
 
-    // 기존 works 유지 + 복사된 명일 데이터 추가
-    const merged = [...form.works, ...copied]
+    // 기존 금일 데이터 유지 + 명일 데이터 새로 덮어쓰기
+    const newWorks = [
+      ...todayWorks, // 금일 데이터 유지
+      ...copied, // 복사된 명일 데이터
+    ]
 
     setIsEditMode(true)
-    setField('works', merged)
+    setField('works', newWorks)
 
     console.log('금일 → 명일 복사 완료:', copied)
     alert('금일 작업 내용이 명일로 복사되었습니다.')
@@ -947,8 +939,9 @@ export default function DailyReportRegistrationView() {
         reportDate: lastCheckedDateStr,
       })
 
+      console.log('전일 내용 복사', res)
+
       if (res?.data?.content && res.data.content.length > 0) {
-        // ✅ 데이터 존재 시 변환
         const allMainProcess = res.data.content
         const fetched = allMainProcess.map((item: any) => ({
           id: item.id,
@@ -964,7 +957,6 @@ export default function DailyReportRegistrationView() {
         setIsEditMode(true)
         setField('mainProcesses', fetched)
 
-        // ✅ 알림 메시지 처리
         if (attempts === 0) {
           // 바로 전일 데이터 있음
           alert('전일 주요공정 내용이 복사되었습니다.')
@@ -1907,7 +1899,7 @@ export default function DailyReportRegistrationView() {
   // 상세페이지 데이터 (예: props나 query에서 가져온 값)
   const ContractOutsourcings = contractData
 
-  // 1. 상세페이지 들어올 때 각 업체별 worker 데이터 API 호출
+  // 1. 상세페이지 들어올 때 각 업체별 worker 데이터 API 호출 (직영 용역 데이터 불러옴 언제? 셀렉트 박스 선택 시 )
   useEffect(() => {
     if (!ContractOutsourcings.length) return
 
@@ -1976,12 +1968,6 @@ export default function DailyReportRegistrationView() {
     })
   }, [ContractOutsourcings])
 
-  // 외주(공사에서 데이터 받아오기 )
-
-  const [contractGroupOptionsByCompany, setContractGroupOptionsByCompany] = useState<{
-    [companyId: number]: { id: number; name: string; items: any[] }[]
-  }>({})
-
   const {
     data: contractGroupList,
     // fetchNextPage: contractGroupFetchNextPage,
@@ -2005,137 +1991,116 @@ export default function DailyReportRegistrationView() {
     enabled: !!selectedCompanyIds[selectId],
   })
 
-  console.log('contractGroupListcontractGroupList현장 관리', contractGroupList)
-
   useEffect(() => {
     if (!contractGroupList) return
 
-    const options = contractGroupList.pages
-      .flatMap((page) => page.data.content)
-      .map((item) => ({
-        id: item.outsourcingCompanyContractConstructionGroupId,
-        name: item.itemName,
-        items: item.items ?? [],
-        deleted: item.deleted,
-      }))
-
-    setContractGroupOptionsByCompany((prev) => ({
-      ...prev,
-      [selectedCompanyIds[selectId]]: [{ id: 0, name: '선택', items: [] }, ...options],
-    }))
+    // 1️⃣ 백엔드에서 받아온 그룹 데이터를 정리
+    // const options = contractGroupList.pages
+    //   .flatMap((page) => page.data.content)
+    //   .map((group) => ({
+    //     id: group.outsourcingCompanyContractConstructionGroupId,
+    //     name: group.itemName,
+    //     items: group.items
+    //       .filter((item: any) => !item.deleted)
+    //       .map((item: any) => ({
+    //         id: item.outsourcingCompanyContractConstructionId,
+    //         item: item.item,
+    //         specification: item.specification,
+    //         unit: item.unit,
+    //         quantity: item.quantity ?? 0,
+    //       })),
+    //     deleted: group.deleted,
+    //   }))
   }, [contractGroupList, selectedCompanyIds, selectId])
-
-  // 외주(공사)에 대한 규격 데이터 확인
-
-  const {
-    data: contractSpecificationList,
-    // isFetching: contractSpecificationListIsFetching,
-    // isLoading: contractSpecificationListLoading,
-    // refetch: refetchContractSpecificationList,
-  } = useQuery({
-    queryKey: [
-      'ContractSpecificationInfo',
-      selectedCompanyIds[selectId],
-      selectedConstructionGroupId[selectId],
-      selectedItemName[selectId],
-    ],
-    queryFn: () =>
-      GetContractSpecifications({
-        id: selectedCompanyIds[selectId] ?? 0,
-        constructionGroupId: selectedConstructionGroupId[selectId] ?? 0,
-        itemName: selectedItemName[selectId] ?? '',
-      }),
-    enabled:
-      !!selectedCompanyIds[selectId] &&
-      !!selectedConstructionGroupId[selectId] &&
-      !!selectedItemName[selectId], // 필요한 값 모두 있을 때만 요청
-  })
-
-  const [specificationOptionsByCompany, setSpecificationOptionsByCompany] = useState<{
-    [companyId: number]: { id: number; name: string }[]
-  }>({})
-
-  useEffect(() => {
-    if (!contractSpecificationList || !contractSpecificationList.data) return
-
-    // 백엔드에서 받은 문자열 배열 → { id, name } 구조로 변환
-    const options = contractSpecificationList.data.map((spec: string, idx: number) => ({
-      id: idx + 1, // 문자열에는 id가 없으므로 인덱스로 대체
-      name: spec,
-    }))
-
-    // 선택 회사 ID가 존재할 경우에만 업데이트
-    if (selectedCompanyIds[selectId]) {
-      setSpecificationOptionsByCompany((prev) => ({
-        ...prev,
-        [selectedCompanyIds[selectId]]: [{ id: 0, name: '선택' }, ...options],
-      }))
-    }
-  }, [contractSpecificationList, selectedCompanyIds, selectId])
-
-  useEffect(() => {
-    if (!contractSpecificationList) return
-
-    const options = contractSpecificationList
-      .flatMap((page: any) => page.data.content)
-      .map((item: any) => ({
-        id: item.outsourcingCompanyContractConstructionGroupId,
-        name: item.itemName,
-        items: item.items ?? [],
-        deleted: item.deleted,
-      }))
-
-    setContractGroupOptionsByCompany((prev) => ({
-      ...prev,
-      [selectedCompanyIds[selectId]]: [{ id: 0, name: '선택', items: [] }, ...options],
-    }))
-  }, [contractGroupList, selectedCompanyIds, selectId])
-
-  // const outsourcings = resultOutsourcing
 
   // useEffect(() => {
-  //   if (!outsourcings.length) return
+  //   co
+  //   // 모든 외주공사 데이터를 순회
+  //   resultOutsourcing.forEach((row) => {
+  //     const groupOptions = contractGroupOptionsByCompany[row.outsourcingCompanyId] ?? []
+  //     const firstGroup = groupOptions.find((g) => g.id !== 0)
+  //     if (!firstGroup) return
 
-  //   outsourcings.forEach(async (row) => {
-  //     const companyId = row.outsourcingCompanyId
-  //     const worker = row.outsourcingCompanyContractWorkerId
+  //     console.log('firstGroupfirstGroup', firstGroup)
+  //     // 상위 그룹 선택값 초기화
+  //     setSelectedConstructionGroupId((prev) => ({
+  //       ...prev,
+  //       [row.checkId]: firstGroup.id,
+  //     }))
+  //   })
+  // }, [contractGroupOptionsByCompany])
 
-  //     if (workerOptionsByCompany[companyId]) {
-  //       return
-  //     }
+  // // 하위 그룹 선택값 초기화 (첫 번째 그룹이 있다면)
+  // setSelectedConstructionSubGroupIds((prev) => ({
+  //   ...prev,
+  //   [row.checkId]: firstGroup.id,
+  // }))
 
+  // 출역일보 외주(공사) 데이터를 불러올때 사용하는 로직 상세페이지 로직임
+  // useEffect(() => {
+  //   if (!resultOutsourcing.length) return
+
+  //   const companyIds = [
+  //     ...new Set(resultOutsourcing.map((m) => m.outsourcingCompanyId).filter(Boolean)),
+  //   ]
+
+  //   companyIds.forEach(async (companyId) => {
   //     try {
-  //       const res = await OutsourcingWorkerNameScroll({
+  //       const res = await GetContractGroup({
   //         pageParam: 0,
   //         id: companyId,
-  //         siteIdList: Number(siteIdList),
+  //         siteId: Number(siteIdList),
   //         size: 10,
   //       })
 
-  //       const options = res.data.content.map((user: any) => ({
-  //         id: user.id,
-  //         name: user.name,
-  //         category: user.category,
+  //       const content = res?.data?.content ?? []
+
+  //       const options = content.map((item: any) => ({
+  //         id: item.outsourcingCompanyContractConstructionGroupId,
+  //         name: item.itemName,
+  //         items: item.items ?? [],
   //       }))
 
-  //       setWorkerOptionsByCompany((prev) => {
-  //         const exists = options.some((opt: any) => opt.id === worker)
-
-  //         return {
-  //           ...prev,
-  //           [companyId]: [
-  //             { id: 0, name: '선택', category: '' },
-  //             ...options,
-  //             // 만약 선택된 worker가 목록에 없으면 추가
-  //             ...(worker && !exists ? [{ id: worker, name: '', category: '' }] : []),
-  //           ],
-  //         }
-  //       })
   //     } catch (err) {
-  //       console.error('업체별 인력 조회 실패', err)
+  //       console.error(`ContractGroup 불러오기 실패 - companyId: ${companyId}`, err)
   //     }
   //   })
-  // }, [outsourcings])
+  // }, [resultOutsourcing, siteIdList])
+
+  // 외주(공사)에 대한 규격 데이터 확인
+
+  // 규격을 관리 할 수 있는 변수
+
+  // 외주(공사)에서 규격 다루는 변수
+  // const [specificationOptionsByCompany, setSpecificationOptionsByCompany] = useState<{
+  //   [key: string]: { id: number; name: string }[]
+  // }>({})
+
+  // resultOutsourcing이 갱신될 때마다 규격 옵션 세팅
+  // useEffect(() => {
+  //   if (!resultOutsourcing.length) return
+
+  //   const newSpecificationOptions: typeof specificationOptionsByCompany = {}
+
+  //   resultOutsourcing.forEach((item) => {
+  //     const companyId = item.outsourcingCompanyId
+  //     const allSpecs = item.groups
+  //       .flatMap((group) => group.items)
+  //       .map((it) => it.specification)
+  //       .filter(Boolean) // 빈 값 제거
+
+  //     if (allSpecs.length > 0) {
+  //       newSpecificationOptions[companyId] = [
+  //         { id: 0, name: '선택' },
+  //         ...allSpecs.map((spec, idx) => ({ id: idx + 1, name: spec })),
+  //       ]
+  //     } else {
+  //       newSpecificationOptions[companyId] = [{ id: 0, name: '선택' }]
+  //     }
+  //   })
+
+  //   setSpecificationOptionsByCompany(newSpecificationOptions)
+  // }, [resultOutsourcing])
 
   const [selectedDriverIds, setSelectedDriverIds] = useState<{ [rowId: number]: number }>({})
 
@@ -2246,98 +2211,75 @@ export default function DailyReportRegistrationView() {
     unitPrice: number
   }
 
-  const [testArray, setTestArray] = useState<EquipmentTypeOption[]>([
-    { id: 0, name: '선택', taskDescription: '', unitPrice: 0 },
-  ])
+  // const [testArray, setTestArray] = useState<EquipmentTypeOption[]>([
+  //   { id: 0, name: '선택', taskDescription: '', unitPrice: 0 },
+  // ])
+
+  const [testArrayByRow, setTestArrayByRow] = useState<Record<number, EquipmentTypeOption[]>>({})
 
   useEffect(() => {
     if (!equipmentDataResult.length) return
 
-    equipmentDataResult.forEach(async (row) => {
-      const companyId = row.outsourcingCompanyId
-      const driverData = row.outsourcingCompanyContractDriverId
-      const carNumberId = row.outsourcingCompanyContractEquipmentId
+    const fetchData = async () => {
+      for (const row of equipmentDataResult) {
+        const companyId = row.outsourcingCompanyId
+        const driverData = row.outsourcingCompanyContractDriverId
+        const carNumberId = row.outsourcingCompanyContractEquipmentId
 
-      if (driverOptionsByCompany[companyId] && carNumberOptionsByCompany[companyId]) {
-        return
-      }
+        try {
+          // 기사 + 차량 병렬 요청
+          const [driverRes, carNumberRes] = await Promise.all([
+            FuelDriverNameScroll({
+              pageParam: 0,
+              id: companyId,
+              siteIdList: Number(siteIdList),
+              size: 200,
+            }),
+            FuelEquipmentNameScroll({
+              pageParam: 0,
+              id: companyId,
+              siteIdList: Number(siteIdList),
+              size: 200,
+            }),
+          ])
 
-      try {
-        const res = await FuelDriverNameScroll({
-          pageParam: 0,
-          id: companyId,
-          siteIdList: Number(siteIdList),
-          size: 200,
-        })
-
-        const options = res.data.content.map((user: any) => ({
-          id: user.id,
-          name: user.name,
-          deleted: user.deleted,
-        }))
-
-        setDriverOptionsByCompany((prev) => {
-          const exists = options.some((opt: any) => opt.id === driverData)
-
-          return {
-            ...prev,
-            [companyId]: [
-              { id: 0, name: '선택', deleted: false },
-              ...options,
-              // 만약 선택된 worker가 목록에 없으면 추가
-              ...(driverData && !exists ? [{ id: driverData, name: '', deleted: false }] : []),
-            ],
-          }
-        })
-
-        // 이 로직이 차량 선택 시 해당 데이터를 가져옴
-
-        const carNumberRes = await FuelEquipmentNameScroll({
-          pageParam: 0,
-          id: companyId,
-          siteIdList: Number(siteIdList),
-          size: 200,
-        })
-
-        const carOptions = carNumberRes.data.content.map((user: any) => ({
-          id: user.id,
-          specification: user.specification,
-          vehicleNumber: user.vehicleNumber,
-          category: user.category,
-          unitPrice: user.unitPrice,
-          taskDescription: user.taskDescription,
-          subEquipments:
-            user.subEquipments &&
-            user.subEquipments.length > 0 &&
-            user.subEquipments.map((item: any) => ({
-              id: item.id,
-              outsourcingCompanyContractSubEquipmentId: item.id,
-              type: item.typeCode,
-              typeCode: item.typeCode,
-              workContent: item.description ?? '24',
-              memo: item.memo ?? '22',
-              taskDescription: item.taskDescription ?? '24',
-              unitPrice: item.unitPrice ?? 200,
-            })),
-        }))
-
-        if (!carNumberRes?.data?.content) return
-
-        const allTypes = carNumberRes.data.content
-          .flatMap((user: any) => user.subEquipments ?? [])
-          .map((item: any) => ({
-            id: item.id,
-            name: item.type,
-            taskDescription: item.taskDescription,
-            unitPrice: item.unitPrice,
+          // ✅ 기사 옵션
+          const driverOptions = (driverRes?.data?.content ?? []).map((user: any) => ({
+            id: user.id,
+            name: user.name,
+            deleted: user.deleted ?? false,
           }))
 
-        setTestArray([{ id: 0, name: '선택' }, ...allTypes])
+          setDriverOptionsByCompany((prev) => {
+            const exists = driverOptions.some((opt: any) => opt.id === driverData)
+            return {
+              ...prev,
+              [companyId]: [
+                { id: 0, name: '선택', deleted: false },
+                ...driverOptions,
+                ...(driverData && !exists ? [{ id: driverData, name: '', deleted: false }] : []),
+              ],
+            }
+          })
 
-        setCarNumberOptionsByCompany((prev) => {
-          const exists = carOptions.some((opt: any) => opt.id === carNumberId)
+          const carOptions = (carNumberRes?.data?.content ?? []).map((user: any) => ({
+            id: user.id,
+            specification: user.specification,
+            vehicleNumber: user.vehicleNumber,
+            category: user.category,
+            unitPrice: user.unitPrice,
+            taskDescription: user.taskDescription,
+            subEquipments:
+              user.subEquipments?.map((item: any) => ({
+                id: item.id,
+                type: item.type,
+                typeCode: item.typeCode,
+                workContent: item.taskDescription ?? '',
+                unitPrice: item.unitPrice ?? 0,
+              })) ?? [],
+          }))
 
-          return {
+          setCarNumberOptionsByCompany((prev) => ({
             ...prev,
             [companyId]: [
               {
@@ -2348,29 +2290,39 @@ export default function DailyReportRegistrationView() {
                 unitPrice: '',
                 taskDescription: '',
                 subEquipments: [],
-                deleted: false,
               },
               ...carOptions,
-              // 만약 선택된 worker가 목록에 없으면 추가
-              ...(carNumberId && !exists
-                ? [
-                    {
-                      id: carNumberId,
-                      specification: '',
-                      vehicleNumber: '',
-                      category: '',
-                      subEquipments: [],
-                      deleted: false,
-                    },
-                  ]
-                : []),
             ],
-          }
-        })
-      } catch (err) {
-        console.error('업체별 인력 조회 실패', err)
+          }))
+
+          // ✅ subEquipments 세팅
+          carOptions.forEach((car: any) => {
+            if (car.subEquipments?.length) {
+              setTestArrayByRow((prev) => ({
+                ...prev,
+                [car.id]: [
+                  { id: 0, name: '선택' },
+                  ...car.subEquipments.map((sub: any) => ({
+                    id: sub.id,
+                    name: sub.type || sub.typeCode || '-',
+                    taskDescription: sub.workContent,
+                    unitPrice: sub.unitPrice,
+                  })),
+                ],
+              }))
+            }
+          })
+
+          // ✅ 각 행의 선택값 초기화
+          setSelectedDriverIds((prev) => ({ ...prev, [row.id]: driverData || 0 }))
+          setSelectedCarNumberIds((prev) => ({ ...prev, [row.id]: carNumberId || 0 }))
+        } catch (err) {
+          console.error('업체별 차량/기사 조회 실패', err)
+        }
       }
-    })
+    }
+
+    fetchData()
   }, [equipmentDataResult])
 
   // 유류의 업체명 삭제 됨 표시
@@ -3955,38 +3907,30 @@ export default function DailyReportRegistrationView() {
                         sx={{ color: 'black' }}
                       />
                     </TableCell>
-                    {[
-                      '업체명',
-                      '항목명',
-                      '항목',
-                      '규격',
-                      '단위',
-                      '수량',
-                      '비고',
-                      '첨부파일',
-                      '등록/수정일',
-                    ].map((label) => (
-                      <TableCell
-                        key={label}
-                        align="center"
-                        sx={{
-                          backgroundColor: '#D1D5DB',
-                          border: '1px solid  #9CA3AF',
-                          color: 'black',
-                          fontWeight: 'bold',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
-                          label
-                        ) : (
-                          <div className="flex items-center justify-center">
-                            <span>{label}</span>
-                            <span className="text-red-500 ml-1">*</span>
-                          </div>
-                        )}
-                      </TableCell>
-                    ))}
+                    {['업체명', '항목명', '항목', '규격', '단위', '수량', '비고', '첨부파일'].map(
+                      (label) => (
+                        <TableCell
+                          key={label}
+                          align="center"
+                          sx={{
+                            backgroundColor: '#D1D5DB',
+                            border: '1px solid  #9CA3AF',
+                            color: 'black',
+                            fontWeight: 'bold',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
+                            label
+                          ) : (
+                            <div className="flex items-center justify-center">
+                              <span>{label}</span>
+                              <span className="text-red-500 ml-1">*</span>
+                            </div>
+                          )}
+                        </TableCell>
+                      ),
+                    )}
                   </TableRow>
                 </TableHead>
 
@@ -3999,807 +3943,19 @@ export default function DailyReportRegistrationView() {
                     </TableRow>
                   ) : (
                     resultOutsourcing.map((m) => (
-                      <TableRow key={m.id}>
+                      <TableRow key={m.checkId}>
                         <TableCell
                           padding="checkbox"
                           align="center"
                           sx={{ border: '1px solid  #9CA3AF' }}
                         >
                           <Checkbox
-                            checked={checkedOutsourcingIds.includes(m.id)}
+                            checked={checkedOutsourcingIds.includes(m.checkId)}
                             onChange={(e) =>
-                              toggleCheckItem('outsourcings', m.id, e.target.checked)
+                              toggleCheckItem('outsourcings', m.checkId, e.target.checked)
                             }
                           />
                         </TableCell>
-
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <CommonSelect
-                            fullWidth
-                            // value={m.outsourcingCompanyId || 0}
-                            value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
-                            onChange={async (value) => {
-                              const selectedCompany = updatedOutCompanyOptions.find(
-                                (opt) => Number(opt.id) === Number(value),
-                              )
-
-                              setSelectedCompanyIds((prev) => ({
-                                ...prev,
-                                [m.id]: selectedCompany ? selectedCompany.id : 0,
-                              }))
-
-                              setSelectId(m.id)
-
-                              updateItemField(
-                                'outsourcings',
-                                m.id,
-                                'outsourcingCompanyId',
-                                selectedCompany?.id || null,
-                              )
-
-                              updateItemField(
-                                'outsourcings',
-                                m.id,
-                                'outsourcingCompanyContractConstructionGroupId',
-                                0,
-                              )
-                              updateItemField(
-                                'outsourcings',
-                                m.id,
-                                'outsourcingCompanyContractConstructionId',
-                                0,
-                              )
-                              updateItemField('outsourcings', m.id, 'specification', null)
-                              updateItemField('outsourcings', m.id, 'unit', '-')
-
-                              setSelectId(m.id)
-
-                              updateItemField(
-                                'outsourcings',
-                                m.id,
-                                'outsourcingCompanyId',
-                                selectedCompany?.id || null,
-                              )
-
-                              // 차량 값도 추가
-                            }}
-                            options={updatedOutCompanyOptions}
-                            onScrollToBottom={() => {
-                              if (withEquipmenthasNextPage && !withEquipmentFetching)
-                                withEquipmentFetchNextPage()
-                            }}
-                            loading={withEquipmentLoading}
-                          />
-                        </TableCell>
-
-                        {/* 첫번째 첫줄 세팅 항목명 , 항목, 규격, 단위, 수량 , 바고  */}
-
-                        <TableCell
-                          align="center"
-                          sx={{
-                            border: '1px solid #9CA3AF',
-                            padding: 0,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'space-between',
-                          }}
-                        >
-                          {/* 상단 영역 */}
-                          <div className="flex justify-center items-center mt-2">
-                            <div className="flex gap-2">
-                              <CommonSelect
-                                fullWidth
-                                value={
-                                  selectedConstructionGroupId[m.id] ??
-                                  m.groups?.[0]?.outsourcingCompanyContractConstructionGroupId ??
-                                  0
-                                }
-                                onChange={(value) => {
-                                  const selectedGroup = (
-                                    contractGroupOptionsByCompany[m.outsourcingCompanyId] ?? []
-                                  ).find((opt) => opt.id === value)
-
-                                  if (!selectedGroup) return
-
-                                  // 외주공사에서 규격을 찾을때 사용하는 그룹 id 값
-                                  setSelectedConstructionGroupId((prev) => ({
-                                    ...prev,
-                                    [m.id]: selectedGroup ? selectedGroup.id : 0,
-                                  }))
-
-                                  updateItemField(
-                                    'outsourcings',
-                                    m.id,
-                                    'outsourcingCompanyContractConstructionGroupId',
-                                    selectedGroup.id,
-                                  )
-                                }}
-                                options={
-                                  contractGroupOptionsByCompany[m.outsourcingCompanyId] ?? [
-                                    { id: 0, name: '선택' },
-                                  ]
-                                }
-                              />
-
-                              <CommonButton
-                                label="추가11"
-                                variant="primary"
-                                onClick={() => addSubGroups(m.id)}
-                                className="whitespace-nowrap"
-                              />
-                            </div>
-                          </div>
-
-                          {/* {m.groups &&
-                            m.groups?.map((group, groupIdx) => (
-                              <div key={group.id ?? groupIdx} style={{ marginTop: 8 }}>
-                                <div className="flex flex-col gap-2">
-                                  {group.items?.map((subItem, subIdx) => (
-                                    <div
-                                      key={subItem.id ?? subIdx}
-                                      className="flex gap-6 items-center h-[40px]"
-                                    ></div>
-                                  ))}
-                                </div>
-                              </div>
-                            ))} */}
-
-                          {/* <div className="flex flex-col justify-end h-full mb-2">
-                            {m.groups?.map((item, idx) => (
-                              <div
-                                key={item.id ?? idx}
-                                className="flex flex-col items-center justify-center text-center mt-2"
-                              >
-                                <div className="flex gap-6">
-                                  <CommonSelect
-                                    className="text-2xl w-[110px]"
-                                    value={
-                                      item.outsourcingCompanyContractConstructionGroupId || 'BASE'
-                                    }
-                                    onChange={(value) =>
-                                      updateSubGroupsField(
-                                        m.id,
-                                        item.id,
-                                        'outsourcingCompanyContractConstructionGroupId',
-                                        value,
-                                      )
-                                    }
-                                    options={EquipmentType}
-                                  />
-
-                                  <CommonButton
-                                    label="삭제11"
-                                    variant="danger"
-                                    onClick={() => removeSubGroups(m.id, item.id)}
-                                    className="whitespace-nowrap"
-                                  />
-                                </div>
-                              </div>
-                            ))}
-                          </div> */}
-                        </TableCell>
-
-                        <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                          <div className="flex gap-2">
-                            <CommonSelect
-                              fullWidth
-                              value={
-                                m.groups?.[0]?.items?.[0]
-                                  ?.outsourcingCompanyContractConstructionId ?? 0
-                              } // 현재 선택된 ID
-                              onChange={(value) => {
-                                const selectedItem = contractGroupOptionsByCompany[
-                                  m.outsourcingCompanyId
-                                ]
-                                  ?.flatMap((group) => group.items)
-                                  .find(
-                                    (item) =>
-                                      item.outsourcingCompanyContractConstructionId === value,
-                                  )
-                                if (!selectedItem) return
-
-                                setSelectedItemName((prev) => ({
-                                  ...prev,
-                                  [m.id]: selectedItem.item,
-                                }))
-
-                                UpdateOutsourcingItemField(
-                                  'outsourcings',
-                                  m.id,
-                                  m.groups[0].id,
-                                  m.groups[0].items[0].id,
-                                  'outsourcingCompanyContractConstructionId',
-                                  selectedItem.outsourcingCompanyContractConstructionId,
-                                )
-
-                                UpdateOutsourcingItemField(
-                                  'outsourcings',
-                                  m.id,
-                                  m.groups[0].id,
-                                  m.groups[0].items[0].id,
-                                  'unit',
-                                  selectedItem.unit || '', // unit도 선택값에 따라 업데이트
-                                )
-                              }}
-                              options={
-                                contractGroupOptionsByCompany[m.outsourcingCompanyId]?.flatMap(
-                                  (group) =>
-                                    group.items.map((item) => ({
-                                      id: item.outsourcingCompanyContractConstructionId,
-                                      name: item.item,
-                                    })),
-                                ) ?? [{ id: 0, name: '선택' }]
-                              }
-                            />
-
-                            <CommonButton
-                              label="추가2"
-                              variant="primary"
-                              onClick={() => addSubGroups(m.id)}
-                              className="whitespace-nowrap"
-                            />
-                          </div>
-
-                          {/* {m.groups &&
-                            m.groups?.map((group, groupIdx) => (
-                              <div key={group.id ?? groupIdx} style={{ marginTop: 8 }}>
-                                <div className="flex flex-col gap-2">
-                                  {group.items?.map((subItem, subIdx) => (
-                                    <div
-                                      key={subItem.id ?? subIdx}
-                                      className="flex gap-6 items-center"
-                                    >
-                                      <CommonSelect
-                                        className="text-2xl w-[110px]"
-                                        value={subItem.specification || 'BASE'}
-                                        onChange={(value) =>
-                                          updateSubitemsField(
-                                            m.id,
-                                            group.id,
-                                            subItem.id,
-                                            'specification',
-                                            value,
-                                          )
-                                        }
-                                        options={EquipmentType}
-                                      />
-                                      <CommonButton
-                                        label="삭제"
-                                        variant="danger"
-                                        onClick={() => removeSubitems(m.id, subItem.id)}
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-
-                          {m.groups &&
-                            m.groups?.map((item: any, idx) => (
-                              <div
-                                key={item.id ?? idx}
-                                style={{
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  textAlign: 'center',
-                                  marginTop: 8,
-                                }}
-                              >
-                                <div className="flex gap-6 ">
-                                  <CommonSelect
-                                    className="text-2xl w-[110px]"
-                                    value={item.outsourcingCompanyContractConstructionId || 'BASE'}
-                                    onChange={(value) =>
-                                      updateSubGroupsField(
-                                        m.id,
-                                        item.id,
-                                        'outsourcingCompanyContractConstructionId',
-                                        value,
-                                      )
-                                    }
-                                    options={EquipmentType}
-                                  />
-
-                                  <CommonButton
-                                    label="추가22"
-                                    variant="primary"
-                                    onClick={() => addSubitems(m.id)}
-                                    className="whitespace-nowrap"
-                                  />
-                                </div>
-                              </div>
-                            ))} */}
-                        </TableCell>
-
-                        <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                          <div className="flex gap-2">
-                            <CommonSelectByName
-                              fullWidth
-                              value={m.groups?.[0]?.items?.[0]?.specification || ''}
-                              onChange={(value) => {
-                                const selectedOption = specificationOptionsByCompany[
-                                  m.outsourcingCompanyId
-                                ]?.find((opt) => opt.name === value)
-
-                                if (!selectedOption) return
-
-                                UpdateOutsourcingItemField(
-                                  'outsourcings',
-                                  m.id,
-                                  m.groups[0].id,
-                                  m.groups[0].items[0].id,
-                                  'specification',
-                                  selectedOption.name,
-                                )
-                              }}
-                              options={
-                                specificationOptionsByCompany[m.outsourcingCompanyId] ?? [
-                                  { id: 0, name: '선택' },
-                                ]
-                              }
-                            />
-                          </div>
-
-                          {/* {m.groups &&
-                            m.groups?.map((group, groupIdx) => (
-                              <div key={group.id ?? groupIdx} style={{ marginTop: 8 }}>
-                                <div className="flex flex-col gap-2">
-                                  {group.items?.map((subItem, subIdx) => (
-                                    <div
-                                      key={subItem.id ?? subIdx}
-                                      className="flex gap-6 items-center"
-                                    >
-                                      <CommonSelect
-                                        className="text-2xl w-[110px]"
-                                        value={
-                                          subItem.outsourcingCompanyContractConstructionId || 'BASE'
-                                        }
-                                        onChange={(value) =>
-                                          updateSubitemsField(
-                                            m.id,
-                                            group.id,
-                                            subItem.id,
-                                            'outsourcingCompanyContractConstructionId',
-                                            value,
-                                          )
-                                        }
-                                        options={EquipmentType}
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-
-                          {m.groups &&
-                            m.groups?.map((item: any, idx) => (
-                              <div
-                                key={item.id ?? idx}
-                                style={{
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  textAlign: 'center',
-                                  marginTop: 8,
-                                }}
-                              >
-                                <div className="flex gap-6 ">
-                                  <CommonSelect
-                                    className="text-2xl w-[110px]"
-                                    value={item.specification || 'BASE'}
-                                    onChange={(value) =>
-                                      updateSubGroupsField(m.id, item.id, 'specification', value)
-                                    }
-                                    options={EquipmentType}
-                                  />
-                                </div>
-                              </div>
-                            ))} */}
-                        </TableCell>
-
-                        <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                          <div className="flex gap-2">
-                            <TextField
-                              size="small"
-                              placeholder="입력"
-                              sx={{ width: '120px' }}
-                              value={m.groups?.[0]?.items?.[0]?.unit ?? 0}
-                              onChange={(e) =>
-                                UpdateOutsourcingItemField(
-                                  'outsourcings',
-                                  m.id,
-                                  m.groups[0].id,
-                                  m.groups[0].items[0].id,
-                                  'unit',
-                                  e.target.value,
-                                )
-                              }
-                            />
-                          </div>
-
-                          {/* {m.groups &&
-                            m.groups?.map((group, groupIdx) => (
-                              <div key={group.id ?? groupIdx} style={{ marginTop: 8 }}>
-                                <div className="flex flex-col gap-2">
-                                  {group.items?.map((subItem, subIdx) => (
-                                    <div
-                                      key={subItem.id ?? subIdx}
-                                      className="flex gap-6 items-center"
-                                    >
-                                      <TextField
-                                        size="small"
-                                        placeholder="입력"
-                                        sx={{ width: '120px' }}
-                                        value={m.unit}
-                                        onChange={(value) =>
-                                          updateSubitemsField(
-                                            m.id,
-                                            group.id,
-                                            subItem.id,
-                                            'unit',
-                                            value,
-                                          )
-                                        }
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-
-                          {m.groups &&
-                            m.groups?.map((item: any, idx) => (
-                              <div
-                                key={item.id ?? idx}
-                                style={{
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  textAlign: 'center',
-                                  marginTop: 8,
-                                }}
-                              >
-                                <div className="flex gap-6 ">
-                                  <TextField
-                                    size="small"
-                                    placeholder="입력"
-                                    sx={{ width: '120px' }}
-                                    value={m.unit}
-                                    onChange={(e) =>
-                                      updateItemField('outsourcings', m.id, 'unit', e.target.value)
-                                    }
-                                  />
-                                </div>
-                              </div>
-                            ))} */}
-                        </TableCell>
-
-                        <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                          <div className="flex gap-2">
-                            <TextField
-                              size="small"
-                              placeholder="입력"
-                              sx={{ width: '120px' }}
-                              value={m.groups?.[0]?.items?.[0]?.quantity ?? 0}
-                              onChange={(e) =>
-                                UpdateOutsourcingItemField(
-                                  'outsourcings',
-                                  m.id,
-                                  m.groups[0].id,
-                                  m.groups[0].items[0].id,
-                                  'quantity',
-                                  e.target.value,
-                                )
-                              }
-                            />
-                          </div>
-
-                          {/* {m.groups &&
-                            m.groups?.map((group, groupIdx) => (
-                              <div key={group.id ?? groupIdx} style={{ marginTop: 8 }}>
-                                <div className="flex flex-col gap-2">
-                                  {group.items?.map((subItem, subIdx) => (
-                                    <div
-                                      key={subItem.id ?? subIdx}
-                                      className="flex gap-6 items-center"
-                                    >
-                                      <TextField
-                                        size="small"
-                                        placeholder="입력"
-                                        sx={{ width: '120px' }}
-                                        value={m.quantity}
-                                        onChange={(value) =>
-                                          updateSubitemsField(
-                                            m.id,
-                                            group.id,
-                                            subItem.id,
-                                            'quantity',
-                                            value,
-                                          )
-                                        }
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-
-                          {m.groups &&
-                            m.groups?.map((item: any, idx) => (
-                              <div
-                                key={item.id ?? idx}
-                                style={{
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  textAlign: 'center',
-                                  marginTop: 8,
-                                }}
-                              >
-                                <div className="flex gap-6 ">
-                                  <TextField
-                                    size="small"
-                                    placeholder="입력"
-                                    sx={{ width: '120px' }}
-                                    value={m.quantity}
-                                    onChange={(e) =>
-                                      updateItemField(
-                                        'outsourcings',
-                                        m.id,
-                                        'quantity',
-                                        e.target.value,
-                                      )
-                                    }
-                                  />
-                                </div>
-                              </div>
-                            ))} */}
-                        </TableCell>
-
-                        <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                          <div className="flex gap-2">
-                            <TextField
-                              size="small"
-                              placeholder="입력"
-                              sx={{ width: '120px' }}
-                              value={m.groups?.[0]?.items?.[0]?.memo ?? ''}
-                              onChange={(e) =>
-                                UpdateOutsourcingItemField(
-                                  'outsourcings',
-                                  m.id,
-                                  m.groups[0].id,
-                                  m.groups[0].items[0].id,
-                                  'memo',
-                                  e.target.value,
-                                )
-                              }
-                            />
-                          </div>
-
-                          {/* {m.groups &&
-                            m.groups?.map((group, groupIdx) => (
-                              <div key={group.id ?? groupIdx} style={{ marginTop: 8 }}>
-                                <div className="flex flex-col gap-2">
-                                  {group.items?.map((subItem, subIdx) => (
-                                    <div
-                                      key={subItem.id ?? subIdx}
-                                      className="flex gap-6 items-center"
-                                    >
-                                      <TextField
-                                        size="small"
-                                        placeholder="입력"
-                                        sx={{ width: '120px' }}
-                                        value={m.memo}
-                                        onChange={(value) =>
-                                          updateSubitemsField(
-                                            m.id,
-                                            group.id,
-                                            subItem.id,
-                                            'memo',
-                                            value,
-                                          )
-                                        }
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-
-                          {m.groups &&
-                            m.groups?.map((item: any, idx) => (
-                              <div
-                                key={item.id ?? idx}
-                                style={{
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  textAlign: 'center',
-                                  marginTop: 8,
-                                }}
-                              >
-                                <div className="flex gap-6 ">
-                                  <TextField
-                                    size="small"
-                                    placeholder="입력"
-                                    sx={{ width: '120px' }}
-                                    value={m.memo}
-                                    onChange={(e) =>
-                                      updateItemField('outsourcings', m.id, 'memo', e.target.value)
-                                    }
-                                  />
-                                </div>
-                              </div>
-                            ))} */}
-                        </TableCell>
-
-                        {/* <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <TextField
-                            placeholder="텍스트 입력"
-                            size="small"
-                            value={m.outsourcingCompanyContractConstructionId ?? ''}
-                            onChange={(e) =>
-                              updateItemField(
-                                'outsourcings',
-                                m.id,
-                                'outsourcingCompanyContractConstructionId',
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </TableCell>
-
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <TextField
-                            placeholder="텍스트 입력"
-                            size="small"
-                            value={m.specification}
-                            onChange={(e) =>
-                              updateItemField('outsourcings', m.id, 'specification', e.target.value)
-                            }
-                          />
-                        </TableCell>
-
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <TextField
-                            placeholder="텍스트 입력"
-                            size="small"
-                            value={m.unit}
-                            onChange={(e) =>
-                              updateItemField('outsourcings', m.id, 'unit', e.target.value)
-                            }
-                          />
-                        </TableCell>
-
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <TextField
-                            placeholder="텍스트 입력"
-                            size="small"
-                            value={m.quantity}
-                            onChange={(e) =>
-                              updateItemField('outsourcings', m.id, 'quantity', e.target.value)
-                            }
-                          />
-                        </TableCell> */}
-
-                        {/* 해당 데이터 세트 */}
-                        {/* 
-                        <TableCell
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
-                        >
-                          <TextField
-                            size="small"
-                            type="number" // type을 number로 변경
-                            placeholder="숫자를 입력해주세요."
-                            inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
-                            value={m.workQuantity ?? ''}
-                            onChange={(e) => {
-                              const value = e.target.value
-                              const numericValue = value === '' ? null : parseFloat(value)
-
-                              // dailyWork 배열 idx 위치 업데이트
-                              updateItemField('outsourcings', m.id, 'workQuantity', numericValue)
-                            }}
-                            sx={{
-                              height: '100%',
-                              '& .MuiInputBase-root': {
-                                height: '100%',
-                                fontSize: '1rem',
-                              },
-                              '& input': {
-                                textAlign: 'center',
-                                padding: '10px',
-                                MozAppearance: 'textfield', // Firefox
-                                '&::-webkit-outer-spin-button': {
-                                  // Chrome, Safari
-                                  WebkitAppearance: 'none',
-                                  margin: 0,
-                                },
-                                '&::-webkit-inner-spin-button': {
-                                  // Chrome, Safari
-                                  WebkitAppearance: 'none',
-                                  margin: 0,
-                                },
-                              },
-                            }}
-                          />
-                        </TableCell> */}
-
-                        {/* <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
-                            <CommonFileInput
-                              acceptedExtensions={[
-                                'pdf',
-                                'txt',
-                                'rtf',
-                                'docx',
-                                'hwp',
-                                'xlsx',
-                                'csv',
-                                'ods',
-                                'pptx',
-                                'ppt',
-                                'odp',
-                                'jpg',
-                                'jpeg',
-                                'png',
-                                'gif',
-                                'tif',
-                                'tiff',
-                                'bmp',
-                                'zip',
-                                '7z',
-                                'mp3',
-                                'wav',
-                                'mp4',
-                                'mov',
-                                'avi',
-                                'wmv',
-                                'dwg',
-                              ]}
-                              multiple={false}
-                              files={m.files} // 각 항목별 files
-                              onChange={(newFiles) => {
-                                updateItemField('outsourcings', m.id, 'files', newFiles.slice(0, 1))
-                              }}
-                              uploadTarget="WORK_DAILY_REPORT"
-                            />
-                          </div>
-                        </TableCell>
-
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <TextField
-                            size="small"
-                            placeholder="500자 이하 텍스트 입력"
-                            value={m.memo}
-                            onChange={(e) =>
-                              updateItemField('outsourcings', m.id, 'memo', e.target.value)
-                            }
-                          />
-                        </TableCell> */}
-
-                        {/* 등록/수정일 (임시: Date.now 기준) */}
-                        {/* <TableCell
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF', width: '260px' }}
-                        >
-                          <CommonInput
-                            placeholder="-"
-                            value={m.modifyDate ?? ''}
-                            onChange={(value) =>
-                              updateItemField('outsourcings', m.id, 'modifyDate', value)
-                            }
-                            disabled
-                            className="flex-1"
-                          />
-                        </TableCell> */}
                       </TableRow>
                     ))
                   )}
@@ -5158,78 +4314,49 @@ export default function DailyReportRegistrationView() {
                               0
                             }
                             onChange={async (value) => {
-                              const selectedCarNumber = (
-                                carNumberOptionsByCompany[m.outsourcingCompanyId] ?? []
-                              ).find((opt) => opt.id === value)
-
-                              console.log('selectedCarNumberselectedCarNumber', selectedCarNumber)
-
+                              const selectedCarNumber = carNumberOptionsByCompany[
+                                m.outsourcingCompanyId
+                              ]?.find((opt) => opt.id === value)
                               if (!selectedCarNumber) return
 
+                              // 차량 및 관련 필드 업데이트
                               updateItemField(
                                 'equipment',
                                 m.id,
                                 'outsourcingCompanyContractEquipmentId',
                                 selectedCarNumber.id,
                               )
-
                               updateItemField(
                                 'equipment',
                                 m.id,
                                 'specificationName',
                                 selectedCarNumber.category || '',
                               )
-
-                              // updateItemField(
-                              //   'equipment',
-                              //   m.id,
-                              //   'workContent',
-                              //   selectedCarNumber.workContent || '',
-                              // )
-
                               updateItemField(
                                 'equipment',
                                 m.id,
                                 'unitPrice',
                                 selectedCarNumber.unitPrice || 0,
                               )
-
                               updateItemField(
                                 'equipment',
                                 m.id,
                                 'workContent',
-                                selectedCarNumber.taskDescription || 0,
+                                selectedCarNumber.taskDescription || '',
                               )
 
-                              // updateItemField(
-                              //   'equipment',
-                              //   m.id,
-                              //   'type',
-                              //   selectedCarNumber.category || '-', // type 없으면 '-'
-                              // )
+                              const subEquipments = selectedCarNumber.subEquipments ?? []
 
-                              if (
-                                selectedCarNumber?.subEquipments &&
-                                selectedCarNumber?.subEquipments?.length > 0
-                              ) {
-                                const formattedSubEquipments = selectedCarNumber.subEquipments?.map(
-                                  (sub: any) => ({
-                                    id: sub.id,
-                                    outsourcingCompanyContractSubEquipmentId: sub?.id,
-                                    type: sub.type || sub.typeCode || '-',
-                                    workContent: sub.workContent || sub.taskDescription || '',
-                                    unitPrice: sub.unitPrice || 0,
-                                    workHours: sub.workHours || 0,
-                                    memo: sub.memo || '',
-                                  }),
-                                )
-
-                                console.log(
-                                  '2455',
-                                  formattedSubEquipments,
-                                  selectedCarNumber,
-                                  carNumberOptionsByCompany[m.outsourcingCompanyId],
-                                )
+                              if (subEquipments.length > 0) {
+                                const formattedSubEquipments = subEquipments.map((sub: any) => ({
+                                  id: sub.id,
+                                  outsourcingCompanyContractSubEquipmentId: sub.id,
+                                  type: sub.type || sub.typeCode || '-',
+                                  workContent: sub.workContent || sub.taskDescription || '',
+                                  unitPrice: sub.unitPrice || 0,
+                                  workHours: sub.workHours || 0,
+                                  memo: sub.memo || '',
+                                }))
 
                                 updateItemField(
                                   'equipment',
@@ -5237,9 +4364,29 @@ export default function DailyReportRegistrationView() {
                                   'subEquipments',
                                   formattedSubEquipments,
                                 )
-                              }
 
-                              updateItemField('equipment', m.id, 'subEquipments', [])
+                                const subEquipmentsOptions = formattedSubEquipments.map(
+                                  (sub: any) => ({
+                                    id: sub.id,
+                                    name: sub.type || sub.typeCode || '-',
+                                    taskDescription: sub.workContent,
+                                    unitPrice: sub.unitPrice,
+                                  }),
+                                )
+
+                                // ✅ 차량 ID 기준으로 서브장비 옵션 저장
+                                setTestArrayByRow((prev) => ({
+                                  ...prev,
+                                  [selectedCarNumber.id]: [
+                                    { id: 0, name: '선택' },
+                                    ...subEquipmentsOptions,
+                                  ],
+                                }))
+
+                                console.log('✅ 저장된 subEquipments:', subEquipmentsOptions)
+                              } else {
+                                updateItemField('equipment', m.id, 'subEquipments', [])
+                              }
                             }}
                             options={
                               carNumberOptionsByCompany[m.outsourcingCompanyId] ?? [
@@ -5254,9 +4401,8 @@ export default function DailyReportRegistrationView() {
                           />
                         </TableCell>
 
-                        {/* 규격 */}
+                        {/* 규격 (서브장비 부분) */}
                         <TableCell align="center" sx={cellStyle}>
-                          {/* 규격명 + 추가 버튼 */}
                           <div className="flex items-center justify-between mb-2">
                             <TextField
                               size="small"
@@ -5268,20 +4414,14 @@ export default function DailyReportRegistrationView() {
                                 '& .MuiInputBase-input': { textAlign: 'center' },
                               }}
                             />
-                            <CommonButton
-                              label="추가"
-                              className="px-5 ml-2 whitespace-nowrap"
-                              variant="primary"
-                              onClick={() => addContractDetailItem(m.id, m.subEquipments)}
-                            />
                           </div>
 
-                          {/* subEquipments 있을 때만 표시 */}
-                          {m.subEquipments && (
+                          {/* ✅ subEquipments 있을 때만 표시 */}
+                          {m.subEquipments && m.subEquipments?.length > 0 && (
                             <div className="flex flex-col gap-2 mt-2">
                               {m.subEquipments.map((item) => (
                                 <div
-                                  key={Date.now() + Math.random()}
+                                  key={item.id || item.outsourcingCompanyContractSubEquipmentId}
                                   className="flex items-center justify-between gap-2 w-full"
                                   style={{ minHeight: '40px' }}
                                 >
@@ -5295,34 +4435,14 @@ export default function DailyReportRegistrationView() {
                                         'outsourcingCompanyContractSubEquipmentId',
                                         value,
                                       )
-
-                                      const selected = testArray.find((t) => t.id === value)
-
-                                      console.log('testArraytestArray', testArray)
-
-                                      if (selected) {
-                                        updateContractDetailField(
-                                          m.id,
-                                          item.id,
-                                          'workContent',
-                                          selected.taskDescription || '',
-                                        )
-                                        updateContractDetailField(
-                                          m.id,
-                                          item.id,
-                                          'unitPrice',
-                                          selected.unitPrice || 0,
-                                        )
-                                      }
                                     }}
-                                    options={testArray}
-                                  />
-
-                                  <CommonButton
-                                    label="삭제"
-                                    className="px-6 whitespace-nowrap"
-                                    variant="danger"
-                                    onClick={() => removeContractDetailItem(m.id, item.id)}
+                                    disabled
+                                    // ✅ 차량ID 기준으로 서브장비 옵션 불러오기
+                                    options={
+                                      testArrayByRow[m.outsourcingCompanyContractEquipmentId] ?? [
+                                        { id: 0, name: '선택', taskDescription: '', unitPrice: 0 },
+                                      ]
+                                    }
                                   />
                                 </div>
                               ))}
@@ -5351,6 +4471,7 @@ export default function DailyReportRegistrationView() {
                               updateItemField('equipment', m.id, 'workContent', e.target.value)
                             }
                             fullWidth
+                            disabled
                           />
 
                           {m.subEquipments &&
@@ -5369,6 +4490,7 @@ export default function DailyReportRegistrationView() {
                                     )
                                   }
                                   fullWidth
+                                  disabled
                                 />
                               </div>
                             ))}
@@ -5389,6 +4511,7 @@ export default function DailyReportRegistrationView() {
                               style: { textAlign: 'right' }, // ← 오른쪽 정렬
                             }}
                             fullWidth
+                            disabled
                           />
                           {m.subEquipments &&
                             m.subEquipments.map((detail) => (
@@ -5412,6 +4535,7 @@ export default function DailyReportRegistrationView() {
                                     style: { textAlign: 'right' }, // ← 오른쪽 정렬
                                   }}
                                   fullWidth
+                                  disabled
                                 />
                               </div>
                             ))}

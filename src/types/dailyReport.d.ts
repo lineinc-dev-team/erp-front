@@ -80,13 +80,12 @@ export type directContractsItem = {
 // 외주(공사) 타입 설정
 
 export interface OutsourcingConstructionItem {
-  id: number
+  id: T
+  checkId: number
   outsourcingCompanyContractConstructionId: number
   specification: string
   unit: string
   quantity: number
-  contractFileUrl: string
-  contractOriginalFileName: string
   fileUrl?: string
   originalFileName?: string
   files?: FileUploadInfo[]
@@ -95,13 +94,15 @@ export interface OutsourcingConstructionItem {
 
 // 그룹 (groups)
 export interface OutsourcingConstructionGroup {
-  id: number
+  id: T
+  checkId: number
   outsourcingCompanyContractConstructionGroupId: number
   items: OutsourcingConstructionItem[]
 }
 
 export interface OutsourcingsItem {
-  id: number
+  id: T
+  checkId: number
   outsourcingCompanyId: number
   groups: OutsourcingConstructionGroup[]
 }
@@ -445,7 +446,7 @@ type DailyReportFormStore = {
       | 'fuelFile'
       | 'attachedFile',
     subType?: string,
-    isToday?: boolean, // ✅ 추가
+    isToday?: boolean,
   ) => void
 
   // 작업내용 에서 구분에 세부 항목추가!!
@@ -458,44 +459,6 @@ type DailyReportFormStore = {
     workId: number,
     workDetailId: number,
     field: keyof WorkDetailInfo,
-    value: T,
-  ) => void
-
-  // 외주(공사) 데이터 조회
-
-  // 새로운 외주 업데이트 필드
-
-  UpdateOutsourcingItemField: (
-    type: string,
-    mId: number,
-    groupId: number,
-    itemId: number,
-    field: keyof OutsourcingsItem['groups'][0]['items'][0],
-    value: T,
-  ) => void
-
-  addSubGroups: (contractGroupId: number) => void
-  removeSubGroups: (contractGroupId: number, subContractIndex: number) => void
-
-  // 여기 추가
-  updateSubGroupsField: (
-    contractGroupId: number,
-    subContractIndex: number,
-    field: keyof OutsourcingConstructionItem,
-    value: T,
-  ) => void
-
-  // 외주 공사에 items 필드 세팅
-
-  addSubitems: (contractItemsId: number) => void
-  removeSubitems: (equipmentId: number, subEquipmentIndex: number) => void
-
-  // // 여기 추가
-  updateSubitemsField: (
-    equipmentId: number,
-    groupId: number,
-    subEquipmentId: number,
-    field: keyof OutsourcingConstructionItem,
     value: T,
   ) => void
 

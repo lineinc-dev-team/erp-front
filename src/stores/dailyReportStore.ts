@@ -11,7 +11,6 @@ import {
   InputStatusesItem,
   MainProcessesItem,
   MaterialStatuses,
-  OutsourcingConstructionItem,
   OutsourcingsItem,
   SubEquipmentItems,
   WorkDetailInfo,
@@ -448,22 +447,25 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         }
       } else if (type === 'outsourcings') {
         const newItem: OutsourcingsItem = {
-          id: Date.now(),
+          id: null,
+          checkId: Date.now(),
           outsourcingCompanyId: 0, // 업체명
           groups: [
             {
-              id: Date.now(),
+              id: null,
+              checkId: Date.now() + 1,
               outsourcingCompanyContractConstructionGroupId: 0, // 항목명
               items: [
                 {
-                  id: Date.now(),
+                  id: null,
+                  checkId: Date.now() + 2,
                   outsourcingCompanyContractConstructionId: 0, // 항목
                   specification: '', // 규격 데이터
                   unit: '', // 단위
                   quantity: 0, // 수량
                   memo: '', // 비고
-                  contractFileUrl: '', // 첨부파일 (URL)
-                  contractOriginalFileName: '', // 첨부파일명
+                  fileUrl: '', // 첨부파일 (URL)
+                  originalFileName: '', // 첨부파일명
                   files: [],
                 },
               ],
@@ -581,41 +583,6 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       return state
     }),
 
-  // 외주 업체에 대한 업데이트
-
-  UpdateOutsourcingItemField: (
-    type: string,
-    mId: number,
-    groupId: number,
-    itemId: number,
-    field: keyof OutsourcingsItem['groups'][0]['items'][0],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    value: any,
-  ) => {
-    set((state) => {
-      if (type === 'outsourcings') {
-        return {
-          form: {
-            ...state.form,
-            outsourcingConstructions: state.form.outsourcingConstructions.map((m) => {
-              if (m.id !== mId) return m
-              const groups = m.groups.map((g) => {
-                if (g.id !== groupId) return g
-                const items = g.items.map((i) => {
-                  if (i.id !== itemId) return i
-                  return { ...i, [field]: value }
-                })
-                return { ...g, items }
-              })
-              return { ...m, groups }
-            }),
-          },
-        }
-      }
-      return state
-    })
-  },
-
   updateItemField: (type, id, field, value) =>
     set((state) => {
       if (type === 'Employees') {
@@ -721,7 +688,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           form: {
             ...state.form,
             outsourcingConstructions: state.form.outsourcingConstructions.map((m) =>
-              m.id === id ? { ...m, [field]: value } : m,
+              m.checkId === id ? { ...m, [field]: value } : m,
             ),
           },
         }
@@ -1059,7 +1026,6 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           },
         }
       } else if (type === 'worker') {
-        // ✅ 금일 / 명일 구분 삭제
         const updatedWorks = state.form.works.filter(
           (m) => !state.form.checkedWorkerIds.includes(m.id) || m.isToday !== isToday,
         )
@@ -1209,7 +1175,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         ),
       },
     })),
-  // 장비에서 구분 추가 로직
+
   updateSubWorkField: (
     workId: number,
     workDetailId: number,
@@ -1233,218 +1199,6 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
     }))
   },
 
-  addSubGroups: (equipmentId: number) =>
-    set((state) => ({
-      form: {
-        ...state.form,
-        outsourcingConstructions: state.form.outsourcingConstructions.map((contractGroup) =>
-          contractGroup.id === equipmentId
-            ? {
-                ...contractGroup,
-                groups: contractGroup.groups
-                  ? [
-                      ...contractGroup.groups,
-                      {
-                        id: Date.now(),
-                        outsourcingCompanyContractConstructionGroupId: Date.now(),
-                        outsourcingCompanyContractConstructionId: Date.now(),
-                        specification: '',
-                        unit: '',
-                        quantity: 0,
-                        contractFileUrl: '',
-                        contractOriginalFileName: '',
-                        memo: '',
-                        items: [],
-                      },
-                    ]
-                  : [
-                      {
-                        id: Date.now(),
-                        outsourcingCompanyContractConstructionGroupId: Date.now(),
-                        outsourcingCompanyContractConstructionId: Date.now(),
-                        specification: '',
-                        unit: '',
-                        quantity: 0,
-                        contractFileUrl: '',
-                        contractOriginalFileName: '',
-                        memo: '',
-                        items: [],
-                      },
-                    ],
-              }
-            : contractGroup,
-        ),
-      },
-    })),
-
-  removeSubGroups: (equipmentId: number, subEquipmentId: number) =>
-    set((state) => ({
-      form: {
-        ...state.form,
-        outsourcingConstructions: state.form.outsourcingConstructions.map((equipment) =>
-          equipment.id === equipmentId
-            ? {
-                ...equipment,
-                groups: equipment.groups?.filter((sub) => sub.id !== subEquipmentId) ?? [],
-              }
-            : equipment,
-        ),
-      },
-    })),
-  // 장비에서 구분 추가 로직
-  updateSubGroupsField: <K extends keyof OutsourcingConstructionItem>(
-    equipmentId: number,
-    subEquipmentId: number,
-    field: K,
-    value: OutsourcingConstructionItem[K],
-  ) => {
-    set((state) => ({
-      form: {
-        ...state.form,
-        outsourcingConstructions: state.form.outsourcingConstructions.map((equipment) =>
-          equipment.id === equipmentId
-            ? {
-                ...equipment,
-                groups: equipment.groups?.map((sub) =>
-                  sub.id === subEquipmentId ? { ...sub, [field]: value } : sub,
-                ),
-              }
-            : equipment,
-        ),
-      },
-    }))
-  },
-
-  addSubitems: (equipmentId: number) =>
-    set((state) => ({
-      form: {
-        ...state.form,
-        outsourcingConstructions: state.form.outsourcingConstructions.map((contractGroup) => {
-          if (contractGroup.id !== equipmentId) return contractGroup
-
-          const groups = contractGroup.groups || []
-
-          // ✅ 그룹이 여러 개여도 첫 번째 그룹에만 아이템 추가
-          const updatedGroups = groups.map((group, idx) => {
-            if (idx !== 0) return group // 첫 번째 그룹만 수정
-            return {
-              ...group,
-              items: [
-                ...group.items,
-                {
-                  id: Date.now(),
-                  outsourcingCompanyContractConstructionId: Date.now(),
-                  specification: '',
-                  unit: '',
-                  quantity: 0,
-                  contractFileUrl: '',
-                  contractOriginalFileName: '',
-                  memo: '',
-                },
-              ],
-            }
-          })
-
-          return {
-            ...contractGroup,
-            groups: updatedGroups,
-          }
-        }),
-      },
-    })),
-
-  removeSubitems: (equipmentId: number, subEquipmentId: number) =>
-    set((state) => ({
-      form: {
-        ...state.form,
-        outsourcingConstructions: state.form.outsourcingConstructions.map((equipment) => {
-          if (equipment.id !== equipmentId) return equipment
-
-          // ✅ 각 그룹의 items 배열 안에서 subEquipmentId 일치하는 항목만 제거
-          const updatedGroups = equipment.groups.map((group) => ({
-            ...group,
-            items: group.items.filter((item) => item.id !== subEquipmentId),
-          }))
-
-          return {
-            ...equipment,
-            groups: updatedGroups,
-          }
-        }),
-      },
-    })),
-
-  // items 의  업ㄷ베이트 함수
-
-  updateSubitemsField: (
-    equipmentId: number,
-    groupId: number,
-    itemId: number,
-    field: keyof OutsourcingConstructionItem,
-    value: string,
-  ) => {
-    set((state) => ({
-      form: {
-        ...state.form,
-        outsourcingConstructions: state.form.outsourcingConstructions.map((equipment) => {
-          if (equipment.id !== equipmentId) return equipment
-
-          const updatedGroups = equipment.groups.map((group) => {
-            if (group.id !== groupId) return group
-
-            // ✅ 해당 group의 items 중 itemId에 해당하는 항목만 업데이트
-            const updatedItems = group.items.map((item) =>
-              item.id === itemId ? { ...item, [field]: value } : item,
-            )
-
-            return { ...group, items: updatedItems }
-          })
-
-          return { ...equipment, groups: updatedGroups }
-        }),
-      },
-    }))
-  },
-
-  // 세부 항목(ContractDetailItems) 추가
-  // addContractDetailItem: (managerId: number) =>
-  //   set((state) => ({
-  //     form: {
-  //       ...state.form,
-  //       outsourcingEquipments: state.form.outsourcingEquipments.map((manager) =>
-  //         manager.id === managerId
-  //           ? {
-  //               ...manager,
-  //               subEquipments: manager.subEquipments
-  //                 ? [
-  //                     ...manager.subEquipments,
-  //                     {
-  //                       id: Date.now(), // 임시 ID
-  //                       outsourcingCompanyContractSubEquipmentId: null,
-  //                       workContent: '',
-  //                       unitPrice: 0,
-  //                       workHours: 0,
-  //                       memo: '',
-  //                     },
-  //                   ]
-  //                 : [
-  //                     {
-  //                       id: Date.now(), // 임시 ID
-  //                       outsourcingCompanyContractSubEquipmentId: null,
-  //                       workContent: '',
-  //                       unitPrice: 0,
-  //                       workHours: 0,
-  //                       memo: '',
-  //                     },
-  //                   ],
-  //             }
-  //           : manager,
-  //       ),
-  //     },
-  //   })),
-
-  // store 안
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   addContractDetailItem: (managerId: number, item: any) =>
     set((state) => ({
@@ -1715,31 +1469,30 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         }
       }),
 
-      outsourcingConstructions: form.outsourcingConstructions.map((item) => {
-        // const file = item.files[0]
+      outsourcingConstructions: form.outsourcingConstructions.map((contract) => ({
+        id: contract.id,
+        outsourcingCompanyId: contract.outsourcingCompanyId,
 
-        return {
-          outsourcingCompanyId: item.outsourcingCompanyId,
-          groups: item.groups.map((groupItems) => {
+        groups: contract.groups.map((group) => ({
+          id: group.id,
+          outsourcingCompanyContractConstructionGroupId:
+            group.outsourcingCompanyContractConstructionGroupId,
+          items: group.items.map((item) => {
+            const file = item.files?.[0] ?? null // 파일이 없으면 null 처리
             return {
-              outsourcingCompanyContractConstructionGroupId:
-                groupItems.outsourcingCompanyContractConstructionGroupId,
-              items: groupItems.items.map((lastItems) => {
-                return {
-                  outsourcingCompanyContractConstructionId:
-                    lastItems.outsourcingCompanyContractConstructionId,
-                  specification: lastItems.specification,
-                  unit: lastItems.unit,
-                  quantity: lastItems.quantity,
-                  // fileUrl: file?.fileUrl || null,
-                  // originalFileName: file?.originalFileName || null,
-                  memo: lastItems.memo,
-                }
-              }),
+              id: item.id,
+              outsourcingCompanyContractConstructionId:
+                item.outsourcingCompanyContractConstructionId,
+              specification: item.specification,
+              unit: item.unit,
+              quantity: item.quantity,
+              fileUrl: file?.fileUrl ?? null,
+              originalFileName: file?.originalFileName ?? null,
+              memo: item.memo,
             }
           }),
-        }
-      }),
+        })),
+      })),
 
       outsourcingEquipments: form.outsourcingEquipments.map((item) => {
         const file = item.files[0]
@@ -1893,9 +1646,31 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       weather: undefined,
       employees: undefined,
 
-      outsourcings: form.outsourcingConstructions.map((item: OutsourcingsItem) => ({
+      outsourcingCompanies: form.outsourcingConstructions.map((item: OutsourcingsItem) => ({
         id: item.id, // 수정이면 기존 id, 신규면 0 또는 undefined
+
         outsourcingCompanyId: item.outsourcingCompanyId,
+        groups: item.groups.map((groupItems) => {
+          return {
+            id: groupItems.id,
+            outsourcingCompanyContractConstructionGroupId:
+              groupItems.outsourcingCompanyContractConstructionGroupId,
+            items: groupItems.items.map((lastItems) => {
+              const file = lastItems.files?.[0] ?? null // 파일이 없으면 null 처리
+              return {
+                id: lastItems.id,
+                outsourcingCompanyContractConstructionId:
+                  lastItems.outsourcingCompanyContractConstructionId,
+                specification: lastItems.specification,
+                unit: lastItems.unit,
+                quantity: lastItems.quantity,
+                fileUrl: file?.fileUrl || null,
+                originalFileName: file?.originalFileName || null,
+                memo: lastItems.memo,
+              }
+            }),
+          }
+        }),
         // outsourcingCompanyContractWorkerId: item.outsourcingCompanyContractConstructionGroupId,
         // outsourcingCompanyContractConstructionId: item.outsourcingCompanyContractConstructionId,
         // category: item.category,

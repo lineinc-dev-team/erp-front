@@ -308,7 +308,7 @@ export async function GetContractByFilterService({
   return data
 }
 
-// 외주 데이터 조회
+// 외주(공사) 데이터 조회
 export async function GetOutsoucingByFilterService({
   pageParam = 0,
   size = 5,
@@ -326,7 +326,7 @@ export async function GetOutsoucingByFilterService({
     reportDate,
   })
 
-  const res = await fetch(`${API.DAILYREPORT}/outsourcings?${query.toString()}`, {
+  const res = await fetch(`${API.DAILYREPORT}/outsourcing-constructions?${query.toString()}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -361,7 +361,7 @@ export async function ModifyOutsourcingReport({
   const payload = modifyOutsourcing()
 
   const res = await fetch(
-    `${API.DAILYREPORT}/outsourcings?siteId=${siteId}&siteProcessId=${siteProcessId}&reportDate=${reportDate}`,
+    `${API.DAILYREPORT}/outsourcing-constructions?siteId=${siteId}&siteProcessId=${siteProcessId}&reportDate=${reportDate}`,
     {
       method: 'PATCH',
       headers: {
