@@ -209,7 +209,9 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
   const { data: contractEquipmentDetailData } = useQuery({
     queryKey: ['OutsourcingEqDetailInfo'],
     queryFn: () => ContractEquipmentDetailService(outsourcingContractId),
-    enabled: isEditMode && !!outsourcingContractId && contractDetailData?.data?.type === '장비', // 타입이 장비일 때만
+    enabled:
+      (isEditMode && !!outsourcingContractId && contractDetailData?.data?.type === '장비') ||
+      contractDetailData?.data?.type === '외주', // 타입이 장비일 때만
   })
 
   // 장비 데이터
@@ -217,7 +219,9 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
   const { data: contractDriverDetailData } = useQuery({
     queryKey: ['OutsourcingDrDetailInfo'],
     queryFn: () => OutsourcingDriverDetailService(outsourcingContractId),
-    enabled: isEditMode && !!outsourcingContractId && contractDetailData?.data?.type === '장비', // 타입이 장비일 때만
+    enabled:
+      (isEditMode && !!outsourcingContractId && contractDetailData?.data?.type === '장비') ||
+      contractDetailData?.data?.type === '외주', // 타입이 장비일 때만
   })
 
   const PROPERTY_NAME_MAP: Record<string, string> = {
@@ -498,6 +502,10 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       setField('businessNumber', client.outsourcingCompany?.businessNumber)
       setField('type', client?.typeCode)
       setField('typeDescription', client?.typeDescription)
+      setField('contractName', client?.contractName)
+
+
+
 
       setField('workTypeName', client?.workTypeName)
       // 계약 기간
@@ -574,6 +582,87 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
           )
 
           setField('contractManagers', getContractItems)
+        }
+
+        const Equipment = contractEquipmentDetailData?.data
+
+        if (Equipment) {
+          const getEquipmentItems = (Equipment.content ?? []).map(
+            (item: OutsourcingEquipmentInfoAttachedFile) => ({
+              id: item.id,
+              specification: item.specification,
+              vehicleNumber: item.vehicleNumber,
+              category: item.category,
+              unitPrice: item.unitPrice,
+              type: item.typeCode,
+              // subtotal: item.subtotal,
+              taskDescription: item.taskDescription,
+              memo: item.memo,
+              subEquipments: (item.subEquipments ?? []).map((sub) => ({
+                id: sub.id,
+                type: sub.typeCode,
+                taskDescription: sub.taskDescription,
+                description: sub.description,
+                unitPrice: sub.unitPrice,
+                memo: sub.memo,
+              })),
+            }),
+          )
+          setField('equipmentManagers', getEquipmentItems)
+        }
+
+        const DriverData = contractDriverDetailData?.data
+
+        if (DriverData) {
+          const getArticleItems = (DriverData.content ?? []).map(
+            (item: OutsourcingArticleInfoAttachedFile) => {
+              // files 분류
+              const driverLicenseFiles = (item?.files ?? []).filter(
+                (f) => f.documentTypeCode === 'DRIVER_LICENSE',
+              )
+              const safetyEducationFiles = (item?.files ?? []).filter(
+                (f) => f.documentTypeCode === 'SAFETY_EDUCATION',
+              )
+              const etcFiles = (item?.files ?? []).filter(
+                (f) =>
+                  f.documentTypeCode !== 'DRIVER_LICENSE' &&
+                  f.documentTypeCode !== 'SAFETY_EDUCATION',
+              )
+
+              return {
+                id: item.id,
+                name: item.name,
+                memo: item.memo,
+                // 각 문서 타입 배열 그대로 넣기
+                driverLicense: driverLicenseFiles.map((f) => ({
+                  id: f.id,
+                  fileUrl: f.fileUrl && f.fileUrl.trim() !== '' ? f.fileUrl : null,
+                  originalFileName:
+                    f.originalFileName && f.originalFileName.trim() !== ''
+                      ? f.originalFileName
+                      : null,
+                })),
+                safeEducation: safetyEducationFiles.map((f) => ({
+                  id: f.id,
+                  fileUrl: f.fileUrl && f.fileUrl.trim() !== '' ? f.fileUrl : null,
+                  originalFileName:
+                    f.originalFileName && f.originalFileName.trim() !== ''
+                      ? f.originalFileName
+                      : null,
+                })),
+                ETCfiles: etcFiles.map((f) => ({
+                  id: f.id,
+                  fileUrl: f.fileUrl && f.fileUrl.trim() !== '' ? f.fileUrl : null,
+                  originalFileName:
+                    f.originalFileName && f.originalFileName.trim() !== ''
+                      ? f.originalFileName
+                      : null,
+                })),
+              }
+            },
+          )
+
+          setField('articleManagers', getArticleItems)
         }
       } else if (client.type === '장비') {
         const Equipment = contractEquipmentDetailData?.data
@@ -905,17 +994,22 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
         if (!item.specification?.trim()) return '장비의 규격을 입력해주세요.'
         if (!item.vehicleNumber?.trim()) return '장비의 차량번호를 입력해주세요.'
         if (!item.category?.trim()) return '장비의 구분을 입력해주세요.'
-        if (!item.unitPrice) return '장비의 단가를 입력해주세요.'
         // if (!item.subtotal) return '장비의 소계를 입력해주세요.'
         if (item.memo.length > 500) return '장비의 비고는 500자 이하로 입력해주세요.'
 
-        if (item.subEquipments?.length) {
-          for (const sub of item.subEquipments) {
-            if (!sub.type?.trim() || sub.type === 'BASE') {
-              return '하위 장비의 유형을 입력해주세요.'
-            }
-            if (sub.description.length > 500) {
-              return '하위 장비의 비고는 500자 이하로 입력해주세요.'
+        // 'EQUIPMENT' 타입일 때만 유효성 검사 실행
+        if (form.type === 'EQUIPMENT') {
+          if (!item.unitPrice) return '장비의 단가를 입력해주세요.'
+
+          if (item.subEquipments?.length) {
+            for (const sub of item.subEquipments) {
+              if (!sub.type?.trim() || sub.type === 'BASE') {
+                return '하위 장비의 유형을 입력해주세요.'
+              }
+
+              if (sub.description?.length > 500) {
+                return '하위 장비의 비고는 500자 이하로 입력해주세요.'
+              }
             }
           }
         }
@@ -1176,9 +1270,9 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
               구분 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
-              <div className="flex gap-2 items-center">
+              <div className="flex gap-4 items-center">
                 <CommonSelect
-                  className="text-2xl"
+                  className="min-w-[100px]"
                   value={form.type || 'BASE'}
                   onChange={(value) => {
                     setField('type', value)
@@ -1192,13 +1286,47 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                   disabled={isEditMode}
                 />
 
-                <CommonInput
-                  value={form.typeDescription}
-                  onChange={(value) => setField('typeDescription', value)}
-                  className="flex-1"
-                  disabled={isEditMode || form.type !== 'ETC'}
-                  placeholder={form.type === 'ETC' ? '기타 내용을 입력하세요' : ''}
-                />
+                {form.type === 'EQUIPMENT' && (
+                  <div className="flex items-center w-full">
+                    <label className="w-20 text-[16px] flex items-center justify-center font-bold text-center">
+                      계약명
+                    </label>
+                    <div className="py-2 w-full flex justify-center items-center">
+                      <CommonInput
+                        className="w-[100px]" // 원하는 너비 지정
+                        fullWidth
+                        value={form.contractName}
+                        onChange={(value) => setField('contractName', value)}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {form.type === 'CONSTRUCTION' && (
+                  <div className="flex items-center w-full">
+                    <label className="w-20 text-[16px] flex items-center justify-center font-bold text-center">
+                      계약명
+                    </label>
+                    <div className="py-2 w-full flex justify-center items-center">
+                      <CommonInput
+                        className="w-[100px]" // 원하는 너비 지정
+                        fullWidth
+                        value={form.contractName}
+                        onChange={(value) => setField('contractName', value)}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {form.type !== 'CONSTRUCTION' && form.type !== 'EQUIPMENT' && (
+                  <CommonInput
+                    value={form.typeDescription}
+                    onChange={(value) => setField('typeDescription', value)}
+                    className="flex-1"
+                    disabled={isEditMode || form.type !== 'ETC'}
+                    placeholder={form.type === 'ETC' ? '기타 내용을 입력하세요' : ''}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -2342,12 +2470,427 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
               </TableBody>
             </Table>
           </TableContainer>
+
+          {/* 외주에서 장비를 넣는다. */}
+          <div>
+            <div className="flex justify-between items-center mt-10 mb-2">
+              <span className="font-bold border-b-2 mb-4">장비</span>
+              <div className="flex gap-4">
+                <CommonButton
+                  label="삭제"
+                  className="px-7"
+                  variant="danger"
+                  onClick={() => removeCheckedItems('equipment')}
+                />
+                <CommonButton
+                  label="추가"
+                  className="px-7"
+                  variant="secondary"
+                  onClick={() => addItem('equipment')}
+                />
+              </div>
+            </div>
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <Checkbox
+                        checked={isEquipmentAllChecked}
+                        indeterminate={equipmentCheckIds.length > 0 && !isEquipmentAllChecked}
+                        onChange={(e) => toggleCheckAllItems('equipment', e.target.checked)}
+                        sx={{ color: 'black' }}
+                      />
+                    </TableCell>
+                    {[
+                      '장비명(규격)',
+                      '차량번호',
+                      '추가장비',
+                      '단가',
+                      '유형',
+                      '작업내용',
+                      '비고',
+                    ].map((label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        {label === '비고' ||
+                        label === '작업내용' ||
+                        label === '단가' ||
+                        label === '유형' ? (
+                          label
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {equipmentAddAttachedFiles.map((m) => (
+                    <TableRow key={m.id} sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TableCell
+                        padding="checkbox"
+                        align="center"
+                        sx={{ border: '1px solid  #9CA3AF' }}
+                      >
+                        <Checkbox
+                          checked={equipmentCheckIds.includes(m.id)}
+                          onChange={(e) => toggleCheckItem('equipment', m.id, e.target.checked)}
+                        />
+                      </TableCell>
+                      <TableCell
+                        sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                        align="center"
+                      >
+                        <TextField
+                          size="small"
+                          placeholder="규격 입력"
+                          sx={{ width: '100%' }}
+                          value={m.specification}
+                          onChange={(e) =>
+                            updateItemField('equipment', m.id, 'specification', e.target.value)
+                          }
+                        />
+                      </TableCell>
+                      <TableCell
+                        sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                        align="center"
+                      >
+                        <TextField
+                          size="small"
+                          placeholder="차량번호 입력"
+                          sx={{ width: '100%' }}
+                          value={m.vehicleNumber}
+                          onChange={(e) =>
+                            updateItemField('equipment', m.id, 'vehicleNumber', e.target.value)
+                          }
+                        />
+                      </TableCell>
+
+                      <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
+                        <div className="flex gap-3">
+                          <TextField
+                            size="small"
+                            placeholder="텍스트 입력"
+                            sx={{ flex: 1 }} // flex:1으로 너비 균등
+                            value={m.category}
+                            onChange={(e) =>
+                              updateItemField('equipment', m.id, 'category', e.target.value)
+                            }
+                            disabled
+                          />
+                        </div>
+                      </TableCell>
+
+                      <TableCell
+                        sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                        align="center"
+                      >
+                        <TextField
+                          size="small"
+                          placeholder="숫자만"
+                          value={formatNumber(m.unitPrice)}
+                          onChange={(e) => {
+                            const numericValue = unformatNumber(e.target.value)
+                            updateItemField('equipment', m.id, 'unitPrice', numericValue)
+                          }}
+                          inputProps={{
+                            inputMode: 'numeric',
+                            pattern: '[0-9]*',
+                            style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                          }}
+                          fullWidth
+                          disabled
+                        />
+                      </TableCell>
+
+                      <TableCell
+                        sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                        align="center"
+                      >
+                        <CommonSelect
+                          className="text-2xl"
+                          value={m.type || 'BASE'}
+                          onChange={(value) => updateItemField('equipment', m.id, 'type', value)}
+                          options={categoryMethodOptions}
+                          disabled
+                        />
+                      </TableCell>
+
+                      <TableCell
+                        sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                        align="center"
+                      >
+                        <TextField
+                          size="small"
+                          placeholder="작업내용 입력"
+                          sx={{ width: '100%' }}
+                          value={m.taskDescription}
+                          onChange={(e) =>
+                            updateItemField('equipment', m.id, 'taskDescription', e.target.value)
+                          }
+                        />
+                      </TableCell>
+
+                      <TableCell
+                        sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                        align="center"
+                      >
+                        <TextField
+                          size="small"
+                          placeholder="500자 이하 텍스트 입력"
+                          sx={{ width: '100%' }}
+                          value={m.memo}
+                          onChange={(e) =>
+                            updateItemField('equipment', m.id, 'memo', e.target.value)
+                          }
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </div>
+
+          {/* 외주에서 기사를 넣는다  */}
+
+          <div>
+            <div className="flex justify-between items-center mt-10 mb-2">
+              <span className="font-bold border-b-2 mb-4">기사</span>
+              <div className="flex gap-4">
+                <CommonButton
+                  label="삭제"
+                  className="px-7"
+                  variant="danger"
+                  onClick={() => removeCheckedItems('articleInfo')}
+                />
+                <CommonButton
+                  label="추가"
+                  className="px-7"
+                  variant="secondary"
+                  onClick={() => addItem('articleInfo')}
+                />
+              </div>
+            </div>
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <Checkbox
+                        checked={isArticleAllChecked}
+                        indeterminate={articleCheckIds.length > 0 && !isArticleAllChecked}
+                        onChange={(e) => toggleCheckAllItems('articleInfo', e.target.checked)}
+                        sx={{ color: 'black' }}
+                      />
+                    </TableCell>
+                    {['이름', '기사저격증', '안전교육', '기타서류', '비고'].map((label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        {label === '비고' ||
+                        label === '기사저격증' ||
+                        label === '안전교육' ||
+                        label === '기타서류' ? (
+                          label
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {articleAddAttachedFiles.map((m) => (
+                    <TableRow key={m.id} sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TableCell
+                        padding="checkbox"
+                        align="center"
+                        sx={{ border: '1px solid  #9CA3AF' }}
+                      >
+                        <Checkbox
+                          checked={articleCheckIds.includes(m.id)}
+                          onChange={(e) => toggleCheckItem('articleInfo', m.id, e.target.checked)}
+                        />
+                      </TableCell>
+                      <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
+                        <TextField
+                          size="small"
+                          placeholder="텍스트 입력"
+                          sx={{ width: '100%' }}
+                          value={m.name}
+                          onChange={(e) =>
+                            updateItemField('articleInfo', m.id, 'name', e.target.value)
+                          }
+                        />
+                      </TableCell>
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                          <CommonMultiFileInput
+                            className="text-left"
+                            acceptedExtensions={[
+                              'pdf',
+                              'txt',
+                              'rtf',
+                              'docx',
+                              'hwp',
+                              'xlsx',
+                              'csv',
+                              'ods',
+                              'pptx',
+                              'ppt',
+                              'odp',
+                              'jpg',
+                              'jpeg',
+                              'png',
+                              'gif',
+                              'tif',
+                              'tiff',
+                              'bmp',
+                              'zip',
+                              '7z',
+                              'mp3',
+                              'wav',
+                              'mp4',
+                              'mov',
+                              'avi',
+                              'wmv',
+                              'dwg',
+                            ]}
+                            files={m.driverLicense} // 각 항목별 files
+                            onChange={
+                              (newFiles) =>
+                                updateItemField('articleInfo', m.id, 'driverLicense', newFiles) //  해당 항목만 업데이트
+                            }
+                            uploadTarget="OUTSOURCING_COMPANY_CONTRACT"
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                          <CommonMultiFileInput
+                            className="text-left"
+                            acceptedExtensions={[
+                              'pdf',
+                              'txt',
+                              'rtf',
+                              'docx',
+                              'hwp',
+                              'xlsx',
+                              'csv',
+                              'ods',
+                              'pptx',
+                              'ppt',
+                              'odp',
+                              'jpg',
+                              'jpeg',
+                              'png',
+                              'gif',
+                              'tif',
+                              'tiff',
+                              'bmp',
+                              'zip',
+                              '7z',
+                              'mp3',
+                              'wav',
+                              'mp4',
+                              'mov',
+                              'avi',
+                              'wmv',
+                              'dwg',
+                            ]}
+                            files={m.safeEducation} // 각 항목별 files
+                            onChange={
+                              (newFiles) =>
+                                updateItemField('articleInfo', m.id, 'safeEducation', newFiles) //  해당 항목만 업데이트
+                            }
+                            uploadTarget="OUTSOURCING_COMPANY_CONTRACT"
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                          <CommonMultiFileInput
+                            className="text-left"
+                            acceptedExtensions={[
+                              'pdf',
+                              'txt',
+                              'rtf',
+                              'docx',
+                              'hwp',
+                              'xlsx',
+                              'csv',
+                              'ods',
+                              'pptx',
+                              'ppt',
+                              'odp',
+                              'jpg',
+                              'jpeg',
+                              'png',
+                              'gif',
+                              'tif',
+                              'tiff',
+                              'bmp',
+                              'zip',
+                              '7z',
+                              'mp3',
+                              'wav',
+                              'mp4',
+                              'mov',
+                              'avi',
+                              'wmv',
+                              'dwg',
+                            ]}
+                            files={m.ETCfiles} // 각 항목별 files
+                            onChange={
+                              (newFiles) =>
+                                updateItemField('articleInfo', m.id, 'ETCfiles', newFiles) //  해당 항목만 업데이트
+                            }
+                            uploadTarget="OUTSOURCING_COMPANY_CONTRACT"
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="500자 이하 텍스트 입력"
+                          sx={{ width: '100%' }}
+                          value={m.memo}
+                          onChange={(e) =>
+                            updateItemField('articleInfo', m.id, 'memo', e.target.value)
+                          }
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </div>
         </>
       )}
-
-      {/* 구분에서 장비 클릭 시  */}
-
-      {/* 장비 */}
 
       {form.type === 'EQUIPMENT' && (
         <div>

@@ -181,6 +181,7 @@ export type OutsourcingContractFormState = {
   businessNumber: string
   type: string
   typeDescription: string
+  contractName: string
   contractAmount: number
   contractStartDate: Date | null
   contractEndDate: Date | null
