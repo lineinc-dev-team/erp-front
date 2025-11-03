@@ -581,89 +581,185 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
 
   const outsourcings = fuelInfo
 
+  // useEffect(() => {
+  //   if (!outsourcings.length) return
+
+  //   outsourcings.forEach(async (row) => {
+  //     const companyId = row.outsourcingCompanyId
+  //     const driverData = row.driverId
+  //     const carNumberId = row.equipmentId
+  //     const categoryType = row.categoryType
+
+  //     if (driverOptionsByCompany[companyId] && carNumberOptionsByCompany[companyId]) {
+  //       return
+  //     }
+
+  //     try {
+  //       const res = await FuelDriverNameScroll({
+  //         pageParam: 0,
+  //         id: companyId,
+  //         siteIdList: Number(siteIdList),
+  //         size: 200,
+  //       })
+
+  //       if (res === undefined) return
+
+  //       const options = res?.data?.content?.map((user: any) => ({
+  //         id: user.id,
+  //         name: user.name + (user.deleted ? ' (삭제됨)' : ''),
+  //         deleted: user.deleted,
+  //       }))
+
+  //       setDriverOptionsByCompany((prev) => {
+  //         const exists = options?.some((opt: any) => opt.id === driverData)
+
+  //         return {
+  //           ...prev,
+  //           [companyId]: [
+  //             { id: 0, name: '선택', deleted: false },
+  //             ...options,
+  //             // 만약 선택된 worker가 목록에 없으면 추가
+  //             ...(driverData && !exists ? [{ id: driverData, name: '', deleted: true }] : []),
+  //           ],
+  //         }
+  //       })
+
+  //       const carNumberRes = await FuelEquipmentNameScroll({
+  //         pageParam: 0,
+  //         id: companyId,
+  //         siteIdList: Number(siteIdList),
+  //         size: 200,
+  //         types: categoryType,
+  //       })
+
+  //       const carOptions = carNumberRes.data.content.map((user: any) => ({
+  //         id: user.id,
+  //         specification: user.specification,
+  //         vehicleNumber: user.vehicleNumber + (user.deleted ? ' (삭제됨)' : ''),
+  //         category: user.category,
+  //       }))
+
+  //       setCarNumberOptionsByCompany((prev) => {
+  //         const exists = carOptions.some((opt: any) => opt.id === carNumberId)
+
+  //         return {
+  //           ...prev,
+  //           [companyId]: [
+  //             { id: 0, specification: '', vehicleNumber: '선택', category: '', deleted: false },
+  //             ...carOptions,
+  //             // 만약 선택된 worker가 목록에 없으면 추가
+  //             ...(carNumberId && !exists
+  //               ? [
+  //                   {
+  //                     id: carNumberId,
+  //                     specification: '',
+  //                     vehicleNumber: '',
+  //                     category: '',
+  //                     deleted: true,
+  //                   },
+  //                 ]
+  //               : []),
+  //           ],
+  //         }
+  //       })
+  //     } catch (err) {
+  //       console.error('업체별 인력 조회 실패', err)
+  //     }
+  //   })
+  // }, [outsourcings])
+
   useEffect(() => {
     if (!outsourcings.length) return
 
-    outsourcings.forEach(async (row) => {
-      const companyId = row.outsourcingCompanyId
-      const driverData = row.driverId
-      const carNumberId = row.equipmentId
+    const fetchData = async () => {
+      for (const row of outsourcings) {
+        const companyId = row.outsourcingCompanyId
+        const driverData = row.driverId
+        const carNumberId = row.equipmentId
+        const categoryType = row.categoryType
 
-      if (driverOptionsByCompany[companyId] && carNumberOptionsByCompany[companyId]) {
-        return
+        const hasDriverData = driverOptionsByCompany[companyId]
+        const hasCarData = carNumberOptionsByCompany[companyId]?.some(
+          (opt) => opt.categoryType === categoryType,
+        )
+
+        if (hasDriverData && hasCarData) continue
+
+        try {
+          // ─────────── 인력 목록 ───────────
+          const res = await FuelDriverNameScroll({
+            pageParam: 0,
+            id: companyId,
+            siteIdList: Number(siteIdList),
+            size: 200,
+          })
+
+          if (!res) continue
+
+          const options = res.data.content.map((user: any) => ({
+            id: user.id,
+            name: user.name + (user.deleted ? ' (삭제됨)' : ''),
+            deleted: user.deleted,
+          }))
+
+          setDriverOptionsByCompany((prev) => {
+            const exists = options.some((opt: any) => opt.id === driverData)
+            return {
+              ...prev,
+              [companyId]: [
+                { id: 0, name: '선택', deleted: false },
+                ...options,
+                ...(driverData && !exists ? [{ id: driverData, name: '', deleted: true }] : []),
+              ],
+            }
+          })
+
+          // ─────────── 차량 목록 ───────────
+          const carNumberRes = await FuelEquipmentNameScroll({
+            pageParam: 0,
+            id: companyId,
+            siteIdList: Number(siteIdList),
+            size: 200,
+            types: categoryType,
+          })
+
+          const carOptions = carNumberRes.data.content.map((item: any) => ({
+            id: item.id,
+            specification: item.specification,
+            vehicleNumber: item.vehicleNumber,
+            category: item.category,
+            categoryType, // ← 캐시 구분용으로 추가
+          }))
+
+          setCarNumberOptionsByCompany((prev) => {
+            const exists = carOptions.some((opt: any) => opt.id === carNumberId)
+            return {
+              ...prev,
+              [companyId]: [
+                { id: 0, specification: '', vehicleNumber: '선택', category: '', deleted: false },
+                ...carOptions,
+                ...(carNumberId && !exists
+                  ? [
+                      {
+                        id: carNumberId,
+                        specification: '',
+                        vehicleNumber: '',
+                        category: '',
+                        deleted: true,
+                        categoryType,
+                      },
+                    ]
+                  : []),
+              ],
+            }
+          })
+        } catch (err) {
+          console.error('업체별 인력/차량 조회 실패', err)
+        }
       }
+    }
 
-      try {
-        const res = await FuelDriverNameScroll({
-          pageParam: 0,
-          id: companyId,
-          siteIdList: Number(siteIdList),
-          size: 200,
-        })
-
-        if (res === undefined) return
-
-        const options = res?.data?.content?.map((user: any) => ({
-          id: user.id,
-          name: user.name + (user.deleted ? ' (삭제됨)' : ''),
-          deleted: user.deleted,
-        }))
-
-        setDriverOptionsByCompany((prev) => {
-          const exists = options?.some((opt: any) => opt.id === driverData)
-
-          return {
-            ...prev,
-            [companyId]: [
-              { id: 0, name: '선택', deleted: false },
-              ...options,
-              // 만약 선택된 worker가 목록에 없으면 추가
-              ...(driverData && !exists ? [{ id: driverData, name: '', deleted: true }] : []),
-            ],
-          }
-        })
-
-        const carNumberRes = await FuelEquipmentNameScroll({
-          pageParam: 0,
-          id: companyId,
-          siteIdList: Number(siteIdList),
-          size: 200,
-        })
-
-        const carOptions = carNumberRes.data.content.map((user: any) => ({
-          id: user.id,
-          specification: user.specification,
-          vehicleNumber: user.vehicleNumber + (user.deleted ? ' (삭제됨)' : ''),
-          category: user.category,
-        }))
-
-        setCarNumberOptionsByCompany((prev) => {
-          const exists = carOptions.some((opt: any) => opt.id === carNumberId)
-
-          return {
-            ...prev,
-            [companyId]: [
-              { id: 0, specification: '', vehicleNumber: '선택', category: '', deleted: false },
-              ...carOptions,
-              // 만약 선택된 worker가 목록에 없으면 추가
-              ...(carNumberId && !exists
-                ? [
-                    {
-                      id: carNumberId,
-                      specification: '',
-                      vehicleNumber: '',
-                      category: '',
-                      deleted: true,
-                    },
-                  ]
-                : []),
-            ],
-          }
-        })
-      } catch (err) {
-        console.error('업체별 인력 조회 실패', err)
-      }
-    })
+    fetchData()
   }, [outsourcings])
 
   return (
@@ -996,7 +1092,6 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                         const selectedCompany = updatedOutCompanyOptions.find(
                           (opt) => opt.id === value,
                         )
-                        // ✅ 업체 선택 시 — 어떤 업체를 선택하든 전부 초기화
                         setSelectedCompanyIds((prev) => ({
                           ...prev,
                           [m.id]: selectedCompany ? selectedCompany.id : 0,
@@ -1004,7 +1099,6 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
 
                         setSelectId(m.id)
 
-                        // ✅ 업체 정보 업데이트
                         updateItemField(
                           'FuelInfo',
                           m.id,
@@ -1047,7 +1141,10 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                       <label className="flex items-center gap-1">
                         <Radio
                           checked={m.categoryType === 'EQUIPMENT'}
-                          onChange={() => setFuelRadioBtn(m.id, 'EQUIPMENT')}
+                          onChange={() => {
+                            setFuelRadioBtn(m.id, 'EQUIPMENT')
+                            updateItemField('FuelInfo', m.id, 'equipmentId', '')
+                          }}
                           value="EQUIPMENT"
                           name={`categoryType-${m.id}`} // 각 행별로 고유 그룹
                         />
@@ -1057,7 +1154,10 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                       <label className="flex items-center gap-1">
                         <Radio
                           checked={m.categoryType === 'CONSTRUCTION'}
-                          onChange={() => setFuelRadioBtn(m.id, 'CONSTRUCTION')}
+                          onChange={() => {
+                            setFuelRadioBtn(m.id, 'CONSTRUCTION')
+                            updateItemField('FuelInfo', m.id, 'equipmentId', '')
+                          }}
                           value="CONSTRUCTION"
                           name={`categoryType-${m.id}`} // 각 행별로 고유 그룹
                         />

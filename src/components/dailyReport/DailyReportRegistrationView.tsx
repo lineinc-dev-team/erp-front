@@ -190,7 +190,7 @@ export default function DailyReportRegistrationView() {
   // 체크 박스에 활용
   //   const employees = form.employees
   //'외주(공사)',
-  const tabs = ['직원', '직영/용역', '장비', '외주(공사)', '유류', '공사일보', '현장 사진 등록']
+  const tabs = ['직원', '직영/용역', '장비', '유류', '공사일보', '현장 사진 등록']
   const [activeTab, setActiveTab] = useState('직원')
 
   const handleTabClick = (tab: string) => {
@@ -2558,98 +2558,206 @@ export default function DailyReportRegistrationView() {
 
   const previousWeatherRef = useRef(form.weather)
 
+  // useEffect(() => {
+  //   if (!outsourcingfuel.length) return
+
+  //   console.log('해당 구분 값 찾기', outsourcingfuel)
+
+  //   outsourcingfuel.forEach(async (row) => {
+  //     const companyId = row.outsourcingCompanyId
+  //     const driverData = row.driverId
+  //     const carNumberId = row.equipmentId
+  //     const categoryType = row.categoryType
+
+  //     // ✅ categoryType이 변경되어도 항상 새로 가져오게 하려면
+  //     // driverOptionsByCompany[companyId] 캐시 체크를 제거하거나,
+  //     // 조건을 완화합니다.
+  //     const hasDriverData = driverOptionsByCompany[companyId]
+  //     const hasCarData = carNumberOptionsByCompany[companyId]?.some(
+  //       (opt) => opt.categoryType === categoryType,
+  //     )
+
+  //     // ✅ 이미 같은 타입(categoryType)으로 로드된 적이 있으면 skip
+  //     if (hasDriverData && hasCarData) continue
+
+  //     try {
+  //       const res = await FuelDriverNameScroll({
+  //         pageParam: 0,
+  //         id: companyId,
+  //         siteIdList: Number(siteIdList),
+  //         size: 200,
+  //       })
+
+  //       if (res === undefined) return
+
+  //       const options = res.data.content.map((user: any) => ({
+  //         id: user.id,
+  //         name: user.name + (user.deleted ? ' (삭제됨)' : ''),
+  //         deleted: user.deleted,
+  //       }))
+
+  //       setDriverOptionsByCompany((prev) => {
+  //         const exists = options.some((opt: any) => opt.id === driverData)
+
+  //         return {
+  //           ...prev,
+  //           [companyId]: [
+  //             { id: 0, name: '선택', deleted: false },
+  //             ...options,
+  //             // 만약 선택된 worker가 목록에 없으면 추가
+  //             ...(driverData && !exists ? [{ id: driverData, name: '', deleted: true }] : []),
+  //           ],
+  //         }
+  //       })
+
+  //       const carNumberRes = await FuelEquipmentNameScroll({
+  //         pageParam: 0,
+  //         id: companyId,
+  //         siteIdList: Number(siteIdList),
+  //         size: 200,
+  //         types: categoryType,
+  //       })
+
+  //       const carOptions = carNumberRes.data.content.map((user: any) => ({
+  //         id: user.id,
+  //         specification: user.specification,
+  //         vehicleNumber: user.vehicleNumber,
+  //         category: user.category,
+  //       }))
+
+  //       setCarNumberOptionsByCompany((prev) => {
+  //         const exists = carOptions.some((opt: any) => opt.id === carNumberId)
+
+  //         return {
+  //           ...prev,
+  //           [companyId]: [
+  //             { id: 0, specification: '', vehicleNumber: '선택', category: '', deleted: false },
+  //             ...carOptions,
+  //             // 만약 선택된 worker가 목록에 없으면 추가
+  //             ...(carNumberId && !exists
+  //               ? [
+  //                   {
+  //                     id: carNumberId,
+  //                     specification: '',
+  //                     vehicleNumber: '',
+  //                     category: '',
+  //                     deleted: true,
+  //                   },
+  //                 ]
+  //               : []),
+  //           ],
+  //         }
+  //       })
+  //     } catch (err) {
+  //       console.error('업체별 인력 조회 실패', err)
+  //     }
+  //   })
+  // }, [outsourcingfuel, categoryType])
+
+  //  ui 그림
+
   useEffect(() => {
     if (!outsourcingfuel.length) return
 
-    outsourcingfuel.forEach(async (row) => {
-      const companyId = row.outsourcingCompanyId
-      const driverData = row.driverId
-      const carNumberId = row.equipmentId
+    console.log('해당 구분 값 찾기', outsourcingfuel)
 
-      if (driverOptionsByCompany[companyId] && carNumberOptionsByCompany[companyId]) {
-        return
+    const fetchData = async () => {
+      for (const row of outsourcingfuel) {
+        const companyId = row.outsourcingCompanyId
+        const driverData = row.driverId
+        const carNumberId = row.equipmentId
+        const categoryType = row.categoryType
+
+        const hasDriverData = driverOptionsByCompany[companyId]
+        const hasCarData = carNumberOptionsByCompany[companyId]?.some(
+          (opt) => opt.categoryType === categoryType,
+        )
+
+        if (hasDriverData && hasCarData) continue
+
+        try {
+          // ─────────── 인력 목록 ───────────
+          const res = await FuelDriverNameScroll({
+            pageParam: 0,
+            id: companyId,
+            siteIdList: Number(siteIdList),
+            size: 200,
+          })
+
+          if (!res) continue
+
+          const options = res.data.content.map((user: any) => ({
+            id: user.id,
+            name: user.name + (user.deleted ? ' (삭제됨)' : ''),
+            deleted: user.deleted,
+          }))
+
+          setDriverOptionsByCompany((prev) => {
+            const exists = options.some((opt: any) => opt.id === driverData)
+            return {
+              ...prev,
+              [companyId]: [
+                { id: 0, name: '선택', deleted: false },
+                ...options,
+                ...(driverData && !exists ? [{ id: driverData, name: '', deleted: true }] : []),
+              ],
+            }
+          })
+
+          // ─────────── 차량 목록 ───────────
+          const carNumberRes = await FuelEquipmentNameScroll({
+            pageParam: 0,
+            id: companyId,
+            siteIdList: Number(siteIdList),
+            size: 200,
+            types: categoryType,
+          })
+
+          const carOptions = carNumberRes.data.content.map((item: any) => ({
+            id: item.id,
+            specification: item.specification,
+            vehicleNumber: item.vehicleNumber,
+            category: item.category,
+            categoryType, // ← 캐시 구분용으로 추가
+          }))
+
+          setCarNumberOptionsByCompany((prev) => {
+            const exists = carOptions.some((opt: any) => opt.id === carNumberId)
+            return {
+              ...prev,
+              [companyId]: [
+                { id: 0, specification: '', vehicleNumber: '선택', category: '', deleted: false },
+                ...carOptions,
+                ...(carNumberId && !exists
+                  ? [
+                      {
+                        id: carNumberId,
+                        specification: '',
+                        vehicleNumber: '',
+                        category: '',
+                        deleted: true,
+                        categoryType,
+                      },
+                    ]
+                  : []),
+              ],
+            }
+          })
+        } catch (err) {
+          console.error('업체별 인력/차량 조회 실패', err)
+        }
       }
+    }
 
-      try {
-        const res = await FuelDriverNameScroll({
-          pageParam: 0,
-          id: companyId,
-          siteIdList: Number(siteIdList),
-          size: 200,
-        })
-
-        if (res === undefined) return
-
-        const options = res.data.content.map((user: any) => ({
-          id: user.id,
-          name: user.name + (user.deleted ? ' (삭제됨)' : ''),
-          deleted: user.deleted,
-        }))
-
-        setDriverOptionsByCompany((prev) => {
-          const exists = options.some((opt: any) => opt.id === driverData)
-
-          return {
-            ...prev,
-            [companyId]: [
-              { id: 0, name: '선택', deleted: false },
-              ...options,
-              // 만약 선택된 worker가 목록에 없으면 추가
-              ...(driverData && !exists ? [{ id: driverData, name: '', deleted: true }] : []),
-            ],
-          }
-        })
-
-        const carNumberRes = await FuelEquipmentNameScroll({
-          pageParam: 0,
-          id: companyId,
-          siteIdList: Number(siteIdList),
-          size: 200,
-        })
-
-        const carOptions = carNumberRes.data.content.map((user: any) => ({
-          id: user.id,
-          specification: user.specification,
-          vehicleNumber: user.vehicleNumber,
-          category: user.category,
-        }))
-
-        setCarNumberOptionsByCompany((prev) => {
-          const exists = carOptions.some((opt: any) => opt.id === carNumberId)
-
-          return {
-            ...prev,
-            [companyId]: [
-              { id: 0, specification: '', vehicleNumber: '선택', category: '', deleted: false },
-              ...carOptions,
-              // 만약 선택된 worker가 목록에 없으면 추가
-              ...(carNumberId && !exists
-                ? [
-                    {
-                      id: carNumberId,
-                      specification: '',
-                      vehicleNumber: '',
-                      category: '',
-                      deleted: true,
-                    },
-                  ]
-                : []),
-            ],
-          }
-        })
-      } catch (err) {
-        console.error('업체별 인력 조회 실패', err)
-      }
-    })
+    fetchData()
   }, [outsourcingfuel])
-
-  //  ui 그림
 
   const cellStyle = {
     border: '1px solid #9CA3AF',
     verticalAlign: 'top',
     padding: '8px',
   }
+
   return (
     <>
       <div className="flex gap-10 items-center justify-between">
@@ -5053,11 +5161,6 @@ export default function DailyReportRegistrationView() {
                                 (opt) => Number(opt.id) === Number(value),
                               )
 
-                              console.log(
-                                'updatedOutCompanyOptionsupdatedOutCompanyOptions',
-                                updatedOutCompanyOptions,
-                                value,
-                              )
                               setSelectedCompanyIds((prev) => ({
                                 ...prev,
                                 [m.id]: selectedCompany ? selectedCompany.id : 0,
@@ -5112,7 +5215,10 @@ export default function DailyReportRegistrationView() {
                             <label className="flex items-center gap-1">
                               <Radio
                                 checked={m.categoryType === 'EQUIPMENT'}
-                                onChange={() => setFuelRadioBtn(m.id, 'EQUIPMENT')}
+                                onChange={() => {
+                                  setFuelRadioBtn(m.id, 'EQUIPMENT')
+                                  updateItemField('fuel', m.id, 'equipmentId', '')
+                                }}
                                 value="EQUIPMENT"
                                 name={`categoryType-${m.id}`} // 각 행별로 고유 그룹
                               />
@@ -5122,7 +5228,11 @@ export default function DailyReportRegistrationView() {
                             <label className="flex items-center gap-1">
                               <Radio
                                 checked={m.categoryType === 'CONSTRUCTION'}
-                                onChange={() => setFuelRadioBtn(m.id, 'CONSTRUCTION')}
+                                onChange={() => {
+                                  setFuelRadioBtn(m.id, 'CONSTRUCTION')
+
+                                  updateItemField('fuel', m.id, 'equipmentId', '')
+                                }}
                                 value="CONSTRUCTION"
                                 name={`categoryType-${m.id}`} // 각 행별로 고유 그룹
                               />
