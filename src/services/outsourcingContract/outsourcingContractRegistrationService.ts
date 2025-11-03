@@ -130,6 +130,39 @@ export async function OutsourcingContractDeductionIdInfoService() {
   return data
 }
 
+// 소속 업체 선택 시  해당 업체계약  넣기
+
+export async function GetOutSourcingContractInfoService({
+  pageParam = 0,
+  size = 50,
+  keyword = '',
+  sort = 'id,asc',
+  outsourcingCompanyId = 0,
+}) {
+  const resData = await fetch(
+    `${API.OUTSOURCINGCONTRACT}/search?page=${pageParam}&size=${size}&keyword=${keyword}&outsourcingCompanyId=${outsourcingCompanyId}&sort=${sort}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    },
+  )
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+
 // 업체명 + 자동완성 사업자등록 번호
 export async function GetCompanyNameInfoService({
   pageParam = 0,
@@ -137,9 +170,10 @@ export async function GetCompanyNameInfoService({
   keyword = '',
   sort = '',
   type = '',
+  outsourcingCompanyId = 0,
 }) {
   const resData = await fetch(
-    `${API.OUTSOURCINGCOMPANY}/search?page=${pageParam}&size=${size}&keyword=${keyword}&sort=${sort}&type=${type}`,
+    `${API.OUTSOURCINGCOMPANY}/search?page=${pageParam}&size=${size}&keyword=${keyword}&sort=${sort}&outsourcingCompanyId=${outsourcingCompanyId}&type=${type}`,
     {
       method: 'GET',
       headers: {

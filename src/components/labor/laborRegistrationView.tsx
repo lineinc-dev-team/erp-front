@@ -68,6 +68,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     LaborTypeMethodOptions,
     laborCancel,
     useOutsourcingNameListInfiniteScroll,
+    useOutsourcingContractNameListInfiniteScroll,
 
     useLaborHistoryDataQuery,
   } = useLaborInfo()
@@ -268,6 +269,39 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       outsourcingList = [{ id: 0, name: '라인공영' }, ...outsourcingList]
     }
   }
+
+  // 구분에서  외주 입력 시 해당 업체계약을 입력 할 수 있게 한다.
+
+  const [isOutsourcingContractFocused, setIsOutsourcingContractFocused] = useState(false)
+
+  // 유저 선택 시 처리
+  const handleSelectOutsourcingContract = (selectedUser: any) => {
+    console.log('selectedUserselectedUser', selectedUser)
+    setField('outsourcingCompanyContractName', selectedUser.contractName)
+    setField('outsourcingCompanyContractId', selectedUser.id)
+  }
+
+  const debouncedOutsourcingContractKeyword = useDebouncedValue(
+    form.outsourcingCompanyContractName,
+    300,
+  )
+
+  const {
+    data: OutsourcingContractNameData,
+    fetchNextPage: OutsourcingContractNameFetchNextPage,
+    hasNextPage: OutsourcingContractNameHasNextPage,
+    isFetching: OutsourcingContractNameIsFetching,
+    isLoading: OutsourcingContractNameIsLoading,
+  } = useOutsourcingContractNameListInfiniteScroll(
+    debouncedOutsourcingContractKeyword,
+    form.outsourcingCompanyId,
+  )
+
+  const OutsourcingContractRawList =
+    OutsourcingContractNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const outsourcingContractList = Array.from(
+    new Map(OutsourcingContractRawList.map((user) => [user.contractName, user])).values(),
+  )
 
   const formatChangeDetail = (getChanges: string) => {
     try {
@@ -530,11 +564,10 @@ export default function LaborRegistrationView({ isEditMode = false }) {
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               구분 <span className="text-red-500 ml-1">*</span>
             </label>
-            <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
-              <div className="flex items-center gap-4">
-                {/* 구분 선택 */}
+            <div className="border border-gray-400 w-full flex gap-4 p-2">
+              <div className="flex items-center gap-10 flex-1">
                 <CommonSelect
-                  className="text-2xl w-24"
+                  className="min-w-[100px]"
                   value={form.type || 'BASE'}
                   onChange={(value) => {
                     setField('type', value)
@@ -544,11 +577,10 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                   disabled={isEditMode}
                 />
 
-                {/* 정직원일 때 직급 표시 */}
                 {form.type === 'REGULAR_EMPLOYEE' && (
                   <div className="flex items-center w-full  ">
                     <label className="w-20 text-[16px] flex items-center justify-center font-bold text-center">
-                      직급 <span className="text-red-500 ml-1 size-">*</span>
+                      직급
                     </label>
                     <div className="  py-2 w-full flex justify-center items-center">
                       <CommonSelect
@@ -561,7 +593,6 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                   </div>
                 )}
 
-                {/* 기타 타입일 때만 typeDescription 입력 */}
                 {form.type !== 'REGULAR_EMPLOYEE' && (
                   <CommonInput
                     value={form.typeDescription ?? ''}
@@ -579,11 +610,19 @@ export default function LaborRegistrationView({ isEditMode = false }) {
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               소속업체 <span className="text-red-500 ml-1">*</span>
             </label>
-            <div className="border border-gray-400  w-full flex flex-col  py-2 px-1">
+            <div className="border border-gray-400  w-full flex  py-2 px-1">
               <InfiniteScrollSelect
                 placeholder="업체명을 입력하세요"
                 keyword={form.outsourcingCompanyName ?? ''}
-                onChangeKeyword={(newKeyword) => setField('outsourcingCompanyName', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                onChangeKeyword={(newKeyword) => {
+                  setField('outsourcingCompanyName', newKeyword)
+
+                  if (newKeyword.trim() === '') {
+                    setField('outsourcingCompanyContractName', '')
+                    setField('outsourcingCompanyContractId', 0)
+                    setField('outsourcingCompanyId', 0)
+                  }
+                }}
                 items={outsourcingList}
                 hasNextPage={OutsourcingNameHasNextPage ?? false}
                 fetchNextPage={OutsourcingeNameFetchNextPage}
@@ -600,6 +639,41 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                 onFocus={() => setIsOutsourcingFocused(true)}
                 onBlur={() => setIsOutsourcingFocused(false)}
               />
+              {form.type === 'OUTSOURCING_CONTRACT' && (
+                <div className="flex items-center w-full">
+                  <label className="w-20 text-[16px] flex items-center justify-center font-bold text-center">
+                    업체계약
+                  </label>
+                  <div className="  py-2 w-full flex justify-center items-center">
+                    <InfiniteScrollSelect
+                      placeholder="업체계약을 입력하세요"
+                      keyword={form.outsourcingCompanyContractName ?? ''}
+                      onChangeKeyword={(newKeyword) =>
+                        setField('outsourcingCompanyContractName', newKeyword)
+                      } // ★필드명과 값 둘 다 넘겨야 함
+                      items={outsourcingContractList}
+                      hasNextPage={OutsourcingContractNameHasNextPage ?? false}
+                      fetchNextPage={OutsourcingContractNameFetchNextPage}
+                      renderItem={(item, isHighlighted) => (
+                        <div
+                          className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}
+                        >
+                          {item.contractName}
+                        </div>
+                      )}
+                      onSelect={handleSelectOutsourcingContract}
+                      // shouldShowList={true}
+                      isLoading={
+                        OutsourcingContractNameIsLoading || OutsourcingContractNameIsFetching
+                      }
+                      debouncedKeyword={debouncedOutsourcingContractKeyword}
+                      shouldShowList={isOutsourcingContractFocused}
+                      onFocus={() => setIsOutsourcingContractFocused(true)}
+                      onBlur={() => setIsOutsourcingContractFocused(false)}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

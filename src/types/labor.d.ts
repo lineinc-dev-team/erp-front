@@ -79,6 +79,9 @@ export type LaborFormState = {
   gradeId: number
   outsourcingCompanyId: number
   outsourcingCompanyName: string
+  // 업체계약 이름
+  outsourcingCompanyContractId: number
+  outsourcingCompanyContractName: string
   name: string
   residentNumber: string
   address: string

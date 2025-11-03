@@ -11,7 +11,10 @@ import {
   ModifyLaborData,
   WorkTypeService,
 } from '@/services/labor/laborRegistrationService'
-import { GetCompanyNameInfoService } from '@/services/outsourcingContract/outsourcingContractRegistrationService'
+import {
+  GetCompanyNameInfoService,
+  GetOutSourcingContractInfoService,
+} from '@/services/outsourcingContract/outsourcingContractRegistrationService'
 import {
   GetTypeDesInfoService,
   LaborListInfoService,
@@ -195,6 +198,25 @@ export function useLaborInfo() {
     })
   }
 
+  // 인력에서 외주 업체 키워드 검색 시 해당 업체명 검색
+
+  const useOutsourcingContractNameListInfiniteScroll = (
+    keyword: string,
+    outsourcingCompanyId: number,
+  ) => {
+    return useInfiniteQuery({
+      queryKey: ['outsourcingContractInfo', keyword, outsourcingCompanyId],
+      queryFn: ({ pageParam }) =>
+        GetOutSourcingContractInfoService({ pageParam, outsourcingCompanyId, keyword }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        const nextPage = sliceInfo.page + 1
+        return sliceInfo.hasNext ? nextPage : undefined
+      },
+    })
+  }
+
   // const [CompanySearch, setCompanySearch] = useState('')
 
   // const {
@@ -280,6 +302,7 @@ export function useLaborInfo() {
     useLaborHistoryDataQuery,
 
     useOutsourcingNameListInfiniteScroll,
+    useOutsourcingContractNameListInfiniteScroll,
 
     // 기타의 설명 데이터 값
 
