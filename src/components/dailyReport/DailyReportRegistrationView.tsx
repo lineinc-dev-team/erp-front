@@ -7,6 +7,7 @@ import CommonButton from '../common/Button'
 import {
   Checkbox,
   Paper,
+  Radio,
   Table,
   TableBody,
   TableCell,
@@ -94,6 +95,7 @@ export default function DailyReportRegistrationView() {
     addItem,
     toggleCheckItem,
     toggleCheckAllItems,
+    setFuelRadioBtn,
 
     // 외주공사 추가 함수
 
@@ -666,10 +668,11 @@ export default function DailyReportRegistrationView() {
       outsourcingCompanyId: item.outsourcingCompany?.id ?? 0,
       outsourcingCompanyName: item.outsourcingCompany?.name ?? 0,
       deleted: item.outsourcingCompany.deleted,
-      driverId: item.outsourcingCompanyDriver.id ?? 0,
+      driverId: item.outsourcingCompanyDriver?.id ?? 0,
       equipmentId: item.outsourcingCompanyEquipment?.id ?? '',
       specificationName: item.outsourcingCompanyEquipment.specification ?? '',
       fuelType: item.fuelTypeCode ?? '',
+      categoryType: item.categoryTypeCode,
       fuelAmount: item.fuelAmount,
       memo: item.memo,
       files:
@@ -2501,9 +2504,7 @@ export default function DailyReportRegistrationView() {
       if (!f.outsourcingCompanyId || f.outsourcingCompanyId === 0) {
         return showSnackbar('유류의 업체명을 선택해주세요.', 'warning')
       }
-      if (!f.driverId || f.driverId === 0) {
-        return showSnackbar('유류의 기사명을 선택해주세요.', 'warning')
-      }
+
       if (!f.equipmentId || f.equipmentId === 0) {
         return showSnackbar('유류의 차량번호를 선택해주세요.', 'warning')
       }
@@ -4988,7 +4989,7 @@ export default function DailyReportRegistrationView() {
                     </TableCell>
                     {[
                       '업체명',
-                      '기사명',
+                      '구분',
                       '차량번호',
                       '규격',
                       '유종',
@@ -5107,7 +5108,30 @@ export default function DailyReportRegistrationView() {
                         </TableCell>
 
                         <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <CommonSelect
+                          <div className="flex items-center gap-4 justify-center">
+                            <label className="flex items-center gap-1">
+                              <Radio
+                                checked={m.categoryType === 'EQUIPMENT'}
+                                onChange={() => setFuelRadioBtn(m.id, 'EQUIPMENT')}
+                                value="EQUIPMENT"
+                                name={`categoryType-${m.id}`} // 각 행별로 고유 그룹
+                              />
+                              외주
+                            </label>
+
+                            <label className="flex items-center gap-1">
+                              <Radio
+                                checked={m.categoryType === 'CONSTRUCTION'}
+                                onChange={() => setFuelRadioBtn(m.id, 'CONSTRUCTION')}
+                                value="CONSTRUCTION"
+                                name={`categoryType-${m.id}`} // 각 행별로 고유 그룹
+                              />
+                              장비
+                            </label>
+                          </div>
+                        </TableCell>
+
+                        {/* <CommonSelect
                             fullWidth
                             value={selectedDriverIds[m.id] || m.driverId || 0}
                             onChange={async (value) => {
@@ -5129,8 +5153,7 @@ export default function DailyReportRegistrationView() {
                                 fuelDriverFetchNextPage()
                             }}
                             loading={fuelDriverLoading}
-                          />
-                        </TableCell>
+                          /> */}
 
                         <TableCell>
                           <CommonSelect

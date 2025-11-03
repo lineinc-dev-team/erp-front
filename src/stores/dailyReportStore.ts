@@ -525,6 +525,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           id: Date.now(),
           outsourcingCompanyId: 0,
           driverId: 0,
+          categoryType: 'EQUIPMENT',
           equipmentId: 0,
           specificationName: '',
           fuelType: '',
@@ -859,6 +860,14 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         }
       }
     }),
+
+  setFuelRadioBtn: (id: number, categoryType: 'EQUIPMENT' | 'CONSTRUCTION') =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        fuelInfos: state.form.fuelInfos.map((m) => (m.id === id ? { ...m, categoryType } : m)),
+      },
+    })),
 
   toggleCheckAllItems: (type, checked) =>
     set((state) => {
@@ -1517,6 +1526,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           outsourcingCompanyId: item.outsourcingCompanyId,
           driverId: item.driverId,
           equipmentId: item.equipmentId,
+          categoryType: item.categoryType,
           fuelType: item.fuelType,
           fuelAmount: item.fuelAmount,
           fileUrl: file?.fileUrl || null,
@@ -1845,7 +1855,8 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       fuelInfos: form.fuelInfos.map((item: FuelsItem) => ({
         id: item.id,
         outsourcingCompanyId: item.outsourcingCompanyId,
-        driverId: item.driverId,
+        driverId: null,
+        categoryType: item.categoryType,
         equipmentId: item.equipmentId,
         fuelType: item.fuelType,
         fuelAmount: item.fuelAmount,

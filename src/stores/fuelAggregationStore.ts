@@ -127,6 +127,7 @@ export const useFuelFormStore = create<FuelFormStore>((set, get) => ({
           id: Date.now(),
           outsourcingCompanyId: 0,
           driverId: 0,
+          categoryType: 'EQUIPMENT',
           specificationName: '',
           equipmentId: 0,
           fuelType: '',
@@ -203,6 +204,14 @@ export const useFuelFormStore = create<FuelFormStore>((set, get) => ({
       return state
     }),
 
+  setFuelRadioBtn: (id: number, categoryType: 'EQUIPMENT' | 'CONSTRUCTION') =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        fuelInfos: state.form.fuelInfos.map((m) => (m.id === id ? { ...m, categoryType } : m)),
+      },
+    })),
+
   newFuelData: () => {
     const form = get().form
     const { initialDateAt, ...restForm } = form // initialDateAt 제외
@@ -218,9 +227,10 @@ export const useFuelFormStore = create<FuelFormStore>((set, get) => ({
         return {
           id: item.id,
           outsourcingCompanyId: item.outsourcingCompanyId,
-          driverId: item.driverId,
+          driverId: null,
           equipmentId: item.equipmentId,
           fuelType: item.fuelType,
+          categoryType: item.categoryType,
           fuelAmount: item.fuelAmount,
           fileUrl: file?.fileUrl || null,
           originalFileName: file?.originalFileName || null,

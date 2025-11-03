@@ -154,6 +154,7 @@ export type FuelsItem = {
   id: number
   outsourcingCompanyId: number
   driverId: number
+  categoryType: string
   equipmentId: number
   specificationName?: string
   fuelType: string
@@ -461,6 +462,8 @@ type DailyReportFormStore = {
     field: keyof WorkDetailInfo,
     value: T,
   ) => void
+
+  setFuelRadioBtn: (id: number, categoryType: 'EQUIPMENT' | 'CONSTRUCTION') => void
 
   //payload 값
   newDailyReportData: () => void

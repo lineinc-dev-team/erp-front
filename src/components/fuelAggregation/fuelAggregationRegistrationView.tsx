@@ -7,6 +7,7 @@ import CommonButton from '../common/Button'
 import {
   Checkbox,
   Paper,
+  Radio,
   Table,
   TableBody,
   TableCell,
@@ -59,6 +60,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     updateMemo,
     toggleCheckAllItems,
     toggleCheckItem,
+    setFuelRadioBtn,
   } = useFuelFormStore()
 
   const { showSnackbar } = useSnackbarStore()
@@ -240,6 +242,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
         outsourcingCompanyId: item.outsourcingCompany?.id ?? 0,
         businessNumber: item.outsourcingCompany?.businessNumber ?? '',
         driverId: item?.driver?.id ?? 0,
+        categoryType: item.categoryTypeCode,
         specificationName: item?.equipment?.specification ?? '',
         fuelType: item.fuelTypeCode ?? '',
         fuelAmount: item.fuelAmount ?? '0',
@@ -387,7 +390,6 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     if (fuelInfo.length > 0) {
       for (const item of fuelInfo) {
         if (!item.outsourcingCompanyId) return '업체명을 선택하세요.'
-        if (!item.driverId) return '기사명을 선택하세요.'
         if (!item.equipmentId) return '차량번호를 선택하세요.'
         if (!item.specificationName?.trim()) return '규격이 올바르지 않습니다.'
         if (!item.fuelType?.trim()) return '유종을 선택하세요.'
@@ -477,52 +479,52 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
   const [selectedCompanyIds, setSelectedCompanyIds] = useState<{ [rowId: number]: number }>({})
   const [selectId, setSelectId] = useState(0)
 
-  const [selectedDriverIds, setSelectedDriverIds] = useState<{ [rowId: number]: number }>({})
+  // const [selectedDriverIds, setSelectedDriverIds] = useState<{ [rowId: number]: number }>({})
 
   const [driverOptionsByCompany, setDriverOptionsByCompany] = useState<Record<number, any[]>>({})
 
   // 업체명 id
 
-  const {
-    data: fuelDriver,
-    fetchNextPage: fuelDriverFetchNextPage,
-    hasNextPage: fuelDriverHasNextPage,
-    isFetching: fuelDriverIsFetching,
-    isLoading: fuelDriverLoading,
-  } = useInfiniteQuery({
-    queryKey: ['FuelDriverInfo', selectedCompanyIds[selectId] || 0, siteIdList],
+  // const {
+  //   data: fuelDriver,
+  //   fetchNextPage: fuelDriverFetchNextPage,
+  //   hasNextPage: fuelDriverHasNextPage,
+  //   isFetching: fuelDriverIsFetching,
+  //   isLoading: fuelDriverLoading,
+  // } = useInfiniteQuery({
+  //   queryKey: ['FuelDriverInfo', selectedCompanyIds[selectId] || 0, siteIdList],
 
-    queryFn: ({ pageParam }) =>
-      FuelDriverNameScroll({
-        pageParam,
-        id: selectedCompanyIds[selectId] || 0,
-        siteIdList: Number(siteIdList),
-        size: 200,
-      }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
-      const { sliceInfo } = lastPage.data
-      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
-    },
-    enabled: !!selectedCompanyIds[selectId],
-  })
+  //   queryFn: ({ pageParam }) =>
+  //     FuelDriverNameScroll({
+  //       pageParam,
+  //       id: selectedCompanyIds[selectId] || 0,
+  //       siteIdList: Number(siteIdList),
+  //       size: 200,
+  //     }),
+  //   initialPageParam: 0,
+  //   getNextPageParam: (lastPage) => {
+  //     const { sliceInfo } = lastPage.data
+  //     return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+  //   },
+  //   enabled: !!selectedCompanyIds[selectId],
+  // })
 
-  useEffect(() => {
-    if (!fuelDriver) return
+  // useEffect(() => {
+  //   if (!fuelDriver) return
 
-    const options = fuelDriver.pages
-      .flatMap((page) => page.data.content)
-      .map((user) => ({
-        id: user.id,
-        name: user.name,
-        deleted: user.deleted,
-      }))
+  //   const options = fuelDriver.pages
+  //     .flatMap((page) => page.data.content)
+  //     .map((user) => ({
+  //       id: user.id,
+  //       name: user.name,
+  //       deleted: user.deleted,
+  //     }))
 
-    setDriverOptionsByCompany((prev) => ({
-      ...prev,
-      [selectedCompanyIds[selectId]]: [{ id: 0, name: '선택', deleted: false }, , ...options],
-    }))
-  }, [fuelDriver, selectedCompanyIds, selectId])
+  //   setDriverOptionsByCompany((prev) => ({
+  //     ...prev,
+  //     [selectedCompanyIds[selectId]]: [{ id: 0, name: '선택', deleted: false }, , ...options],
+  //   }))
+  // }, [fuelDriver, selectedCompanyIds, selectId])
 
   const [selectedCarNumberIds, setSelectedCarNumberIds] = useState<{ [rowId: number]: number }>({})
 
@@ -937,7 +939,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                     sx={{ color: 'black' }}
                   />
                 </TableCell>
-                {['업체명', '기사명', '차량번호', '규격', '유종', '주유량', '첨부파일', '비고'].map(
+                {['업체명', '구분', '차량번호', '규격', '유종', '주유량', '첨부파일', '비고'].map(
                   (label) => (
                     <TableCell
                       key={label}
@@ -1024,12 +1026,6 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                           selectedCompany?.id || null,
                         )
 
-                        // 해당 row 기사, 차량 초기화
-                        setSelectedDriverIds((prev) => ({
-                          ...prev,
-                          [m.id]: 0,
-                        }))
-
                         setSelectedCarNumberIds((prev) => ({
                           ...prev,
                           [m.id]: 0,
@@ -1046,9 +1042,31 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                     />
                   </TableCell>
 
-                  {/* 기사명 */}
-
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                    <div className="flex items-center gap-4 justify-center">
+                      <label className="flex items-center gap-1">
+                        <Radio
+                          checked={m.categoryType === 'EQUIPMENT'}
+                          onChange={() => setFuelRadioBtn(m.id, 'EQUIPMENT')}
+                          value="EQUIPMENT"
+                          name={`categoryType-${m.id}`} // 각 행별로 고유 그룹
+                        />
+                        외주
+                      </label>
+
+                      <label className="flex items-center gap-1">
+                        <Radio
+                          checked={m.categoryType === 'CONSTRUCTION'}
+                          onChange={() => setFuelRadioBtn(m.id, 'CONSTRUCTION')}
+                          value="CONSTRUCTION"
+                          name={`categoryType-${m.id}`} // 각 행별로 고유 그룹
+                        />
+                        장비
+                      </label>
+                    </div>
+                  </TableCell>
+
+                  {/* <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <CommonSelect
                       fullWidth
                       value={selectedDriverIds[m.id] || m.driverId || 0}
@@ -1072,7 +1090,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                       }}
                       loading={fuelDriverLoading}
                     />
-                  </TableCell>
+                  </TableCell> */}
 
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                     <CommonSelect

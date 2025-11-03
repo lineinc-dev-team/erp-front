@@ -31,7 +31,8 @@ export interface FuelListInfoData {
   id: number
   driver: driverInfoData
   equipment: equipmentInfoData
-
+  categoryType?: string
+  categoryTypeCode?: string
   fileUrl: string
   originalFileName: string
   vehicleNumber: string
@@ -92,6 +93,7 @@ export type fuelDetailItem = {
   outsourcingCompanyName?: string
   driverId: number
   driverName?: string
+  categoryType: string
   equipmentId: number
   equipmentName?: string
   specificationName: string
@@ -128,6 +130,8 @@ type FuelFormStore = {
   form: FuelInfo
 
   reset: () => void
+
+  setFuelRadioBtn: (id: number, categoryType: 'EQUIPMENT' | 'CONSTRUCTION') => void
 
   // methods
   setField: <K extends keyof Omit<FuelInfo, 'reset' | 'setField'>>(
