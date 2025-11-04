@@ -284,6 +284,7 @@ export default function useOutSourcingContract() {
     queryFn: OutsourcingContractTaxIdInfoService,
   })
 
+  console.log('typeMethodOptionstypeMethodOptionstypeMethodOptions', typeMethodOptions)
   const taxMethodOptions = [{ code: 'BASE', name: '선택' }, ...(taxInfoId?.data ?? [])]
 
   const { data: daduInfoId } = useQuery({

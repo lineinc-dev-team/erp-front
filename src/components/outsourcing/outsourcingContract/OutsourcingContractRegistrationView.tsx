@@ -941,7 +941,10 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       new Date(form.contractEndDate) < new Date(form.contractStartDate)
     )
       return '계약 종료일은 시작일 이후여야 합니다.'
-    if (!form.contractAmount) return '계약금액을 입력해주세요.'
+
+    if (form.category !== 'SERVICE' && !form.contractAmount) {
+      return '계약금액을 입력해주세요.'
+    }
 
     // if (!(form.defaultDeductions?.split(',').filter(Boolean)?.length > 0)) {
     //   return '기본공제 항목을 선택해주세요.'
@@ -1370,7 +1373,14 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              계약금액(총액) <span className="text-red-500 ml-1">*</span>
+              {form.type === 'SERVICE' ? (
+                <>계약금액(총액)</>
+              ) : (
+                <>
+                  계약금액(총액)
+                  <span className="text-red-500 ml-1">*</span>
+                </>
+              )}
             </label>
             <div className="border border-gray-400 p-2 px-2 w-full">
               <AmountInput
