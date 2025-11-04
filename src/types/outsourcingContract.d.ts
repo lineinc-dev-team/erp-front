@@ -39,6 +39,7 @@ export type ContractDetailItems = {
   contractQuantity: string | number
   contractPrice: string | number
   outsourcingContractQuantity: string | number
+  outsourcingContractUnitPrice: number
   outsourcingContractPrice: string | number
   memo: string
 }
@@ -311,6 +312,8 @@ type OutsourcingContractFormStore = {
 
   // 공사항목에서만 쓰이는 계산
   getTotalOutsourceQty: () => number
+  getTotalOutsourcePrices: () => number
+
   getTotalOutsourceAmount: () => number
   getTotalContractQty: () => number
   getTotalContractAmount: () => number

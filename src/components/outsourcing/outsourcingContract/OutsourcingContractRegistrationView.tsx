@@ -73,6 +73,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     getTotalContractQty,
     getTotalContractAmount,
     getTotalOutsourceQty,
+    getTotalOutsourcePrices,
     getTotalOutsourceAmount,
     removeSubEquipment,
     addSubEquipment,
@@ -259,6 +260,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     vehicleNumber: '차량번호',
     contractQuantity: '도급 수량',
     outsourcingContractPrice: '외주계약금액',
+    outsourcingContractUnitPrice: '외주계약금액의 단가',
     item: '단위',
     unit: '단가',
     outsourcingContractQuantity: '외주계약금액의 수량',
@@ -504,9 +506,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       setField('typeDescription', client?.typeDescription)
       setField('contractName', client?.contractName)
 
-
-
-
       setField('workTypeName', client?.workTypeName)
       // 계약 기간
       setField('contractStartDate', new Date(client.contractStartDate) || null)
@@ -575,6 +574,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                 contractQuantity: detail.contractQuantity,
                 contractPrice: detail.contractPrice,
                 outsourcingContractQuantity: detail.outsourcingContractQuantity,
+                outsourcingContractUnitPrice: detail.outsourcingContractUnitPrice,
                 outsourcingContractPrice: detail.outsourcingContractPrice,
                 memo: detail.memo,
               })),
@@ -2076,7 +2076,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     계약금액 <span className="text-red-500 ml-1">*</span>
                   </TableCell>
                   <TableCell
-                    colSpan={2}
+                    colSpan={3}
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
@@ -2116,6 +2116,12 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
                     수량 <span className="text-red-500 ml-1">*</span>
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
+                  >
+                    단가 <span className="text-red-500 ml-1">*</span>
                   </TableCell>
                   <TableCell
                     align="center"
@@ -2343,6 +2349,39 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       ))}
                     </TableCell>
 
+                    {/* 외주계약금액에 단가  */}
+
+                    <TableCell
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top' }}
+                    >
+                      {m.items.map((item) => (
+                        <div key={item.id} className="flex gap-2 mt-1 items-center">
+                          <TextField
+                            size="small"
+                            placeholder="숫자만"
+                            value={formatNumber(item.outsourcingContractUnitPrice)}
+                            onChange={(e) => {
+                              const numericValue = unformatNumber(e.target.value)
+
+                              updateContractDetailField(
+                                m.id,
+                                item.id,
+                                'outsourcingContractUnitPrice',
+                                numericValue,
+                              )
+                            }}
+                            inputProps={{
+                              inputMode: 'numeric',
+                              pattern: '[0-9]*',
+                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                            }}
+                            fullWidth
+                          />
+                        </div>
+                      ))}
+                    </TableCell>
+
                     {/* 외주계약금액 금액 */}
                     <TableCell
                       align="center"
@@ -2452,11 +2491,18 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                   >
                     {getTotalContractAmount().toLocaleString()}
                   </TableCell>
+
                   <TableCell
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
                   >
                     {getTotalOutsourceQty().toLocaleString()}
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                  >
+                    {getTotalOutsourcePrices().toLocaleString()}
                   </TableCell>
                   <TableCell
                     align="center"

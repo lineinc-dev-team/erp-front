@@ -245,6 +245,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
               contractQuantity: 0,
               contractPrice: 0,
               outsourcingContractQuantity: 0,
+              outsourcingContractUnitPrice: 0,
               outsourcingContractPrice: 0,
               memo: '',
             },
@@ -665,6 +666,18 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
     }, 0)
   },
 
+  // 외주계약 단가 총합
+  getTotalOutsourcePrices: () => {
+    const { contractManagers } = get().form
+    return contractManagers.reduce((sum, manager) => {
+      const qtySum = manager.items.reduce((innerSum, item) => {
+        const qty = Number(item.outsourcingContractUnitPrice)
+        return innerSum + (isNaN(qty) ? 0 : qty)
+      }, 0)
+      return sum + qtySum
+    }, 0)
+  },
+
   // 외주계약 금액 총합
   getTotalOutsourceAmount: () => {
     const { contractManagers } = get().form
@@ -697,6 +710,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
                     contractQuantity: 0,
                     contractPrice: 0,
                     outsourcingContractQuantity: 0,
+                    outsourcingContractUnitPrice: 0,
                     outsourcingContractPrice: 0,
                     memo: '',
                   },
