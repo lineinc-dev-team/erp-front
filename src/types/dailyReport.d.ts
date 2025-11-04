@@ -77,6 +77,20 @@ export type directContractsItem = {
   temporaryLaborName: string
   modifyDate?: string
 }
+
+export type directContractOutsourcingsItem = {
+  id: T
+  outsourcingCompanyId: number
+  outsourcingCompanyContractId: number
+  laborId: number
+  workQuantity: number
+  memo: string
+  fileUrl?: string
+  originalFileName?: string
+  files: FileUploadInfo[]
+  modifyDate?: string
+}
+
 // 외주(공사) 타입 설정
 
 export interface OutsourcingConstructionItem {
@@ -245,6 +259,12 @@ export type DailyFormState = {
   directContracts: directContractsItem[]
   checkeddirectContractsIds: number[]
 
+  // 직영/용역에서 외주 데이터 추가
+
+  directContractOutsourcings: directContractOutsourcingsItem[]
+  checkedDirectContractOutsourcingIds: number[]
+
+  //외주 데이터
   outsourcingConstructions: OutsourcingsItem[]
   checkedOutsourcingIds: number[]
 
@@ -306,6 +326,7 @@ type DailyReportFormStore = {
   reset: () => void
   resetEmployees: () => void
   resetDirectContracts: () => void
+  resetDirectContractOut: () => void
   resetOutsourcing: () => void
   resetEquipment: () => void
   resetFuel: () => void
@@ -350,6 +371,7 @@ type DailyReportFormStore = {
       | 'EmployeeFiles'
       | 'directContracts'
       | 'directContractFiles'
+      | 'directContractOutsourcings'
       | 'outsourcings'
       | 'outsourcingFiles'
       | 'equipment'
@@ -374,6 +396,7 @@ type DailyReportFormStore = {
       | 'EmployeeFiles'
       | 'directContracts'
       | 'directContractFiles'
+      | 'directContractOutsourcings'
       | 'outsourcings'
       | 'outsourcingFiles'
       | 'equipment'
@@ -396,6 +419,7 @@ type DailyReportFormStore = {
       | 'EmployeeFiles'
       | 'directContracts'
       | 'directContractFiles'
+      | 'directContractOutsourcings'
       | 'outsourcings'
       | 'outsourcingFiles'
       | 'equipment'
@@ -416,6 +440,7 @@ type DailyReportFormStore = {
       | 'EmployeeFiles'
       | 'directContracts'
       | 'directContractFiles'
+      | 'directContractOutsourcings'
       | 'outsourcings'
       | 'outsourcingFiles'
       | 'equipment'
@@ -435,6 +460,7 @@ type DailyReportFormStore = {
       | 'EmployeeFiles'
       | 'directContracts'
       | 'directContractFiles'
+      | 'directContractOutsourcings'
       | 'equipment'
       | 'equipmentFile'
       | 'outsourcings'
@@ -469,6 +495,8 @@ type DailyReportFormStore = {
   newDailyReportData: () => void
   modifyEmployees: () => void
   modifyDirectContracts: () => void
+  modifyDirectContractOutsourcing: () => void
+
   modifyOutsourcing: () => void
   modifyEquipment: () => void
 

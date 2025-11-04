@@ -30,6 +30,8 @@ import {
   GetContractByFilterService,
   GetContractGroup,
   GetContractNameInfoService,
+  GetDirectContractByFilterService,
+  GetDirectContractNameInfoService,
   GetEmployeesByFilterService,
   GetEquipmentByFilterService,
   GetFuelByFilterService,
@@ -80,6 +82,7 @@ export default function DailyReportRegistrationView() {
     resetInputStatus,
     resetMaterialStatus,
     resetDirectContracts,
+    resetDirectContractOut,
     resetOutsourcing,
     resetEquipment,
     resetFuel,
@@ -182,6 +185,12 @@ export default function DailyReportRegistrationView() {
   // const [workerOptionsByCompany] = useState<Record<number, any[]>>({})
 
   const [ContarctNameOptionsByCompany, setContarctNameOptionsByCompany] = useState<
+    Record<number, any[]>
+  >({})
+
+  // 직영/용역에서 외주의 계약명 가져오는 변수
+
+  const [directContarctNameOptionsByCompany, setDirectContarctNameOptionsByCompany] = useState<
     Record<number, any[]>
   >({})
 
@@ -429,6 +438,82 @@ export default function DailyReportRegistrationView() {
   const ContractCheckedIds = form.checkeddirectContractsIds
   const isContractAllChecked =
     contractData.length > 0 && ContractCheckedIds.length === contractData.length
+
+  // 직영/용역 계약직에서 외주 데이터 불러오는 탭 추가
+
+  const {
+    // data: employeesData,
+    fetchNextPage: directContractFetchNextPage,
+    hasNextPage: directContractHasNextPage,
+    isFetching: directContractFetching,
+    refetch: directContractRefetch, // 조회 버튼에서 직접 실행할 수 있게
+  } = useInfiniteQuery({
+    queryKey: ['directContract', form.siteId, form.siteProcessId, form.reportDate],
+    queryFn: ({ pageParam }) =>
+      GetDirectContractByFilterService({
+        pageParam,
+        siteId: form.siteId,
+        siteProcessId: form.siteProcessId,
+        reportDate: form.reportDate ? form.reportDate.toISOString().slice(0, 10) : '',
+      }),
+    enabled: false, // 버튼 누르기 전에는 자동 조회 안 되게
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      const nextPage = sliceInfo.page + 1
+      return sliceInfo.hasNext ? nextPage : undefined
+    },
+  })
+
+  const handleDirectContractRefetch = async () => {
+    const res = await directContractRefetch()
+    if (!res.data) return
+
+    // content 배열 합치기
+    const allContract = res.data.pages.flatMap((page) => page.data.content)
+
+    if (allContract.length === 0) {
+      // 데이터가 아예 없는 경우
+      setIsEditMode(false)
+      resetDirectContractOut()
+      return
+    }
+
+    // 데이터가 있는 경우
+    const fetched = allContract.map((item: any) => ({
+      id: item.id,
+      outsourcingCompanyId: item.outsourcingCompany?.id ?? null,
+      outsourcingCompanyContractId: item.outsourcingCompanyContract.id ?? null,
+      laborId: item.labor?.id ?? 0,
+      workQuantity: item.workQuantity,
+      memo: item.memo,
+
+      files:
+        item.fileUrl && item.originalFileName
+          ? [
+              {
+                fileUrl: item.fileUrl,
+                originalFileName: item.originalFileName,
+              },
+            ]
+          : [],
+
+      modifyDate: `${getTodayDateString(item.createdAt)} / ${getTodayDateString(item.updatedAt)}`,
+    }))
+
+    setIsEditMode(true)
+    setField('directContractOutsourcings', fetched)
+  }
+
+  const directContractOutsourcings = useMemo(
+    () => form.directContractOutsourcings,
+    [form.directContractOutsourcings],
+  )
+
+  const directContractOutsourcingCheckedIds = form.checkedDirectContractOutsourcingIds
+  const isDirectContractOutsourcingsAllChecked =
+    directContractOutsourcings.length > 0 &&
+    directContractOutsourcingCheckedIds.length === directContractOutsourcings.length
 
   // 외주(공사) 조회
 
@@ -1391,6 +1476,7 @@ export default function DailyReportRegistrationView() {
       }
       if (activeTab === '직영/용역') {
         handleContractRefetch()
+        handleDirectContractRefetch()
         handleContractEvidenceRefetch()
       }
       if (activeTab === '외주(공사)') {
@@ -1970,6 +2056,124 @@ export default function DailyReportRegistrationView() {
       }
     })
   }, [ContractOutsourcings])
+
+  // 직영/용역에서 외주 데이터 조회 시 계약한 데이터 가져오기
+
+  const {
+    data: directContractNameInfo,
+    fetchNextPage: directContractNameFetchNextPage,
+    hasNextPage: directContractNamehasNextPage,
+    isFetching: directContractNameFetching,
+    isLoading: directContractNameLoading,
+  } = useInfiniteQuery({
+    queryKey: ['directContractNameInfo', selectedCompanyIds[selectId]],
+    queryFn: ({ pageParam = 0 }) =>
+      GetDirectContractNameInfoService({
+        pageParam,
+        outsourcingCompanyId: selectedCompanyIds[selectId] || 0,
+        size: 100,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+    },
+    enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
+  })
+
+  useEffect(() => {
+    if (!directContractNameInfo) return
+
+    const options = directContractNameInfo.pages
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        name: user.contractName,
+      }))
+
+    setDirectContarctNameOptionsByCompany((prev) => ({
+      ...prev,
+      [selectedCompanyIds[selectId]]: [
+        {
+          id: 0,
+          name: '선택',
+        },
+        ...options,
+      ],
+    }))
+  }, [directContractNameInfo, selectedCompanyIds, selectId])
+
+  // 직영에서 상세 데이터 가져올 시 상세 useEffect 넣어줘야 함 (외주의 상세 데이터 조회 계약명)
+
+  const directContractOutsourcingsDetail = directContractOutsourcings
+
+  useEffect(() => {
+    if (!directContractOutsourcingsDetail.length) return
+
+    const configList = [
+      {
+        key: 'direct', // 구분자
+        api: GetDirectContractNameInfoService,
+        setState: setDirectContarctNameOptionsByCompany,
+        optionsByCompany: ContarctNameOptionsByCompany, // 직접 연결 시 state 구분 가능
+        extract: (row: any) => ({
+          companyId: row.outsourcingCompanyId,
+          selectedId: row.outsourcingCompanyContractId,
+        }),
+        mapData: (item: any) => ({
+          id: item.id,
+          name: item.contractName,
+        }),
+      },
+      {
+        key: 'normal',
+        api: GetContractNameInfoService,
+        setState: setContarctNameOptionsByCompany,
+        optionsByCompany: ContarctNameOptionsByCompany,
+        extract: (row: any) => ({
+          companyId: row.outsourcingCompanyId,
+          selectedId: row.laborId,
+        }),
+        mapData: (item: any) => ({
+          id: item.id,
+          name: item.name,
+        }),
+      },
+    ]
+
+    configList.forEach(({ api, setState, optionsByCompany, extract, mapData }) => {
+      directContractOutsourcingsDetail.forEach(async (row) => {
+        const { companyId, selectedId } = extract(row)
+        if (companyId === null) return
+        if (optionsByCompany[companyId]) return
+
+        try {
+          const res = await api({
+            pageParam: 0,
+            outsourcingCompanyId: companyId,
+            size: 200,
+          })
+
+          const options = res.data.content.map(mapData)
+          const exists = options.some((opt: any) => opt.id === selectedId)
+
+          setState((prev: any) => ({
+            ...prev,
+            [companyId]: [
+              {
+                id: 0,
+                name: '선택',
+              },
+              ...options,
+              ...(selectedId && !exists ? [{ id: selectedId, name: '' }] : []),
+            ],
+          }))
+        } catch (err) {
+          console.error('업체별 데이터 조회 실패', err)
+        }
+      })
+    })
+  }, [directContractOutsourcingsDetail])
 
   const {
     data: contractGroupList,
@@ -3798,6 +4002,350 @@ export default function DailyReportRegistrationView() {
                             value={m.modifyDate ?? ''}
                             onChange={(value) =>
                               updateItemField('directContracts', m.checkId, 'modifyDate', value)
+                            }
+                            disabled
+                            className="flex-1"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+
+              {employeesFetching && <div className="p-2 text-center">불러오는 중...</div>}
+            </TableContainer>
+          </div>
+
+          {/* 직영에서 사용하는 외주  데이터 */}
+
+          <div>
+            <div className="flex justify-between items-center mt-10 mb-2">
+              <span className="font-bold mb-4"> [외주]</span>
+              <div className="flex gap-4">
+                <CommonButton
+                  label="삭제"
+                  className="px-7"
+                  variant="danger"
+                  onClick={() => removeCheckedItems('directContractOutsourcings')}
+                  disabled={
+                    isHeadOfficeInfo
+                      ? false // 본사 정보이면 무조건 활성화
+                      : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                        detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
+                  }
+                />
+                <CommonButton
+                  label="추가"
+                  className="px-7"
+                  variant="secondary"
+                  onClick={() => addItem('directContractOutsourcings')}
+                  disabled={
+                    isHeadOfficeInfo
+                      ? false // 본사 정보이면 무조건 활성화
+                      : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                        detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
+                  }
+                />
+              </div>
+            </div>
+            <TableContainer
+              component={Paper}
+              onScroll={(e) => {
+                const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
+                if (scrollHeight - scrollTop <= clientHeight * 1.2) {
+                  if (directContractHasNextPage && !directContractFetching) {
+                    directContractFetchNextPage()
+                  }
+                }
+              }}
+            >
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <Checkbox
+                        checked={isDirectContractOutsourcingsAllChecked}
+                        indeterminate={
+                          directContractOutsourcingCheckedIds.length > 0 &&
+                          !isDirectContractOutsourcingsAllChecked
+                        }
+                        onChange={(e) =>
+                          toggleCheckAllItems('directContractOutsourcings', e.target.checked)
+                        }
+                        sx={{ color: 'black' }}
+                      />
+                    </TableCell>
+                    {['업체명', '계약명', '이름', '공수', '첨부파일', '비고', '등록/수정일'].map(
+                      (label) => (
+                        <TableCell
+                          key={label}
+                          align="center"
+                          sx={{
+                            backgroundColor: '#D1D5DB',
+                            border: '1px solid  #9CA3AF',
+                            color: 'black',
+                            fontWeight: 'bold',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
+                            label
+                          ) : (
+                            <div className="flex items-center justify-center">
+                              <span>{label}</span>
+                              <span className="text-red-500 ml-1">*</span>
+                            </div>
+                          )}
+                        </TableCell>
+                      ),
+                    )}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {directContractOutsourcings.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                        외주 데이터가 없습니다.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    directContractOutsourcings.map((m) => (
+                      <TableRow key={m.id}>
+                        <TableCell
+                          padding="checkbox"
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF' }}
+                        >
+                          <Checkbox
+                            checked={directContractOutsourcingCheckedIds.includes(m.id)}
+                            onChange={(e) =>
+                              toggleCheckItem('directContractOutsourcings', m.id, e.target.checked)
+                            }
+                          />
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <CommonSelect
+                            fullWidth
+                            // selectedCompanyIds[m.id] ||
+                            value={m.outsourcingCompanyId || 0}
+                            onChange={async (value) => {
+                              const selectedCompany = updatedOutCompanyOptions.find(
+                                (opt) => Number(opt.id) === Number(value),
+                              )
+
+                              console.log('현재 업체명을 찾기', selectedCompany)
+
+                              setSelectedCompanyIds((prev) => ({
+                                ...prev,
+                                [m.id]: selectedCompany ? selectedCompany.id : 0,
+                              }))
+
+                              setSelectId(m.id)
+
+                              updateItemField(
+                                'directContractOutsourcings',
+                                m.id,
+                                'outsourcingCompanyId',
+                                selectedCompany?.id || null,
+                              )
+                            }}
+                            options={updatedOutCompanyOptions}
+                            onScrollToBottom={() => {
+                              if (withEquipmenthasNextPage && !withEquipmentFetching)
+                                withEquipmentFetchNextPage()
+                            }}
+                            loading={withEquipmentLoading}
+                          />
+                        </TableCell>
+
+                        {/* 계약명 */}
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <CommonSelect
+                            fullWidth
+                            value={m.outsourcingCompanyContractId || 0}
+                            onChange={async (value) => {
+                              const selectedDirectContractName = (
+                                directContarctNameOptionsByCompany[m.outsourcingCompanyId] ?? []
+                              ).find((opt) => opt.id === value)
+
+                              console.log(
+                                'selectedDirectContractNameselectedDirectContractName',
+                                selectedDirectContractName,
+                              )
+
+                              if (!selectedDirectContractName) return
+
+                              updateItemField(
+                                'directContractOutsourcings',
+                                m.id,
+                                'outsourcingCompanyContractId',
+                                value,
+                              )
+                            }}
+                            options={
+                              directContarctNameOptionsByCompany[m.outsourcingCompanyId] ?? [
+                                { id: 0, name: '선택' },
+                              ]
+                            }
+                            onScrollToBottom={() => {
+                              if (directContractNamehasNextPage && !directContractNameFetching)
+                                directContractNameFetchNextPage()
+                            }}
+                            loading={directContractNameLoading}
+                          />
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <CommonSelect
+                            value={m.laborId || 0}
+                            onChange={(value) => {
+                              const selectedContractName = (
+                                ContarctNameOptionsByCompany[m.outsourcingCompanyId] ?? []
+                              ).find((opt) => opt.id === value)
+
+                              if (!selectedContractName) return
+
+                              updateItemField('directContractOutsourcings', m.id, 'laborId', value)
+                            }}
+                            options={
+                              ContarctNameOptionsByCompany[m.outsourcingCompanyId] ?? [
+                                { id: 0, name: '선택' },
+                              ]
+                            }
+                            onScrollToBottom={() => {
+                              if (contractNamehasNextPage && !contractNameFetching)
+                                contractNameFetchNextPage()
+                            }}
+                            loading={contractNameLoading}
+                          />
+                        </TableCell>
+
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                        >
+                          <TextField
+                            size="small"
+                            type="number" // type을 number로 변경
+                            placeholder="숫자를 입력해주세요."
+                            inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
+                            value={m.workQuantity ?? ''}
+                            onChange={(e) => {
+                              const value = e.target.value
+                              const numericValue = value === '' ? null : parseFloat(value)
+
+                              // dailyWork 배열 idx 위치 업데이트
+                              updateItemField(
+                                'directContractOutsourcings',
+                                m.id,
+                                'workQuantity',
+                                numericValue,
+                              )
+                            }}
+                            sx={{
+                              height: '100%',
+                              '& .MuiInputBase-root': {
+                                height: '100%',
+                                fontSize: '1rem',
+                              },
+                              '& input': {
+                                textAlign: 'center',
+                                padding: '10px',
+                                MozAppearance: 'textfield', // Firefox
+                                '&::-webkit-outer-spin-button': {
+                                  // Chrome, Safari
+                                  WebkitAppearance: 'none',
+                                  margin: 0,
+                                },
+                                '&::-webkit-inner-spin-button': {
+                                  // Chrome, Safari
+                                  WebkitAppearance: 'none',
+                                  margin: 0,
+                                },
+                              },
+                            }}
+                          />
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                            <CommonFileInput
+                              acceptedExtensions={[
+                                'pdf',
+                                'txt',
+                                'rtf',
+                                'docx',
+                                'hwp',
+                                'xlsx',
+                                'csv',
+                                'ods',
+                                'pptx',
+                                'ppt',
+                                'odp',
+                                'jpg',
+                                'jpeg',
+                                'png',
+                                'gif',
+                                'tif',
+                                'tiff',
+                                'bmp',
+                                'zip',
+                                '7z',
+                                'mp3',
+                                'wav',
+                                'mp4',
+                                'mov',
+                                'avi',
+                                'wmv',
+                                'dwg',
+                              ]}
+                              multiple={false}
+                              files={m.files} // 각 항목별 files
+                              onChange={(newFiles) => {
+                                updateItemField(
+                                  'directContractOutsourcings',
+                                  m.id,
+                                  'files',
+                                  newFiles.slice(0, 1),
+                                )
+                              }}
+                              uploadTarget="WORK_DAILY_REPORT"
+                            />
+                          </div>
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <TextField
+                            size="small"
+                            placeholder="500자 이하 텍스트 입력"
+                            value={m.memo}
+                            onChange={(e) =>
+                              updateItemField(
+                                'directContractOutsourcings',
+                                m.id,
+                                'memo',
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', width: '260px' }}
+                        >
+                          <CommonInput
+                            placeholder="-"
+                            value={m.modifyDate ?? ''}
+                            onChange={(value) =>
+                              updateItemField(
+                                'directContractOutsourcings',
+                                m.id,
+                                'modifyDate',
+                                value,
+                              )
                             }
                             disabled
                             className="flex-1"
@@ -7482,6 +8030,7 @@ export default function DailyReportRegistrationView() {
                 createDailyMutation.mutate(undefined, {
                   onSuccess: () => {
                     handleContractRefetch() // 등록 성공 후 실행
+                    handleDirectContractRefetch()
                     setSaved(true)
                   },
                 })

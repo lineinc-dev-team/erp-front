@@ -4,6 +4,7 @@ import {
   DailyDataSearchState,
   DailyProofAttachedFile,
   DailyReportFormStore,
+  directContractOutsourcingsItem,
   directContractsItem,
   EmployeesItem,
   EquipmentsItem,
@@ -87,6 +88,9 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
     directContracts: [],
     checkeddirectContractsIds: [],
 
+    directContractOutsourcings: [],
+    checkedDirectContractOutsourcingIds: [],
+
     contractProofFile: [],
     contractProofCheckId: [],
 
@@ -153,6 +157,9 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
 
         directContracts: [],
         checkeddirectContractsIds: [],
+
+        directContractOutsourcings: [],
+        checkedDirectContractOutsourcingIds: [],
 
         contractProofFile: [],
         contractProofCheckId: [],
@@ -250,6 +257,14 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       form: {
         ...state.form,
         directContracts: [],
+      },
+    })),
+
+  resetDirectContractOut: () =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        directContractOutsourcings: [],
       },
     })),
 
@@ -444,6 +459,23 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         }
         return {
           form: { ...state.form, directContracts: [...state.form.directContracts, newItem] },
+        }
+      } else if (type === 'directContractOutsourcings') {
+        const newItem: directContractOutsourcingsItem = {
+          // id: Date.now(),
+          id: Date.now(),
+          outsourcingCompanyId: 0,
+          outsourcingCompanyContractId: 0,
+          laborId: 0,
+          workQuantity: 0,
+          files: [],
+          memo: '',
+        }
+        return {
+          form: {
+            ...state.form,
+            directContractOutsourcings: [...state.form.directContractOutsourcings, newItem],
+          },
         }
       } else if (type === 'outsourcings') {
         const newItem: OutsourcingsItem = {
@@ -675,6 +707,17 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           },
           lastModifiedRowId: id,
         }
+      }
+
+      if (type === 'directContractOutsourcings') {
+        return {
+          form: {
+            ...state.form,
+            directContractOutsourcings: state.form.directContractOutsourcings.map((m) =>
+              m.id === id ? { ...m, [field]: value } : m,
+            ),
+          },
+        }
       } else if (type === 'outsourcingFiles') {
         return {
           form: {
@@ -813,6 +856,15 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
               : state.form.checkeddirectContractsIds.filter((cid) => cid !== id),
           },
         }
+      } else if (type === 'directContractOutsourcings') {
+        return {
+          form: {
+            ...state.form,
+            checkedDirectContractOutsourcingIds: checked
+              ? [...state.form.checkedDirectContractOutsourcingIds, id]
+              : state.form.checkedDirectContractOutsourcingIds.filter((cid) => cid !== id),
+          },
+        }
       } else if (type === 'outsourcingFiles') {
         return {
           form: {
@@ -943,6 +995,15 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
               : [],
           },
         }
+      } else if (type === 'directContractOutsourcings') {
+        return {
+          form: {
+            ...state.form,
+            checkedDirectContractOutsourcingIds: checked
+              ? state.form.directContractOutsourcings.map((m) => m.id)
+              : [],
+          },
+        }
       } else if (type === 'outsourcingFiles') {
         return {
           form: {
@@ -995,6 +1056,16 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
               (m) => !state.form.checkedManagerIds.includes(m.id),
             ),
             checkedManagerIds: [],
+          },
+        }
+      } else if (type === 'directContractOutsourcings') {
+        return {
+          form: {
+            ...state.form,
+            directContractOutsourcings: state.form.directContractOutsourcings.filter(
+              (m) => !state.form.checkedDirectContractOutsourcingIds.includes(m.id),
+            ),
+            checkedDirectContractOutsourcingIds: [],
           },
         }
       } else if (type === 'mainProcesses') {
@@ -1478,6 +1549,20 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         }
       }),
 
+      directContractOutsourcings: form.directContractOutsourcings.map((item) => {
+        const file = item.files[0]
+
+        return {
+          outsourcingCompanyId: item.outsourcingCompanyId,
+          outsourcingCompanyContractId: item.outsourcingCompanyContractId,
+          laborId: item.laborId,
+          workQuantity: item.workQuantity,
+          fileUrl: file?.fileUrl || null,
+          originalFileName: file?.originalFileName || null,
+          memo: item.memo,
+        }
+      }),
+
       outsourcingConstructions: form.outsourcingConstructions.map((contract) => ({
         id: contract.id,
         outsourcingCompanyId: contract.outsourcingCompanyId,
@@ -1636,6 +1721,40 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         fileUrl: item.files?.[0]?.fileUrl ?? null,
         originalFileName: item.files?.[0]?.originalFileName ?? null,
       })),
+
+      outsourcings: undefined,
+      outsourcingEquipments: undefined,
+      fuelInfos: undefined,
+      works: undefined,
+      mainProcesses: undefined,
+    }
+  },
+
+  modifyDirectContractOutsourcing: () => {
+    const form = get().form
+    return {
+      files: undefined,
+      siteId: undefined,
+      siteProcessId: undefined,
+      reportDate: undefined,
+      weather: undefined,
+      employees: undefined,
+
+      directContractOutsourcings: form.directContractOutsourcings.map(
+        (item: directContractOutsourcingsItem) => ({
+          id: item.id, // 신규면 0 or undefined, 수정이면 기존 id
+          outsourcingCompanyId: item.outsourcingCompanyId, // 선택된 외주업체 id
+          outsourcingCompanyContractId: item.outsourcingCompanyContractId,
+          laborId: item.laborId, // 선택된 근로자 id
+          workQuantity: item.workQuantity, // 수량
+          memo: item.memo, // 메모
+
+          fileUrl: item.files?.[0]?.fileUrl ?? null,
+          originalFileName: item.files?.[0]?.originalFileName ?? null,
+        }),
+      ),
+
+      directContracts: undefined,
 
       outsourcings: undefined,
       outsourcingEquipments: undefined,

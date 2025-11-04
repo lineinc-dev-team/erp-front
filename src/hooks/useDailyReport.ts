@@ -10,6 +10,7 @@ import {
   GetWithEquipmentService,
   ModifyContractReport,
   ModifyDailyFuel,
+  ModifyDirectContractReport,
   ModifyEmployeesReport,
   ModifyEquipmentReport,
   ModifyFileReport,
@@ -243,7 +244,7 @@ export function useDailyReport() {
   // 직영/계약직 수정
 
   const ContractModifyMutation = useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       siteId,
       siteProcessId,
       reportDate,
@@ -251,7 +252,14 @@ export function useDailyReport() {
       siteId: number
       siteProcessId: number
       reportDate: string
-    }) => ModifyContractReport({ siteId, siteProcessId, reportDate }),
+    }) => {
+      const res1 = await ModifyContractReport({ siteId, siteProcessId, reportDate })
+
+      const res2 = await ModifyDirectContractReport({ siteId, siteProcessId, reportDate })
+
+      // 필요하다면 두 응답을 함께 리턴
+      return { res1, res2 }
+    },
 
     onSuccess: () => {
       showSnackbar('출역일보(직영)이 수정 되었습니다.', 'success')

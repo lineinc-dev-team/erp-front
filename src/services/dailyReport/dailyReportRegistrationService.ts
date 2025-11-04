@@ -149,6 +149,45 @@ export async function GetContractNameInfoService({
   return data
 }
 
+// 외주 (직영/용역)에서의 계약명 가져오기
+
+// 계약/인력 쪽 인력 데이터 조회
+export async function GetDirectContractNameInfoService({
+  pageParam = 0,
+  size = 200,
+  keyword = '',
+  outsourcingCompanyId = 0,
+}: {
+  pageParam?: number
+  size?: number
+  outsourcingCompanyId?: string | number | ''
+  keyword?: string
+}) {
+  const url = `${
+    API.OUTSOURCINGCONTRACT
+  }/search?page=${pageParam}&size=${size}&outsourcingCompanyId=${outsourcingCompanyId}&keyword=${encodeURIComponent(
+    keyword,
+  )}&types=CONSTRUCTION`
+
+  const resData = await fetch(url, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+
 // 직영/계약직 수정
 
 export async function ModifyContractReport({
@@ -165,6 +204,57 @@ export async function ModifyContractReport({
 
   const res = await fetch(
     `${API.DAILYREPORT}/direct-contracts?siteId=${siteId}&siteProcessId=${siteProcessId}&reportDate=${reportDate}`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      credentials: 'include',
+    },
+  )
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
+  }
+
+  return await res.status
+}
+
+// 직영/계약직에서 외주 부분 수정
+
+// 직영/계약직 수정
+
+export async function ModifyDirectContractReport({
+  siteId,
+  siteProcessId,
+  reportDate,
+}: {
+  siteId: number
+  siteProcessId: number
+  reportDate: string
+}) {
+  const { modifyDirectContractOutsourcing } = useDailyFormStore.getState()
+  const payload = modifyDirectContractOutsourcing()
+
+  const res = await fetch(
+    `${API.DAILYREPORT}/direct-contract-outsourcings?siteId=${siteId}&siteProcessId=${siteProcessId}&reportDate=${reportDate}`,
     {
       method: 'PATCH',
       headers: {
@@ -288,6 +378,46 @@ export async function GetContractByFilterService({
   })
 
   const res = await fetch(`${API.DAILYREPORT}/direct-contracts?${query.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
+  }
+
+  const data = await res.json()
+  return data
+}
+
+// 직영/용역에서 외주 데이터 조회 탭
+
+export async function GetDirectContractByFilterService({
+  pageParam = 0,
+  size = 100,
+  sort = 'id,asc',
+  siteId = 0,
+  siteProcessId = 0,
+  reportDate = '',
+}) {
+  const query = new URLSearchParams({
+    page: pageParam.toString(),
+    size: size.toString(),
+    sort,
+    siteId: siteId.toString(),
+    siteProcessId: siteProcessId.toString(),
+    reportDate,
+  })
+
+  const res = await fetch(`${API.DAILYREPORT}/direct-contract-outsourcings?${query.toString()}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
