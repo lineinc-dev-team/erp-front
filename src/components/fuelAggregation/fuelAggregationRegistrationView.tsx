@@ -1140,12 +1140,12 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                     <div className="flex items-center gap-4 justify-center">
                       <label className="flex items-center gap-1">
                         <Radio
-                          checked={m.categoryType === 'EQUIPMENT'}
+                          checked={m.categoryType === 'CONSTRUCTION'}
                           onChange={() => {
-                            setFuelRadioBtn(m.id, 'EQUIPMENT')
+                            setFuelRadioBtn(m.id, 'CONSTRUCTION')
                             updateItemField('FuelInfo', m.id, 'equipmentId', '')
                           }}
-                          value="EQUIPMENT"
+                          value="CONSTRUCTION"
                           name={`categoryType-${m.id}`} // 각 행별로 고유 그룹
                         />
                         외주
@@ -1153,12 +1153,12 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
 
                       <label className="flex items-center gap-1">
                         <Radio
-                          checked={m.categoryType === 'CONSTRUCTION'}
+                          checked={m.categoryType === 'EQUIPMENT'}
                           onChange={() => {
-                            setFuelRadioBtn(m.id, 'CONSTRUCTION')
+                            setFuelRadioBtn(m.id, 'EQUIPMENT')
                             updateItemField('FuelInfo', m.id, 'equipmentId', '')
                           }}
-                          value="CONSTRUCTION"
+                          value="EQUIPMENT"
                           name={`categoryType-${m.id}`} // 각 행별로 고유 그룹
                         />
                         장비
