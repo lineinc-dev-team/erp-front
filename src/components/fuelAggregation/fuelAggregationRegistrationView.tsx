@@ -259,8 +259,8 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
             : [],
         modifyDate: `${getTodayDateString(item.createdAt)} / ${getTodayDateString(item.updatedAt)}`,
         subEquipments: (item.subEquipments ?? []).map((sub: any) => ({
-          id: sub.subEquipment?.id ?? sub.id,
-          checkId: sub.subEquipment?.id ?? sub.id,
+          id: sub.id,
+          checkId: sub.id,
           outsourcingCompanyContractSubEquipmentId: sub.subEquipment?.id || '-',
           fuelType: sub.fuelTypeCode || '',
           fuelAmount: sub.fuelAmount ?? 0,
