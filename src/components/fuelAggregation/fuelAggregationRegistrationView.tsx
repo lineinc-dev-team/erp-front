@@ -38,7 +38,7 @@ import {
   FuelDriverNameScroll,
   FuelEquipmentNameScroll,
 } from '@/services/fuelAggregation/fuelAggregationRegistrationService'
-import { FuelInfo, FuelListInfoData } from '@/types/fuelAggregation'
+import { FuelInfo } from '@/types/fuelAggregation'
 import { useDailyReport } from '@/hooks/useDailyReport'
 import { HistoryItem } from '@/types/ordering'
 import CommonFileInput from '../common/FileInput'
@@ -60,6 +60,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     updateMemo,
     toggleCheckAllItems,
     toggleCheckItem,
+    updateContractDetailField,
     setFuelRadioBtn,
   } = useFuelFormStore()
 
@@ -92,6 +93,8 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     OilTypeMethodOptions,
     FuelDeleteMutation,
     useFuelHistoryDataQuery,
+
+    useFuelOuysourcingName,
   } = useFuelAggregation()
 
   const textFieldStyle = {
@@ -233,48 +236,56 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
   }, [data, isEditMode, processOptions, setField])
 
   useEffect(() => {
-    if (data && isEditMode === true) {
+    if (data && isEditMode) {
       const client = data.data
 
-      // // 상세 항목 가공
-      const formattedDetails = (client.fuelInfos ?? []).map((item: FuelListInfoData) => ({
+      const formattedDetails = (client.fuelInfos ?? []).map((item: any) => ({
         id: item.id,
+        checkId: item.id,
         outsourcingCompanyId: item.outsourcingCompany?.id ?? 0,
         businessNumber: item.outsourcingCompany?.businessNumber ?? '',
-        driverId: item?.driver?.id ?? 0,
+        driverId: item.driver?.id ?? 0,
         categoryType: item.categoryTypeCode,
-        specificationName: item?.equipment?.specification ?? '',
+        specificationName: item.equipment?.specification ?? '',
         fuelType: item.fuelTypeCode ?? '',
         fuelAmount: item.fuelAmount ?? '0',
-        equipmentId: item?.equipment?.id ?? 0,
+        equipmentId: item.equipment?.id ?? 0,
         createdAt: item.createdAt ?? '',
         updatedAt: item.updatedAt ?? '',
-        memo: item.memo,
+        memo: item.memo ?? '',
         files:
           item.fileUrl && item.originalFileName
-            ? [
-                {
-                  fileUrl: item.fileUrl,
-                  originalFileName: item.originalFileName,
-                },
-              ]
+            ? [{ fileUrl: item.fileUrl, originalFileName: item.originalFileName }]
             : [],
         modifyDate: `${getTodayDateString(item.createdAt)} / ${getTodayDateString(item.updatedAt)}`,
+        subEquipments: (item.subEquipments ?? []).map((sub: any) => ({
+          id: sub.subEquipment?.id ?? sub.id,
+          checkId: sub.subEquipment?.id ?? sub.id,
+          outsourcingCompanyContractSubEquipmentId: sub.subEquipment?.id || '-',
+          fuelType: sub.fuelTypeCode || '',
+          fuelAmount: sub.fuelAmount ?? 0,
+          memo: sub.memo ?? 0,
+        })),
       }))
 
-      setField('fuelInfos', formattedDetails)
+      const subEquipmentsByRow: Record<number, EquipmentTypeOption[]> = {}
+      formattedDetails.forEach((item: any) => {
+        subEquipmentsByRow[item.equipmentId] = item.subEquipments ?? []
+      })
+      setTestArrayByRow(subEquipmentsByRow)
 
-      // 각 필드에 값 세팅
+      setField('fuelInfos', formattedDetails)
       setField('siteId', client.site?.id ?? '')
       setField('siteProcessId', client.process?.id ?? '')
+
+      setField('outsourcingCompanyName', client.outsourcingCompany?.name ?? '')
+      setField('outsourcingCompanyId', client.outsourcingCompany?.id ?? '')
 
       setField('gasolinePrice', client.gasolinePrice ?? 0)
       setField('dieselPrice', client.dieselPrice ?? 0)
       setField('ureaPrice', client.ureaPrice ?? 0)
-
       setField('siteName', client.site?.name ?? '')
       setField('siteProcessName', client.process?.name ?? '')
-
       setField('date', client.date ? new Date(client.date) : null)
       setField('weather', client.weatherCode)
     } else {
@@ -296,6 +307,29 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
 
   const SiteRawList = SiteNameData?.pages.flatMap((page) => page.data.content) ?? []
   const siteList = Array.from(new Map(SiteRawList.map((user) => [user.name, user])).values())
+
+  const [isOutsourcingFocused, setIsOutsourcingFocused] = useState(false)
+
+  // 유저 선택 시 처리
+  const handleSelectOutsourcing = (selectedUser: any) => {
+    setField('outsourcingCompanyName', selectedUser.name)
+    setField('outsourcingCompanyId', selectedUser.id)
+  }
+
+  const debouncedOutsourcingKeyword = useDebouncedValue(form.outsourcingCompanyName, 300)
+
+  const {
+    data: OutsourcingNameData,
+    fetchNextPage: OutsourcingeNameFetchNextPage,
+    hasNextPage: OutsourcingNameHasNextPage,
+    isFetching: OutsourcingNameIsFetching,
+    isLoading: OutsourcingNameIsLoading,
+  } = useFuelOuysourcingName(debouncedOutsourcingKeyword)
+
+  const OutsourcingRawList = OutsourcingNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const outsourcingList = Array.from(
+    new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
+  )
 
   const formatChangeDetail = (getChanges: string) => {
     try {
@@ -564,6 +598,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
       .flatMap((page) => page.data.content)
       .map((user) => ({
         id: user.id,
+        checkId: user.id,
         specification: user.specification,
         vehicleNumber: user.vehicleNumber,
         category: user.category,
@@ -668,8 +703,19 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
   //   })
   // }, [outsourcings])
 
+  interface EquipmentTypeOption {
+    id: number
+    name: string
+    fuelType: string
+    fuelAmount: number
+  }
+
+  const [testArrayByRow, setTestArrayByRow] = useState<Record<number, EquipmentTypeOption[]>>({})
+
   useEffect(() => {
     if (!outsourcings.length) return
+
+    console.log('차량번호 데이터 가져오기!!', outsourcings)
 
     const fetchData = async () => {
       for (const row of outsourcings) {
@@ -686,75 +732,97 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
         if (hasDriverData && hasCarData) continue
 
         try {
-          // ─────────── 인력 목록 ───────────
-          const res = await FuelDriverNameScroll({
-            pageParam: 0,
-            id: companyId,
-            siteIdList: Number(siteIdList),
-            size: 200,
-          })
+          // 기사 + 차량 병렬 요청
+          const [driverRes, carNumberRes] = await Promise.all([
+            FuelDriverNameScroll({
+              pageParam: 0,
+              id: companyId,
+              siteIdList: Number(siteIdList),
+              size: 200,
+            }),
+            FuelEquipmentNameScroll({
+              pageParam: 0,
+              id: companyId,
+              siteIdList: Number(siteIdList),
+              size: 200,
+            }),
+          ])
 
-          if (!res) continue
-
-          const options = res.data.content.map((user: any) => ({
+          // ✅ 기사 옵션
+          const driverOptions = (driverRes?.data?.content ?? []).map((user: any) => ({
             id: user.id,
-            name: user.name + (user.deleted ? ' (삭제됨)' : ''),
-            deleted: user.deleted,
+            name: user.name,
+            deleted: user.deleted ?? false,
           }))
 
           setDriverOptionsByCompany((prev) => {
-            const exists = options.some((opt: any) => opt.id === driverData)
+            const exists = driverOptions.some((opt: any) => opt.id === driverData)
             return {
               ...prev,
               [companyId]: [
                 { id: 0, name: '선택', deleted: false },
-                ...options,
-                ...(driverData && !exists ? [{ id: driverData, name: '', deleted: true }] : []),
+                ...driverOptions,
+                ...(driverData && !exists ? [{ id: driverData, name: '', deleted: false }] : []),
               ],
             }
           })
 
-          // ─────────── 차량 목록 ───────────
-          const carNumberRes = await FuelEquipmentNameScroll({
-            pageParam: 0,
-            id: companyId,
-            siteIdList: Number(siteIdList),
-            size: 200,
-            types: categoryType,
-          })
-
-          const carOptions = carNumberRes.data.content.map((item: any) => ({
-            id: item.id,
-            specification: item.specification,
-            vehicleNumber: item.vehicleNumber,
-            category: item.category,
-            categoryType, // ← 캐시 구분용으로 추가
+          const carOptions = (carNumberRes?.data?.content ?? []).map((user: any) => ({
+            id: user.id,
+            specification: user.specification,
+            vehicleNumber: user.vehicleNumber,
+            category: user.category,
+            unitPrice: user.unitPrice,
+            taskDescription: user.taskDescription,
+            subEquipments:
+              user.subEquipments?.map((item: any) => ({
+                id: item.id,
+                checkId: item.id,
+                type: item.type,
+                typeCode: item.typeCode,
+                workContent: item.taskDescription ?? '',
+                unitPrice: item.unitPrice ?? 0,
+              })) ?? [],
           }))
 
-          setCarNumberOptionsByCompany((prev) => {
-            const exists = carOptions.some((opt: any) => opt.id === carNumberId)
-            return {
-              ...prev,
-              [companyId]: [
-                { id: 0, specification: '', vehicleNumber: '선택', category: '', deleted: false },
-                ...carOptions,
-                ...(carNumberId && !exists
-                  ? [
-                      {
-                        id: carNumberId,
-                        specification: '',
-                        vehicleNumber: '',
-                        category: '',
-                        deleted: true,
-                        categoryType,
-                      },
-                    ]
-                  : []),
-              ],
+          setCarNumberOptionsByCompany((prev) => ({
+            ...prev,
+            [companyId]: [
+              {
+                id: 0,
+                checkId: 0,
+                specification: '',
+                vehicleNumber: '선택',
+                category: '',
+                unitPrice: '',
+                taskDescription: '',
+                subEquipments: [],
+              },
+              ...carOptions,
+            ],
+          }))
+
+          carOptions.forEach((car: any) => {
+            if (car.subEquipments?.length) {
+              setTestArrayByRow((prev) => ({
+                ...prev,
+                [car.id]: [
+                  { id: 0, name: '선택' },
+                  ...car.subEquipments.map((sub: any) => ({
+                    id: sub.id,
+                    checkId: sub.id,
+                    name: sub.type || sub.typeCode || '-',
+                    taskDescription: sub.workContent,
+                    unitPrice: sub.unitPrice,
+                  })),
+                ],
+              }))
             }
           })
+
+          setSelectedCarNumberIds((prev) => ({ ...prev, [row.checkId]: carNumberId || 0 }))
         } catch (err) {
-          console.error('업체별 인력/차량 조회 실패', err)
+          console.error('업체별 차량/기사 조회 실패', err)
         }
       }
     }
@@ -1002,6 +1070,33 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
               />
             </div>
           </div>
+          <div className="flex">
+            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+              유류업체명 <span className="text-red-500 ml-1">*</span>
+            </label>
+            <div className="border border-gray-400  w-full">
+              <InfiniteScrollSelect
+                placeholder="유류 업체명을 입력하세요"
+                keyword={form.outsourcingCompanyName ?? ''}
+                onChangeKeyword={(newKeyword) => setField('outsourcingCompanyName', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                items={outsourcingList}
+                hasNextPage={OutsourcingNameHasNextPage ?? false}
+                fetchNextPage={OutsourcingeNameFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                onSelect={handleSelectOutsourcing}
+                // shouldShowList={true}
+                isLoading={OutsourcingNameIsLoading || OutsourcingNameIsFetching}
+                debouncedKeyword={debouncedOutsourcingKeyword ?? ''}
+                shouldShowList={isOutsourcingFocused}
+                onFocus={() => setIsOutsourcingFocused(true)}
+                onBlur={() => setIsOutsourcingFocused(false)}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1079,50 +1174,53 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                   {/* 체크박스 */}
                   <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
                     <Checkbox
-                      checked={checkedIds.includes(m.id)}
-                      onChange={(e) => toggleCheckItem('FuelInfo', m.id, e.target.checked)}
+                      checked={checkedIds.includes(m.checkId)}
+                      onChange={(e) => toggleCheckItem('FuelInfo', m.checkId, e.target.checked)}
                     />
                   </TableCell>
 
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                  >
                     <CommonSelect
                       fullWidth
-                      value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
+                      value={selectedCompanyIds[m.checkId] || m.outsourcingCompanyId || 0}
                       onChange={async (value) => {
                         const selectedCompany = updatedOutCompanyOptions.find(
                           (opt) => opt.id === value,
                         )
                         setSelectedCompanyIds((prev) => ({
                           ...prev,
-                          [m.id]: selectedCompany ? selectedCompany.id : 0,
+                          [m.checkId]: selectedCompany ? selectedCompany.id : 0,
                         }))
 
-                        setSelectId(m.id)
+                        setSelectId(m.checkId)
 
                         updateItemField(
                           'FuelInfo',
-                          m.id,
+                          m.checkId,
                           'outsourcingCompanyId',
                           selectedCompany?.id || null,
                         )
 
-                        updateItemField('FuelInfo', m.id, 'driverId', null)
-                        updateItemField('FuelInfo', m.id, 'equipmentId', null)
-                        updateItemField('FuelInfo', m.id, 'specificationName', '')
-                        updateItemField('FuelInfo', m.id, 'type', '-')
+                        updateItemField('FuelInfo', m.checkId, 'driverId', null)
+                        updateItemField('FuelInfo', m.checkId, 'equipmentId', null)
+                        updateItemField('FuelInfo', m.checkId, 'specificationName', '')
+                        updateItemField('FuelInfo', m.checkId, 'type', '-')
 
-                        setSelectId(m.id)
+                        setSelectId(m.checkId)
 
                         updateItemField(
                           'FuelInfo',
-                          m.id,
+                          m.checkId,
                           'outsourcingCompanyId',
                           selectedCompany?.id || null,
                         )
 
                         setSelectedCarNumberIds((prev) => ({
                           ...prev,
-                          [m.id]: 0,
+                          [m.checkId]: 0,
                         }))
 
                         // 차량 값도 추가
@@ -1136,17 +1234,24 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                     />
                   </TableCell>
 
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      border: '1px solid  #9CA3AF',
+                      verticalAlign: 'top',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
                     <div className="flex items-center gap-4 justify-center">
                       <label className="flex items-center gap-1">
                         <Radio
                           checked={m.categoryType === 'CONSTRUCTION'}
                           onChange={() => {
-                            setFuelRadioBtn(m.id, 'CONSTRUCTION')
-                            updateItemField('FuelInfo', m.id, 'equipmentId', '')
+                            setFuelRadioBtn(m.checkId, 'CONSTRUCTION')
+                            updateItemField('FuelInfo', m.checkId, 'equipmentId', '')
                           }}
                           value="CONSTRUCTION"
-                          name={`categoryType-${m.id}`} // 각 행별로 고유 그룹
+                          name={`categoryType-${m.checkId}`} // 각 행별로 고유 그룹
                         />
                         외주
                       </label>
@@ -1155,52 +1260,29 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                         <Radio
                           checked={m.categoryType === 'EQUIPMENT'}
                           onChange={() => {
-                            setFuelRadioBtn(m.id, 'EQUIPMENT')
-                            updateItemField('FuelInfo', m.id, 'equipmentId', '')
+                            setFuelRadioBtn(m.checkId, 'EQUIPMENT')
+                            updateItemField('FuelInfo', m.checkId, 'equipmentId', '')
                           }}
                           value="EQUIPMENT"
-                          name={`categoryType-${m.id}`} // 각 행별로 고유 그룹
+                          name={`categoryType-${m.checkId}`} // 각 행별로 고유 그룹
                         />
                         장비
                       </label>
                     </div>
                   </TableCell>
 
-                  {/* <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                  >
                     <CommonSelect
                       fullWidth
-                      value={selectedDriverIds[m.id] || m.driverId || 0}
-                      onChange={async (value) => {
-                        const selectedDriver = (
-                          driverOptionsByCompany[m.outsourcingCompanyId] ?? []
-                        ).find((opt) => opt?.id === value)
-
-                        if (!selectedDriver) return
-
-                        updateItemField('FuelInfo', m.id, 'driverId', selectedDriver.id)
-                      }}
-                      options={
-                        driverOptionsByCompany[m.outsourcingCompanyId] ?? [
-                          { id: 0, name: '선택', category: '' },
-                        ]
-                      }
-                      onScrollToBottom={() => {
-                        if (fuelDriverHasNextPage && !fuelDriverIsFetching)
-                          fuelDriverFetchNextPage()
-                      }}
-                      loading={fuelDriverLoading}
-                    />
-                  </TableCell> */}
-
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <CommonSelect
-                      fullWidth
-                      value={selectedCarNumberIds[m.id] || m.equipmentId || 0}
+                      value={selectedCarNumberIds[m.checkId] || m.equipmentId || 0}
                       onChange={async (value) => {
                         if (value === 0) {
-                          updateItemField('FuelInfo', m.id, 'equipmentId', null)
-                          updateItemField('FuelInfo', m.id, 'specificationName', '')
-                          updateItemField('FuelInfo', m.id, 'type', '-')
+                          updateItemField('FuelInfo', m.checkId, 'equipmentId', null)
+                          updateItemField('FuelInfo', m.checkId, 'specificationName', '')
+                          updateItemField('FuelInfo', m.checkId, 'type', '-')
                           return
                         }
 
@@ -1210,21 +1292,58 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
 
                         if (!selectedCarNumber) return
 
-                        updateItemField('FuelInfo', m.id, 'equipmentId', selectedCarNumber.id)
+                        updateItemField('FuelInfo', m.checkId, 'equipmentId', selectedCarNumber.id)
 
                         updateItemField(
                           'FuelInfo',
-                          m.id,
+                          m.checkId,
                           'specificationName',
                           selectedCarNumber.specification || '',
                         )
 
                         updateItemField(
                           'FuelInfo',
-                          m.id,
+                          m.checkId,
                           'type',
                           selectedCarNumber.category || '-', // type 없으면 '-'
                         )
+
+                        const subEquipments = selectedCarNumber.subEquipments ?? []
+
+                        if (subEquipments.length > 0) {
+                          const formattedSubEquipments = subEquipments.map((sub: any) => ({
+                            id: null,
+                            checkId: sub.id,
+                            outsourcingCompanyContractSubEquipmentId: sub.id,
+                            type: sub.type || sub.typeCode || '-',
+                            memo: sub.memo || '',
+                          }))
+
+                          updateItemField(
+                            'FuelInfo',
+                            m.checkId,
+                            'subEquipments',
+                            formattedSubEquipments,
+                          )
+
+                          const subEquipmentsOptions = formattedSubEquipments.map((sub: any) => ({
+                            id: sub.id,
+                            checkId: sub.id,
+                            name: sub.type || sub.typeCode || '-',
+                            taskDescription: sub.workContent,
+                            unitPrice: sub.unitPrice,
+                          }))
+
+                          setTestArrayByRow((prev) => ({
+                            ...prev,
+                            [selectedCarNumber.id]: [
+                              { id: 0, name: '선택' },
+                              ...subEquipmentsOptions,
+                            ],
+                          }))
+                        } else {
+                          updateItemField('FuelInfo', m.checkId, 'subEquipments', [])
+                        }
                       }}
                       options={
                         carNumberOptionsByCompany[m.outsourcingCompanyId] ?? [
@@ -1245,11 +1364,42 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                       placeholder="자동 입력"
                       value={m.specificationName ?? ''}
                       onChange={(value) =>
-                        updateItemField('FuelInfo', m.id, 'specificationName', value)
+                        updateItemField('FuelInfo', m.checkId, 'specificationName', value)
                       }
                       disabled={true}
                       className=" flex-1"
                     />
+
+                    {m.subEquipments && m.subEquipments?.length > 0 && (
+                      <div className="flex flex-col gap-2 mt-2">
+                        {m.subEquipments.map((item) => (
+                          <div
+                            key={item.id || item.outsourcingCompanyContractSubEquipmentId}
+                            className="flex items-center justify-between gap-2 w-full"
+                            style={{ minHeight: '40px' }}
+                          >
+                            <CommonSelect
+                              className="flex-1 text-2xl"
+                              value={item.outsourcingCompanyContractSubEquipmentId || 0}
+                              onChange={(value) => {
+                                updateContractDetailField(
+                                  m.checkId,
+                                  item.checkId,
+                                  'outsourcingCompanyContractSubEquipmentId',
+                                  value,
+                                )
+                              }}
+                              disabled
+                              options={
+                                testArrayByRow[m.equipmentId] ?? [
+                                  { id: 0, name: '선택', taskDescription: '', unitPrice: 0 },
+                                ]
+                              }
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </TableCell>
                   {/* 유종 */}
                   <TableCell sx={{ border: '1px solid  #9CA3AF' }}>
@@ -1257,22 +1407,59 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                       fullWidth={true}
                       value={m.fuelType || 'BASE'}
                       onChange={async (value) => {
-                        updateItemField('FuelInfo', m.id, 'fuelType', value)
+                        updateItemField('FuelInfo', m.checkId, 'fuelType', value)
                       }}
                       options={OilTypeMethodOptions}
                     />
+                    {m.subEquipments &&
+                      m.subEquipments?.map((detail, index) => (
+                        <div key={index} className="flex gap-2 mt-1 items-center">
+                          <CommonSelect
+                            fullWidth={true}
+                            value={detail.fuelType || 'BASE'}
+                            onChange={async (value) => {
+                              updateContractDetailField(
+                                m.checkId,
+                                detail.checkId,
+                                'fuelType',
+                                value,
+                              )
+                            }}
+                            options={OilTypeMethodOptions}
+                          />
+                        </div>
+                      ))}
                   </TableCell>
-                  {/* 주유량 */}
                   <TableCell align="center" sx={{ border: '1px solid #9CA3AF', width: '120px' }}>
                     <TextField
                       size="small"
                       placeholder="'-'없이 숫자만 입력"
-                      value={formatNumber(m.fuelAmount)}
+                      value={formatNumber(m.fuelAmount) ?? 0}
                       onChange={(e) => {
                         const formatted = unformatNumber(e.target.value)
-                        updateItemField('FuelInfo', m.id, 'fuelAmount', formatted)
+                        updateItemField('FuelInfo', m.checkId, 'fuelAmount', formatted)
                       }}
                     />
+
+                    {m.subEquipments &&
+                      m.subEquipments?.map((detail, index) => (
+                        <div key={index} className="flex gap-2 mt-1 items-center">
+                          <TextField
+                            size="small"
+                            placeholder="작업 내용 입력"
+                            value={detail.fuelAmount ?? 0}
+                            onChange={(e) =>
+                              updateContractDetailField(
+                                m.checkId,
+                                detail.checkId,
+                                'fuelAmount',
+                                e.target.value,
+                              )
+                            }
+                            fullWidth
+                          />
+                        </div>
+                      ))}
                   </TableCell>
 
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -1310,7 +1497,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                         multiple={false}
                         files={m.files} // 각 항목별 files
                         onChange={(newFiles) => {
-                          updateItemField('FuelInfo', m.id, 'files', newFiles.slice(0, 1))
+                          updateItemField('FuelInfo', m.checkId, 'files', newFiles.slice(0, 1))
                         }}
                         uploadTarget="WORK_DAILY_REPORT"
                       />
@@ -1323,10 +1510,32 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                       size="small"
                       placeholder="500자 이하 텍스트 입력"
                       value={m.memo}
-                      onChange={(e) => updateItemField('FuelInfo', m.id, 'memo', e.target.value)}
+                      onChange={(e) =>
+                        updateItemField('FuelInfo', m.checkId, 'memo', e.target.value)
+                      }
                       variant="outlined"
                       sx={textFieldStyle}
                     />
+
+                    {m.subEquipments &&
+                      m.subEquipments?.map((detail, index) => (
+                        <div key={index} className="flex gap-2 mt-1 items-center">
+                          <TextField
+                            size="small"
+                            placeholder="500자 이하 텍스트 입력"
+                            value={detail.memo ?? 0}
+                            onChange={(e) =>
+                              updateContractDetailField(
+                                m.checkId,
+                                detail.checkId,
+                                'memo',
+                                e.target.value,
+                              )
+                            }
+                            fullWidth
+                          />
+                        </div>
+                      ))}
                   </TableCell>
                   {isEditMode && (
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF', width: '260px' }}>

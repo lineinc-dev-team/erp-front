@@ -1,4 +1,9 @@
-import { fuelDetailItem, FuelFormStore, FuelSearchState } from '@/types/fuelAggregation'
+import {
+  fuelDetailItem,
+  FuelFormStore,
+  FuelSearchState,
+  SubEquipmentByFuleItems,
+} from '@/types/fuelAggregation'
 import { getTodayDateString } from '@/utils/formatters'
 import { create } from 'zustand'
 
@@ -62,6 +67,9 @@ export const useFuelFormStore = create<FuelFormStore>((set, get) => ({
     date: null,
     initialDateAt: '',
     weather: 'BASE',
+    outsourcingCompanyId: 0,
+    outsourcingCompanyName: '',
+
     gasolinePrice: 0,
     dieselPrice: 0,
     ureaPrice: 0,
@@ -81,6 +89,8 @@ export const useFuelFormStore = create<FuelFormStore>((set, get) => ({
         date: null,
         initialDateAt: '',
         weather: 'BASE',
+        outsourcingCompanyId: 0,
+        outsourcingCompanyName: '',
         gasolinePrice: 0,
         dieselPrice: 0,
         ureaPrice: 0,
@@ -124,7 +134,8 @@ export const useFuelFormStore = create<FuelFormStore>((set, get) => ({
     set((state) => {
       if (typeName === 'FuelInfo') {
         const newItem: fuelDetailItem = {
-          id: Date.now(),
+          checkId: Date.now(),
+          id: null,
           outsourcingCompanyId: 0,
           driverId: 0,
           categoryType: 'EQUIPMENT',
@@ -152,7 +163,7 @@ export const useFuelFormStore = create<FuelFormStore>((set, get) => ({
           form: {
             ...state.form,
             fuelInfos: state.form.fuelInfos.map((item) =>
-              item.id === id ? { ...item, [field]: value } : item,
+              item.checkId === id ? { ...item, [field]: value } : item,
             ),
           },
         }
@@ -181,7 +192,7 @@ export const useFuelFormStore = create<FuelFormStore>((set, get) => ({
         return {
           form: {
             ...state.form,
-            checkedFuelItemIds: checked ? state.form.fuelInfos.map((i) => i.id) : [],
+            checkedFuelItemIds: checked ? state.form.fuelInfos.map((i) => i.checkId) : [],
           },
         }
       }
@@ -195,7 +206,7 @@ export const useFuelFormStore = create<FuelFormStore>((set, get) => ({
           form: {
             ...state.form,
             fuelInfos: state.form.fuelInfos.filter(
-              (item) => !state.form.checkedFuelItemIds.includes(item.id),
+              (item) => !state.form.checkedFuelItemIds.includes(item.checkId),
             ),
             checkedFuelItemIds: [],
           },
@@ -204,11 +215,35 @@ export const useFuelFormStore = create<FuelFormStore>((set, get) => ({
       return state
     }),
 
+  updateContractDetailField: (
+    managerId: number,
+    itemId: number,
+    field: keyof SubEquipmentByFuleItems,
+    value: string | number,
+  ) =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        fuelInfos: state.form.fuelInfos.map((manager) =>
+          manager.checkId === managerId
+            ? {
+                ...manager,
+                subEquipments:
+                  manager.subEquipments &&
+                  manager.subEquipments.map((detail) =>
+                    detail.checkId === itemId ? { ...detail, [field]: value } : detail,
+                  ),
+              }
+            : manager,
+        ),
+      },
+    })),
+
   setFuelRadioBtn: (id: number, categoryType: 'EQUIPMENT' | 'CONSTRUCTION') =>
     set((state) => ({
       form: {
         ...state.form,
-        fuelInfos: state.form.fuelInfos.map((m) => (m.id === id ? { ...m, categoryType } : m)),
+        fuelInfos: state.form.fuelInfos.map((m) => (m.checkId === id ? { ...m, categoryType } : m)),
       },
     })),
 
@@ -235,6 +270,7 @@ export const useFuelFormStore = create<FuelFormStore>((set, get) => ({
           fileUrl: file?.fileUrl || null,
           originalFileName: file?.originalFileName || null,
           memo: item.memo,
+          subEquipments: item.subEquipments,
         }
       }),
     }

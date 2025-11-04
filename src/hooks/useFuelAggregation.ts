@@ -10,6 +10,7 @@ import {
   FuelInfoHistoryService,
   FuelOilTypeService,
   FuelWeatherTypeService,
+  GetCompanyNameInfoServiceByFuel,
   ModifyFuel,
 } from '@/services/fuelAggregation/fuelAggregationRegistrationService'
 import { useFuelFormStore, useFuelSearchStore } from '@/stores/fuelAggregationStore'
@@ -311,11 +312,28 @@ export function useFuelAggregation() {
     return [defaultOption, ...uniqueOptions]
   }, [carNumberSearchData])
 
+  // 유류만 선택 된 업체명
+
+  const useFuelOuysourcingName = (keyword: string) => {
+    return useInfiniteQuery({
+      queryKey: ['outsourcingFuelListInfo', keyword],
+      queryFn: ({ pageParam }) => GetCompanyNameInfoServiceByFuel({ pageParam, keyword }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        const nextPage = sliceInfo.page + 1
+        return sliceInfo.hasNext ? nextPage : undefined
+      },
+    })
+  }
+
   return {
     createFuelMutation,
     FuelModifyMutation,
 
     FuelDeleteMutation,
+
+    useFuelOuysourcingName,
 
     FuelListQuery,
     FuelCancel,

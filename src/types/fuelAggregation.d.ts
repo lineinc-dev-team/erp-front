@@ -84,11 +84,19 @@ export type FuelSearchState = {
   handleSearch: () => void
 }
 
-/** ===================================== 밑에는 등록 타입 로직 */
+export type SubEquipmentByFuleItems = {
+  checkId: number
+  id: number | null
+  outsourcingCompanyContractSubEquipmentId: number
+  fuelType: string
+  fuelAmount: number
+  memo: string
+}
 
 // 등록 타입
 export type fuelDetailItem = {
-  id: number
+  checkId: number
+  id: number | null
   outsourcingCompanyId: number
   outsourcingCompanyName?: string
   driverId: number
@@ -100,6 +108,7 @@ export type fuelDetailItem = {
   fuelType: string
   fuelAmount: number
   memo: string
+  subEquipments?: SubEquipmentByFuleItems[]
   fileUrl?: string
   originalFileName?: string
   files: FileUploadInfo[]
@@ -114,6 +123,8 @@ export type FuelInfo = {
   date: Date | null
   initialDateAt: string
   weather: string
+  outsourcingCompanyId: number
+  outsourcingCompanyName: string
 
   gasolinePrice: number
   dieselPrice: number
@@ -137,6 +148,13 @@ type FuelFormStore = {
   setField: <K extends keyof Omit<FuelInfo, 'reset' | 'setField'>>(
     field: K,
     value: FuelInfo[K],
+  ) => void
+
+  updateContractDetailField: (
+    managerId: number,
+    itemId: number,
+    field: keyof SubEquipmentByFuleItems,
+    value: T,
   ) => void
 
   addItem: (type: 'FuelInfo') => void
