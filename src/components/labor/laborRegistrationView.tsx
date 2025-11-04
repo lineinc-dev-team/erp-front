@@ -278,7 +278,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
   const handleSelectOutsourcingContract = (selectedUser: any) => {
     console.log('selectedUserselectedUser', selectedUser)
     setField('outsourcingCompanyContractName', selectedUser.contractName)
-    setField('outsourcingCompanyContractId', selectedUser.id)
+    setField('outsourcingCompanyContractId', selectedUser.id ?? null)
   }
 
   const debouncedOutsourcingContractKeyword = useDebouncedValue(
@@ -619,7 +619,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
                   if (newKeyword.trim() === '') {
                     setField('outsourcingCompanyContractName', '')
-                    setField('outsourcingCompanyContractId', 0)
+                    setField('outsourcingCompanyContractId', null)
                     setField('outsourcingCompanyId', 0)
                   }
                 }}

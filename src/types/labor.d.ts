@@ -80,7 +80,7 @@ export type LaborFormState = {
   outsourcingCompanyId: number
   outsourcingCompanyName: string
   // 업체계약 이름
-  outsourcingCompanyContractId: number
+  outsourcingCompanyContractId: number | null
   outsourcingCompanyContractName: string
   name: string
   residentNumber: string

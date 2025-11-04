@@ -301,6 +301,9 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
           ? resignationDateStr
           : form.initialResignationDateAt,
 
+      outsourcingCompanyContractId:
+        form.outsourcingCompanyContractId === 0 ? null : form.outsourcingCompanyContractId,
+
       outsourcingCompanyId:
         form.outsourcingCompanyId === -1 ? undefined : form.outsourcingCompanyId,
       // 첨부파일에 파일 업로드를 안할 시 null 로 넣는다..
