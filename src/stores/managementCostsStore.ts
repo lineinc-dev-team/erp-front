@@ -447,7 +447,7 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
     return {
       siteId: form.siteId,
       siteProcessId: form.siteProcessId,
-      outsourcingCompanyId: form.outsourcingCompanyId === -2 ? null : form.outsourcingCompanyId,
+      outsourcingCompanyId: form.outsourcingCompanyId === -1 ? null : form.outsourcingCompanyId,
       itemType: form.itemType,
       itemTypeDescription: form.itemTypeDescription,
       paymentDate:

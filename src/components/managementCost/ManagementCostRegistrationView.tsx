@@ -558,7 +558,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     if (!form.paymentDate) return '일자를 선택하세요.'
     if (!form.outsourcingCompanyInfo) return '업체 정보를 입력하세요.'
 
-    if (!form.outsourcingCompanyInfo?.name) return '업체명을 입력해주세요.'
+    // if (!form.outsourcingCompanyInfo?.name) return '업체명을 입력해주세요.'
 
     // if (form.outsourcingCompanyId !== -2) {
     //   const businessNumberDigits =
@@ -795,6 +795,13 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                 keyword={form.outsourcingCompanyName}
                 onChangeKeyword={(newKeyword) => {
                   setField('outsourcingCompanyName', newKeyword)
+
+                  if (newKeyword) {
+                    setField('outsourcingCompanyInfo', {
+                      name: newKeyword,
+                    })
+                    setField('outsourcingCompanyId', -1)
+                  }
 
                   // 업체명을 지우면 전체 정보 초기화
                   if (newKeyword === '') {

@@ -147,7 +147,7 @@ export type ManagementCostFormState = {
   siteProcessId: number
   siteProcessName: string
   outsourcingCompanyName: string
-  outsourcingCompanyId: number
+  outsourcingCompanyId: number | null
   itemType: string
   itemTypeDescription: string
   paymentDate: Date | null // ISO string
