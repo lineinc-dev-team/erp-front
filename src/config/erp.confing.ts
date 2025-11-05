@@ -252,7 +252,7 @@ export const LaborColumnList: GridColDef[] = [
   { field: 'isSeverancePayEligible', headerName: '퇴직금 발생', width: 100 },
   { field: 'hasBankbook', headerName: '통장 사본', width: 100 },
   { field: 'hasIdCard', headerName: '신분증 사본', width: 100 },
-  { field: 'hasSignatureImage', headerName: '서명 이미지', width: 100 },
+  { field: 'hasLaborContract', headerName: '근로계약서', width: 100 },
   { field: 'hasFile', headerName: '기타첨부', width: 100 },
 ]
 

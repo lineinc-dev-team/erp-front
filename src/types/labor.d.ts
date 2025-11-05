@@ -26,6 +26,7 @@ export interface LaborDataList {
   hasBankbook: boolean
   hasIdCard: boolean
   hasSignatureImage: boolean
+  hasLaborContract: boolean
 }
 
 export interface OutsourcingCompany {

@@ -253,7 +253,7 @@ export const laborExcelFieldMap = {
   '퇴직금 발생': 'isSeverancePayEligible',
   '통장 사본': 'hasBankbook',
   '신분증 사본': 'hasIdCard',
-  '서명 이미지': 'hasSignatureImage',
+  근로계약서: 'hasLaborContract',
   // 입사일: 'hireDate',
   // 퇴사일: 'resignationDate',
   첨부파일: 'hasFile',

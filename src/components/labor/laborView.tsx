@@ -64,7 +64,7 @@ export default function LaborView() {
       isSeverancePayEligible: item.isSeverancePayEligible ? 'Y' : 'N',
       hasBankbook: item.hasBankbook ? 'Y' : 'N',
       hasIdCard: item.hasIdCard ? 'Y' : 'N',
-      hasSignatureImage: item.hasSignatureImage ? 'Y' : 'N',
+      hasLaborContract: item.hasLaborContract ? 'Y' : 'N',
 
       hireDate: item.hireDate ? `${getTodayDateString(item.hireDate)}` : '-',
       resignationDate: item.resignationDate ? getTodayDateString(item.resignationDate) : '-',
