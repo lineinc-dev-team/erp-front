@@ -334,7 +334,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
     }
   }, [laborSummaryDetail, isEditMode, processOptions, setField])
 
-  const TYPES = ['REGULAR_EMPLOYEE', 'DIRECT_CONTRACT', 'ETC'] as const
+  const TYPES = ['REGULAR_EMPLOYEE', 'DIRECT_CONTRACT'] as const
 
   function useLaborStatementInfo() {
     return useQueries({
