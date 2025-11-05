@@ -529,10 +529,11 @@ export const LaborStateMentColumnList: GridColDef[] = [
   // { field: 'id', headerName: 'No', width: 70 },
   { field: 'siteName', headerName: '현장', width: 130 },
   { field: 'processName', headerName: '공정', width: 130 },
-  { field: 'regularEmployeeCount', headerName: '정직원', width: 130 },
   { field: 'yearMonth', headerName: '조회월', width: 130 },
+
+  { field: 'outsourcingCount', headerName: '용역', width: 130 },
   { field: 'directContractCount', headerName: '직영', width: 180 },
-  { field: 'etcCount', headerName: '기타', width: 100 },
+  // { field: 'etcCount', headerName: '기타', width: 100 },
   { field: 'totalLaborCost', headerName: '노무비 합계', width: 100 },
   { field: 'totalDeductions', headerName: '공제 합계', width: 120 },
   { field: 'totalNetPayment', headerName: '차감지급액 합계', width: 100 },

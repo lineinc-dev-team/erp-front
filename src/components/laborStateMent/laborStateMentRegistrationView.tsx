@@ -432,17 +432,17 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
     return result
   }, [allSumeRows])
 
-  const dailySums = useMemo(() => {
-    const result = Array(31).fill(0)
-    allSumeRows
-      .filter((row) => row.type === '기타')
-      .forEach((row) => {
-        row.dailyWork.forEach((val: any, idx: number) => {
-          result[idx] += Number(val)
-        })
-      })
-    return result
-  }, [allSumeRows])
+  // const dailySums = useMemo(() => {
+  //   const result = Array(31).fill(0)
+  //   allSumeRows
+  //     .filter((row) => row.type === '기타')
+  //     .forEach((row) => {
+  //       row.dailyWork.forEach((val: any, idx: number) => {
+  //         result[idx] += Number(val)
+  //       })
+  //     })
+  //   return result
+  // }, [allSumeRows])
 
   // 합계 계산
 
@@ -657,7 +657,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
 
   const totalEmployment = laborTotalsByType['정직원']
   const totalContract = laborTotalsByType['직영']
-  const totalEtc = laborTotalsByType['기타']
+  // const totalEtc = laborTotalsByType['기타']
 
   return (
     <>
@@ -1415,67 +1415,6 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                     </Fragment>
                   )
                 })}
-              <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
-                {/* 소계: rowSpan=2로 합치기 */}
-                <TableCell
-                  rowSpan={2}
-                  colSpan={8}
-                  align="center"
-                  sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold' }}
-                >
-                  소계
-                </TableCell>
-
-                {/* 1~16일 합계 */}
-                {dailyEmployee.slice(0, 16).map((sum, idx) => (
-                  <TableCell
-                    key={idx}
-                    align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold' }}
-                  >
-                    {sum}
-                  </TableCell>
-                ))}
-                {[
-                  totalEmployment.totalWorkHours,
-                  totalEmployment.totalWorkDays,
-                  totalEmployment.totalDeductions,
-                  totalEmployment.totalLaborCost,
-                  totalEmployment.incomeTax,
-                  totalEmployment.employmentInsurance,
-                  totalEmployment.healthInsurance,
-                  totalEmployment.localTax,
-                  totalEmployment.nationalPension,
-                  totalEmployment.longTermCareInsurance,
-                  totalEmployment.netPayment,
-                ].map((value, idx) => (
-                  <TableCell
-                    key={idx}
-                    rowSpan={2}
-                    align="center"
-                    sx={{
-                      border: '1px solid #9CA3AF',
-                      backgroundColor: '#F3F4F6',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    {formatNumber(value) || 0}
-                  </TableCell>
-                ))}
-              </TableRow>
-
-              {/* 16일 부터 31일 까지*/}
-              <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
-                {dailyEmployee.slice(16).map((sum, idx) => (
-                  <TableCell
-                    key={idx + 16}
-                    align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold' }}
-                  >
-                    {sum}
-                  </TableCell>
-                ))}
-              </TableRow>
             </TableBody>
           )}
           {laborStateMentList.filter((item) => item.type === '직영').length > 0 && (
@@ -1945,7 +1884,6 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                   )
                 })}
               <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
-                {/* 소계: rowSpan=2로 합치기 */}
                 <TableCell
                   rowSpan={2}
                   colSpan={8}
@@ -1955,29 +1893,31 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                   소계
                 </TableCell>
 
-                {/* 1~15일 합계 */}
-                {dailyContract.slice(0, 16).map((sum, idx) => (
-                  <TableCell
-                    key={idx}
-                    align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold' }}
-                  >
-                    {sum}
-                  </TableCell>
-                ))}
-
+                {/* 1~16일 합계 */}
+                {dailyEmployee
+                  .map((v, idx) => v + (dailyContract[idx] ?? 0))
+                  .slice(0, 16)
+                  .map((sum, idx) => (
+                    <TableCell
+                      key={idx}
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold' }}
+                    >
+                      {sum}
+                    </TableCell>
+                  ))}
                 {[
-                  totalContract.totalWorkHours,
-                  totalContract.totalWorkDays,
-                  totalContract.totalDeductions,
-                  totalContract.totalLaborCost,
-                  totalContract.incomeTax,
-                  totalContract.employmentInsurance,
-                  totalContract.healthInsurance,
-                  totalContract.localTax,
-                  totalContract.nationalPension,
-                  totalContract.longTermCareInsurance,
-                  totalContract.netPayment,
+                  totalEmployment.totalWorkHours + totalContract.totalWorkHours,
+                  totalEmployment.totalWorkDays + totalContract.totalWorkDays,
+                  totalEmployment.totalDeductions + totalContract.totalDeductions,
+                  totalEmployment.totalLaborCost + totalContract.totalLaborCost,
+                  totalEmployment.incomeTax + totalContract.incomeTax,
+                  totalEmployment.employmentInsurance + totalContract.employmentInsurance,
+                  totalEmployment.healthInsurance + totalContract.healthInsurance,
+                  totalEmployment.localTax + totalContract.localTax,
+                  totalEmployment.nationalPension + totalContract.nationalPension,
+                  totalEmployment.longTermCareInsurance + totalContract.longTermCareInsurance,
+                  totalEmployment.netPayment + totalContract.netPayment,
                 ].map((value, idx) => (
                   <TableCell
                     key={idx}
@@ -1994,549 +1934,20 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
                 ))}
               </TableRow>
 
+              {/* 16일 부터 31일 까지*/}
               <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
-                {dailyContract.slice(16).map((sum, idx) => (
-                  <TableCell
-                    key={idx + 16}
-                    align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold' }}
-                  >
-                    {sum}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableBody>
-          )}
-          {laborStateMentList.filter((item) => item.type === '기타').length > 0 && (
-            <TableBody>
-              {laborStateMentList
-                .filter((item) => item.type === '기타')
-                .map((row) => {
-                  const firstHalf = row.dailyWork.slice(0, 16)
-                  const secondHalf = row.dailyWork.slice(16)
-
-                  return (
-                    <Fragment key={row.no}>
-                      {/* 첫 번째 행 */}
-                      <TableRow>
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          {row.no}
-                        </TableCell>
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          {row.type}
-                        </TableCell>
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          {row.name}
-                        </TableCell>
-                        <TableCell
-                          rowSpan={2}
-                          align="center"
-                          sx={{
-                            cursor: 'pointer',
-                            textDecoration: 'underline',
-
-                            border: '1px solid #a3a3a3',
-                            fontSize: '0.75rem', // 글자 작게
-                            fontWeight: 'bold', // 글자 두껍게
-                            padding: '2px 4px', // 위아래 2px, 좌우 4px
-                            lineHeight: 2, // 줄 간격 최소화
-                            width: '40px',
-                            height: '40px',
-                          }}
-                          onClick={() => {
-                            setSelectedIdInfo({
-                              laborAccountHolder: row.accountHolder,
-                              laborAccountNumber: row.accountNumber,
-                              laborAddress: row.address,
-                              laborDetailAddress: row.detailAddress,
-                              laborBankName: row.bankName,
-                            })
-                            setOpenModal(true)
-                          }}
-                        >
-                          {row.idNumber}
-                        </TableCell>
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          {row.company}
-                        </TableCell>
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          {row.position}
-                        </TableCell>
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          {row.task}
-                        </TableCell>
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          <TextField
-                            size="small"
-                            type="text"
-                            value={formatNumber(row.dailyWage) ?? ''}
-                            onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
-                              updateItemField('ETC', row.id, 'dailyWage', numericValue)
-                            }}
-                            // 부모 셀에 꽉 차도록
-                            sx={{
-                              width: '100%',
-                              height: '100%',
-                              '& .MuiInputBase-root': {
-                                height: '100%',
-                                fontSize: '0.75rem', // 글자 크기 줄이기
-                              },
-                              '& input': {
-                                textAlign: 'center', // 가운데 정렬
-                                padding: '4px', // padding 줄이기
-                              },
-                            }}
-                          />
-                        </TableCell>
-
-                        {firstHalf.map((val: any, idx: number) => (
-                          <TableCell key={idx} align="center" sx={dayCellStyle}>
-                            <TextField
-                              size="small"
-                              type="number"
-                              inputProps={{ step: 0.1, min: 0 }}
-                              value={val ?? ''}
-                              onChange={(e) => {
-                                const value = e.target.value
-                                const numericValue = value === '' ? null : parseFloat(value)
-                                updateItemField('ETC', row.id, `dailyWork.${idx}`, numericValue)
-                              }}
-                              sx={{
-                                width: '100%',
-                                height: '100%',
-                                '& .MuiInputBase-root': {
-                                  height: '100%',
-                                  fontSize: '0.75rem',
-                                },
-                                '& input': {
-                                  textAlign: 'center',
-                                  padding: '4px',
-
-                                  // 숫자 스핀 버튼 제거
-                                  MozAppearance: 'textfield', // Firefox
-                                  '&::-webkit-outer-spin-button': {
-                                    // Chrome, Safari
-                                    WebkitAppearance: 'none',
-                                    margin: 0,
-                                  },
-                                  '&::-webkit-inner-spin-button': {
-                                    // Chrome, Safari
-                                    WebkitAppearance: 'none',
-                                    margin: 0,
-                                  },
-                                },
-                              }}
-                            />
-                          </TableCell>
-                        ))}
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          <TextField
-                            size="small"
-                            type="text"
-                            value={formatNumber(row.totalWorkHours) ?? ''}
-                            onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
-                              updateItemField('ETC', row.id, 'totalWorkHours', numericValue)
-                            }}
-                            // 부모 셀에 꽉 차도록
-                            sx={{
-                              width: '100%',
-                              height: '100%',
-                              '& .MuiInputBase-root': {
-                                height: '100%',
-                                fontSize: '0.75rem', // 글자 크기 줄이기
-                              },
-                              '& input': {
-                                textAlign: 'center', // 가운데 정렬
-                                padding: '4px', // padding 줄이기
-                              },
-                            }}
-                          />
-                        </TableCell>
-                        {/* 합계 컬럼 */}
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          <TextField
-                            size="small"
-                            type="text"
-                            value={formatNumber(row.totalWorkDays) ?? ''}
-                            onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
-                              updateItemField('ETC', row.id, 'totalWorkDays', numericValue)
-                            }}
-                            // 부모 셀에 꽉 차도록
-                            sx={{
-                              width: '100%',
-                              height: '100%',
-                              '& .MuiInputBase-root': {
-                                height: '100%',
-                                fontSize: '0.75rem', // 글자 크기 줄이기
-                              },
-                              '& input': {
-                                textAlign: 'center', // 가운데 정렬
-                                padding: '4px', // padding 줄이기
-                              },
-                            }}
-                          />
-                        </TableCell>
-
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          <TextField
-                            size="small"
-                            type="text"
-                            value={formatNumber(row.totalDeductions) ?? ''}
-                            onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
-                              updateItemField('ETC', row.id, 'totalDeductions', numericValue)
-                            }}
-                            // 부모 셀에 꽉 차도록
-                            sx={{
-                              width: '100%',
-                              height: '100%',
-                              '& .MuiInputBase-root': {
-                                height: '100%',
-                                fontSize: '0.75rem', // 글자 크기 줄이기
-                              },
-                              '& input': {
-                                textAlign: 'center', // 가운데 정렬
-                                padding: '4px', // padding 줄이기
-                              },
-                            }}
-                          />
-                        </TableCell>
-
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          <TextField
-                            size="small"
-                            type="text"
-                            value={formatNumber(row.totalLaborCost) ?? ''}
-                            onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
-                              updateItemField('ETC', row.id, 'totalLaborCost', numericValue)
-                            }}
-                            // 부모 셀에 꽉 차도록
-                            sx={{
-                              width: '100%',
-                              height: '100%',
-                              '& .MuiInputBase-root': {
-                                height: '100%',
-                                fontSize: '0.75rem', // 글자 크기 줄이기
-                              },
-                              '& input': {
-                                textAlign: 'center', // 가운데 정렬
-                                padding: '4px', // padding 줄이기
-                              },
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          <TextField
-                            size="small"
-                            type="text"
-                            value={formatNumber(row.incomeTax) ?? ''}
-                            onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
-                              updateItemField('ETC', row.id, 'incomeTax', numericValue)
-                            }}
-                            // 부모 셀에 꽉 차도록
-                            sx={{
-                              width: '100%',
-                              height: '100%',
-                              '& .MuiInputBase-root': {
-                                height: '100%',
-                                fontSize: '0.75rem', // 글자 크기 줄이기
-                              },
-                              '& input': {
-                                textAlign: 'center', // 가운데 정렬
-                                padding: '4px', // padding 줄이기
-                              },
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          <TextField
-                            size="small"
-                            type="text"
-                            value={formatNumber(row.employmentInsurance) ?? ''}
-                            onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
-                              updateItemField('ETC', row.id, 'employmentInsurance', numericValue)
-                            }}
-                            // 부모 셀에 꽉 차도록
-                            sx={{
-                              width: '100%',
-                              height: '100%',
-                              '& .MuiInputBase-root': {
-                                height: '100%',
-                                fontSize: '0.75rem', // 글자 크기 줄이기
-                              },
-                              '& input': {
-                                textAlign: 'center', // 가운데 정렬
-                                padding: '4px', // padding 줄이기
-                              },
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          <TextField
-                            size="small"
-                            type="text"
-                            value={formatNumber(row.healthInsurance) ?? ''}
-                            onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
-                              updateItemField('ETC', row.id, 'healthInsurance', numericValue)
-                            }}
-                            // 부모 셀에 꽉 차도록
-                            sx={{
-                              width: '100%',
-                              height: '100%',
-                              '& .MuiInputBase-root': {
-                                height: '100%',
-                                fontSize: '0.75rem', // 글자 크기 줄이기
-                              },
-                              '& input': {
-                                textAlign: 'center', // 가운데 정렬
-                                padding: '4px', // padding 줄이기
-                              },
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          <TextField
-                            size="small"
-                            type="text"
-                            value={formatNumber(row.localTax) ?? ''}
-                            onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
-                              updateItemField('ETC', row.id, 'localTax', numericValue)
-                            }}
-                            // 부모 셀에 꽉 차도록
-                            sx={{
-                              width: '100%',
-                              height: '100%',
-                              '& .MuiInputBase-root': {
-                                height: '100%',
-                                fontSize: '0.75rem', // 글자 크기 줄이기
-                              },
-                              '& input': {
-                                textAlign: 'center', // 가운데 정렬
-                                padding: '4px', // padding 줄이기
-                              },
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          <TextField
-                            size="small"
-                            type="text"
-                            value={formatNumber(row.nationalPension) ?? ''}
-                            onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
-                              updateItemField('ETC', row.id, 'nationalPension', numericValue)
-                            }}
-                            // 부모 셀에 꽉 차도록
-                            sx={{
-                              width: '100%',
-                              height: '100%',
-                              '& .MuiInputBase-root': {
-                                height: '100%',
-                                fontSize: '0.75rem', // 글자 크기 줄이기
-                              },
-                              '& input': {
-                                textAlign: 'center', // 가운데 정렬
-                                padding: '4px', // padding 줄이기
-                              },
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          <TextField
-                            size="small"
-                            type="text"
-                            value={formatNumber(row.longTermCareInsurance) ?? ''}
-                            onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
-                              updateItemField('ETC', row.id, 'longTermCareInsurance', numericValue)
-                            }}
-                            // 부모 셀에 꽉 차도록
-                            sx={{
-                              width: '100%',
-                              height: '100%',
-                              '& .MuiInputBase-root': {
-                                height: '100%',
-                                fontSize: '0.75rem', // 글자 크기 줄이기
-                              },
-                              '& input': {
-                                textAlign: 'center', // 가운데 정렬
-                                padding: '4px', // padding 줄이기
-                              },
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          <TextField
-                            size="small"
-                            type="text"
-                            value={formatNumber(row.netPayment) ?? ''}
-                            onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
-                              updateItemField('ETC', row.id, 'netPayment', numericValue)
-                            }}
-                            // 부모 셀에 꽉 차도록
-                            sx={{
-                              width: '100%',
-                              height: '100%',
-                              '& .MuiInputBase-root': {
-                                height: '100%',
-                                fontSize: '0.75rem', // 글자 크기 줄이기
-                              },
-                              '& input': {
-                                textAlign: 'center', // 가운데 정렬
-                                padding: '4px', // padding 줄이기
-                              },
-                            }}
-                          />
-                        </TableCell>
-
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          <TextField
-                            size="small"
-                            type="text"
-                            value={row.memo ?? ''}
-                            onChange={(e) => {
-                              const numericValue = e.target.value
-                              updateItemField('ETC', row.id, 'memo', numericValue)
-                            }}
-                            // 부모 셀에 꽉 차도록
-                            sx={{
-                              width: '100%',
-                              height: '100%',
-                              '& .MuiInputBase-root': {
-                                height: '100%',
-                                fontSize: '0.75rem', // 글자 크기 줄이기
-                              },
-                              '& input': {
-                                textAlign: 'center', // 가운데 정렬
-                                padding: '4px', // padding 줄이기
-                              },
-                            }}
-                          />
-                        </TableCell>
-                      </TableRow>
-
-                      <TableRow>
-                        {secondHalf.map((val: any, idx: number) => (
-                          <TableCell key={idx + 17} align="center" sx={dayCellStyle}>
-                            <TextField
-                              size="small"
-                              type="number" // number로 변경
-                              inputProps={{ step: 0.1, min: 0 }} // 소수점 입력 허용, 음수 방지
-                              value={val ?? ''}
-                              onChange={(e) => {
-                                const value = e.target.value
-                                const numericValue = value === '' ? null : parseFloat(value)
-
-                                // dailyWork 배열 전체에서 idx+16 위치 업데이트
-                                updateItemField(
-                                  'ETC',
-                                  row.id,
-                                  `dailyWork.${idx + 16}`,
-                                  numericValue,
-                                )
-                              }}
-                              sx={{
-                                width: '100%',
-                                height: '100%',
-                                '& .MuiInputBase-root': {
-                                  height: '100%',
-                                  fontSize: '0.75rem',
-                                },
-                                '& input': {
-                                  textAlign: 'center',
-                                  padding: '4px',
-
-                                  // 숫자형 스핀 버튼 제거
-                                  MozAppearance: 'textfield', // Firefox
-                                  '&::-webkit-outer-spin-button': {
-                                    // Chrome, Safari
-                                    WebkitAppearance: 'none',
-                                    margin: 0,
-                                  },
-                                  '&::-webkit-inner-spin-button': {
-                                    // Chrome, Safari
-                                    WebkitAppearance: 'none',
-                                    margin: 0,
-                                  },
-                                },
-                              }}
-                            />
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    </Fragment>
-                  )
-                })}
-              <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
-                {/* 소계: rowSpan=2로 합치기 */}
-                <TableCell
-                  rowSpan={2}
-                  colSpan={8}
-                  align="center"
-                  sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold' }}
-                >
-                  소계
-                </TableCell>
-
-                {/* 1~15일 합계 */}
-                {dailySums.slice(0, 16).map((sum, idx) => (
-                  <TableCell
-                    key={idx}
-                    align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold' }}
-                  >
-                    {sum}
-                  </TableCell>
-                ))}
-                {[
-                  totalEtc.totalWorkHours,
-                  totalEtc.totalWorkDays,
-                  totalEtc.totalDeductions,
-                  totalEtc.totalLaborCost,
-                  totalEtc.incomeTax,
-                  totalEtc.employmentInsurance,
-                  totalEtc.healthInsurance,
-                  totalEtc.localTax,
-                  totalEtc.nationalPension,
-                  totalEtc.longTermCareInsurance,
-                  totalEtc.netPayment,
-                ].map((value, idx) => (
-                  <TableCell
-                    key={idx}
-                    rowSpan={2}
-                    align="center"
-                    sx={{
-                      border: '1px solid #9CA3AF',
-                      backgroundColor: '#F3F4F6',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    {formatNumber(value) || 0}
-                  </TableCell>
-                ))}
-              </TableRow>
-
-              <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
-                {/* 16~31일 합계 */}
-                {/* 15로 바꿔야함!! */}
-                {dailySums.slice(16).map((sum, idx) => (
-                  <TableCell
-                    key={idx + 16}
-                    align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold' }}
-                  >
-                    {sum}
-                  </TableCell>
-                ))}
+                {dailyEmployee
+                  .map((v, idx) => v + (dailyContract[idx] ?? 0))
+                  .slice(16)
+                  .map((sum, idx) => (
+                    <TableCell
+                      key={idx + 16}
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold' }}
+                    >
+                      {sum}
+                    </TableCell>
+                  ))}
               </TableRow>
             </TableBody>
           )}
