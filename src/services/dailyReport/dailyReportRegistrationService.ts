@@ -1458,6 +1458,38 @@ export async function GetFuelPrice({ siteId = 0, siteProcessId = 0, reportDate =
   return data
 }
 
+// 유류 집계에서 업체명  가져오는 로직
+
+// 유류 집계 기름 가격 조회
+
+export async function GetFuelCompany({ siteId = 0, siteProcessId = 0, reportDate = '' }) {
+  const query = new URLSearchParams({
+    siteId: siteId.toString(),
+    siteProcessId: siteProcessId.toString(),
+    reportDate,
+  })
+
+  const res = await fetch(`${API.FUELAGGRE}/fuel-company?${query.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
+  }
+
+  const data = await res.json()
+  return data
+}
+
 // 외주(공사) 항목명, 항목 조회
 
 export async function GetContractGroup({

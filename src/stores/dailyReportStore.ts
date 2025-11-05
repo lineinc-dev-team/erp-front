@@ -13,6 +13,7 @@ import {
   MainProcessesItem,
   MaterialStatuses,
   OutsourcingsItem,
+  SubEquipmentByFuleItems,
   SubEquipmentItems,
   WorkDetailInfo,
   WorkerItem,
@@ -74,6 +75,8 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
   form: {
     siteId: 0,
     siteProcessId: 0,
+    outsourcingCompanyName: '',
+    outsourcingCompanyId: 0,
     reportDate: null,
     weather: '',
     gasolinePrice: 0,
@@ -145,6 +148,8 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       form: {
         siteId: 0,
         siteProcessId: 0,
+        outsourcingCompanyName: '',
+        outsourcingCompanyId: 0,
         reportDate: null,
         weather: '',
         gasolinePrice: 0,
@@ -1349,6 +1354,32 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       },
     })),
 
+  //유류 에서 서브 장비 가져옴
+
+  updateSubEqByFuel: (
+    managerId: number,
+    itemId: number,
+    field: keyof SubEquipmentByFuleItems,
+    value: string | number,
+  ) =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        fuelInfos: state.form.fuelInfos.map((manager) =>
+          manager.id === managerId
+            ? {
+                ...manager,
+                subEquipments:
+                  manager.subEquipments &&
+                  manager.subEquipments.map((detail) =>
+                    detail.checkId === itemId ? { ...detail, [field]: value } : detail,
+                  ),
+              }
+            : manager,
+        ),
+      },
+    })),
+
   // newDailyReportData: () => {
   //   const form = get().form
   //   return {
@@ -1517,6 +1548,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       reportDate: form.reportDate,
       weather: form.weather,
       gasolinePrice: form.gasolinePrice,
+      outsourcingCompanyId: form.outsourcingCompanyId,
       dieselPrice: form.dieselPrice,
       ureaPrice: form.ureaPrice,
       employees: form.employees.map((emp) => {
@@ -1617,6 +1649,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           fileUrl: file?.fileUrl || null,
           originalFileName: file?.originalFileName || null,
           memo: item.memo,
+          subEquipments: item.subEquipments,
         }
       }),
 
@@ -1963,6 +1996,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       files: undefined,
       siteId: form.siteId,
       siteProcessId: form.siteProcessId,
+      outsourcingCompanyId: form.outsourcingCompanyId,
       date: form.reportDate,
       weather: form.weather,
       gasolinePrice: form.gasolinePrice,
@@ -1983,6 +2017,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
 
         fileUrl: item.files?.[0]?.fileUrl ?? null,
         originalFileName: item.files?.[0]?.originalFileName ?? null,
+        subEquipments: item.subEquipments,
       })),
     }
   },

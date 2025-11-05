@@ -164,6 +164,15 @@ export type EquipmentsItem = {
   modifyDate?: string
 }
 
+export type SubEquipmentByFuleItems = {
+  checkId: number
+  id: number | null
+  outsourcingCompanyContractSubEquipmentId: number
+  fuelType: string
+  fuelAmount: number
+  memo: string
+}
+
 export type FuelsItem = {
   id: number
   outsourcingCompanyId: number
@@ -177,6 +186,7 @@ export type FuelsItem = {
   originalFileName?: string
   files: FileUploadInfo[]
   memo: string
+  subEquipments?: SubEquipmentByFuleItems[]
   modifyDate?: string
 }
 
@@ -250,6 +260,9 @@ export type DailyFormState = {
   gasolinePrice: number
   dieselPrice: number
   ureaPrice: number
+
+  outsourcingCompanyName: string
+  outsourcingCompanyId: number
 
   // 직원 배열
   employees: EmployeesItem[]
@@ -357,6 +370,13 @@ type DailyReportFormStore = {
     managerId: number,
     itemId: number,
     field: keyof SubEquipmentItems,
+    value: T,
+  ) => void
+
+  updateSubEqByFuel: (
+    managerId: number,
+    itemId: number,
+    field: keyof SubEquipmentByFuleItems,
     value: T,
   ) => void
 

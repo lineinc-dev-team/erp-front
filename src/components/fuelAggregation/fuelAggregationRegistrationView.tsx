@@ -715,8 +715,6 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
   useEffect(() => {
     if (!outsourcings.length) return
 
-    console.log('차량번호 데이터 가져오기!!', outsourcings)
-
     const fetchData = async () => {
       for (const row of outsourcings) {
         const companyId = row.outsourcingCompanyId

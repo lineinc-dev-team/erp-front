@@ -35,6 +35,7 @@ import {
   GetEmployeesByFilterService,
   GetEquipmentByFilterService,
   GetFuelByFilterService,
+  GetFuelCompany,
   GetFuelPrice,
   GetInputStatusService,
   GetMainProcessService,
@@ -64,6 +65,8 @@ import { useManagementCost } from '@/hooks/useManagementCost'
 import { useSearchParams } from 'next/navigation'
 import AmountInput from '../common/AmountInput'
 import { useSiteId } from '@/hooks/useSiteIdNumber'
+import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
+import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 
 export default function DailyReportRegistrationView() {
   const {
@@ -103,10 +106,13 @@ export default function DailyReportRegistrationView() {
     // 외주공사 추가 함수
 
     updateContractDetailField,
+
+    updateSubEqByFuel,
+
     // 직원 정보
   } = useDailyFormStore()
 
-  const { WeatherTypeMethodOptions } = useFuelAggregation()
+  const { WeatherTypeMethodOptions, useFuelOuysourcingName } = useFuelAggregation()
 
   const [isEditMode, setIsEditMode] = useState(false)
   const {
@@ -751,7 +757,6 @@ export default function DailyReportRegistrationView() {
     const fetched = allFuels.map((item: any) => ({
       id: item.fuelInfoId,
       outsourcingCompanyId: item.outsourcingCompany?.id ?? 0,
-      outsourcingCompanyName: item.outsourcingCompany?.name ?? 0,
       deleted: item.outsourcingCompany.deleted,
       driverId: item.outsourcingCompanyDriver?.id ?? 0,
       equipmentId: item.outsourcingCompanyEquipment?.id ?? '',
@@ -770,7 +775,21 @@ export default function DailyReportRegistrationView() {
             ]
           : [],
       modifyDate: `${getTodayDateString(item.createdAt)} / ${getTodayDateString(item.updatedAt)}`,
+      subEquipments: (item.subEquipments ?? []).map((sub: any) => ({
+        id: sub.id,
+        checkId: sub.id,
+        outsourcingCompanyContractSubEquipmentId: sub.subEquipment?.id || '-',
+        fuelType: sub.fuelTypeCode || '',
+        fuelAmount: sub.fuelAmount ?? 0,
+        memo: sub.memo ?? 0,
+      })),
     }))
+
+    const subEquipmentsByRow: Record<number, subEquipmentTypeOption[]> = {}
+    fetched.forEach((item: any) => {
+      subEquipmentsByRow[item.equipmentId] = item.subEquipments ?? []
+    })
+    setSubEquipmentByRow(subEquipmentsByRow)
 
     setIsEditMode(true)
     setField('fuelInfos', fetched)
@@ -1542,12 +1561,34 @@ export default function DailyReportRegistrationView() {
 
   const { data: oilPrice } = detailFuelPrice
 
+  // 출역일보 유류에서 유류 업체명 가져오기
+
+  const detailFuelCompany = useQuery({
+    queryKey: ['fuelCompany', form.siteId, form.siteProcessId, form.reportDate],
+    queryFn: () =>
+      GetFuelCompany({
+        siteId: form.siteId || 0,
+        siteProcessId: form.siteProcessId || 0,
+        reportDate: getTodayDateString(form.reportDate) || '',
+      }),
+    enabled: !!form.siteId && !!form.siteProcessId && !!form.reportDate,
+    refetchOnWindowFocus: false, // 포커스 바뀌어도 재요청 안 함
+    refetchOnReconnect: false, // 네트워크 재연결해도 재요청 안 함
+    retry: false, // 실패했을 때 자동 재시도 X
+  })
+
+  const { data: fuelCompany } = detailFuelCompany
+
+  console.log('fuelCompanyfuelCompany', fuelCompany)
+
   useEffect(() => {
     if (detailReport?.status === 200 && !isEditMode) {
       setIsEditMode(true)
       setField('gasolinePrice', oilPrice?.data.gasolinePrice) // 상세 데이터가 있을 때만 세팅
       setField('dieselPrice', oilPrice?.data.dieselPrice) // 상세 데이터가 있을 때만 세팅
       setField('ureaPrice', oilPrice?.data.ureaPrice) // 상세 데이터가 있을 때만 세팅
+      setField('outsourcingCompanyId', fuelCompany?.data?.outsourcingCompany?.id)
+      setField('outsourcingCompanyName', fuelCompany?.data?.outsourcingCompany?.name)
     }
   }, [detailReport, isEditMode])
 
@@ -1555,15 +1596,16 @@ export default function DailyReportRegistrationView() {
     if (detailReport === undefined) {
       setField('weather', 'BASE') // 상세 데이터가 있을 때만 세팅
     }
-    if (detailReport?.status === 200 || oilPrice) {
+    if (detailReport?.status === 200 || oilPrice || fuelCompany) {
       setField('weather', detailReport?.data?.weatherCode) // 상세 데이터가 있을 때만 세팅
       setField('gasolinePrice', oilPrice?.data.gasolinePrice) // 상세 데이터가 있을 때만 세팅
       setField('dieselPrice', oilPrice?.data.dieselPrice) // 상세 데이터가 있을 때만 세팅
-      setField('ureaPrice', oilPrice?.data.ureaPrice) // 상세 데이터가 있을 때만 세팅
+      setField('outsourcingCompanyId', fuelCompany?.data?.outsourcingCompany?.id)
+      setField('outsourcingCompanyName', fuelCompany?.data?.outsourcingCompany?.name)
 
       if (!isEditMode) setIsEditMode(true) // 최초 로딩 시 editMode 설정
     }
-  }, [detailReport, oilPrice])
+  }, [detailReport, oilPrice, fuelCompany])
 
   // 증빙 서류 조회
 
@@ -2536,6 +2578,29 @@ export default function DailyReportRegistrationView() {
 
   // 유효성 검사
 
+  const [isOutsourcingFocused, setIsOutsourcingFocused] = useState(false)
+
+  // 유저 선택 시 처리
+  const handleSelectOutsourcing = (selectedUser: any) => {
+    setField('outsourcingCompanyName', selectedUser.name)
+    setField('outsourcingCompanyId', selectedUser.id)
+  }
+
+  const debouncedOutsourcingKeyword = useDebouncedValue(form.outsourcingCompanyName, 300)
+
+  const {
+    data: OutsourcingNameData,
+    fetchNextPage: OutsourcingeNameFetchNextPage,
+    hasNextPage: OutsourcingNameHasNextPage,
+    isFetching: OutsourcingNameIsFetching,
+    isLoading: OutsourcingNameIsLoading,
+  } = useFuelOuysourcingName(debouncedOutsourcingKeyword)
+
+  const OutsourcingRawList = OutsourcingNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const outsourcingList = Array.from(
+    new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
+  )
+
   // 유효성 검사 함수
   const validateEmployees = () => {
     // 직원 데이터 검증
@@ -2860,10 +2925,115 @@ export default function DailyReportRegistrationView() {
 
   //  ui 그림
 
+  // useEffect(() => {
+  //   if (!outsourcingfuel.length) return
+
+  //   console.log('해당 구분 값 찾기', outsourcingfuel)
+
+  //   const fetchData = async () => {
+  //     for (const row of outsourcingfuel) {
+  //       const companyId = row.outsourcingCompanyId
+  //       const driverData = row.driverId
+  //       const carNumberId = row.equipmentId
+  //       const categoryType = row.categoryType
+
+  //       const hasDriverData = driverOptionsByCompany[companyId]
+  //       const hasCarData = carNumberOptionsByCompany[companyId]?.some(
+  //         (opt) => opt.categoryType === categoryType,
+  //       )
+
+  //       if (hasDriverData && hasCarData) continue
+
+  //       try {
+  //         // ─────────── 인력 목록 ───────────
+  //         const res = await FuelDriverNameScroll({
+  //           pageParam: 0,
+  //           id: companyId,
+  //           siteIdList: Number(siteIdList),
+  //           size: 200,
+  //         })
+
+  //         if (!res) continue
+
+  //         const options = res.data.content.map((user: any) => ({
+  //           id: user.id,
+  //           name: user.name + (user.deleted ? ' (삭제됨)' : ''),
+  //           deleted: user.deleted,
+  //         }))
+
+  //         setDriverOptionsByCompany((prev) => {
+  //           const exists = options.some((opt: any) => opt.id === driverData)
+  //           return {
+  //             ...prev,
+  //             [companyId]: [
+  //               { id: 0, name: '선택', deleted: false },
+  //               ...options,
+  //               ...(driverData && !exists ? [{ id: driverData, name: '', deleted: true }] : []),
+  //             ],
+  //           }
+  //         })
+
+  //         // ─────────── 차량 목록 ───────────
+  //         const carNumberRes = await FuelEquipmentNameScroll({
+  //           pageParam: 0,
+  //           id: companyId,
+  //           siteIdList: Number(siteIdList),
+  //           size: 200,
+  //           types: categoryType,
+  //         })
+
+  //         const carOptions = carNumberRes.data.content.map((item: any) => ({
+  //           id: item.id,
+  //           specification: item.specification,
+  //           vehicleNumber: item.vehicleNumber,
+  //           category: item.category,
+  //           categoryType, // ← 캐시 구분용으로 추가
+  //         }))
+
+  //         setCarNumberOptionsByCompany((prev) => {
+  //           const exists = carOptions.some((opt: any) => opt.id === carNumberId)
+  //           return {
+  //             ...prev,
+  //             [companyId]: [
+  //               { id: 0, specification: '', vehicleNumber: '선택', category: '', deleted: false },
+  //               ...carOptions,
+  //               ...(carNumberId && !exists
+  //                 ? [
+  //                     {
+  //                       id: carNumberId,
+  //                       specification: '',
+  //                       vehicleNumber: '',
+  //                       category: '',
+  //                       deleted: true,
+  //                       categoryType,
+  //                     },
+  //                   ]
+  //                 : []),
+  //             ],
+  //           }
+  //         })
+  //       } catch (err) {
+  //         console.error('업체별 인력/차량 조회 실패', err)
+  //       }
+  //     }
+  //   }
+
+  //   fetchData()
+  // }, [outsourcingfuel])
+
+  interface subEquipmentTypeOption {
+    id: number
+    name: string
+    fuelType: string
+    fuelAmount: number
+  }
+
+  const [subEquipmentByRow, setSubEquipmentByRow] = useState<
+    Record<number, subEquipmentTypeOption[]>
+  >({})
+
   useEffect(() => {
     if (!outsourcingfuel.length) return
-
-    console.log('해당 구분 값 찾기', outsourcingfuel)
 
     const fetchData = async () => {
       for (const row of outsourcingfuel) {
@@ -2880,75 +3050,97 @@ export default function DailyReportRegistrationView() {
         if (hasDriverData && hasCarData) continue
 
         try {
-          // ─────────── 인력 목록 ───────────
-          const res = await FuelDriverNameScroll({
-            pageParam: 0,
-            id: companyId,
-            siteIdList: Number(siteIdList),
-            size: 200,
-          })
+          // 기사 + 차량 병렬 요청
+          const [driverRes, carNumberRes] = await Promise.all([
+            FuelDriverNameScroll({
+              pageParam: 0,
+              id: companyId,
+              siteIdList: Number(siteIdList),
+              size: 200,
+            }),
+            FuelEquipmentNameScroll({
+              pageParam: 0,
+              id: companyId,
+              siteIdList: Number(siteIdList),
+              size: 200,
+            }),
+          ])
 
-          if (!res) continue
-
-          const options = res.data.content.map((user: any) => ({
+          // ✅ 기사 옵션
+          const driverOptions = (driverRes?.data?.content ?? []).map((user: any) => ({
             id: user.id,
-            name: user.name + (user.deleted ? ' (삭제됨)' : ''),
-            deleted: user.deleted,
+            name: user.name,
+            deleted: user.deleted ?? false,
           }))
 
           setDriverOptionsByCompany((prev) => {
-            const exists = options.some((opt: any) => opt.id === driverData)
+            const exists = driverOptions.some((opt: any) => opt.id === driverData)
             return {
               ...prev,
               [companyId]: [
                 { id: 0, name: '선택', deleted: false },
-                ...options,
-                ...(driverData && !exists ? [{ id: driverData, name: '', deleted: true }] : []),
+                ...driverOptions,
+                ...(driverData && !exists ? [{ id: driverData, name: '', deleted: false }] : []),
               ],
             }
           })
 
-          // ─────────── 차량 목록 ───────────
-          const carNumberRes = await FuelEquipmentNameScroll({
-            pageParam: 0,
-            id: companyId,
-            siteIdList: Number(siteIdList),
-            size: 200,
-            types: categoryType,
-          })
-
-          const carOptions = carNumberRes.data.content.map((item: any) => ({
-            id: item.id,
-            specification: item.specification,
-            vehicleNumber: item.vehicleNumber,
-            category: item.category,
-            categoryType, // ← 캐시 구분용으로 추가
+          const carOptions = (carNumberRes?.data?.content ?? []).map((user: any) => ({
+            id: user.id,
+            specification: user.specification,
+            vehicleNumber: user.vehicleNumber,
+            category: user.category,
+            unitPrice: user.unitPrice,
+            taskDescription: user.taskDescription,
+            subEquipments:
+              user.subEquipments?.map((item: any) => ({
+                id: item.id,
+                checkId: item.id,
+                type: item.type,
+                typeCode: item.typeCode,
+                workContent: item.taskDescription ?? '',
+                unitPrice: item.unitPrice ?? 0,
+              })) ?? [],
           }))
 
-          setCarNumberOptionsByCompany((prev) => {
-            const exists = carOptions.some((opt: any) => opt.id === carNumberId)
-            return {
-              ...prev,
-              [companyId]: [
-                { id: 0, specification: '', vehicleNumber: '선택', category: '', deleted: false },
-                ...carOptions,
-                ...(carNumberId && !exists
-                  ? [
-                      {
-                        id: carNumberId,
-                        specification: '',
-                        vehicleNumber: '',
-                        category: '',
-                        deleted: true,
-                        categoryType,
-                      },
-                    ]
-                  : []),
-              ],
+          setCarNumberOptionsByCompany((prev) => ({
+            ...prev,
+            [companyId]: [
+              {
+                id: 0,
+                checkId: 0,
+                specification: '',
+                vehicleNumber: '선택',
+                category: '',
+                unitPrice: '',
+                taskDescription: '',
+                subEquipments: [],
+              },
+              ...carOptions,
+            ],
+          }))
+
+          carOptions.forEach((car: any) => {
+            if (car.subEquipments?.length) {
+              setSubEquipmentByRow((prev) => ({
+                ...prev,
+                [car.id]: [
+                  { id: 0, name: '선택' },
+                  ...car.subEquipments.map((sub: any) => ({
+                    id: sub.id,
+                    checkId: sub.id,
+                    name: sub.type || sub.typeCode || '-',
+                    taskDescription: sub.workContent,
+                    unitPrice: sub.unitPrice,
+                  })),
+                ],
+              }))
             }
           })
+
+          setSelectedCarNumberIds((prev) => ({ ...prev, [row.id]: carNumberId || 0 }))
         } catch (err) {
-          console.error('업체별 인력/차량 조회 실패', err)
+          console.error('업체별 차량/기사 조회 실패', err)
         }
       }
     }
@@ -5590,6 +5782,33 @@ export default function DailyReportRegistrationView() {
                   />
                 </div>
               </div>
+              <div className="flex">
+                <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+                  유류업체명
+                </label>
+                <div className="border border-gray-400  w-full">
+                  <InfiniteScrollSelect
+                    placeholder="유류 업체명을 입력하세요"
+                    keyword={form.outsourcingCompanyName ?? ''}
+                    onChangeKeyword={(newKeyword) => setField('outsourcingCompanyName', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                    items={outsourcingList}
+                    hasNextPage={OutsourcingNameHasNextPage ?? false}
+                    fetchNextPage={OutsourcingeNameFetchNextPage}
+                    renderItem={(item, isHighlighted) => (
+                      <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                        {item.name}
+                      </div>
+                    )}
+                    onSelect={handleSelectOutsourcing}
+                    // shouldShowList={true}
+                    isLoading={OutsourcingNameIsLoading || OutsourcingNameIsFetching}
+                    debouncedKeyword={debouncedOutsourcingKeyword ?? ''}
+                    shouldShowList={isOutsourcingFocused}
+                    onFocus={() => setIsOutsourcingFocused(true)}
+                    onBlur={() => setIsOutsourcingFocused(false)}
+                  />
+                </div>
+              </div>
             </div>
             <div className="flex justify-between items-center mt-5 mb-2">
               <span className="font-bold mb-4"> [{activeTab}]</span>
@@ -5699,7 +5918,10 @@ export default function DailyReportRegistrationView() {
                           />
                         </TableCell>
 
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                        >
                           <CommonSelect
                             fullWidth
                             // value={m.outsourcingCompanyId || 0}
@@ -5758,7 +5980,14 @@ export default function DailyReportRegistrationView() {
                           />
                         </TableCell>
 
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TableCell
+                          align="center"
+                          sx={{
+                            border: '1px solid  #9CA3AF',
+                            verticalAlign: 'top',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
                           <div className="flex items-center gap-4 justify-center">
                             <label className="flex items-center gap-1">
                               <Radio
@@ -5813,7 +6042,10 @@ export default function DailyReportRegistrationView() {
                             loading={fuelDriverLoading}
                           /> */}
 
-                        <TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                        >
                           <CommonSelect
                             fullWidth
                             value={selectedCarNumberIds[m.id] || m.equipmentId || 0}
@@ -5832,6 +6064,45 @@ export default function DailyReportRegistrationView() {
                                 'specificationName',
                                 selectedCarNumber.specification || '-',
                               )
+
+                              const subEquipments = selectedCarNumber.subEquipments ?? []
+
+                              if (subEquipments.length > 0) {
+                                const formattedSubEquipments = subEquipments.map((sub: any) => ({
+                                  id: null,
+                                  checkId: sub.id,
+                                  outsourcingCompanyContractSubEquipmentId: sub.id,
+                                  type: sub.type || sub.typeCode || '-',
+                                  memo: sub.memo || '',
+                                }))
+
+                                updateItemField(
+                                  'fuel',
+                                  m.id,
+                                  'subEquipments',
+                                  formattedSubEquipments,
+                                )
+
+                                const subEquipmentsOptions = formattedSubEquipments.map(
+                                  (sub: any) => ({
+                                    id: sub.id,
+                                    checkId: sub.id,
+                                    name: sub.type || sub.typeCode || '-',
+                                    taskDescription: sub.workContent,
+                                    unitPrice: sub.unitPrice,
+                                  }),
+                                )
+
+                                setSubEquipmentByRow((prev) => ({
+                                  ...prev,
+                                  [selectedCarNumber.id]: [
+                                    { id: 0, name: '선택' },
+                                    ...subEquipmentsOptions,
+                                  ],
+                                }))
+                              } else {
+                                updateItemField('fuel', m.id, 'subEquipments', [])
+                              }
                             }}
                             options={
                               carNumberOptionsByCompany[m.outsourcingCompanyId] ?? [
@@ -5847,11 +6118,56 @@ export default function DailyReportRegistrationView() {
                         </TableCell>
 
                         {/* 규격 */}
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          {m.specificationName ?? '-'}
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                        >
+                          <CommonInput
+                            placeholder="자동 입력"
+                            value={m.specificationName ?? ''}
+                            onChange={(value) =>
+                              updateItemField('fuel', m.id, 'specificationName', value)
+                            }
+                            disabled={true}
+                            className=" flex-1"
+                          />
+
+                          {m.subEquipments && m.subEquipments?.length > 0 && (
+                            <div className="flex flex-col gap-2 mt-2">
+                              {m.subEquipments.map((item) => (
+                                <div
+                                  key={item.id || item.outsourcingCompanyContractSubEquipmentId}
+                                  className="flex items-center justify-between gap-2 w-full"
+                                  style={{ minHeight: '40px' }}
+                                >
+                                  <CommonSelect
+                                    className="flex-1 text-2xl"
+                                    value={item.outsourcingCompanyContractSubEquipmentId || 0}
+                                    onChange={(value) => {
+                                      updateSubEqByFuel(
+                                        m.id,
+                                        item.checkId,
+                                        'outsourcingCompanyContractSubEquipmentId',
+                                        value,
+                                      )
+                                    }}
+                                    disabled
+                                    options={
+                                      subEquipmentByRow[m.equipmentId] ?? [
+                                        { id: 0, name: '선택', taskDescription: '', unitPrice: 0 },
+                                      ]
+                                    }
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </TableCell>
 
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                        >
                           <CommonSelect
                             fullWidth={true}
                             value={m.fuelType || 'BASE'}
@@ -5860,11 +6176,25 @@ export default function DailyReportRegistrationView() {
                             }}
                             options={OilTypeMethodOptions}
                           />
+
+                          {m.subEquipments &&
+                            m.subEquipments?.map((detail, index) => (
+                              <div key={index} className="flex gap-2 mt-1 items-center">
+                                <CommonSelect
+                                  fullWidth={true}
+                                  value={detail.fuelType || 'BASE'}
+                                  onChange={async (value) => {
+                                    updateSubEqByFuel(m.id, detail.checkId, 'fuelType', value)
+                                  }}
+                                  options={OilTypeMethodOptions}
+                                />
+                              </div>
+                            ))}
                         </TableCell>
 
                         <TableCell
                           align="center"
-                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
                         >
                           <TextField
                             size="small"
@@ -5880,9 +6210,36 @@ export default function DailyReportRegistrationView() {
                               style: { textAlign: 'right' }, // ← 오른쪽 정렬
                             }}
                           />
+
+                          {m.subEquipments &&
+                            m.subEquipments?.map((detail, index) => (
+                              <div key={index} className="flex gap-2 mt-1 items-center">
+                                <TextField
+                                  size="small"
+                                  placeholder="작업 내용 입력"
+                                  value={detail.fuelAmount ?? 0}
+                                  onChange={(e) =>
+                                    updateSubEqByFuel(
+                                      m.id,
+                                      detail.checkId,
+                                      'fuelAmount',
+                                      e.target.value,
+                                    )
+                                  }
+                                  inputProps={{
+                                    inputMode: 'numeric',
+                                    pattern: '[0-9]*',
+                                    style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                                  }}
+                                />
+                              </div>
+                            ))}
                         </TableCell>
 
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                        >
                           <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
                             <CommonFileInput
                               acceptedExtensions={[
@@ -5924,13 +6281,31 @@ export default function DailyReportRegistrationView() {
                           </div>
                         </TableCell>
 
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                        >
                           <TextField
                             size="small"
                             placeholder="500자 이하 텍스트 입력"
                             value={m.memo}
                             onChange={(e) => updateItemField('fuel', m.id, 'memo', e.target.value)}
                           />
+
+                          {m.subEquipments &&
+                            m.subEquipments?.map((detail, index) => (
+                              <div key={index} className="flex gap-2 mt-1 items-center">
+                                <TextField
+                                  size="small"
+                                  placeholder="500자 이하 텍스트 입력"
+                                  value={detail.memo ?? 0}
+                                  onChange={(e) =>
+                                    updateSubEqByFuel(m.id, detail.checkId, 'memo', e.target.value)
+                                  }
+                                  fullWidth
+                                />
+                              </div>
+                            ))}
                         </TableCell>
 
                         {/* 등록/수정일 (임시: Date.now 기준) */}
