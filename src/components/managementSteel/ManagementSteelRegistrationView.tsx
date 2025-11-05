@@ -421,10 +421,10 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
       return
     }
 
-    if (!form.details || form.details.length === 0) {
-      showSnackbar('품목 상세를 1개 이상 입력해주세요.', 'warning')
-      return
-    }
+    // if (!form.details || form.details.length === 0) {
+    //   showSnackbar('품목 상세를 1개 이상 입력해주세요.', 'warning')
+    //   return
+    // }
 
     if (isEditMode) {
       if (window.confirm('수정하시겠습니까?')) {

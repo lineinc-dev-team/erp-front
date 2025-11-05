@@ -15,10 +15,7 @@ import { SteelExcelFieldMap } from '@/utils/userExcelField'
 import { useManagementSteel } from '@/hooks/useManagementSteel'
 import { formatNumber, getTodayDateString } from '@/utils/formatters'
 import { useSteelSearchStore } from '@/stores/managementSteelStore'
-import {
-  ManagementSteelService,
-  SteelExcelDownload,
-} from '@/services/managementSteel/managementSteelService'
+import { SteelExcelDownload } from '@/services/managementSteel/managementSteelService'
 import CommonSelectByName from '../common/CommonSelectByName'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
@@ -27,10 +24,9 @@ import { myInfoProps } from '@/types/user'
 import { CustomNoRowsOverlay } from '../common/NoData'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
+import SteelCreateModal from '../common/SteelCreateModal'
 
 export default function ManagementSteel() {
-  const { handleNewSteelCreate } = ManagementSteelService()
-
   const { search } = useSteelSearchStore()
 
   const { SteelListQuery } = useManagementSteel()
@@ -163,6 +159,8 @@ export default function ManagementSteel() {
   }
 
   const [isSiteFocused, setIsSiteFocused] = useState(false)
+
+  const [createModalOpen, setCreateModalOpen] = useState(false)
 
   const debouncedSiteKeyword = useDebouncedValue(search.siteName, 300)
 
@@ -395,10 +393,20 @@ export default function ManagementSteel() {
               />
               <CommonButton
                 label="+ 신규등록"
-                disabled={!hasCreate} // 권한 없으면 비활성화
+                disabled={!hasCreate}
                 variant="secondary"
-                onClick={handleNewSteelCreate}
+                // onClick={() => openTab('/dailyReport/registration', '출역일보')}
+                onClick={() => setCreateModalOpen(true)}
                 className="px-3"
+              />
+
+              <SteelCreateModal
+                open={createModalOpen}
+                onClose={() => {
+                  setCreateModalOpen(false)
+                  window.location.reload()
+                }}
+                title="강재수불부 등록"
               />
             </div>
           </div>
