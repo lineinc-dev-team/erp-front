@@ -2626,7 +2626,7 @@ export default function DailyReportRegistrationView() {
     }
 
     // form 전체 필드 검증 (루프 밖)
-    if (form.weather === 'BASE' || form.weather === '') {
+    if (form.weather === 'BASE' || form.weather === '' || form.weather === undefined) {
       return showSnackbar('날씨를 선택해주세요.', 'warning')
     }
 
@@ -2670,7 +2670,7 @@ export default function DailyReportRegistrationView() {
       }
     }
 
-    if (form.weather === 'BASE' || form.weather === '') {
+    if (form.weather === 'BASE' || form.weather === '' || form.weather === undefined) {
       return showSnackbar('날씨를 선택해주세요.', 'warning')
     }
     return true
@@ -2761,10 +2761,9 @@ export default function DailyReportRegistrationView() {
       }
     }
 
-    if (form.weather === 'BASE' || form.weather === '') {
+     if (form.weather === 'BASE' || form.weather === '' || form.weather === undefined) {
       return showSnackbar('날씨를 선택해주세요.', 'warning')
     }
-
     return true
   }
 
@@ -2797,7 +2796,7 @@ export default function DailyReportRegistrationView() {
       }
     }
 
-    if (form.weather === 'BASE' || form.weather === '') {
+    if (form.weather === 'BASE' || form.weather === '' || form.weather === undefined) {
       return showSnackbar('날씨를 선택해주세요.', 'warning')
     }
 
@@ -2818,7 +2817,7 @@ export default function DailyReportRegistrationView() {
         return showSnackbar('비고는 500자를 초과할 수 없습니다.', 'warning')
       }
     }
-    if (form.weather === 'BASE' || form.weather === '') {
+    if (form.weather === 'BASE' || form.weather === '' || form.weather === undefined) {
       return showSnackbar('날씨를 선택해주세요.', 'warning')
     }
 
