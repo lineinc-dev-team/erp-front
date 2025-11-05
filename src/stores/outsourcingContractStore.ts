@@ -820,18 +820,18 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         }))
       }),
 
-      workers: form.personManagers.map((item) => ({
-        id: item.id || Date.now(),
-        name: item.name,
-        category: item.category,
-        taskDescription: item.taskDescription,
-        memo: item.memo,
-        files: (item.files ?? []).map((fileObj) => ({
-          id: fileObj.id || Date.now(),
-          fileUrl: fileObj.fileUrl,
-          originalFileName: fileObj.originalFileName,
-        })),
-      })),
+      // workers: form.personManagers.map((item) => ({
+      //   id: item.id || Date.now(),
+      //   name: item.name,
+      //   category: item.category,
+      //   taskDescription: item.taskDescription,
+      //   memo: item.memo,
+      //   files: (item.files ?? []).map((fileObj) => ({
+      //     id: fileObj.id || Date.now(),
+      //     fileUrl: fileObj.fileUrl,
+      //     originalFileName: fileObj.originalFileName,
+      //   })),
+      // })),
 
       constructionsV2: form.contractManagers.map((m) => ({
         id: m.id || Date.now(),

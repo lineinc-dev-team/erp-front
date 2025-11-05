@@ -123,10 +123,10 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
   const filesToCheck = attachedFiles.filter((f) => f.type !== 'GUARANTEE' && f.type !== 'CONTRACT')
   const isFilesAllChecked = filesToCheck.length > 0 && fileCheckIds.length === filesToCheck.length
   // 인력
-  const personAddAttachedFiles = form.personManagers
-  const personCheckIds = form.checkedPersonIds
-  const isPersonAllChecked =
-    personAddAttachedFiles.length > 0 && personCheckIds.length === personAddAttachedFiles.length
+  // const personAddAttachedFiles = form.personManagers
+  // const personCheckIds = form.checkedPersonIds
+  // const isPersonAllChecked =
+  //   personAddAttachedFiles.length > 0 && personCheckIds.length === personAddAttachedFiles.length
 
   // 장비
 
@@ -913,7 +913,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
   )
 
   // 인력 쪽 무한 스크롤 콜백함수구현
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const [isChecked, setIsChecked] = useState(false)
 
@@ -980,16 +979,16 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       }
     }
 
-    if (personAddAttachedFiles.length > 0) {
-      for (const item of personAddAttachedFiles) {
-        if (!item.name?.trim()) return '인력의 이름을 입력해주세요.'
-        if (!item.category?.trim()) return '인력의 구분을 입력해주세요.'
-        if (!item.taskDescription?.trim()) return '인력의 작업내용을 입력해주세요.'
-        if (item.memo.length > 500) {
-          return '인력의 비고는 500자 이하로 입력해주세요.'
-        }
-      }
-    }
+    // if (personAddAttachedFiles.length > 0) {
+    //   for (const item of personAddAttachedFiles) {
+    //     if (!item.name?.trim()) return '인력의 이름을 입력해주세요.'
+    //     if (!item.category?.trim()) return '인력의 구분을 입력해주세요.'
+    //     if (!item.taskDescription?.trim()) return '인력의 작업내용을 입력해주세요.'
+    //     if (item.memo.length > 500) {
+    //       return '인력의 비고는 500자 이하로 입력해주세요.'
+    //     }
+    //   }
+    // }
 
     if (equipmentAddAttachedFiles.length > 0) {
       for (const item of equipmentAddAttachedFiles) {
@@ -1827,6 +1826,8 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       </div>
 
       {/* 구분에서 인력 클릭 시  */}
+
+      {/*
       {form.type === 'SERVICE' && (
         <div ref={scrollContainerRef} className="h-[340px] overflow-y-auto mt-10">
           <div className="flex justify-between items-center  mb-2">
@@ -1989,18 +1990,13 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     </TableCell>
                   </TableRow>
                 ))}
-                {/* {outsourcingPersonHasNextPage && (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center">
-                      <div ref={loadMorePersonRef}>불러오는 중...</div>
-                    </TableCell>
-                  </TableRow>
-                )} */}
               </TableBody>
             </Table>
           </TableContainer>
         </div>
       )}
+
+      */}
       {/* 구분에서 공사 클릭 시  */}
 
       {form.type === 'CONSTRUCTION' && (
