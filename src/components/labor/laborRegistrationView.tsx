@@ -797,12 +797,22 @@ export default function LaborRegistrationView({ isEditMode = false }) {
             <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
               <div className="flex gap-2 items-center">
                 {/* 작업 구분 선택 */}
-                <CommonSelect
-                  className="text-2xl"
-                  value={form.workType || 'BASE'}
-                  onChange={(value) => setField('workType', value)}
-                  options={WorkTypeMethodOptions}
-                />
+                {form.type === 'OUTSOURCING' ? (
+                  <CommonSelect
+                    className="text-2xl"
+                    value="OUTSOURCING"
+                    onChange={() => {}} // 수정 불가이므로 빈 함수
+                    options={[{ label: '용역', code: 'OUTSOURCING' }]}
+                    disabled
+                  />
+                ) : (
+                  <CommonSelect
+                    className="text-2xl"
+                    value={form.workType || 'BASE'}
+                    onChange={(value) => setField('workType', value)}
+                    options={WorkTypeMethodOptions}
+                  />
+                )}
 
                 {/* 작업 구분 설명 입력 */}
                 <CommonInput

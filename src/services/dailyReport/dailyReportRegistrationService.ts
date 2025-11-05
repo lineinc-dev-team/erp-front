@@ -128,7 +128,7 @@ export async function GetContractNameInfoService({
     API.LABOR
   }/search?page=${pageParam}&size=${size}&outsourcingCompanyId=${outsourcingCompanyId}&keyword=${encodeURIComponent(
     keyword,
-  )}&types=DIRECT_CONTRACT&types=ETC&types=OUTSOURCING`
+  )}&types=DIRECT_CONTRACT&types=OUTSOURCING`
 
   const resData = await fetch(url, {
     method: 'GET',
