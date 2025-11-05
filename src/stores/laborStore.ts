@@ -79,6 +79,7 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
     phoneNumber: '',
     memo: '',
     workType: '',
+    workTypeCode: '',
     workTypeDescription: '',
     mainWork: '',
     dailyWage: 0,
@@ -138,6 +139,7 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
         phoneNumber: '',
         memo: '',
         workType: '',
+        workTypeCode: '',
         workTypeDescription: '',
         mainWork: '',
         dailyWage: 0,
@@ -300,6 +302,7 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
         resignationDateStr !== form.initialResignationDateAt
           ? resignationDateStr
           : form.initialResignationDateAt,
+      workType: form.workTypeCode,
 
       outsourcingCompanyContractId:
         form.outsourcingCompanyContractId === 0 ? null : form.outsourcingCompanyContractId,

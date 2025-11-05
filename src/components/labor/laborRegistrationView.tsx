@@ -43,6 +43,7 @@ import { HistoryItem } from '@/types/ordering'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 import { useUserMg } from '@/hooks/useUserMg'
+import CommonKeywordInput from '../common/CommonKeywordInput'
 
 export default function LaborRegistrationView({ isEditMode = false }) {
   const {
@@ -110,6 +111,26 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     outsourcingCompanyName: '소속업체',
     address: '주소',
   }
+
+  const [searchTerm, setSearchTerm] = useState('') // 인풋 텍스트
+  const [filteredList, setFilteredList] = useState<any[]>([])
+
+  // useEffect(() => {
+  //   if (!searchTerm.trim()) return setFilteredList([])
+  //   setFilteredList(WorkTypeMethodOptions.filter((item) => item.name.includes(searchTerm)))
+  // }, [searchTerm, WorkTypeMethodOptions])
+
+  // OUTSOURCING 처리
+  // useEffect(() => {
+  //   if (form.type === 'OUTSOURCING') {
+  //     if (form.workType !== 'OUTSOURCING') {
+  //       setField('workType', 'OUTSOURCING')
+  //     }
+  //     if (searchTerm !== '용역') {
+  //       setSearchTerm('용역')
+  //     }
+  //   }
+  // }, [form.type, form.workType, setField, searchTerm])
 
   // const [isChecked, setIsChecked] = useState(false)
 
@@ -181,7 +202,9 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       setField('phoneNumber', client.phoneNumber)
       setField('detailAddress', client.detailAddress)
 
-      setField('workType', client.workTypeCode)
+      setField('workType', client.workType)
+      setField('workTypeCode', client.workTypeCode)
+
       setField('workTypeDescription', client.workTypeDescription)
       setField('mainWork', client.mainWork)
       setField('dailyWage', client.dailyWage)
@@ -215,18 +238,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
       // isSeverancePayEligible 설정
       setField('isSeverancePayEligible', client.isSeverancePayEligible === true ? 'Y' : 'N')
-
-      // // resignationDate 연동
-      // if (client.resignationDate === null) {
-      //   // 퇴직금 발생하면 퇴사일 초기화
-      //   setIsChecked(true)
-      //   setField('resignationDate', null)
-      // } else {
-      //   // 퇴직금 미발생이면 퇴사일 값이 있어야 함
-      //   setIsChecked(false)
-      //   setField('resignationDate', new Date(client.resignationDate))
-      // }
-    } else {
+    } else if (isEditMode === false) {
       reset()
     }
   }, [laborDetailData, isEditMode, reset, setField])
@@ -555,6 +567,18 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     height: '40px',
   }
 
+  useEffect(() => {
+    if (isEditMode === false) {
+      setField('workType', '')
+      setField('workTypeCode', '')
+    } else if (isEditMode === true) {
+      if (form.type === 'OUTSOURCING') {
+        setField('workType', '용역')
+        setField('workTypeCode', 'OUTSOURCING')
+      }
+    }
+  }, [form.type, setField])
+
   return (
     <>
       <div>
@@ -794,34 +818,51 @@ export default function LaborRegistrationView({ isEditMode = false }) {
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
               공종 <span className="text-red-500 ml-1">*</span>
             </label>
-            <div className="border border-gray-400 w-full flex flex-col gap-2 p-2">
-              <div className="flex gap-2 items-center">
-                {/* 작업 구분 선택 */}
+            <div className="border border-gray-400 w-full flex flex-col gap-2 p-2 relative">
+              <div className="relative w-full">
                 {form.type === 'OUTSOURCING' ? (
-                  <CommonSelect
+                  <CommonInput
                     className="text-2xl"
-                    value="OUTSOURCING"
-                    onChange={() => {}} // 수정 불가이므로 빈 함수
-                    options={[{ label: '용역', code: 'OUTSOURCING' }]}
+                    value={form.workType ?? ''}
+                    onChange={() => {}}
                     disabled
                   />
                 ) : (
-                  <CommonSelect
-                    className="text-2xl"
-                    value={form.workType || 'BASE'}
-                    onChange={(value) => setField('workType', value)}
-                    options={WorkTypeMethodOptions}
-                  />
-                )}
+                  <>
+                    <CommonKeywordInput
+                      className="text-2xl"
+                      value={form.workType || searchTerm}
+                      onChange={(val) => setSearchTerm(val)}
+                      options={WorkTypeMethodOptions} // 필수
+                      onSelect={(opt) => {
+                        setSearchTerm(opt.name)
+                        setField('workTypeCode', opt.code)
+                        setField('workType', opt.name)
+                      }} // 필수
+                      placeholder="공종명을 입력하세요"
+                    />
 
-                {/* 작업 구분 설명 입력 */}
-                <CommonInput
-                  value={form.workTypeDescription ?? ''}
-                  onChange={(value) => setField('workTypeDescription', value)}
-                  className="flex-1"
-                  placeholder={form.workType === 'ETC' ? '텍스트 입력' : ''}
-                  disabled={form.workType !== 'ETC'}
-                />
+                    {filteredList.length > 0 && (
+                      <div className="absolute z-10 bg-white border border-gray-400 mt-1 w-full rounded-md max-h-40 overflow-y-auto shadow-md">
+                        {filteredList.map((item) => (
+                          <div
+                            key={item.code}
+                            className="px-2 py-1 hover:bg-gray-200 cursor-pointer"
+                            onMouseDown={() => {
+                              // onClick 대신 onMouseDown 사용 (blur 전에 선택 가능)
+                              setSearchTerm(item.name)
+                              setField('workTypeCode', item.code)
+                              setField('workType', item.name)
+                              setFilteredList([])
+                            }}
+                          >
+                            {item.name}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </div>

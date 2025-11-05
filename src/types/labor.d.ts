@@ -91,6 +91,7 @@ export type LaborFormState = {
   phoneNumber: string
   memo: string
   workType: string
+  workTypeCode: string
   workTypeDescription: string
   mainWork: string
   dailyWage: number

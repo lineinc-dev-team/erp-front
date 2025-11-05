@@ -35,7 +35,7 @@ export function useLaborInfo() {
     queryFn: WorkTypeService,
   })
 
-  const WorkTypeMethodOptions = [{ code: 'BASE', name: '선택' }, ...(workTypeInfoId?.data ?? [])]
+  const WorkTypeMethodOptions = [...(workTypeInfoId?.data ?? [])]
 
   //   노무 구분 조회
   const { data: laborTypeInfoId } = useQuery({
