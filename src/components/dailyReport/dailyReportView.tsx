@@ -13,7 +13,6 @@ import {
 import { Pagination, Tooltip } from '@mui/material'
 import { useAccountStore } from '@/stores/accountManagementStore'
 import { Fragment, useEffect, useState } from 'react'
-import { useTabOpener } from '@/utils/openTab'
 import { LaborDataList } from '@/types/labor'
 import { formatNumber, getTodayDateString } from '@/utils/formatters'
 import { myInfoProps } from '@/types/user'
@@ -28,10 +27,9 @@ import { SitesProcessNameScroll } from '@/services/managementCost/managementCost
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 import { useRouter } from 'next/navigation'
+import CreateModal from '../common/CreateModal'
 
 export default function DailyReportView() {
-  const openTab = useTabOpener()
-
   const { search } = useDailySearchList()
 
   const { DailyListQuery } = useDailyReport()
@@ -290,6 +288,8 @@ export default function DailyReportView() {
   // "계정 관리" 메뉴에 대한 권한
   const { hasCreate, hasModify } = useMenuPermission(roleId, '출역일보', enabled)
 
+  const [createModalOpen, setCreateModalOpen] = useState(false)
+
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
@@ -508,8 +508,18 @@ export default function DailyReportView() {
                 label="+ 신규등록"
                 disabled={!hasCreate}
                 variant="secondary"
-                onClick={() => openTab('/dailyReport/registration', '출역일보')}
+                // onClick={() => openTab('/dailyReport/registration', '출역일보')}
+                onClick={() => setCreateModalOpen(true)}
                 className="px-3"
+              />
+
+              <CreateModal
+                open={createModalOpen}
+                onClose={() => {
+                  setCreateModalOpen(false)
+                  window.location.reload()
+                }}
+                title="출역일보 등록"
               />
             </div>
           </div>
