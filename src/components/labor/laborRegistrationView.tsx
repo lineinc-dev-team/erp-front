@@ -408,7 +408,10 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       return '구분 내용을 입력하세요.'
     }
 
-    if (form.outsourcingCompanyId < 0) {
+    if (
+      !['REGULAR_EMPLOYEE', 'DIRECT_CONTRACT'].includes(form.type) &&
+      form.outsourcingCompanyId <= 0
+    ) {
       return '소속업체를 선택하세요.'
     }
 
@@ -667,6 +670,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                 shouldShowList={isOutsourcingFocused}
                 onFocus={() => setIsOutsourcingFocused(true)}
                 onBlur={() => setIsOutsourcingFocused(false)}
+                disabled={['REGULAR_EMPLOYEE', 'DIRECT_CONTRACT'].includes(form.type)}
               />
               {form.type === 'OUTSOURCING_CONTRACT' && (
                 <div className="flex items-center w-full">
