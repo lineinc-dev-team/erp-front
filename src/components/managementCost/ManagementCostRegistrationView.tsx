@@ -79,7 +79,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
     CostNameTypeMethodOptions,
 
-    // 업체명
+    // 구매처
     // setCompanySearch,
     // companyOptions,
     // comPanyNameFetchNextPage,
@@ -179,7 +179,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     siteName: '현장명',
     processName: '공정명',
     itemTypeDescription: '항목 내용',
-    outsourcingCompanyName: '업체명',
+    outsourcingCompanyName: '구매처',
     vat: '부가세',
     supplyPrice: '공급가',
     total: '합계',
@@ -430,9 +430,9 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
   const SiteRawList = SiteNameData?.pages.flatMap((page) => page.data.content) ?? []
   const siteList = Array.from(new Map(SiteRawList.map((user) => [user.name, user])).values())
 
-  // 업체명 이름 키워드
+  // 구매처 이름 키워드
 
-  // 업체명 키워드 검색
+  // 구매처 키워드 검색
 
   const [isOutsourcingFocused, setIsOutsourcingFocused] = useState(false)
 
@@ -550,7 +550,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
   function validateCostForm(form: ManagementCostFormState) {
     if (!form.siteId) return '현장명을 입력하세요.'
     if (!form.siteProcessId) return '공정명을 선택하세요.'
-    if (!form.outsourcingCompanyId) return '업체명을 선택하세요.'
+    if (!form.outsourcingCompanyId) return '구매처를 선택하세요.'
     if (!form.itemType) return '항목을 선택하세요.'
     if (form.itemType === 'ETC' && !form.itemTypeDescription) {
       return '상세 항목을 입력하세요.'
@@ -558,7 +558,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     if (!form.paymentDate) return '일자를 선택하세요.'
     if (!form.outsourcingCompanyInfo) return '업체 정보를 입력하세요.'
 
-    // if (!form.outsourcingCompanyInfo?.name) return '업체명을 입력해주세요.'
+    // if (!form.outsourcingCompanyInfo?.name) return '구매처을 입력해주세요.'
 
     // if (form.outsourcingCompanyId !== -2) {
     //   const businessNumberDigits =
@@ -787,11 +787,11 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-[143px] text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              업체명 <span className="text-red-500 ml-1">*</span>
+              구매처 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 w-full">
               <InfiniteScrollSelect
-                placeholder="업체명을 입력하세요"
+                placeholder="구매처를 입력하세요"
                 keyword={form.outsourcingCompanyName}
                 onChangeKeyword={(newKeyword) => {
                   setField('outsourcingCompanyName', newKeyword)
@@ -803,7 +803,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                     setField('outsourcingCompanyId', -1)
                   }
 
-                  // 업체명을 지우면 전체 정보 초기화
+                  // 구매처을 지우면 전체 정보 초기화
                   if (newKeyword === '') {
                     setField('outsourcingCompanyInfo', {
                       name: '',

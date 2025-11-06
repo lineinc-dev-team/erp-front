@@ -71,7 +71,7 @@ export const CostExcelFieldMap = {
   현장명: 'siteName',
   공정명: 'processName',
   항목: 'itemType',
-  업체명: 'outsourcingCompanyName',
+  구매처: 'outsourcingCompanyName',
   일자: 'paymentDate',
   사업자번호: 'outsourcingCompanyBusinessNumber',
   대표자: 'outsourcingCompanyCeoName',

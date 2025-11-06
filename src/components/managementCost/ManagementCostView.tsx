@@ -413,11 +413,11 @@ export default function ManagementCost() {
           )}
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              업체명
+              구매처
             </label>
             <div className="border border-gray-400  w-full flex items-center">
               <InfiniteScrollSelect
-                placeholder="업체명을 입력하세요"
+                placeholder="구매처를 입력하세요"
                 keyword={search.outsourcingCompanyName}
                 onChangeKeyword={(newKeyword) =>
                   search.setField('outsourcingCompanyName', newKeyword)

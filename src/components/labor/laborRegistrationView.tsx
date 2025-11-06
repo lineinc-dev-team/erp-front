@@ -569,8 +569,13 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
   useEffect(() => {
     if (isEditMode === false) {
-      setField('workType', '')
-      setField('workTypeCode', '')
+      if (form.type === 'OUTSOURCING') {
+        setField('workType', '용역')
+        setField('workTypeCode', 'OUTSOURCING')
+      } else {
+        setField('workType', '')
+        setField('workTypeCode', '')
+      }
     } else if (isEditMode === true) {
       if (form.type === 'OUTSOURCING') {
         setField('workType', '용역')
