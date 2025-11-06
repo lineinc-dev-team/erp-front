@@ -7,8 +7,8 @@ export type SiteManagementSearchState = {
   siteName: string
   siteProcessId: number
   siteProcessName: string
-  startYearMonth: Date | null
-  endYearMonth: Date | null
+  startYearMonth: string
+  endYearMonth: string
 
   currentPage: number
   arraySort: string
@@ -25,7 +25,7 @@ export type SiteManagementSearchState = {
 }
 
 export type SiteManamentFormState = {
-  yearMonth: Date | null // ISO string
+  yearMonth: Date | null | string // ISO string
   siteId: number
   siteName: string
   siteProcessId: number

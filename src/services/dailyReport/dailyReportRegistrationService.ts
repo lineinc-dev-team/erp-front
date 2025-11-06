@@ -117,18 +117,52 @@ export async function GetContractNameInfoService({
   pageParam = 0,
   size = 200,
   keyword = '',
+}: {
+  pageParam?: number
+  size?: number
+  keyword?: string
+}) {
+  const url = `${API.LABOR}/search?page=${pageParam}&size=${size}&keyword=${encodeURIComponent(
+    keyword,
+  )}&types=DIRECT_CONTRACT`
+
+  const resData = await fetch(url, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+
+// 직영/용역에서  용역 데이터의 이름 조회
+
+export async function GetContractNameInfoByOutsourcing({
+  pageParam = 0,
+  size = 200,
+  keyword = '',
   outsourcingCompanyId = 0,
 }: {
   pageParam?: number
   size?: number
-  outsourcingCompanyId?: string | number | ''
   keyword?: string
+  outsourcingCompanyId?: string | number | ''
 }) {
   const url = `${
     API.LABOR
-  }/search?page=${pageParam}&size=${size}&outsourcingCompanyId=${outsourcingCompanyId}&keyword=${encodeURIComponent(
+  }/search?page=${pageParam}&outsourcingCompanyId=${outsourcingCompanyId}  &size=${size}&keyword=${encodeURIComponent(
     keyword,
-  )}&types=DIRECT_CONTRACT&types=OUTSOURCING`
+  )}&types=OUTSOURCING`
 
   const resData = await fetch(url, {
     method: 'GET',
@@ -237,6 +271,95 @@ export async function ModifyContractReport({
   return await res.status
 }
 
+// 직영/계약직에서 용역 데이터 수정 전송
+
+export async function ModifyDirContractReport({
+  siteId,
+  siteProcessId,
+  reportDate,
+}: {
+  siteId: number
+  siteProcessId: number
+  reportDate: string
+}) {
+  const { modifyDirectContractByOutsourcing } = useDailyFormStore.getState()
+  const payload = modifyDirectContractByOutsourcing()
+
+  const res = await fetch(
+    `${API.DAILYREPORT}/direct-contract-outsourcings?siteId=${siteId}&siteProcessId=${siteProcessId}&reportDate=${reportDate}`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      credentials: 'include',
+    },
+  )
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    // 서버에서 내려준 메시지 꺼내기
+    let errorMessage = `서버 에러: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // json 파싱 실패 시는 그냥 status만 전달
+    }
+
+    throw new Error(errorMessage)
+  }
+
+  return await res.status
+}
+
+// 직영/계약직 용역 데이터 조회
+
+export async function GetViewDirectContractList({
+  pageParam = 0,
+  size = 100,
+  sort = 'id,asc',
+  siteId = 0,
+  siteProcessId = 0,
+  reportDate = '',
+}) {
+  const query = new URLSearchParams({
+    page: pageParam.toString(),
+    size: size.toString(),
+    sort,
+    siteId: siteId.toString(),
+    siteProcessId: siteProcessId.toString(),
+    reportDate,
+  })
+
+  const res = await fetch(`${API.DAILYREPORT}/direct-contract-outsourcings?${query.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
+  }
+
+  const data = await res.json()
+  return data
+}
+
 // 직영/계약직에서 외주 부분 수정
 
 // 직영/계약직 수정
@@ -254,7 +377,7 @@ export async function ModifyDirectContractReport({
   const payload = modifyDirectContractOutsourcing()
 
   const res = await fetch(
-    `${API.DAILYREPORT}/direct-contract-outsourcings?siteId=${siteId}&siteProcessId=${siteProcessId}&reportDate=${reportDate}`,
+    `${API.DAILYREPORT}/direct-contract-outsourcings-contract?siteId=${siteId}&siteProcessId=${siteProcessId}&reportDate=${reportDate}`,
     {
       method: 'PATCH',
       headers: {
@@ -417,13 +540,16 @@ export async function GetDirectContractByFilterService({
     reportDate,
   })
 
-  const res = await fetch(`${API.DAILYREPORT}/direct-contract-outsourcings?${query.toString()}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
+  const res = await fetch(
+    `${API.DAILYREPORT}/direct-contract-outsourcings-contract?${query.toString()}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
     },
-    credentials: 'include',
-  })
+  )
 
   if (!res.ok) {
     if (res.status === 401) {

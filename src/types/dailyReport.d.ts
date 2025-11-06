@@ -78,7 +78,7 @@ export type directContractsItem = {
   modifyDate?: string
 }
 
-export type directContractOutsourcingsItem = {
+export type directContractOutsourcingContractsItem = {
   id: T
   outsourcingCompanyId: number
   outsourcingCompanyContractId: number
@@ -88,6 +88,26 @@ export type directContractOutsourcingsItem = {
   fileUrl?: string
   originalFileName?: string
   files: FileUploadInfo[]
+  modifyDate?: string
+}
+
+export type outSourcingByDirectContractItem = {
+  id: T
+  checkId: number
+  outsourcingCompanyId: T
+  outsourcingCompanyName?: string
+  laborId: T
+  position: string
+  workContent: string
+  previousPrice: number
+  unitPrice: number
+  workQuantity: number
+  memo: string
+  fileUrl?: string
+  originalFileName?: string
+  files: FileUploadInfo[]
+  isTemporary: boolean
+  temporaryLaborName: string
   modifyDate?: string
 }
 
@@ -272,9 +292,13 @@ export type DailyFormState = {
   directContracts: directContractsItem[]
   checkeddirectContractsIds: number[]
 
+  // 직영/용역에서 용역 데이터 추가
+  directContractOutsourcings: outSourcingByDirectContractItem[]
+  outSourcingByDirectContractIds: number[]
+
   // 직영/용역에서 외주 데이터 추가
 
-  directContractOutsourcings: directContractOutsourcingsItem[]
+  directContractOutsourcingContracts: directContractOutsourcingContractsItem[]
   checkedDirectContractOutsourcingIds: number[]
 
   //외주 데이터
@@ -345,6 +369,7 @@ type DailyReportFormStore = {
   resetFuel: () => void
   resetWorker: () => void
   resetMainProcess: () => void
+  resetOutByDirectContracts: () => void
 
   resetInputStatus: () => void
 
@@ -390,6 +415,7 @@ type DailyReportFormStore = {
       | 'Employees'
       | 'EmployeeFiles'
       | 'directContracts'
+      | 'outsourcingByDirectContract'
       | 'directContractFiles'
       | 'directContractOutsourcings'
       | 'outsourcings'
@@ -408,13 +434,14 @@ type DailyReportFormStore = {
     isTodayType?: boolean,
   ) => void
 
-  addTemporaryCheckedItems: (type: 'directContracts') => void
+  addTemporaryCheckedItems: (type: 'directContracts' | 'outsourcingByDirectContract') => void
 
   updateItemField: (
     type:
       | 'Employees'
       | 'EmployeeFiles'
       | 'directContracts'
+      | 'outsourcingByDirectContract'
       | 'directContractFiles'
       | 'directContractOutsourcings'
       | 'outsourcings'
@@ -438,6 +465,7 @@ type DailyReportFormStore = {
       | 'Employees'
       | 'EmployeeFiles'
       | 'directContracts'
+      | 'outsourcingByDirectContract'
       | 'directContractFiles'
       | 'directContractOutsourcings'
       | 'outsourcings'
@@ -459,6 +487,7 @@ type DailyReportFormStore = {
       | 'Employees'
       | 'EmployeeFiles'
       | 'directContracts'
+      | 'outsourcingByDirectContract'
       | 'directContractFiles'
       | 'directContractOutsourcings'
       | 'outsourcings'
@@ -479,6 +508,7 @@ type DailyReportFormStore = {
       | 'Employees'
       | 'EmployeeFiles'
       | 'directContracts'
+      | 'outsourcingByDirectContract'
       | 'directContractFiles'
       | 'directContractOutsourcings'
       | 'equipment'
@@ -514,7 +544,12 @@ type DailyReportFormStore = {
   //payload 값
   newDailyReportData: () => void
   modifyEmployees: () => void
+  // 직영
   modifyDirectContracts: () => void
+
+  // 용역
+  modifyDirectContractByOutsourcing: () => void
+  // 외주
   modifyDirectContractOutsourcing: () => void
 
   modifyOutsourcing: () => void

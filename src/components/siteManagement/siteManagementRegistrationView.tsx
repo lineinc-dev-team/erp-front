@@ -21,7 +21,6 @@ import CommonButton from '../common/Button'
 import { formatDateTime, formatNumber, unformatNumber } from '@/utils/formatters'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import { HistoryItem } from '@/types/ordering'
-import CommonDatePicker from '../common/DatePicker'
 import { useSiteManamentFormStore } from '@/stores/siteManamentStore'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
@@ -33,6 +32,7 @@ import {
 } from '@/services/siteManament/siteManamentRegistrationService'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { SiteManamentFormState } from '@/types/siteManagement'
+import CommonMonthPicker from '../common/MonthPicker'
 
 export default function SiteManagementRegistrationView({ isEditMode = true }) {
   const { setField, form, updateMemo, reset } = useSiteManamentFormStore()
@@ -437,9 +437,20 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
               일자 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonDatePicker
-                value={form.yearMonth}
-                onChange={(value) => setField('yearMonth', value)}
+              <CommonMonthPicker
+                value={form.yearMonth ? new Date(form.yearMonth + '-01') : null}
+                onChange={(date) => {
+                  if (!date) {
+                    setField('yearMonth', '')
+                    return
+                  }
+                  const formatted = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+                    2,
+                    '0',
+                  )}`
+                  setField('yearMonth', formatted)
+                }}
+                disabled={isEditMode}
               />
             </div>
           </div>

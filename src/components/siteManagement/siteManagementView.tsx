@@ -3,7 +3,6 @@
 
 import CommonButton from '../common/Button'
 import CommonSelect from '../common/Select'
-import CommonDatePicker from '../common/DatePicker'
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { Pagination } from '@mui/material'
 import { useAccountStore } from '@/stores/accountManagementStore'
@@ -23,14 +22,11 @@ import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 import useSiteManament from '@/hooks/useSiteManament'
 import { useSiteManamentSearchStore } from '@/stores/siteManamentStore'
-import {
-  SiteManagementExcelDownload,
-  SiteMoveService,
-} from '@/services/siteManament/siteManamentService'
+import { SiteManagementExcelDownload } from '@/services/siteManament/siteManamentService'
+import CommonMonthPicker from '../common/MonthPicker'
+import SiteManagementCreateModal from '../common/SiteManagementCreateModal'
 
 export default function SiteManagement() {
-  const { handleNewSiteCreate } = SiteMoveService()
-
   const { search } = useSiteManamentSearchStore()
 
   const { SiteManamentListQuery, SiteManamentDeleteMutation } = useSiteManament()
@@ -169,6 +165,8 @@ export default function SiteManagement() {
 
   // 권한에 따른 버튼 활성화
 
+  const [createModalOpen, setCreateModalOpen] = useState(false)
+
   const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
 
   useEffect(() => {
@@ -298,14 +296,34 @@ export default function SiteManagement() {
               등록일
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
-              <CommonDatePicker
-                value={search.startYearMonth}
-                onChange={(value) => search.setField('startYearMonth', value)}
+              <CommonMonthPicker
+                value={search.startYearMonth ? new Date(search.startYearMonth + '-01') : null}
+                onChange={(date) => {
+                  if (!date) {
+                    search.setField('startYearMonth', '')
+                    return
+                  }
+                  const formatted = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+                    2,
+                    '0',
+                  )}`
+                  search.setField('startYearMonth', formatted)
+                }}
               />
               ~
-              <CommonDatePicker
-                value={search.endYearMonth}
-                onChange={(value) => search.setField('endYearMonth', value)}
+              <CommonMonthPicker
+                value={search.endYearMonth ? new Date(search.endYearMonth + '-01') : null}
+                onChange={(date) => {
+                  if (!date) {
+                    search.setField('endYearMonth', '')
+                    return
+                  }
+                  const formatted = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+                    2,
+                    '0',
+                  )}`
+                  search.setField('endYearMonth', formatted)
+                }}
               />
             </div>
           </div>
@@ -409,10 +427,20 @@ export default function SiteManagement() {
               />
               <CommonButton
                 label="+ 신규등록"
-                disabled={!hasCreate} // 권한 없으면 비활성화
+                disabled={!hasCreate}
                 variant="secondary"
-                onClick={handleNewSiteCreate}
+                // onClick={() => openTab('/dailyReport/registration', '출역일보')}
+                onClick={() => setCreateModalOpen(true)}
                 className="px-3"
+              />
+
+              <SiteManagementCreateModal
+                open={createModalOpen}
+                onClose={() => {
+                  setCreateModalOpen(false)
+                  window.location.reload()
+                }}
+                title="현장/본사 관리비 등록"
               />
             </div>
           </div>

@@ -10,6 +10,7 @@ import {
   GetWithEquipmentService,
   ModifyContractReport,
   ModifyDailyFuel,
+  ModifyDirContractReport,
   ModifyDirectContractReport,
   ModifyEmployeesReport,
   ModifyEquipmentReport,
@@ -254,11 +255,11 @@ export function useDailyReport() {
       reportDate: string
     }) => {
       const res1 = await ModifyContractReport({ siteId, siteProcessId, reportDate })
-
-      const res2 = await ModifyDirectContractReport({ siteId, siteProcessId, reportDate })
+      const res2 = await ModifyDirContractReport({ siteId, siteProcessId, reportDate })
+      const res3 = await ModifyDirectContractReport({ siteId, siteProcessId, reportDate })
 
       // 필요하다면 두 응답을 함께 리턴
-      return { res1, res2 }
+      return { res1, res2, res3 }
     },
 
     onSuccess: () => {

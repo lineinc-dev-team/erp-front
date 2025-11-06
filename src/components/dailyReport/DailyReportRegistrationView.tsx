@@ -29,6 +29,7 @@ import {
   GetAttachedFileByFilterService,
   GetContractByFilterService,
   GetContractGroup,
+  GetContractNameInfoByOutsourcing,
   GetContractNameInfoService,
   GetDirectContractByFilterService,
   GetDirectContractNameInfoService,
@@ -42,6 +43,7 @@ import {
   GetMaterialStatusService,
   GetOutsoucingByFilterService,
   GetReportByEvidenceFilterService,
+  GetViewDirectContractList,
   GetWorkerStatusService,
   ModifyWeatherReport,
   // OutsourcingWorkerNameScroll,
@@ -61,12 +63,13 @@ import {
   FuelDriverNameScroll,
   FuelEquipmentNameScroll,
 } from '@/services/fuelAggregation/fuelAggregationRegistrationService'
-import { useManagementCost } from '@/hooks/useManagementCost'
+// import { useManagementCost } from '@/hooks/useManagementCost'
 import { useSearchParams } from 'next/navigation'
 import AmountInput from '../common/AmountInput'
 import { useSiteId } from '@/hooks/useSiteIdNumber'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
+import { useManagementCost } from '@/hooks/useManagementCost'
 
 export default function DailyReportRegistrationView() {
   const {
@@ -85,6 +88,8 @@ export default function DailyReportRegistrationView() {
     resetInputStatus,
     resetMaterialStatus,
     resetDirectContracts,
+    resetOutByDirectContracts,
+
     resetDirectContractOut,
     resetOutsourcing,
     resetEquipment,
@@ -194,6 +199,12 @@ export default function DailyReportRegistrationView() {
     Record<number, any[]>
   >({})
 
+  // 직영/용역에서  용역의 이름을 가져올 변수명
+
+  const [outSourcingByDirectContract, setOutSourcingByDirectContract] = useState<
+    Record<number, any[]>
+  >({})
+
   // 직영/용역에서 외주의 계약명 가져오는 변수
 
   const [directContarctNameOptionsByCompany, setDirectContarctNameOptionsByCompany] = useState<
@@ -232,6 +243,8 @@ export default function DailyReportRegistrationView() {
         break
       case '직영/용역':
         resetDirectContracts()
+        resetOutByDirectContracts()
+        resetDirectContractOut()
         break
       case '외주(공사)':
         resetOutsourcing()
@@ -445,6 +458,88 @@ export default function DailyReportRegistrationView() {
   const isContractAllChecked =
     contractData.length > 0 && ContractCheckedIds.length === contractData.length
 
+  // 직영/용역에서 용역 데이터 가져오기
+
+  const {
+    // data: employeesData,
+    fetchNextPage: outsourcingByContractFetchNextPage,
+    hasNextPage: outsourcingByContractHasNextPage,
+    isFetching: outsourcingByContractFetching,
+    refetch: outsourcingByContractRefetch, // 조회 버튼에서 직접 실행할 수 있게
+  } = useInfiniteQuery({
+    queryKey: ['outsourcingByContract', form.siteId, form.siteProcessId, form.reportDate],
+    queryFn: ({ pageParam }) =>
+      GetViewDirectContractList({
+        pageParam,
+        siteId: form.siteId,
+        siteProcessId: form.siteProcessId,
+        reportDate: form.reportDate ? form.reportDate.toISOString().slice(0, 10) : '',
+      }),
+    enabled: false, // 버튼 누르기 전에는 자동 조회 안 되게
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      const nextPage = sliceInfo.page + 1
+      return sliceInfo.hasNext ? nextPage : undefined
+    },
+  })
+
+  const handleOutByContractRefetch = async () => {
+    const res = await outsourcingByContractRefetch()
+    if (!res.data) return
+
+    // content 배열 합치기
+    const allContract = res.data.pages.flatMap((page) => page.data.content)
+
+    if (allContract.length === 0) {
+      // 데이터가 아예 없는 경우
+      setIsEditMode(false)
+      resetOutByDirectContracts()
+      return
+    }
+
+    // 데이터가 있는 경우
+    const fetched = allContract.map((item: any) => ({
+      id: item.id,
+      checkId: item.id,
+      outsourcingCompanyId: item.outsourcingCompany?.id ?? null,
+      laborId: item.labor?.id ?? 0,
+      position: item.position,
+      workContent: item.workContent,
+      previousPrice: item.labor.previousDailyWage,
+      unitPrice: item.unitPrice,
+      workQuantity: item.workQuantity,
+      memo: item.memo,
+      isTemporary: item.labor.isTemporary,
+      temporaryLaborName: item.labor.name,
+
+      files:
+        item.fileUrl && item.originalFileName
+          ? [
+              {
+                fileUrl: item.fileUrl,
+                originalFileName: item.originalFileName,
+              },
+            ]
+          : [],
+
+      modifyDate: `${getTodayDateString(item.createdAt)} / ${getTodayDateString(item.updatedAt)}`,
+    }))
+
+    setIsEditMode(true)
+    setField('directContractOutsourcings', fetched)
+  }
+
+  const directContractByData = useMemo(
+    () => form.directContractOutsourcings,
+    [form.directContractOutsourcings],
+  )
+
+  const directContractCheckedIds = form.outSourcingByDirectContractIds
+  const directContractAllCheckedIds =
+    directContractByData.length > 0 &&
+    directContractCheckedIds.length === directContractByData.length
+
   // 직영/용역 계약직에서 외주 데이터 불러오는 탭 추가
 
   const {
@@ -508,12 +603,12 @@ export default function DailyReportRegistrationView() {
     }))
 
     setIsEditMode(true)
-    setField('directContractOutsourcings', fetched)
+    setField('directContractOutsourcingContracts', fetched)
   }
 
   const directContractOutsourcings = useMemo(
-    () => form.directContractOutsourcings,
-    [form.directContractOutsourcings],
+    () => form.directContractOutsourcingContracts,
+    [form.directContractOutsourcingContracts],
   )
 
   const directContractOutsourcingCheckedIds = form.checkedDirectContractOutsourcingIds
@@ -1495,6 +1590,7 @@ export default function DailyReportRegistrationView() {
       }
       if (activeTab === '직영/용역') {
         handleContractRefetch()
+        handleOutByContractRefetch()
         handleDirectContractRefetch()
         handleContractEvidenceRefetch()
       }
@@ -1986,7 +2082,7 @@ export default function DailyReportRegistrationView() {
     queryFn: ({ pageParam = 0 }) =>
       GetContractNameInfoService({
         pageParam,
-        outsourcingCompanyId: selectedCompanyIds[selectId] || 0,
+        // outsourcingCompanyId: selectedCompanyIds[selectId] || 0,
         size: 100,
       }),
     initialPageParam: 0,
@@ -1997,6 +2093,7 @@ export default function DailyReportRegistrationView() {
     enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
   })
 
+  // 직영/용역에서 직영 데이터 조회
   useEffect(() => {
     if (!contractInfo) return
 
@@ -2042,14 +2139,14 @@ export default function DailyReportRegistrationView() {
         return
       }
 
-      if (companyId === null) {
-        return
-      }
+      // if (companyId === null) {
+      //   return
+      // }
 
       try {
         const res = await GetContractNameInfoService({
           pageParam: 0,
-          outsourcingCompanyId: companyId,
+          // outsourcingCompanyId: companyId,
           size: 200,
         })
 
@@ -2098,6 +2195,132 @@ export default function DailyReportRegistrationView() {
       }
     })
   }, [ContractOutsourcings])
+
+  //직영/용역에서 용역에 필요한 이름 검색 하기 위함 ..
+
+  const {
+    data: NameByOutsourcingInfo,
+    fetchNextPage: NameByOutsourcingFetchNextPage,
+    hasNextPage: NameByOutsourcinghasNextPage,
+    isFetching: NameByOutsourcingFetching,
+    isLoading: NameByOutsourcingLoading,
+  } = useInfiniteQuery({
+    queryKey: ['NameByOutsourcingInfo', selectedCompanyIds[selectId]],
+    queryFn: ({ pageParam = 0 }) =>
+      GetContractNameInfoByOutsourcing({
+        pageParam,
+        outsourcingCompanyId: selectedCompanyIds[selectId] || 0,
+        size: 100,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+    },
+    enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
+  })
+
+  useEffect(() => {
+    if (!NameByOutsourcingInfo) return
+
+    const options = NameByOutsourcingInfo.pages
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+        type: user.type,
+        previousDailyWage: user.previousDailyWage || user.dailyWage,
+        dailyWage: user.dailyWage,
+        isSeverancePayEligible: user.isSeverancePayEligible,
+      }))
+
+    setOutSourcingByDirectContract((prev) => ({
+      ...prev,
+      [selectedCompanyIds[selectId]]: [
+        {
+          id: 0,
+          name: '선택',
+          type: '',
+          previousDailyWage: '',
+          dailyWage: '',
+          isSeverancePayEligible: false,
+        },
+        ...options,
+      ],
+    }))
+  }, [NameByOutsourcingInfo, selectedCompanyIds, selectId])
+
+  // 상세페이지 데이터 (예: props나 query에서 가져온 값)
+  const OutsourcingInfoBydaily = directContractByData
+
+  // 1. 상세페이지 들어올 때 각 업체별 worker 데이터 API 호출 (직영 용역 데이터 불러옴 언제? 셀렉트 박스 선택 시 )
+  useEffect(() => {
+    if (!OutsourcingInfoBydaily.length) return
+
+    OutsourcingInfoBydaily.forEach(async (row) => {
+      const companyId = row.outsourcingCompanyId
+      const worker = row.laborId
+
+      if (ContarctNameOptionsByCompany[companyId]) {
+        return
+      }
+
+      if (companyId === null) {
+        return
+      }
+
+      try {
+        const res = await GetContractNameInfoByOutsourcing({
+          pageParam: 0,
+          outsourcingCompanyId: companyId,
+          size: 200,
+        })
+
+        const options = res.data.content.map((user: any) => ({
+          id: user.id,
+          name: user.name,
+          type: user.type,
+          previousDailyWage: user.previousDailyWage || user.dailyWage,
+          dailyWage: user.dailyWage,
+          isSeverancePayEligible: user.isSeverancePayEligible,
+        }))
+
+        setOutSourcingByDirectContract((prev) => {
+          const exists = options.some((opt: any) => opt.id === worker)
+
+          return {
+            ...prev,
+            [companyId]: [
+              {
+                id: 0,
+                name: '선택',
+                type: '',
+                previousDailyWage: '',
+                dailyWage: '',
+                isSeverancePayEligible: false,
+              },
+              ...options,
+              // 만약 선택된 worker가 목록에 없으면 추가
+              ...(worker && !exists
+                ? [
+                    {
+                      id: worker,
+                      name: '',
+                      type: '',
+                      previousDailyWage: '',
+                      dailyWage: '',
+                      isSeverancePayEligible: false,
+                    },
+                  ]
+                : []),
+            ],
+          }
+        })
+      } catch (err) {
+        console.error('업체별 인력 조회 실패', err)
+      }
+    })
+  }, [OutsourcingInfoBydaily])
 
   // 직영/용역에서 외주 데이터 조회 시 계약한 데이터 가져오기
 
@@ -2761,7 +2984,7 @@ export default function DailyReportRegistrationView() {
       }
     }
 
-     if (form.weather === 'BASE' || form.weather === '' || form.weather === undefined) {
+    if (form.weather === 'BASE' || form.weather === '' || form.weather === undefined) {
       return showSnackbar('날씨를 선택해주세요.', 'warning')
     }
     return true
@@ -3707,7 +3930,7 @@ export default function DailyReportRegistrationView() {
         <>
           <div>
             <div className="flex justify-between items-center mt-10 mb-2">
-              <span className="font-bold mb-4"> [{activeTab}]</span>
+              <span className="font-bold mb-4"> [직영]</span>
               <div className="flex gap-4">
                 <CommonButton
                   label="삭제"
@@ -3753,8 +3976,8 @@ export default function DailyReportRegistrationView() {
               onScroll={(e) => {
                 const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
                 if (scrollHeight - scrollTop <= clientHeight * 1.2) {
-                  if (contractHasNextPage && !contractFetching) {
-                    contractFetchNextPage()
+                  if (outsourcingByContractHasNextPage && !outsourcingByContractFetching) {
+                    outsourcingByContractFetchNextPage()
                   }
                 }
               }}
@@ -3771,7 +3994,6 @@ export default function DailyReportRegistrationView() {
                       />
                     </TableCell>
                     {[
-                      '업체명',
                       '이름',
                       '직급(직책)',
                       '작업내용',
@@ -3827,7 +4049,7 @@ export default function DailyReportRegistrationView() {
                             }
                           />
                         </TableCell>
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        {/* <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                           {m.isTemporary ? (
                             <TextField
                               size="small"
@@ -3895,7 +4117,7 @@ export default function DailyReportRegistrationView() {
                               loading={comPanyNameLoading}
                             />
                           )}
-                        </TableCell>
+                        </TableCell> */}
 
                         <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                           {m.isTemporary ? (
@@ -3915,7 +4137,7 @@ export default function DailyReportRegistrationView() {
                             />
                           ) : (
                             <CommonSelect
-                              value={selectContractIds[m.id] || m.laborId || 0}
+                              value={m.laborId || 0}
                               onChange={(value) => {
                                 const selectedContractName = (
                                   ContarctNameOptionsByCompany[m.outsourcingCompanyId] ?? []
@@ -4193,6 +4415,539 @@ export default function DailyReportRegistrationView() {
                             value={m.modifyDate ?? ''}
                             onChange={(value) =>
                               updateItemField('directContracts', m.checkId, 'modifyDate', value)
+                            }
+                            disabled
+                            className="flex-1"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+
+              {employeesFetching && <div className="p-2 text-center">불러오는 중...</div>}
+            </TableContainer>
+          </div>
+
+          {/* 직영에서 용역 데이터 조회 */}
+
+          <div>
+            <div className="flex justify-between items-center mt-10 mb-2">
+              <span className="font-bold mb-4"> [용역]</span>
+              <div className="flex gap-4">
+                <CommonButton
+                  label="삭제"
+                  className="px-7"
+                  variant="danger"
+                  onClick={() => removeCheckedItems('outsourcingByDirectContract')}
+                  disabled={
+                    isHeadOfficeInfo
+                      ? false // 본사 정보이면 무조건 활성화
+                      : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                        detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
+                  }
+                />
+                <CommonButton
+                  label="임시 인력 추가"
+                  className="px-7"
+                  variant="primary"
+                  onClick={() => addTemporaryCheckedItems('outsourcingByDirectContract')}
+                  disabled={
+                    isHeadOfficeInfo
+                      ? false // 본사 정보이면 무조건 활성화
+                      : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                        detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
+                  }
+                />
+                <CommonButton
+                  label="추가"
+                  className="px-7"
+                  variant="secondary"
+                  onClick={() => addItem('outsourcingByDirectContract')}
+                  disabled={
+                    isHeadOfficeInfo
+                      ? false // 본사 정보이면 무조건 활성화
+                      : detailReport?.data?.status === 'AUTO_COMPLETED' ||
+                        detailReport?.data?.status === 'COMPLETED' // 본사가 아니고 상태가 두 가지 중 하나이면 비활성화
+                  }
+                />
+              </div>
+            </div>
+
+            <TableContainer
+              component={Paper}
+              onScroll={(e) => {
+                const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
+                if (scrollHeight - scrollTop <= clientHeight * 1.2) {
+                  if (contractHasNextPage && !contractFetching) {
+                    contractFetchNextPage()
+                  }
+                }
+              }}
+            >
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <Checkbox
+                        checked={directContractAllCheckedIds}
+                        indeterminate={
+                          directContractCheckedIds.length > 0 && !directContractAllCheckedIds
+                        }
+                        onChange={(e) =>
+                          toggleCheckAllItems('outsourcingByDirectContract', e.target.checked)
+                        }
+                        sx={{ color: 'black' }}
+                      />
+                    </TableCell>
+                    {[
+                      '업체명',
+                      '이름',
+                      '직급(직책)',
+                      '작업내용',
+                      '이전(기준)단가',
+                      '단가',
+                      '공수',
+                      '첨부파일',
+                      '비고',
+                      '등록/수정일',
+                    ].map((label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
+                          label
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {directContractByData.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={11} align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                        용역 데이터가 없습니다.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    directContractByData.map((m, idx) => (
+                      <TableRow key={`${m.checkId}-${idx}`}>
+                        <TableCell
+                          padding="checkbox"
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF' }}
+                        >
+                          <Checkbox
+                            checked={directContractCheckedIds.includes(m.checkId)}
+                            onChange={(e) =>
+                              toggleCheckItem(
+                                'outsourcingByDirectContract',
+                                m.checkId,
+                                e.target.checked,
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          {m.isTemporary ? (
+                            <TextField
+                              size="small"
+                              fullWidth
+                              value={'라인공영(임시)'}
+                              onChange={(e) =>
+                                updateItemField(
+                                  'outsourcingByDirectContract',
+                                  m.checkId,
+                                  'temporaryCompanyName',
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="업체명 입력"
+                              InputProps={{
+                                sx: {
+                                  color: 'red', // 글자색 빨강
+                                  WebkitTextFillColor: 'red', // disabled 상태에서도 빨강 유지
+                                },
+                              }}
+                            />
+                          ) : (
+                            <CommonSelect
+                              fullWidth
+                              value={selectedCompanyIds[m.checkId] || m.outsourcingCompanyId || 0}
+                              onChange={async (value) => {
+                                const selectedCompany = companyOptions.find(
+                                  (opt) => opt.id === value,
+                                )
+                                if (!selectedCompany) return
+
+                                // 해당 row만 업데이트
+                                setSelectedCompanyIds((prev) => ({
+                                  ...prev,
+                                  [m.checkId]: selectedCompany.id,
+                                }))
+
+                                setSelectId(m.checkId)
+
+                                updateItemField(
+                                  'outsourcingByDirectContract',
+                                  m.checkId,
+                                  'outsourcingCompanyId',
+                                  selectedCompany.id,
+                                )
+
+                                updateItemField(
+                                  'outsourcingByDirectContract',
+                                  m.checkId,
+                                  'outsourcingCompanyName',
+                                  selectedCompany.name,
+                                )
+
+                                // 해당 row 워커만 초기화
+                                setSelectContractIds((prev) => ({
+                                  ...prev,
+                                  [m.checkId]: 0,
+                                }))
+                              }}
+                              options={companyOptions}
+                              onScrollToBottom={() => {
+                                if (comPanyNamehasNextPage && !comPanyNameFetching)
+                                  comPanyNameFetchNextPage()
+                              }}
+                              loading={comPanyNameLoading}
+                            />
+                          )}
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          {m.isTemporary ? (
+                            <TextField
+                              size="small"
+                              fullWidth
+                              value={m.temporaryLaborName || ''}
+                              onChange={(e) =>
+                                updateItemField(
+                                  'outsourcingByDirectContract',
+                                  m.checkId,
+                                  'temporaryLaborName',
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="이름 입력"
+                            />
+                          ) : (
+                            <CommonSelect
+                              value={selectContractIds[m.id] || m.laborId || 0}
+                              onChange={(value) => {
+                                const selectedContractName = (
+                                  outSourcingByDirectContract[m.outsourcingCompanyId] ?? []
+                                ).find((opt) => opt.id === value)
+
+                                if (!selectedContractName) return
+
+                                if (selectedContractName?.isSeverancePayEligible) {
+                                  showSnackbar(
+                                    '해당 직원 근속일이 6개월에 도달했습니다. 퇴직금 발생에 주의하세요.',
+                                    'error',
+                                  )
+                                }
+
+                                updateItemField(
+                                  'outsourcingByDirectContract',
+                                  m.checkId,
+                                  'laborId',
+                                  value,
+                                )
+
+                                updateItemField(
+                                  'outsourcingByDirectContract',
+                                  m.checkId,
+                                  'previousPrice',
+                                  selectedContractName?.previousDailyWage ?? 0, // 선택된 항목의 previousDailyWage 자동 입력
+                                )
+                              }}
+                              options={
+                                outSourcingByDirectContract[m.outsourcingCompanyId] ?? [
+                                  { id: 0, name: '선택' },
+                                ]
+                              }
+                              onScrollToBottom={() => {
+                                if (NameByOutsourcinghasNextPage && !NameByOutsourcingFetching)
+                                  NameByOutsourcingFetchNextPage()
+                              }}
+                              loading={NameByOutsourcingLoading}
+                            />
+                          )}
+                        </TableCell>
+
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                        >
+                          <TextField
+                            size="small"
+                            placeholder="텍스트 입력"
+                            value={m.position}
+                            onChange={(e) =>
+                              updateItemField(
+                                'outsourcingByDirectContract',
+                                m.checkId,
+                                'position',
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                        >
+                          <TextField
+                            size="small"
+                            placeholder="텍스트 입력 "
+                            value={m.workContent}
+                            onChange={(e) =>
+                              updateItemField(
+                                'outsourcingByDirectContract',
+                                m.checkId,
+                                'workContent',
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                        >
+                          <TextField
+                            size="small"
+                            value={
+                              m.previousPrice === 0 || m.previousPrice === null
+                                ? ''
+                                : formatNumber(m.previousPrice)
+                            }
+                            onChange={(e) => {
+                              const numericValue =
+                                e.target.value === '' ? null : unformatNumber(e.target.value)
+
+                              updateItemField(
+                                'outsourcingByDirectContract',
+                                m.checkId,
+                                'previousPrice',
+                                numericValue,
+                              )
+                            }}
+                            sx={{
+                              height: '100%',
+                              '& .MuiInputBase-root': {
+                                height: '100%',
+                                fontSize: '1rem',
+                              },
+                              '& input': {
+                                backgroundColor: '#E5E7EB', // 연한 회색 (Tailwind gray-200)
+                                color: '#111827', // 진한 글자색 (Tailwind gray-900)
+                                fontWeight: 'bold', // 글자 강조
+                                textAlign: 'center',
+                                padding: '10px',
+                                MozAppearance: 'textfield', // Firefox
+                                '&::-webkit-outer-spin-button': {
+                                  // Chrome, Safari
+                                  WebkitAppearance: 'none',
+                                  margin: 0,
+                                },
+                                '&::-webkit-inner-spin-button': {
+                                  // Chrome, Safari
+                                  WebkitAppearance: 'none',
+                                  margin: 0,
+                                },
+                              },
+                            }}
+                            disabled
+                          />
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                        >
+                          <TextField
+                            size="small"
+                            placeholder="숫자를 입력해주세요."
+                            value={
+                              m.unitPrice === 0 || m.unitPrice === null
+                                ? ''
+                                : formatNumber(m.unitPrice)
+                            }
+                            onChange={(e) => {
+                              const numericValue =
+                                e.target.value === '' ? null : unformatNumber(e.target.value)
+
+                              updateItemField(
+                                'outsourcingByDirectContract',
+                                m.checkId,
+                                'unitPrice',
+                                numericValue,
+                              )
+                            }}
+                            sx={{
+                              height: '100%',
+                              '& .MuiInputBase-root': {
+                                height: '100%',
+                                fontSize: '1rem',
+                              },
+                              '& input': {
+                                textAlign: 'center',
+                                padding: '10px',
+                                MozAppearance: 'textfield', // Firefox
+                                '&::-webkit-outer-spin-button': {
+                                  // Chrome, Safari
+                                  WebkitAppearance: 'none',
+                                  margin: 0,
+                                },
+                                '&::-webkit-inner-spin-button': {
+                                  // Chrome, Safari
+                                  WebkitAppearance: 'none',
+                                  margin: 0,
+                                },
+                              },
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                        >
+                          <TextField
+                            size="small"
+                            type="number" // type을 number로 변경
+                            placeholder="숫자를 입력해주세요."
+                            inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
+                            value={m.workQuantity ?? ''}
+                            onChange={(e) => {
+                              const value = e.target.value
+                              const numericValue = value === '' ? null : parseFloat(value)
+
+                              // dailyWork 배열 idx 위치 업데이트
+                              updateItemField(
+                                'outsourcingByDirectContract',
+                                m.checkId,
+                                'workQuantity',
+                                numericValue,
+                              )
+                            }}
+                            sx={{
+                              height: '100%',
+                              '& .MuiInputBase-root': {
+                                height: '100%',
+                                fontSize: '1rem',
+                              },
+                              '& input': {
+                                textAlign: 'center',
+                                padding: '10px',
+                                MozAppearance: 'textfield', // Firefox
+                                '&::-webkit-outer-spin-button': {
+                                  // Chrome, Safari
+                                  WebkitAppearance: 'none',
+                                  margin: 0,
+                                },
+                                '&::-webkit-inner-spin-button': {
+                                  // Chrome, Safari
+                                  WebkitAppearance: 'none',
+                                  margin: 0,
+                                },
+                              },
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                            <CommonFileInput
+                              acceptedExtensions={[
+                                'pdf',
+                                'txt',
+                                'rtf',
+                                'docx',
+                                'hwp',
+                                'xlsx',
+                                'csv',
+                                'ods',
+                                'pptx',
+                                'ppt',
+                                'odp',
+                                'jpg',
+                                'jpeg',
+                                'png',
+                                'gif',
+                                'tif',
+                                'tiff',
+                                'bmp',
+                                'zip',
+                                '7z',
+                                'mp3',
+                                'wav',
+                                'mp4',
+                                'mov',
+                                'avi',
+                                'wmv',
+                                'dwg',
+                              ]}
+                              multiple={false}
+                              files={m.files} // 각 항목별 files
+                              onChange={(newFiles) =>
+                                updateItemField(
+                                  'outsourcingByDirectContract',
+                                  m.checkId,
+                                  'files',
+                                  newFiles,
+                                )
+                              }
+                              uploadTarget="WORK_DAILY_REPORT"
+                            />
+                          </div>
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                          <TextField
+                            size="small"
+                            placeholder="500자 이하 텍스트 입력"
+                            value={m.memo}
+                            onChange={(e) =>
+                              updateItemField(
+                                'outsourcingByDirectContract',
+                                m.checkId,
+                                'memo',
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', width: '260px' }}
+                        >
+                          <CommonInput
+                            placeholder="-"
+                            value={m.modifyDate ?? ''}
+                            onChange={(value) =>
+                              updateItemField(
+                                'outsourcingByDirectContract',
+                                m.checkId,
+                                'modifyDate',
+                                value,
+                              )
                             }
                             disabled
                             className="flex-1"
@@ -8103,6 +8858,8 @@ export default function DailyReportRegistrationView() {
                   {
                     onSuccess: async () => {
                       handleContractRefetch() // 직원 데이터 재조회
+                      handleOutByContractRefetch()
+                      handleDirectContractRefetch()
                       setSaved(true)
                       // 날씨가 바뀌었을 경우만 호출
                       try {
