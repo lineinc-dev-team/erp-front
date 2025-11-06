@@ -190,6 +190,7 @@ export type SubEquipmentByFuleItems = {
   outsourcingCompanyContractSubEquipmentId: number
   fuelType: string
   fuelAmount: number
+  amount: number
   memo: string
 }
 
@@ -202,6 +203,7 @@ export type FuelsItem = {
   specificationName?: string
   fuelType: string
   fuelAmount: number
+  amount: number
   fileUrl?: string
   originalFileName?: string
   files: FileUploadInfo[]
@@ -409,6 +411,8 @@ type DailyReportFormStore = {
     field: K,
     value: DailyFormState[K],
   ) => void
+
+  calculateFuelAmount: () => void
 
   addItem: (
     type:

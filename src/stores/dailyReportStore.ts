@@ -608,6 +608,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           specificationName: '',
           fuelType: '',
           fuelAmount: 0,
+          amount: 0,
           memo: '',
           files: [],
         }
@@ -1426,6 +1427,47 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       },
     })),
 
+  calculateFuelAmount: () =>
+    set((state) => {
+      const { gasolinePrice, dieselPrice, ureaPrice, fuelInfos } = state.form
+
+      const getUnitPrice = (fuelType: string) => {
+        switch (fuelType) {
+          case 'GASOLINE':
+            return gasolinePrice
+          case 'DIESEL':
+            return dieselPrice
+          case 'UREA':
+            return ureaPrice
+          default:
+            return 0
+        }
+      }
+
+      const updatedFuelInfos = fuelInfos.map((item) => {
+        // 메인 장비 금액 계산
+        const unitPrice = getUnitPrice(item.fuelType)
+        const amount = item.fuelAmount && unitPrice ? item.fuelAmount * unitPrice : 0
+
+        // ✅ 서브 장비들도 각각 계산
+        const updatedSubEquipments =
+          item.subEquipments?.map((sub) => {
+            const subUnitPrice = getUnitPrice(sub.fuelType)
+            const subAmount = sub.fuelAmount && subUnitPrice ? sub.fuelAmount * subUnitPrice : 0
+            return { ...sub, amount: subAmount }
+          }) ?? []
+
+        return { ...item, amount, subEquipments: updatedSubEquipments }
+      })
+
+      return {
+        form: {
+          ...state.form,
+          fuelInfos: updatedFuelInfos,
+        },
+      }
+    }),
+
   // 세부 항목 수정
   updateContractDetailField: (
     managerId: number,
@@ -1743,6 +1785,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           categoryType: item.categoryType,
           fuelType: item.fuelType,
           fuelAmount: item.fuelAmount,
+          amount: item.amount,
           fileUrl: file?.fileUrl || null,
           originalFileName: file?.originalFileName || null,
           memo: item.memo,
@@ -2145,6 +2188,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         equipmentId: item.equipmentId,
         fuelType: item.fuelType,
         fuelAmount: item.fuelAmount,
+        amount: item.amount,
         memo: item.memo,
 
         fileUrl: item.files?.[0]?.fileUrl ?? null,

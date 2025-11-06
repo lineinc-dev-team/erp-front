@@ -40,6 +40,7 @@ export interface FuelListInfoData {
   fuelType: string
   fuelTypeCode: string
   fuelAmount: number
+  amount: number
   createdAt: string
   updatedAt: string
   memo: string
@@ -90,6 +91,7 @@ export type SubEquipmentByFuleItems = {
   outsourcingCompanyContractSubEquipmentId: number
   fuelType: string
   fuelAmount: number
+  amount: number
   memo: string
 }
 
@@ -107,6 +109,7 @@ export type fuelDetailItem = {
   specificationName: string
   fuelType: string
   fuelAmount: number
+  amount: number
   memo: string
   subEquipments?: SubEquipmentByFuleItems[]
   fileUrl?: string
@@ -167,4 +170,6 @@ type FuelFormStore = {
   updateMemo: (id: number, newMemo: string) => void
 
   newFuelData: () => void
+
+  calculateFuelAmount: () => void
 }

@@ -92,6 +92,8 @@ export default function FuelAggregationView() {
         vehicleNumber: fuelInfo?.equipment?.vehicleNumber || '-',
         fuelType: fuelInfo?.fuelType || '-',
         fuelAmount: formatNumber(fuelInfo?.fuelAmount) || '-',
+
+        amount: formatNumber(fuelInfo?.amount) || '-',
         specification: fuelInfo?.equipment?.specification || '-',
       },
     ]

@@ -89,7 +89,7 @@ export default function DailyReportRegistrationView() {
     resetMaterialStatus,
     resetDirectContracts,
     resetOutByDirectContracts,
-
+    calculateFuelAmount,
     resetDirectContractOut,
     resetOutsourcing,
     resetEquipment,
@@ -859,6 +859,7 @@ export default function DailyReportRegistrationView() {
       fuelType: item.fuelTypeCode ?? '',
       categoryType: item.categoryTypeCode,
       fuelAmount: item.fuelAmount,
+      amount: item.amount,
       memo: item.memo,
       files:
         item.fileUrl && item.originalFileName
@@ -876,6 +877,7 @@ export default function DailyReportRegistrationView() {
         outsourcingCompanyContractSubEquipmentId: sub.subEquipment?.id || '-',
         fuelType: sub.fuelTypeCode || '',
         fuelAmount: sub.fuelAmount ?? 0,
+        amount: sub.amount || 0,
         memo: sub.memo ?? 0,
       })),
     }))
@@ -6501,6 +6503,7 @@ export default function DailyReportRegistrationView() {
                     onChange={(val) => {
                       const numericValue = unformatNumber(val)
                       setField('gasolinePrice', numericValue)
+                      calculateFuelAmount()
                     }}
                     className=" flex-1"
                   />
@@ -6516,6 +6519,7 @@ export default function DailyReportRegistrationView() {
                     onChange={(val) => {
                       const numericValue = unformatNumber(val)
                       setField('dieselPrice', numericValue)
+                      calculateFuelAmount()
                     }}
                     className=" flex-1"
                   />
@@ -6531,6 +6535,7 @@ export default function DailyReportRegistrationView() {
                     onChange={(val) => {
                       const numericValue = unformatNumber(val)
                       setField('ureaPrice', numericValue)
+                      calculateFuelAmount()
                     }}
                     className=" flex-1"
                   />
@@ -6623,6 +6628,7 @@ export default function DailyReportRegistrationView() {
                       '규격',
                       '유종',
                       '주유량',
+                      '금액',
                       '첨부파일',
                       '비고',
                       '등록/수정일',
@@ -6927,6 +6933,7 @@ export default function DailyReportRegistrationView() {
                             value={m.fuelType || 'BASE'}
                             onChange={async (value) => {
                               updateItemField('fuel', m.id, 'fuelType', value)
+                              calculateFuelAmount()
                             }}
                             options={OilTypeMethodOptions}
                           />
@@ -6939,6 +6946,7 @@ export default function DailyReportRegistrationView() {
                                   value={detail.fuelType || 'BASE'}
                                   onChange={async (value) => {
                                     updateSubEqByFuel(m.id, detail.checkId, 'fuelType', value)
+                                    calculateFuelAmount()
                                   }}
                                   options={OilTypeMethodOptions}
                                 />
@@ -6957,6 +6965,53 @@ export default function DailyReportRegistrationView() {
                             onChange={(e) => {
                               const numericValue = unformatNumber(e.target.value)
                               updateItemField('fuel', m.id, 'fuelAmount', numericValue)
+                              calculateFuelAmount()
+                            }}
+                            inputProps={{
+                              inputMode: 'numeric',
+                              pattern: '[0-9]*',
+                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                            }}
+                          />
+
+                          {m.subEquipments &&
+                            m.subEquipments?.map((detail, index) => (
+                              <div key={index} className="flex gap-2 mt-1 items-center">
+                                <TextField
+                                  size="small"
+                                  value={formatNumber(detail.fuelAmount) ?? 0}
+                                  onChange={(e) => {
+                                    const numericValue = unformatNumber(e.target.value)
+
+                                    updateSubEqByFuel(
+                                      m.id,
+                                      detail.checkId,
+                                      'fuelAmount',
+                                      numericValue,
+                                    )
+                                    calculateFuelAmount()
+                                  }}
+                                  inputProps={{
+                                    inputMode: 'numeric',
+                                    pattern: '[0-9]*',
+                                    style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                                  }}
+                                />
+                              </div>
+                            ))}
+                        </TableCell>
+
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                        >
+                          <TextField
+                            size="small"
+                            placeholder="숫자만"
+                            value={formatNumber(m.amount)}
+                            onChange={(e) => {
+                              const numericValue = unformatNumber(e.target.value)
+                              updateItemField('fuel', m.id, 'amount', numericValue)
                             }}
                             inputProps={{
                               inputMode: 'numeric',
@@ -6971,15 +7026,11 @@ export default function DailyReportRegistrationView() {
                                 <TextField
                                   size="small"
                                   placeholder="작업 내용 입력"
-                                  value={detail.fuelAmount ?? 0}
-                                  onChange={(e) =>
-                                    updateSubEqByFuel(
-                                      m.id,
-                                      detail.checkId,
-                                      'fuelAmount',
-                                      e.target.value,
-                                    )
-                                  }
+                                  value={formatNumber(detail.amount) ?? 0}
+                                  onChange={(e) => {
+                                    const formatted = unformatNumber(e.target.value)
+                                    updateSubEqByFuel(m.id, detail.checkId, 'amount', formatted)
+                                  }}
                                   inputProps={{
                                     inputMode: 'numeric',
                                     pattern: '[0-9]*',

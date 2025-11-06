@@ -54,6 +54,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     setField,
     form,
     updateItemField,
+    calculateFuelAmount,
     removeCheckedItems,
     reset,
     addItem,
@@ -137,6 +138,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     gasolinePrice: '휘발유',
     dieselPrice: '경유',
     ureaPrice: '요소수',
+    amount: '금액',
   }
 
   const {
@@ -249,6 +251,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
         specificationName: item.equipment?.specification ?? '',
         fuelType: item.fuelTypeCode ?? '',
         fuelAmount: item.fuelAmount ?? '0',
+        amount: item.amount ?? '0',
         equipmentId: item.equipment?.id ?? 0,
         createdAt: item.createdAt ?? '',
         updatedAt: item.updatedAt ?? '',
@@ -264,6 +267,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
           outsourcingCompanyContractSubEquipmentId: sub.subEquipment?.id || '-',
           fuelType: sub.fuelTypeCode || '',
           fuelAmount: sub.fuelAmount ?? 0,
+          amount: sub.amount,
           memo: sub.memo ?? 0,
         })),
       }))
@@ -902,69 +906,6 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                 onBlur={() => setIsSiteFocused(false)}
               />
             </div>
-            {/* <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonSelect
-                fullWidth
-                value={form.siteId || 0}
-                onChange={async (value) => {
-                  const selectedSite = updatedSiteOptions.find((opt) => opt.id === value)
-                  if (!selectedSite) return
-
-                  setField('siteId', selectedSite.id)
-                  setField(
-                    'siteName',
-                    selectedSite.name + (selectedSite.deleted ? ' (삭제됨)' : ''),
-                  )
-
-                  if (selectedSite.deleted) {
-                    // 삭제된 경우
-                    const deletedProcess = updatedProcessOptions.find(
-                      (p) => p.id === data?.data.process?.id,
-                    )
-                    if (deletedProcess) {
-                      setField('siteProcessId', deletedProcess.id)
-                      setField(
-                        'siteProcessName',
-                        deletedProcess.name + (deletedProcess.deleted ? ' (삭제됨)' : ''),
-                      )
-                    } else {
-                      setField('siteProcessId', 0)
-                      setField('siteProcessName', '')
-                    }
-                  } else {
-                    const res = await SitesProcessNameScroll({
-                      pageParam: 0,
-                      siteId: selectedSite.id,
-                      keyword: '',
-                    })
-
-                    const processes = res.data?.content || []
-                    if (processes.length > 0) {
-                      const firstProcess = processes[0]
-
-                      setUpdatedProcessOptions((prev) => [
-                        { id: 0, name: '선택', deleted: false },
-                        ...prev.filter((p) => p.deleted), // 삭제된 것 유지
-                        ...processes.map((p: any) => ({ ...p, deleted: false })),
-                      ])
-
-                      setField('siteProcessId', firstProcess.id)
-                      setField('siteProcessName', firstProcess.name)
-                    } else {
-                      setField('siteProcessId', 0)
-                      setField('siteProcessName', '')
-                    }
-                  }
-                }}
-                options={updatedSiteOptions}
-                onScrollToBottom={() => {
-                  if (siteNamehasNextPage && !siteNameFetching) siteNameFetchNextPage()
-                }}
-                onInputChange={(value) => setSitesSearch(value)}
-                loading={siteNameLoading}
-                disabled
-              />
-            </div> */}
           </div>
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
@@ -1021,81 +962,94 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
               />
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              휘발유
-            </label>
-            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
-              <AmountInput
-                value={formatNumber(form.gasolinePrice) ?? ''}
-                onChange={(val) => {
-                  const numericValue = unformatNumber(val)
-                  setField('gasolinePrice', numericValue)
-                }}
-                className=" flex-1"
-                disabled
-              />
-            </div>
+      <div>
+        <div className="flex justify-between   flex-col mt-10 mb-2">
+          <div className="w-full mb-2">
+            <span className="font-bold border-b-2 mb-4 ">단가</span>
           </div>
 
           <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              경유
-            </label>
-            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
-              <AmountInput
-                value={formatNumber(form.dieselPrice) ?? ''}
-                onChange={(val) => {
-                  const numericValue = unformatNumber(val)
-                  setField('dieselPrice', numericValue)
-                }}
-                className=" flex-1"
-                disabled
-              />
+            <div className="flex">
+              <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+                휘발유
+              </label>
+              <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
+                <AmountInput
+                  value={formatNumber(form.gasolinePrice) ?? ''}
+                  onChange={(val) => {
+                    const numericValue = unformatNumber(val)
+                    setField('gasolinePrice', numericValue)
+                    calculateFuelAmount()
+                  }}
+                  className=" flex-1"
+                  disabled
+                />
+              </div>
             </div>
-          </div>
-          <div className="flex ">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              요소수
-            </label>
-            <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
-              <AmountInput
-                value={formatNumber(form.ureaPrice) ?? ''}
-                onChange={(val) => {
-                  const numericValue = unformatNumber(val)
-                  setField('ureaPrice', numericValue)
-                }}
-                className=" flex-1"
-                disabled
-              />
+
+            <div className="flex">
+              <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+                경유
+              </label>
+              <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
+                <AmountInput
+                  value={formatNumber(form.dieselPrice) ?? ''}
+                  onChange={(val) => {
+                    const numericValue = unformatNumber(val)
+                    setField('dieselPrice', numericValue)
+                    calculateFuelAmount()
+                  }}
+                  className=" flex-1"
+                  disabled
+                />
+              </div>
             </div>
-          </div>
-          <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              유류업체명 <span className="text-red-500 ml-1">*</span>
-            </label>
-            <div className="border border-gray-400  w-full">
-              <InfiniteScrollSelect
-                placeholder="유류 업체명을 입력하세요"
-                keyword={form.outsourcingCompanyName ?? ''}
-                onChangeKeyword={(newKeyword) => setField('outsourcingCompanyName', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
-                items={outsourcingList}
-                hasNextPage={OutsourcingNameHasNextPage ?? false}
-                fetchNextPage={OutsourcingeNameFetchNextPage}
-                renderItem={(item, isHighlighted) => (
-                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
-                    {item.name}
-                  </div>
-                )}
-                onSelect={handleSelectOutsourcing}
-                // shouldShowList={true}
-                isLoading={OutsourcingNameIsLoading || OutsourcingNameIsFetching}
-                debouncedKeyword={debouncedOutsourcingKeyword ?? ''}
-                shouldShowList={isOutsourcingFocused}
-                onFocus={() => setIsOutsourcingFocused(true)}
-                onBlur={() => setIsOutsourcingFocused(false)}
-              />
+            <div className="flex ">
+              <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+                요소수
+              </label>
+              <div className="border border-gray-400 px-2 w-full flex gap-3 items-center p-3">
+                <AmountInput
+                  value={formatNumber(form.ureaPrice) ?? ''}
+                  onChange={(val) => {
+                    const numericValue = unformatNumber(val)
+                    setField('ureaPrice', numericValue)
+                    calculateFuelAmount()
+                  }}
+                  className=" flex-1"
+                  disabled
+                />
+              </div>
+            </div>
+            <div className="flex">
+              <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+                유류업체명 <span className="text-red-500 ml-1">*</span>
+              </label>
+              <div className="border border-gray-400  w-full">
+                <InfiniteScrollSelect
+                  placeholder="유류 업체명을 입력하세요"
+                  keyword={form.outsourcingCompanyName ?? ''}
+                  onChangeKeyword={(newKeyword) => setField('outsourcingCompanyName', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                  items={outsourcingList}
+                  hasNextPage={OutsourcingNameHasNextPage ?? false}
+                  fetchNextPage={OutsourcingeNameFetchNextPage}
+                  renderItem={(item, isHighlighted) => (
+                    <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                      {item.name}
+                    </div>
+                  )}
+                  onSelect={handleSelectOutsourcing}
+                  // shouldShowList={true}
+                  isLoading={OutsourcingNameIsLoading || OutsourcingNameIsFetching}
+                  debouncedKeyword={debouncedOutsourcingKeyword ?? ''}
+                  shouldShowList={isOutsourcingFocused}
+                  onFocus={() => setIsOutsourcingFocused(true)}
+                  onBlur={() => setIsOutsourcingFocused(false)}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -1131,29 +1085,37 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                     sx={{ color: 'black' }}
                   />
                 </TableCell>
-                {['업체명', '구분', '차량번호', '규격', '유종', '주유량', '첨부파일', '비고'].map(
-                  (label) => (
-                    <TableCell
-                      key={label}
-                      align="center"
-                      sx={{
-                        backgroundColor: '#D1D5DB',
-                        border: '1px solid  #9CA3AF',
-                        color: 'black',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      {label === '비고' || label === '첨부파일' ? (
-                        label
-                      ) : (
-                        <div className="flex items-center justify-center">
-                          <span>{label}</span>
-                          <span className="text-red-500 ml-1">*</span>
-                        </div>
-                      )}
-                    </TableCell>
-                  ),
-                )}
+                {[
+                  '업체명',
+                  '구분',
+                  '차량번호',
+                  '규격',
+                  '유종',
+                  '주유량',
+                  '금액',
+                  '첨부파일',
+                  '비고',
+                ].map((label) => (
+                  <TableCell
+                    key={label}
+                    align="center"
+                    sx={{
+                      backgroundColor: '#D1D5DB',
+                      border: '1px solid  #9CA3AF',
+                      color: 'black',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    {label === '비고' || label === '첨부파일' ? (
+                      label
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <span>{label}</span>
+                        <span className="text-red-500 ml-1">*</span>
+                      </div>
+                    )}
+                  </TableCell>
+                ))}
                 {isEditMode && (
                   <TableCell
                     align="center"
@@ -1409,6 +1371,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                       value={m.fuelType || 'BASE'}
                       onChange={async (value) => {
                         updateItemField('FuelInfo', m.checkId, 'fuelType', value)
+                        calculateFuelAmount()
                       }}
                       options={OilTypeMethodOptions}
                     />
@@ -1425,20 +1388,24 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                                 'fuelType',
                                 value,
                               )
+                              calculateFuelAmount()
                             }}
                             options={OilTypeMethodOptions}
                           />
                         </div>
                       ))}
                   </TableCell>
+
                   <TableCell align="center" sx={{ border: '1px solid #9CA3AF', width: '120px' }}>
                     <TextField
                       size="small"
-                      placeholder="'-'없이 숫자만 입력"
-                      value={formatNumber(m.fuelAmount) ?? 0}
+                      value={formatNumber(m.fuelAmount) || 0}
                       onChange={(e) => {
                         const formatted = unformatNumber(e.target.value)
+
                         updateItemField('FuelInfo', m.checkId, 'fuelAmount', formatted)
+
+                        calculateFuelAmount()
                       }}
                     />
 
@@ -1447,16 +1414,49 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                         <div key={index} className="flex gap-2 mt-1 items-center">
                           <TextField
                             size="small"
-                            placeholder="작업 내용 입력"
-                            value={detail.fuelAmount ?? 0}
-                            onChange={(e) =>
+                            value={formatNumber(detail.fuelAmount) || 0}
+                            onChange={(e) => {
+                              const formatted = unformatNumber(e.target.value)
                               updateContractDetailField(
                                 m.checkId,
                                 detail.checkId,
                                 'fuelAmount',
-                                e.target.value,
+                                formatted,
                               )
-                            }
+                              calculateFuelAmount()
+                            }}
+                            fullWidth
+                          />
+                        </div>
+                      ))}
+                  </TableCell>
+
+                  {/* 금액 */}
+                  <TableCell align="center" sx={{ border: '1px solid #9CA3AF', width: '120px' }}>
+                    <TextField
+                      size="small"
+                      value={formatNumber(m.amount) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        updateItemField('FuelInfo', m.checkId, 'amount', formatted)
+                      }}
+                    />
+
+                    {m.subEquipments &&
+                      m.subEquipments?.map((detail, index) => (
+                        <div key={index} className="flex gap-2 mt-1 items-center">
+                          <TextField
+                            size="small"
+                            value={formatNumber(detail.amount) || 0}
+                            onChange={(e) => {
+                              const formatted = unformatNumber(e.target.value)
+                              updateContractDetailField(
+                                m.checkId,
+                                detail.checkId,
+                                'amount',
+                                formatted,
+                              )
+                            }}
                             fullWidth
                           />
                         </div>
