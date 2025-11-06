@@ -1034,6 +1034,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                   setField('gasolinePrice', numericValue)
                 }}
                 className=" flex-1"
+                disabled
               />
             </div>
           </div>
@@ -1050,6 +1051,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                   setField('dieselPrice', numericValue)
                 }}
                 className=" flex-1"
+                disabled
               />
             </div>
           </div>
@@ -1065,6 +1067,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                   setField('ureaPrice', numericValue)
                 }}
                 className=" flex-1"
+                disabled
               />
             </div>
           </div>

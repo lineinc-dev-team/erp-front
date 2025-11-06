@@ -71,6 +71,7 @@ export default function ManagementCost() {
       ...cost,
       site: cost.site.name,
       process: cost.process.name,
+      itemType: cost.itemType === '기타' ? cost.itemTypeDescription : cost.itemType,
       outsourcingCompany: cost.outsourcingCompany?.name,
       accountNumber: `${cost.outsourcingCompany.bankName ?? ''} / ${
         cost.outsourcingCompany.accountNumber ?? ''
