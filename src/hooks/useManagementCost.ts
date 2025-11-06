@@ -165,15 +165,7 @@ export function useManagementCost() {
   })
 
   const companyOptions = useMemo(() => {
-    const defaultOption = [
-      { id: -1, name: '선택', businessNumber: '', deleted: false },
-      {
-        id: 0,
-        name: '라인공영',
-        businessNumber: '',
-        deleted: false,
-      },
-    ]
+    const defaultOption = [{ id: 0, name: '선택', businessNumber: '', deleted: false }]
 
     // API에서 가져온 옵션
     const options = (comPanyNameInfo?.pages || [])

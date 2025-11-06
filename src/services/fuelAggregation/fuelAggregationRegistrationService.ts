@@ -85,19 +85,76 @@ export async function CreateFuelInfo() {
 }
 
 // 외주 업체에 대한 기사명
+// export async function FuelDriverNameScroll({
+//   pageParam = 0,
+//   size = 200,
+//   keyword = '',
+//   id = 0,
+//   siteIdList,
+//   sort = '',
+// }: {
+//   pageParam?: number
+//   size?: number
+//   keyword?: string
+//   id?: number
+//   siteIdList?: number
+//   sort?: string
+// }) {
+//   if (id === null) {
+//     return
+//   }
+//   const resData = await fetch(
+//     `${API.OUTSOURCINGCOMPANY}/${id}/contract-drivers?page=${pageParam}&size=${size}&siteId=${siteIdList}&keyword=${keyword}&sort=${sort}`,
+//     {
+//       method: 'GET',
+//       headers: {
+//         'Content-Type': 'application/json',
+//       },
+//       credentials: 'include',
+//     },
+//   )
+
+//   if (!resData.ok) {
+//     if (resData.status === 401) throw new Error('권한이 없습니다.')
+//     throw new Error(`서버 에러: ${resData.status}`)
+//   }
+
+//   const data = await resData.json()
+//   return data
+// }
+
 export async function FuelDriverNameScroll({
   pageParam = 0,
   size = 200,
   keyword = '',
   id = 0,
-  siteIdList = 0,
+  siteIdList,
   sort = '',
+}: {
+  pageParam?: number
+  size?: number
+  keyword?: string
+  id?: number
+  siteIdList?: number
+  sort?: string
 }) {
   if (id === null) {
     return
   }
+
+  const query = new URLSearchParams({
+    page: String(pageParam),
+    size: String(size),
+    keyword,
+    sort,
+  })
+
+  if (siteIdList !== undefined) {
+    query.append('siteId', String(siteIdList))
+  }
+
   const resData = await fetch(
-    `${API.OUTSOURCINGCOMPANY}/${id}/contract-drivers?page=${pageParam}&size=${size}&siteId=${siteIdList}&keyword=${keyword}&sort=${sort}`,
+    `${API.OUTSOURCINGCOMPANY}/${id}/contract-drivers?${query.toString()}`,
     {
       method: 'GET',
       headers: {

@@ -8,7 +8,6 @@ export interface DetailItem {
   supplyPrice: number
   vat: number
   total: number
-  isDeductible: boolean
   memo: string
 }
 
@@ -85,7 +84,6 @@ export type CostItem = {
   supplyPrice: number
   vat: number
   total: number
-  isDeductible: boolean
   memo: string
 }
 
@@ -95,7 +93,6 @@ export type KeyMoneyDetail = {
   purpose: string
   personnelCount: number
   amount: number
-  isDeductible: boolean
   memo: string
 }
 
@@ -108,14 +105,61 @@ export type inLabor = {
 // 식대 세부항목
 export type MealFeeDetail = {
   id: number
-  workType: string
   labor?: inLabor
   laborId: number | null
-  inputType?: string
   name: string
   breakfastCount: number
   lunchCount: number
-  mealCount: number
+  dinnerCount: number
+  unitPrice: number
+  amount: number
+  memo: string
+}
+
+export type mealFeeDetailDirectContractsDetail = {
+  id: number
+  labor?: inLabor
+  laborId: number | null
+  breakfastCount: number
+  lunchCount: number
+  dinnerCount: number
+  unitPrice: number
+  amount: number
+  memo: string
+}
+
+export type mealFeeDetailOutsourcingsDetail = {
+  id: number
+  outsourcingCompanyId: number | null
+  labor?: inLabor
+  laborId: number | null
+  breakfastCount: number
+  lunchCount: number
+  dinnerCount: number
+  unitPrice: number
+  amount: number
+  memo: string
+}
+
+export type mealFeeDetailEquipmentsDetail = {
+  id: number
+  outsourcingCompanyId: number
+  outsourcingCompanyContractDriverId: number
+  breakfastCount: number
+  lunchCount: number
+  dinnerCount: number
+  unitPrice: number
+  amount: number
+  memo: string
+}
+
+export type mealFeeDetailOutsourcingContractsDetail = {
+  id: number
+  outsourcingCompanyId: number | null
+  laborId: number | null
+  breakfastCount: number
+  lunchCount: number
+  dinnerCount: number
   unitPrice: number
   amount: number
   memo: string
@@ -148,6 +192,14 @@ export type ManagementCostFormState = {
   siteProcessName: string
   outsourcingCompanyName: string
   outsourcingCompanyId: number | null
+  isDeductible: boolean
+
+  deductionCompanyId: number
+  deductionCompanyName: string
+
+  deductionCompanyContractId: number
+  deductionCompanyContractName: string
+
   itemType: string
   itemTypeDescription: string
   paymentDate: Date | null // ISO string
@@ -163,8 +215,26 @@ export type ManagementCostFormState = {
   keyMoneyDetails: KeyMoneyDetail[]
   checkedKeyMoneyIds: number[]
 
+  // 식대에 직원
   mealFeeDetails: MealFeeDetail[]
   checkedMealFeeIds: number[]
+
+  // 식대에서 직영
+  mealFeeDetailDirectContracts: mealFeeDetailDirectContractsDetail[]
+  checkedMealFeeDetailDirectContractIds: number[]
+
+  // 식대에 용역
+
+  mealFeeDetailOutsourcings: mealFeeDetailOutsourcingsDetail[]
+  checkedMealFeeDetailOutsourcingIds: number[]
+
+  // 식대의 장비 기사
+  mealFeeDetailEquipments: mealFeeDetailEquipmentsDetail[]
+  checkedMealFeeDetailEquipments: number[]
+
+  // 식대의 외주 인력
+  mealFeeDetailOutsourcingContracts: mealFeeDetailOutsourcingContractsDetail[]
+  checkedMealFeeDetailOutsourcingContracts: number[]
 
   // 파일첨부, 수정이력
   attachedFiles: AttachedFile[]
@@ -185,24 +255,68 @@ type CostFormStore = {
     value: T,
   ) => void
 
-  addItem: (type: 'costItem' | 'attachedFile' | 'mealListData' | 'keyMoneyList') => void
+  addItem: (
+    type:
+      | 'costItem'
+      | 'attachedFile'
+      | 'mealListData'
+      | 'mealFeeDetailDirectContracts'
+      | 'mealFeeDetailOutsourcings'
+      | 'mealFeeDetailEquipments'
+      | 'mealFeeDetailOutsourcingContracts'
+      | 'keyMoneyList',
+  ) => void
   updateItemField: (
-    type: 'costItem' | 'attachedFile' | 'mealListData' | 'keyMoneyList',
+    type:
+      | 'costItem'
+      | 'attachedFile'
+      | 'mealListData'
+      | 'mealFeeDetailDirectContracts'
+      | 'mealFeeDetailOutsourcings'
+      | 'mealFeeDetailEquipments'
+      | 'mealFeeDetailOutsourcingContracts'
+      | 'keyMoneyList',
     id: T,
     field: keyof T,
     value: T,
   ) => void
 
   toggleCheckItem: (
-    type: 'costItem' | 'attachedFile' | 'mealListData' | 'keyMoneyList',
+    type:
+      | 'costItem'
+      | 'attachedFile'
+      | 'mealListData'
+      | 'mealFeeDetailDirectContracts'
+      | 'mealFeeDetailOutsourcings'
+      | 'mealFeeDetailEquipments'
+      | 'mealFeeDetailOutsourcingContracts'
+      | 'keyMoneyList',
     id: number,
     checked: boolean,
   ) => void
   toggleCheckAllItems: (
-    type: 'costItem' | 'attachedFile' | 'mealListData' | 'keyMoneyList',
+    type:
+      | 'costItem'
+      | 'attachedFile'
+      | 'mealListData'
+      | 'mealFeeDetailDirectContracts'
+      | 'mealFeeDetailOutsourcings'
+      | 'mealFeeDetailEquipments'
+      | 'mealFeeDetailOutsourcingContracts'
+      | 'keyMoneyList',
     checked: boolean,
   ) => void
-  removeCheckedItems: (type: 'costItem' | 'attachedFile' | 'mealListData' | 'keyMoneyList') => void
+  removeCheckedItems: (
+    type:
+      | 'costItem'
+      | 'attachedFile'
+      | 'mealListData'
+      | 'mealFeeDetailDirectContracts'
+      | 'mealFeeDetailOutsourcings'
+      | 'mealFeeDetailEquipments'
+      | 'mealFeeDetailOutsourcingContracts'
+      | 'keyMoneyList',
+  ) => void
 
   // 그외에 계산 함수값
   getQuantityTotal: () => number

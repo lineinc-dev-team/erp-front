@@ -1,3 +1,7 @@
+import {
+  mealFeeDetailEquipmentsDetail,
+  mealFeeDetailOutsourcingContractsDetail,
+} from './../types/managementCost.d'
 import { create } from 'zustand'
 import {
   AttachedFile,
@@ -6,6 +10,8 @@ import {
   CostSearchState,
   KeyMoneyDetail,
   MealFeeDetail,
+  mealFeeDetailDirectContractsDetail,
+  mealFeeDetailOutsourcingsDetail,
 } from '@/types/managementCost'
 import { getTodayDateString } from '@/utils/formatters'
 
@@ -68,6 +74,14 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
     siteProcessName: '',
     outsourcingCompanyName: '',
     outsourcingCompanyId: -1,
+    isDeductible: false,
+
+    deductionCompanyId: 0,
+    deductionCompanyName: '',
+
+    deductionCompanyContractId: 0,
+    deductionCompanyContractName: '',
+
     itemType: '',
     itemTypeDescription: '',
     paymentDate: null,
@@ -83,6 +97,18 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
 
     mealFeeDetails: [],
     checkedMealFeeIds: [],
+
+    mealFeeDetailDirectContracts: [],
+    checkedMealFeeDetailDirectContractIds: [],
+
+    mealFeeDetailOutsourcings: [],
+    checkedMealFeeDetailOutsourcingIds: [],
+
+    mealFeeDetailEquipments: [],
+    checkedMealFeeDetailEquipments: [],
+
+    mealFeeDetailOutsourcingContracts: [],
+    checkedMealFeeDetailOutsourcingContracts: [],
 
     attachedFiles: [],
     checkedAttachedFileIds: [],
@@ -100,6 +126,14 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
         siteProcessName: '',
         outsourcingCompanyName: '',
         outsourcingCompanyId: -1,
+        isDeductible: false,
+
+        deductionCompanyId: 0,
+        deductionCompanyName: '',
+
+        deductionCompanyContractId: 0,
+        deductionCompanyContractName: '',
+
         itemType: '',
         itemTypeDescription: '',
         paymentDate: null,
@@ -112,6 +146,19 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
         checkedKeyMoneyIds: [],
         mealFeeDetails: [],
         checkedMealFeeIds: [],
+
+        mealFeeDetailDirectContracts: [],
+        checkedMealFeeDetailDirectContractIds: [],
+
+        mealFeeDetailOutsourcings: [],
+        checkedMealFeeDetailOutsourcingIds: [],
+
+        mealFeeDetailEquipments: [],
+        checkedMealFeeDetailEquipments: [],
+
+        mealFeeDetailOutsourcingContracts: [],
+        checkedMealFeeDetailOutsourcingContracts: [],
+
         attachedFiles: [],
         checkedAttachedFileIds: [],
         editedHistories: [],
@@ -153,12 +200,10 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
           supplyPrice: 0,
           vat: 0,
           total: 0,
-          isDeductible: false,
           memo: '',
         }
         return { form: { ...state.form, details: [...state.form.details, newItem] } }
-      }
-      if (type === 'attachedFile') {
+      } else if (type === 'attachedFile') {
         const newFile: AttachedFile = {
           id,
           name: '',
@@ -166,30 +211,100 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
           files: [],
         }
         return { form: { ...state.form, attachedFiles: [...state.form.attachedFiles, newFile] } }
-      }
-      if (type === 'mealListData') {
+      } else if (type === 'mealListData') {
         const newMeal: MealFeeDetail = {
           id: Date.now(),
-          workType: '',
           laborId: null,
           name: '',
           breakfastCount: 0,
           lunchCount: 0,
-          mealCount: 0,
+          dinnerCount: 0,
           unitPrice: 0,
           amount: 0,
           memo: '',
         }
         return { form: { ...state.form, mealFeeDetails: [...state.form.mealFeeDetails, newMeal] } }
-      }
-      if (type === 'keyMoneyList') {
+      } else if (type === 'mealFeeDetailDirectContracts') {
+        const newMeal: mealFeeDetailDirectContractsDetail = {
+          id: Date.now(),
+          laborId: null,
+          breakfastCount: 0,
+          lunchCount: 0,
+          dinnerCount: 0,
+          unitPrice: 0,
+          amount: 0,
+          memo: '',
+        }
+        return {
+          form: {
+            ...state.form,
+            mealFeeDetailDirectContracts: [...state.form.mealFeeDetailDirectContracts, newMeal],
+          },
+        }
+      } else if (type === 'mealFeeDetailOutsourcings') {
+        const newMeal: mealFeeDetailOutsourcingsDetail = {
+          id: Date.now(),
+          outsourcingCompanyId: 0,
+          laborId: null,
+          breakfastCount: 0,
+          lunchCount: 0,
+          dinnerCount: 0,
+          unitPrice: 0,
+          amount: 0,
+          memo: '',
+        }
+        return {
+          form: {
+            ...state.form,
+            mealFeeDetailOutsourcings: [...state.form.mealFeeDetailOutsourcings, newMeal],
+          },
+        }
+      } else if (type === 'mealFeeDetailEquipments') {
+        const newMeal: mealFeeDetailEquipmentsDetail = {
+          id: Date.now(),
+          outsourcingCompanyId: 0,
+          outsourcingCompanyContractDriverId: 0,
+          breakfastCount: 0,
+          lunchCount: 0,
+          dinnerCount: 0,
+          unitPrice: 0,
+          amount: 0,
+          memo: '',
+        }
+        return {
+          form: {
+            ...state.form,
+            mealFeeDetailEquipments: [...state.form.mealFeeDetailEquipments, newMeal],
+          },
+        }
+      } else if (type === 'mealFeeDetailOutsourcingContracts') {
+        const newMeal: mealFeeDetailOutsourcingContractsDetail = {
+          id: Date.now(),
+          outsourcingCompanyId: 0,
+          laborId: null,
+          breakfastCount: 0,
+          lunchCount: 0,
+          dinnerCount: 0,
+          unitPrice: 0,
+          amount: 0,
+          memo: '',
+        }
+        return {
+          form: {
+            ...state.form,
+            mealFeeDetailOutsourcingContracts: [
+              ...state.form.mealFeeDetailOutsourcingContracts,
+              newMeal,
+            ],
+          },
+        }
+      } else if (type === 'keyMoneyList') {
         const newKeyMoney: KeyMoneyDetail = {
           id: Date.now(),
           account: '',
           purpose: '',
           personnelCount: 0,
           amount: 0,
-          isDeductible: false,
           memo: '',
         }
         return {
@@ -228,6 +343,42 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
             ),
           },
         }
+      } else if (type === 'mealFeeDetailDirectContracts') {
+        return {
+          form: {
+            ...state.form,
+            mealFeeDetailDirectContracts: state.form.mealFeeDetailDirectContracts.map((item) =>
+              item.id === id ? { ...item, [field]: value } : item,
+            ),
+          },
+        }
+      } else if (type === 'mealFeeDetailOutsourcings') {
+        return {
+          form: {
+            ...state.form,
+            mealFeeDetailOutsourcings: state.form.mealFeeDetailOutsourcings.map((item) =>
+              item.id === id ? { ...item, [field]: value } : item,
+            ),
+          },
+        }
+      } else if (type === 'mealFeeDetailEquipments') {
+        return {
+          form: {
+            ...state.form,
+            mealFeeDetailEquipments: state.form.mealFeeDetailEquipments.map((item) =>
+              item.id === id ? { ...item, [field]: value } : item,
+            ),
+          },
+        }
+      } else if (type === 'mealFeeDetailOutsourcingContracts') {
+        return {
+          form: {
+            ...state.form,
+            mealFeeDetailOutsourcingContracts: state.form.mealFeeDetailOutsourcingContracts.map(
+              (item) => (item.id === id ? { ...item, [field]: value } : item),
+            ),
+          },
+        }
       } else if (type === 'keyMoneyList') {
         return {
           form: {
@@ -252,8 +403,7 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
               : state.form.checkedCostIds.filter((cid) => cid !== id),
           },
         }
-      }
-      if (type === 'attachedFile') {
+      } else if (type === 'attachedFile') {
         return {
           form: {
             ...state.form,
@@ -262,8 +412,7 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
               : state.form.checkedAttachedFileIds.filter((cid) => cid !== id),
           },
         }
-      }
-      if (type === 'mealListData') {
+      } else if (type === 'mealListData') {
         return {
           form: {
             ...state.form,
@@ -272,8 +421,43 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
               : state.form.checkedMealFeeIds.filter((cid) => cid !== id),
           },
         }
-      }
-      if (type === 'keyMoneyList') {
+      } else if (type === 'mealFeeDetailDirectContracts') {
+        return {
+          form: {
+            ...state.form,
+            checkedMealFeeDetailDirectContractIds: checked
+              ? [...state.form.checkedMealFeeDetailDirectContractIds, id]
+              : state.form.checkedMealFeeDetailDirectContractIds.filter((cid) => cid !== id),
+          },
+        }
+      } else if (type === 'mealFeeDetailOutsourcings') {
+        return {
+          form: {
+            ...state.form,
+            checkedMealFeeDetailOutsourcingIds: checked
+              ? [...state.form.checkedMealFeeDetailOutsourcingIds, id]
+              : state.form.checkedMealFeeDetailOutsourcingIds.filter((cid) => cid !== id),
+          },
+        }
+      } else if (type === 'mealFeeDetailEquipments') {
+        return {
+          form: {
+            ...state.form,
+            checkedMealFeeDetailEquipments: checked
+              ? [...state.form.checkedMealFeeDetailEquipments, id]
+              : state.form.checkedMealFeeDetailEquipments.filter((cid) => cid !== id),
+          },
+        }
+      } else if (type === 'mealFeeDetailOutsourcingContracts') {
+        return {
+          form: {
+            ...state.form,
+            checkedMealFeeDetailOutsourcingContracts: checked
+              ? [...state.form.checkedMealFeeDetailOutsourcingContracts, id]
+              : state.form.checkedMealFeeDetailOutsourcingContracts.filter((cid) => cid !== id),
+          },
+        }
+      } else if (type === 'keyMoneyList') {
         return {
           form: {
             ...state.form,
@@ -307,6 +491,42 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
           form: {
             ...state.form,
             checkedMealFeeIds: checked ? state.form.mealFeeDetails.map((m) => m.id) : [],
+          },
+        }
+      } else if (type === 'mealFeeDetailDirectContracts') {
+        return {
+          form: {
+            ...state.form,
+            checkedMealFeeDetailDirectContractIds: checked
+              ? state.form.mealFeeDetailDirectContracts.map((m) => m.id)
+              : [],
+          },
+        }
+      } else if (type === 'mealFeeDetailOutsourcings') {
+        return {
+          form: {
+            ...state.form,
+            checkedMealFeeDetailOutsourcingIds: checked
+              ? state.form.mealFeeDetailOutsourcings.map((m) => m.id)
+              : [],
+          },
+        }
+      } else if (type === 'mealFeeDetailEquipments') {
+        return {
+          form: {
+            ...state.form,
+            checkedMealFeeDetailEquipments: checked
+              ? state.form.mealFeeDetailEquipments.map((m) => m.id)
+              : [],
+          },
+        }
+      } else if (type === 'mealFeeDetailOutsourcingContracts') {
+        return {
+          form: {
+            ...state.form,
+            checkedMealFeeDetailOutsourcingContracts: checked
+              ? state.form.mealFeeDetailOutsourcingContracts.map((m) => m.id)
+              : [],
           },
         }
       } else if (type === 'keyMoneyList') {
@@ -425,6 +645,46 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
             checkedMealFeeIds: [],
           },
         }
+      } else if (type === 'mealFeeDetailDirectContracts') {
+        return {
+          form: {
+            ...state.form,
+            mealFeeDetailDirectContracts: state.form.mealFeeDetailDirectContracts.filter(
+              (m) => !state.form.checkedMealFeeDetailDirectContractIds.includes(m.id),
+            ),
+            checkedMealFeeDetailDirectContractIds: [],
+          },
+        }
+      } else if (type === 'mealFeeDetailOutsourcings') {
+        return {
+          form: {
+            ...state.form,
+            mealFeeDetailOutsourcings: state.form.mealFeeDetailOutsourcings.filter(
+              (m) => !state.form.checkedMealFeeDetailOutsourcingIds.includes(m.id),
+            ),
+            checkedMealFeeDetailOutsourcingIds: [],
+          },
+        }
+      } else if (type === 'mealFeeDetailEquipments') {
+        return {
+          form: {
+            ...state.form,
+            mealFeeDetailEquipments: state.form.mealFeeDetailEquipments.filter(
+              (m) => !state.form.checkedMealFeeDetailEquipments.includes(m.id),
+            ),
+            checkedMealFeeDetailEquipments: [],
+          },
+        }
+      } else if (type === 'mealFeeDetailOutsourcingContracts') {
+        return {
+          form: {
+            ...state.form,
+            mealFeeDetailOutsourcingContracts: state.form.mealFeeDetailOutsourcingContracts.filter(
+              (m) => !state.form.checkedMealFeeDetailOutsourcingContracts.includes(m.id),
+            ),
+            checkedMealFeeDetailOutsourcingContracts: [],
+          },
+        }
       } else if (type === 'keyMoneyList') {
         return {
           form: {
@@ -448,6 +708,9 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
       siteId: form.siteId,
       siteProcessId: form.siteProcessId,
       outsourcingCompanyId: form.outsourcingCompanyId === -1 ? null : form.outsourcingCompanyId,
+      deductionCompanyId: form.deductionCompanyId === 0 ? null : form.deductionCompanyId,
+      deductionCompanyContractId:
+        form.deductionCompanyContractId === 0 ? null : form.deductionCompanyContractId,
       itemType: form.itemType,
       itemTypeDescription: form.itemTypeDescription,
       paymentDate:
@@ -460,10 +723,9 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
       mealFeeDetails: form.mealFeeDetails.map((detail: MealFeeDetail) => {
         const base = {
           id: detail.id,
-          workType: detail.workType,
           breakfastCount: detail.breakfastCount,
           lunchCount: detail.lunchCount,
-          mealCount: detail.mealCount,
+          dinnerCount: detail.dinnerCount,
           unitPrice: detail.unitPrice,
           amount: detail.amount,
           memo: detail.memo,
@@ -483,6 +745,68 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
           name: detail.name, // laborId가 0 또는 -1이면 name만 보냄
         }
       }),
+
+      mealFeeDetailDirectContracts: form.mealFeeDetailDirectContracts.map(
+        (detail: mealFeeDetailDirectContractsDetail) => {
+          return {
+            id: detail.id,
+            laborId: detail.laborId,
+            breakfastCount: detail.breakfastCount,
+            lunchCount: detail.lunchCount,
+            dinnerCount: detail.dinnerCount,
+            unitPrice: detail.unitPrice,
+            amount: detail.amount,
+            memo: detail.memo,
+          }
+        },
+      ),
+
+      mealFeeDetailOutsourcings: form.mealFeeDetailOutsourcings.map(
+        (detail: mealFeeDetailOutsourcingsDetail) => {
+          return {
+            id: detail.id,
+            outsourcingCompanyId: detail.outsourcingCompanyId,
+            laborId: detail.laborId,
+            breakfastCount: detail.breakfastCount,
+            lunchCount: detail.lunchCount,
+            dinnerCount: detail.dinnerCount,
+            unitPrice: detail.unitPrice,
+            amount: detail.amount,
+            memo: detail.memo,
+          }
+        },
+      ),
+
+      mealFeeDetailEquipments: form.mealFeeDetailEquipments.map((item) => {
+        return {
+          id: item.id,
+          outsourcingCompanyId: item.outsourcingCompanyId,
+          outsourcingCompanyContractDriverId: item.outsourcingCompanyContractDriverId,
+          breakfastCount: item.breakfastCount,
+          lunchCount: item.lunchCount,
+          dinnerCount: item.dinnerCount,
+          unitPrice: item.unitPrice,
+          amount: item.amount,
+          memo: item.memo,
+        }
+      }),
+
+      mealFeeDetailOutsourcingContracts: form.mealFeeDetailOutsourcingContracts.map(
+        (detail: mealFeeDetailOutsourcingContractsDetail) => {
+          return {
+            id: detail.id,
+            outsourcingCompanyId: detail.outsourcingCompanyId,
+            laborId: detail.laborId,
+            breakfastCount: detail.breakfastCount,
+            lunchCount: detail.lunchCount,
+            dinnerCount: detail.dinnerCount,
+            unitPrice: detail.unitPrice,
+            amount: detail.amount,
+            memo: detail.memo,
+          }
+        },
+      ),
+
       files: form.attachedFiles.flatMap((f) =>
         f.files.length === 0
           ? [

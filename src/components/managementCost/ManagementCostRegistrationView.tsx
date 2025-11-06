@@ -20,7 +20,7 @@ import {
 } from '@mui/material'
 import { bankCostOptions } from '@/config/erp.confing'
 import { useCallback, useEffect, useRef } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import { useManagementCostFormStore } from '@/stores/managementCostsStore'
 import CommonDatePicker from '../common/DatePicker'
@@ -37,14 +37,21 @@ import {
   KeyMoneyDetail,
   ManagementCostFormState,
   MealFeeDetail,
+  mealFeeDetailDirectContractsDetail,
 } from '@/types/managementCost'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { SupplyPriceInput, TotalInput, VatInput } from '@/utils/supplyVatTotalInput'
-import CommonSelectByName from '../common/CommonSelectByName'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { HistoryItem } from '@/types/ordering'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
+import { useDailyReport } from '@/hooks/useDailyReport'
+import {
+  GetContractNameInfoByOutsourcing,
+  GetOutSourcingContractByLabor,
+} from '@/services/dailyReport/dailyReportRegistrationService'
+import { FuelDriverNameScroll } from '@/services/fuelAggregation/fuelAggregationRegistrationService'
+import { useLaborInfo } from '@/hooks/useLabor'
 
 export default function ManagementCostRegistrationView({ isEditMode = false }) {
   const {
@@ -81,24 +88,40 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
     // 구매처
     // setCompanySearch,
-    // companyOptions,
-    // comPanyNameFetchNextPage,
-    // comPanyNamehasNextPage,
-    // comPanyNameFetching,
-    // comPanyNameLoading,
 
     // 인력
 
-    setPersonSearch,
-    personDataOptions,
-    PersonSearchFetchNextPage,
-    PersonSearchhasNextPage,
-    PersonSearchFetching,
-    PersonSearchLoading,
+    // setPersonSearch,
+    // personDataOptions,
+    // PersonSearchFetchNextPage,
+    // PersonSearchhasNextPage,
+    // PersonSearchFetching,
+    // PersonSearchLoading,
     costCancel,
 
     useCostHistoryDataQuery,
+    companyOptions,
+    comPanyNameFetchNextPage,
+    comPanyNamehasNextPage,
+    comPanyNameFetching,
+    comPanyNameLoading,
   } = useManagementCost()
+
+  console.log('CostNameTypeMethodOptions', CostNameTypeMethodOptions)
+
+  const {
+    employeeInfoOptions,
+    employeeFetchNextPage,
+    employeehasNextPage,
+    employeeFetching,
+    employeeLoading,
+
+    laborContractInfoOptions,
+    laborContractFetchNextPage,
+    laborContracthasNextPage,
+    laborContractFetching,
+    laborContractLoading,
+  } = useDailyReport()
 
   const {
     useSitePersonNameListInfiniteScroll,
@@ -114,6 +137,172 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     useOutsourcingNameListInfiniteScroll,
   } = useOutSourcingContract()
 
+  const { useOutsourcingContractNameListInfiniteScroll } = useLaborInfo()
+
+  // 식대에서 업체명을 각각 찾아서 선택하기 위한 변수
+  const [selectedCompanyIds, setSelectedCompanyIds] = useState<Record<number, number>>({})
+
+  const [selectId, setSelectId] = useState(0)
+
+  // 직영/용역에서  용역의 이름을 가져올 변수명
+
+  const [outSourcingByDirectContract, setOutSourcingByDirectContract] = useState<
+    Record<number, any[]>
+  >({})
+
+  // 관리비 식대에서 장비기사 이름 가져올 변수명
+
+  const [outSourcingDriverNameByCost, setOutSourcingDriverNameByCost] = useState<
+    Record<number, any[]>
+  >({})
+
+  // 관리비 식대에서 외주인력 이름 가져올 변수명
+
+  const [outSourcingDirectByCost, setOutSourcingDirectByCost] = useState<Record<number, any[]>>({})
+
+  // 직영/용역에서 필요한 이름을 검색하기 위함
+
+  const {
+    data: NameByOutsourcingInfo,
+    fetchNextPage: NameByOutsourcingFetchNextPage,
+    hasNextPage: NameByOutsourcinghasNextPage,
+    isFetching: NameByOutsourcingFetching,
+    isLoading: NameByOutsourcingLoading,
+  } = useInfiniteQuery({
+    queryKey: ['NameByOutsourcingInfo', selectedCompanyIds[selectId]],
+    queryFn: ({ pageParam = 0 }) =>
+      GetContractNameInfoByOutsourcing({
+        pageParam,
+        outsourcingCompanyId: selectedCompanyIds[selectId] || 0,
+        size: 100,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+    },
+    enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
+  })
+
+  useEffect(() => {
+    if (!NameByOutsourcingInfo) return
+
+    const options = NameByOutsourcingInfo.pages
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+        type: user.type,
+        previousDailyWage: user.previousDailyWage || user.dailyWage,
+        dailyWage: user.dailyWage,
+        isSeverancePayEligible: user.isSeverancePayEligible,
+      }))
+
+    setOutSourcingByDirectContract((prev) => ({
+      ...prev,
+      [selectedCompanyIds[selectId]]: [
+        {
+          id: 0,
+          name: '선택',
+          type: '',
+          previousDailyWage: '',
+          dailyWage: '',
+          isSeverancePayEligible: false,
+        },
+        ...options,
+      ],
+    }))
+  }, [NameByOutsourcingInfo, selectedCompanyIds, selectId])
+
+  // 관리비에서 장비기사 이름  필요한 이름을 가져와 검색 기능
+
+  const {
+    data: fuelDriver,
+    fetchNextPage: fuelDriverFetchNextPage,
+    hasNextPage: fuelDriverHasNextPage,
+    isFetching: fuelDriverIsFetching,
+    isLoading: fuelDriverLoading,
+  } = useInfiniteQuery({
+    queryKey: ['FuelDriverInfo', selectedCompanyIds[selectId]],
+
+    queryFn: ({ pageParam }) =>
+      FuelDriverNameScroll({
+        pageParam,
+        id: selectedCompanyIds[selectId] ?? 0,
+        size: 10,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+    },
+    enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
+  })
+
+  useEffect(() => {
+    if (!fuelDriver) return
+
+    const options = fuelDriver.pages
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+      }))
+
+    setOutSourcingDriverNameByCost((prev) => ({
+      ...prev,
+      [selectedCompanyIds[selectId]]: [{ id: 0, name: '선택' }, ...options],
+    }))
+  }, [fuelDriver, selectedCompanyIds, selectId])
+
+  // 관리비에서 외주인력에서 필요한 이름을 검색하기 위함
+
+  const {
+    data: OutSourcingNameByCost,
+    fetchNextPage: OutSourcingNameByCostFetchNextPage,
+    hasNextPage: OutSourcingNameByCosthasNextPage,
+    isFetching: OutSourcingNameByCostFetching,
+    isLoading: OutSourcingNameByCostLoading,
+  } = useInfiniteQuery({
+    queryKey: ['OutSourcingNameByCostInfo', selectedCompanyIds[selectId]],
+    queryFn: ({ pageParam = 0 }) =>
+      GetOutSourcingContractByLabor({
+        pageParam,
+        outsourcingCompanyId: selectedCompanyIds[selectId] || 0,
+        size: 100,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+    },
+    enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
+  })
+
+  useEffect(() => {
+    if (!OutSourcingNameByCost) return
+
+    const options = OutSourcingNameByCost.pages
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+        type: user.type,
+      }))
+
+    setOutSourcingDirectByCost((prev) => ({
+      ...prev,
+      [selectedCompanyIds[selectId]]: [
+        {
+          id: 0,
+          name: '선택',
+          type: '',
+        },
+        ...options,
+      ],
+    }))
+  }, [OutSourcingNameByCost, selectedCompanyIds, selectId])
+
   const textFieldStyle = {
     '& .MuiOutlinedInput-root': {
       '& fieldset': { borderColor: 'black' },
@@ -121,6 +310,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
       '&.Mui-focused fieldset': { borderColor: 'black' },
     },
   }
+
   // 체크 박스에 활용
   const itemDetails = form.details
   const checkedIds = form.checkedCostIds
@@ -132,15 +322,103 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
   const isAllKeyMoneyChecked =
     keyMoneyDetails.length > 0 && checkedKeyMoneyIds.length === keyMoneyDetails.length
 
-  // 식대
+  // 식대에서 (직원)
   const mealFeelDetails = form.mealFeeDetails
   const checkedMealIds = form.checkedMealFeeIds
   const isAllMealChecked =
     mealFeelDetails.length > 0 && checkedMealIds.length === mealFeelDetails.length
 
+  // 식대에서 (직영)
+  const mealFeelDirectContractDetails = form.mealFeeDetailDirectContracts
+  const checkedMealDirectIds = form.checkedMealFeeDetailDirectContractIds
+  const isAllMealDirectChecked =
+    mealFeelDirectContractDetails.length > 0 &&
+    checkedMealDirectIds.length === mealFeelDirectContractDetails.length
+
+  // 식대에서 (용역)
+  const mealFeelOutData = form.mealFeeDetailOutsourcings
+  const checkedmealFeelOutDataIds = form.checkedMealFeeDetailOutsourcingIds
+  const isAllMealFeelOutDataChecked =
+    mealFeelOutData.length > 0 && checkedmealFeelOutDataIds.length === mealFeelOutData.length
+
+  // 식대에서 (장비기사)
+  const mealFeeDetailEquipmentData = form.mealFeeDetailEquipments
+  const checkedMealFeeDetailEquipmentIds = form.checkedMealFeeDetailEquipments
+  const isAllcheckedMealFeeDetailEquipment =
+    mealFeeDetailEquipmentData.length > 0 &&
+    checkedMealFeeDetailEquipmentIds.length === mealFeeDetailEquipmentData.length
+
+  // 식대에서 (외주인력)
+  const mealFeelOutPersonData = form.mealFeeDetailOutsourcingContracts
+  const checkedMealFeelOutPersonDataIds = form.checkedMealFeeDetailOutsourcingContracts
+  const isAllMealFeelOutPersonDataChecked =
+    mealFeelOutPersonData.length > 0 &&
+    checkedMealFeelOutPersonDataIds.length === mealFeelOutPersonData.length
+
   const attachedFiles = form.attachedFiles
   const fileCheckIds = form.checkedAttachedFileIds
   const isFilesAllChecked = attachedFiles.length > 0 && fileCheckIds.length === attachedFiles.length
+
+  // 간식비 넣을 시 업체명  로직
+
+  const [isOutsourcingFocusedBySnack, setIsOutsourcingFocusedBySnack] = useState(false)
+
+  // 유저 선택 시 처리
+  const handleSelectOutsourcing = (selectedUser: any) => {
+    setField('deductionCompanyName', selectedUser.name)
+    setField('deductionCompanyId', selectedUser.id)
+  }
+
+  const debouncedOutsourcingKeywordBySnack = useDebouncedValue(form.deductionCompanyName, 300)
+
+  const {
+    data: OutsourcingNameDataBySnack,
+    fetchNextPage: OutsourcingNameDataBySnackFetchNextPage,
+    hasNextPage: OutsourcingNameDataBySnackHasNextPage,
+    isFetching: OutsourcingNameDataBySnackIsFetching,
+    isLoading: OutsourcingNameDataBySnackIsLoading,
+  } = useOutsourcingNameListInfiniteScroll(debouncedOutsourcingKeywordBySnack)
+
+  // const OutsourcingRawList = OutsourcingNameData?.pages.flatMap((page) => page.data.content) ?? []
+  // const outsourcingList = Array.from(
+  //   new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
+  // )
+
+  const OutsourcingRawListBySnack =
+    OutsourcingNameDataBySnack?.pages.flatMap((page) => page.data.content) ?? []
+
+  const outsourcingListBySnackData = Array.from(
+    new Map(OutsourcingRawListBySnack.map((user) => [user.name, user])).values(),
+  )
+
+  // 간식비 선택 시 해당 공제 받을 계약명 넣기
+
+  const [isdeductionCompanyFocused, setIsdeductionCompanyFocused] = useState(false)
+
+  // 유저 선택 시 처리
+  const handleSelectOutsourcingContract = (selectedUser: any) => {
+    setField('deductionCompanyContractName', selectedUser.contractName)
+    setField('deductionCompanyContractId', selectedUser.id ?? null)
+  }
+
+  const debounceddeductionCompanyKeyWord = useDebouncedValue(form.deductionCompanyContractName, 300)
+
+  const {
+    data: OutsourcingContractNameData,
+    fetchNextPage: OutsourcingContractNameFetchNextPage,
+    hasNextPage: OutsourcingContractNameHasNextPage,
+    isFetching: OutsourcingContractNameIsFetching,
+    isLoading: OutsourcingContractNameIsLoading,
+  } = useOutsourcingContractNameListInfiniteScroll(
+    debounceddeductionCompanyKeyWord,
+    form.deductionCompanyId,
+  )
+
+  const OutsourcingContractRawList =
+    OutsourcingContractNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const deductionCompanyList = Array.from(
+    new Map(OutsourcingContractRawList.map((user) => [user.contractName, user])).values(),
+  )
 
   // 상세페이지 로직
 
@@ -173,6 +451,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     paymentDateFormat: '일자',
     lunchCount: '중식 갯수',
     breakfastCount: '조식 갯수',
+    dinnerCount: '석식 갯수',
     unitPrice: '단가',
     amount: '금액',
     workType: '직종',
@@ -186,8 +465,10 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     account: '계정',
     personnelCount: '인원수',
     purpose: '사용목적',
-    isDeductible: '공제여부',
+    // isDeductible: '공제여부',
     quantity: '수량',
+    deductionCompanyName: '업체명',
+    deductionCompanyContractName: '업체계약명',
   }
 
   const {
@@ -337,7 +618,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
         supplyPrice: c.supplyPrice,
         vat: c.vat,
         total: c.total,
-        isDeductible: c.isDeductible,
+        // isDeductible: c.isDeductible,
         memo: c.memo,
       }))
 
@@ -347,21 +628,75 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
         purpose: item.purpose,
         personnelCount: item.personnelCount,
         amount: item.amount,
-        isDeductible: item.isDeductible,
+        // isDeductible: item.isDeductible,
         memo: item.memo,
       }))
 
       const mealDetails = (client.mealFeeDetails ?? []).map((item: MealFeeDetail) => ({
         id: item.id,
         laborId: item?.labor?.id ?? null,
-        workType: item.workType,
         breakfastCount: item.breakfastCount,
         lunchCount: item.lunchCount,
+        dinnerCount: item.dinnerCount,
         unitPrice: item.unitPrice,
         amount: item.amount,
         memo: item.memo,
         name: item.name || item.labor?.name,
-        inputType: item.labor === null ? 'manual' : 'select',
+      }))
+
+      const mealFeeDetailDirectContracts = (client.mealFeeDetailDirectContracts ?? []).map(
+        (item: mealFeeDetailDirectContractsDetail) => ({
+          id: item.id,
+          laborId: item?.labor?.id ?? null,
+          breakfastCount: item.breakfastCount,
+          lunchCount: item.lunchCount,
+          dinnerCount: item.dinnerCount,
+          unitPrice: item.unitPrice,
+          amount: item.amount,
+          memo: item.memo,
+        }),
+      )
+
+      const mealFeeDetailOutsourcings = (client.mealFeeDetailOutsourcings ?? []).map(
+        (item: any) => ({
+          id: item.id,
+          outsourcingCompanyId: item?.outsourcingCompany?.id ?? null,
+          laborId: item?.labor?.id ?? null,
+          breakfastCount: item.breakfastCount,
+          lunchCount: item.lunchCount,
+          dinnerCount: item.dinnerCount,
+          unitPrice: item.unitPrice,
+          amount: item.amount,
+          memo: item.memo,
+        }),
+      )
+
+      const mealFeeDetailEquipments = (client.mealFeeDetailEquipments ?? []).map((item: any) => ({
+        id: item.id,
+        outsourcingCompanyId: item?.outsourcingCompany?.id ?? null,
+        outsourcingCompanyContractDriverId: item?.driver.id ?? null,
+        breakfastCount: item.breakfastCount,
+        lunchCount: item.lunchCount,
+        dinnerCount: item.dinnerCount,
+        unitPrice: item.unitPrice,
+        amount: item.amount,
+        memo: item.memo,
+      }))
+
+      // 관리비 외주 인력
+
+      const mealFeeDetailOutsourcingContracts = (
+        client.mealFeeDetailOutsourcingContracts ?? []
+      ).map((item: any) => ({
+        id: item.id,
+        outsourcingCompanyId: item?.outsourcingCompany?.id ?? null,
+        laborId: item?.labor?.id ?? null,
+        breakfastCount: item.breakfastCount,
+        lunchCount: item.lunchCount,
+        dinnerCount: item.dinnerCount,
+        unitPrice: item.unitPrice,
+        amount: item.amount,
+        memo: item.memo,
       }))
 
       // 첨부 파일 가공
@@ -393,6 +728,16 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
       setField('outsourcingCompanyName', client.outsourcingCompany.name)
 
+      setField('deductionCompanyId', client.deductionCompany?.id)
+      setField('deductionCompanyName', client.deductionCompany?.name)
+
+      setField('deductionCompanyContractId', client.deductionCompanyContract?.id)
+      setField('deductionCompanyContractName', client.deductionCompanyContract?.contractName)
+      // ✅ 둘 중 하나라도 값이 있으면 공제 체크 true
+      const hasDeductionInfo =
+        !!client.deductionCompany?.id || !!client.deductionCompanyContract?.id
+
+      setField('isDeductible', hasDeductionInfo)
       setField('outsourcingCompanyInfo', {
         name: client.outsourcingCompany?.name ?? '',
         businessNumber: client.outsourcingCompany?.businessNumber ?? '',
@@ -410,6 +755,10 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
       setField('keyMoneyDetails', keyMoneyDetails)
 
       setField('mealFeeDetails', mealDetails)
+      setField('mealFeeDetailDirectContracts', mealFeeDetailDirectContracts)
+      setField('mealFeeDetailOutsourcings', mealFeeDetailOutsourcings)
+      setField('mealFeeDetailOutsourcingContracts', mealFeeDetailOutsourcingContracts)
+      setField('mealFeeDetailEquipments', mealFeeDetailEquipments)
     } else {
       reset()
     }
@@ -456,6 +805,197 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
   const outsourcingList = Array.from(
     new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
   )
+
+  // 상세페이지 데이터 (예: props나 query에서 가져온 값)
+  const OutsourcingInfoBydaily = mealFeelOutData
+
+  // 외주 인력의 이름 상세에서 가져오기
+  const OutsourcingInfoByCostDetail = mealFeelOutPersonData
+
+  // 외주 장비 기사 이름 상세
+
+  const EquipmentDriverInfoByCostDetail = mealFeeDetailEquipmentData
+
+  // 1. 상세페이지 들어올 때 각 업체별 worker 데이터 API 호출 (직영 용역 데이터 불러옴 언제? 셀렉트 박스 선택 시 )
+  useEffect(() => {
+    // if (!OutsourcingInfoByCostDetail.length) return
+
+    OutsourcingInfoByCostDetail.forEach(async (row) => {
+      const companyId = row.outsourcingCompanyId ?? 0
+      const worker = row.laborId
+
+      if (outSourcingByDirectContract[companyId]) {
+        return
+      }
+
+      if (companyId === null) {
+        return
+      }
+
+      try {
+        const res = await GetOutSourcingContractByLabor({
+          pageParam: 0,
+          outsourcingCompanyId: companyId,
+          size: 200,
+        })
+
+        const options = res.data.content.map((user: any) => ({
+          id: user.id,
+          name: user.name,
+          type: user.type,
+          previousDailyWage: user.previousDailyWage || user.dailyWage,
+          dailyWage: user.dailyWage,
+          isSeverancePayEligible: user.isSeverancePayEligible,
+        }))
+
+        setOutSourcingDirectByCost((prev) => {
+          const exists = options.some((opt: any) => opt.id === worker)
+
+          return {
+            ...prev,
+            [companyId]: [
+              {
+                id: 0,
+                name: '선택',
+                type: '',
+              },
+              ...options,
+              // 만약 선택된 worker가 목록에 없으면 추가
+              ...(worker && !exists
+                ? [
+                    {
+                      id: worker,
+                      name: '',
+                      type: '',
+                    },
+                  ]
+                : []),
+            ],
+          }
+        })
+      } catch (err) {
+        console.error('업체별 인력 조회 실패', err)
+      }
+    })
+
+    console.log('FuelDriverNameScroll', EquipmentDriverInfoByCostDetail)
+    EquipmentDriverInfoByCostDetail.forEach(async (row) => {
+      const companyId = row.outsourcingCompanyId ?? 0
+      const worker = row.outsourcingCompanyContractDriverId
+
+      if (outSourcingByDirectContract[companyId]) {
+        return
+      }
+
+      if (companyId === null) {
+        return
+      }
+
+      try {
+        const res = await FuelDriverNameScroll({
+          pageParam: 0,
+          id: companyId,
+          size: 200,
+        })
+
+        console.log('기사 이름', res)
+        const options = res.data.content.map((user: any) => ({
+          id: user.id,
+          name: user.name,
+        }))
+
+        setOutSourcingDriverNameByCost((prev) => {
+          const exists = options.some((opt: any) => opt.id === worker)
+
+          return {
+            ...prev,
+            [companyId]: [
+              {
+                id: 0,
+                name: '선택',
+              },
+              ...options,
+              // 만약 선택된 worker가 목록에 없으면 추가
+              ...(worker && !exists
+                ? [
+                    {
+                      id: worker,
+                      name: '',
+                    },
+                  ]
+                : []),
+            ],
+          }
+        })
+      } catch (err) {
+        console.error('업체별 인력 조회 실패', err)
+      }
+    })
+
+    OutsourcingInfoBydaily.forEach(async (row) => {
+      const companyId = row.outsourcingCompanyId ?? 0
+      const worker = row.laborId
+
+      if (outSourcingByDirectContract[companyId]) {
+        return
+      }
+
+      if (companyId === null) {
+        return
+      }
+
+      try {
+        const res = await GetContractNameInfoByOutsourcing({
+          pageParam: 0,
+          outsourcingCompanyId: companyId,
+          size: 200,
+        })
+
+        const options = res.data.content.map((user: any) => ({
+          id: user.id,
+          name: user.name,
+          type: user.type,
+          previousDailyWage: user.previousDailyWage || user.dailyWage,
+          dailyWage: user.dailyWage,
+          isSeverancePayEligible: user.isSeverancePayEligible,
+        }))
+
+        setOutSourcingByDirectContract((prev) => {
+          const exists = options.some((opt: any) => opt.id === worker)
+
+          return {
+            ...prev,
+            [companyId]: [
+              {
+                id: 0,
+                name: '선택',
+                type: '',
+                previousDailyWage: '',
+                dailyWage: '',
+                isSeverancePayEligible: false,
+              },
+              ...options,
+              // 만약 선택된 worker가 목록에 없으면 추가
+              ...(worker && !exists
+                ? [
+                    {
+                      id: worker,
+                      name: '',
+                      type: '',
+                      previousDailyWage: '',
+                      dailyWage: '',
+                      isSeverancePayEligible: false,
+                    },
+                  ]
+                : []),
+            ],
+          }
+        })
+      } catch (err) {
+        console.error('업체별 인력 조회 실패', err)
+      }
+    })
+  }, [OutsourcingInfoBydaily, OutsourcingInfoByCostDetail, EquipmentDriverInfoByCostDetail])
 
   const formatChangeDetail = (getChanges: string, typeCode: string) => {
     try {
@@ -598,10 +1138,6 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
     if (mealFeelDetails.length > 0) {
       for (const item of mealFeelDetails) {
-        if (!item.workType?.trim()) return '직종을 입력해주세요.'
-        if (item.inputType !== 'manual' && !item.laborId) return '성명을 선택해주세요.'
-        if (!item.inputType?.trim()) return '구분을 선택해주세요.'
-        if (!item.name?.trim()) return '성명을 입력해주세요.'
         const mealTotal = (item.breakfastCount ?? 0) + (item.lunchCount ?? 0)
         if (mealTotal === 0) return '조식 또는 중식을 입력해주세요.'
         if (!item.amount && item.amount !== 0) return '금액을 입력해주세요.'
@@ -948,6 +1484,93 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
             </div>
           </div>
 
+          {form.itemType === 'SNACK_FEE' && (
+            <div className="flex">
+              <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+                공제여부
+              </label>
+
+              <div className="border border-gray-400 px-2 w-full flex items-center gap-2">
+                {/* ✅ 체크박스 + 공제 텍스트 */}
+                <div className="flex items-center gap-1">
+                  <Checkbox
+                    checked={form.isDeductible ?? false}
+                    onChange={(e) => setField('isDeductible', e.target.checked)}
+                    size="small"
+                  />
+                  <span className="text-[16px] font-medium  whitespace-nowrap">공제</span>
+                </div>
+
+                {/* ✅ 업체명 입력 (체크되어야만 활성화됨) */}
+                <InfiniteScrollSelect
+                  placeholder="업체명을 입력하세요"
+                  keyword={form.deductionCompanyName ?? ''}
+                  onChangeKeyword={(newKeyword) => {
+                    setField('deductionCompanyName', newKeyword)
+
+                    if (newKeyword.trim() === '') {
+                      setField('deductionCompanyContractName', '')
+                      setField('deductionCompanyContractId', null)
+                      setField('deductionCompanyId', 0)
+                    }
+                  }}
+                  items={outsourcingListBySnackData}
+                  hasNextPage={OutsourcingNameDataBySnackHasNextPage ?? false}
+                  fetchNextPage={OutsourcingNameDataBySnackFetchNextPage}
+                  renderItem={(item, isHighlighted) => (
+                    <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+                      {item.name}
+                    </div>
+                  )}
+                  onSelect={handleSelectOutsourcing}
+                  isLoading={
+                    OutsourcingNameDataBySnackIsLoading || OutsourcingNameDataBySnackIsFetching
+                  }
+                  debouncedKeyword={debouncedOutsourcingKeywordBySnack}
+                  shouldShowList={isOutsourcingFocusedBySnack}
+                  onFocus={() => setIsOutsourcingFocusedBySnack(true)}
+                  onBlur={() => setIsOutsourcingFocusedBySnack(false)}
+                  disabled={!form.isDeductible} // ✅ 체크 안되면 비활성화
+                />
+
+                {/* ✅ 업체계약 입력 (체크되어야만 활성화됨) */}
+                <div className="flex items-center w-full">
+                  <label className="w-20 text-[16px] flex items-center justify-center font-bold text-center">
+                    업체계약
+                  </label>
+                  <div className="py-2 w-full flex justify-center items-center">
+                    <InfiniteScrollSelect
+                      placeholder="업체계약을 입력하세요"
+                      keyword={form.deductionCompanyContractName ?? ''}
+                      onChangeKeyword={(newKeyword) =>
+                        setField('deductionCompanyContractName', newKeyword)
+                      }
+                      items={deductionCompanyList}
+                      hasNextPage={OutsourcingContractNameHasNextPage ?? false}
+                      fetchNextPage={OutsourcingContractNameFetchNextPage}
+                      renderItem={(item, isHighlighted) => (
+                        <div
+                          className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}
+                        >
+                          {item.contractName}
+                        </div>
+                      )}
+                      onSelect={handleSelectOutsourcingContract}
+                      isLoading={
+                        OutsourcingContractNameIsLoading || OutsourcingContractNameIsFetching
+                      }
+                      debouncedKeyword={debounceddeductionCompanyKeyWord}
+                      shouldShowList={isdeductionCompanyFocused}
+                      onFocus={() => setIsdeductionCompanyFocused(true)}
+                      onBlur={() => setIsdeductionCompanyFocused(false)}
+                      disabled={!form.isDeductible} // ✅ 체크 안되면 비활성화
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               비고
@@ -997,7 +1620,6 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                   </TableCell>
                   {[
                     '품명',
-                    '공제여부',
                     '수량',
                     '단가',
                     '공급가',
@@ -1018,7 +1640,6 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                     >
                       {label === '비고' ||
                       label === '부가세 (체크 시 자동 계산)' ||
-                      label === '공제여부' ||
                       label === '수량' ||
                       label === '합계' ? (
                         label
@@ -1070,7 +1691,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                     </TableCell>
 
                     {/* 공제항목 */}
-                    <TableCell
+                    {/* <TableCell
                       align="center"
                       sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'nowrap' }}
                     >
@@ -1083,7 +1704,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                         }}
                         size="small"
                       />
-                    </TableCell>
+                    </TableCell> */}
 
                     <TableCell align="right" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
@@ -1210,7 +1831,6 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                   >
                     소계
                   </TableCell>
-                  <TableCell sx={{ border: '1px solid #9CA3AF' }} />
                   <TableCell
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
@@ -1250,357 +1870,1786 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
       )}
 
       {form.itemType === 'MEAL_FEE' && (
-        <div>
-          <div className="flex justify-between items-center mt-10 mb-2">
-            <span className="font-bold border-b-2 mb-4">식대상세</span>
-            <div className="flex gap-4">
-              <CommonButton
-                label="삭제"
-                className="px-7"
-                variant="danger"
-                onClick={() => removeCheckedItems('mealListData')}
-              />
-              <CommonButton
-                label="추가"
-                className="px-7"
-                variant="secondary"
-                onClick={() => addItem('mealListData')}
-              />
+        // 직원
+        <>
+          <div>
+            <div className="flex justify-between items-center mt-10 mb-2">
+              <span className="font-bold border-b-2 mb-4">직원</span>
+              <div className="flex gap-4">
+                <CommonButton
+                  label="삭제"
+                  className="px-7"
+                  variant="danger"
+                  onClick={() => removeCheckedItems('mealListData')}
+                />
+                <CommonButton
+                  label="추가"
+                  className="px-7"
+                  variant="secondary"
+                  onClick={() => addItem('mealListData')}
+                />
+              </div>
             </div>
-          </div>
-          <TableContainer component={Paper}>
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                  <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <Checkbox
-                      checked={isAllMealChecked}
-                      indeterminate={checkedMealIds.length > 0 && !isAllMealChecked}
-                      onChange={(e) => toggleCheckAllItems('mealListData', e.target.checked)}
-                      sx={{ color: 'black' }}
-                    />
-                  </TableCell>
-                  {['직종', '성명', '구분', '계', '단가', '금액', '비고'].map((label) => (
-                    <TableCell
-                      key={label}
-                      align="center"
-                      sx={{
-                        backgroundColor: '#D1D5DB',
-                        border: '1px solid  #9CA3AF',
-                        color: 'black',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      {label === '비고' || label === '계' || label === '단가' ? (
-                        label
-                      ) : (
-                        <div className="flex items-center justify-center">
-                          <span>{label}</span>
-                          <span className="text-red-500 ml-1">*</span>
-                        </div>
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {mealFeelDetails.map((m) => (
-                  <TableRow key={m.id}>
-                    <TableCell
-                      padding="checkbox"
-                      align="center"
-                      sx={{ border: '1px solid  #9CA3AF' }}
-                    >
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
                       <Checkbox
-                        checked={checkedMealIds.includes(m.id)}
-                        onChange={(e) => toggleCheckItem('mealListData', m.id, e.target.checked)}
+                        checked={isAllMealChecked}
+                        indeterminate={checkedMealIds.length > 0 && !isAllMealChecked}
+                        onChange={(e) => toggleCheckAllItems('mealListData', e.target.checked)}
+                        sx={{ color: 'black' }}
                       />
                     </TableCell>
-
-                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      <TextField
-                        size="small"
-                        placeholder="텍스트 입력"
-                        value={m.workType}
-                        onChange={(e) =>
-                          updateItemField('mealListData', m.id, 'workType', e.target.value)
-                        }
-                        variant="outlined"
+                    {['이름', '구분', '계', '단가', '금액', '비고'].map((label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
                         sx={{
-                          '& .MuiOutlinedInput-root': {
-                            '& fieldset': {
-                              borderColor: 'black', // 기본 테두리 색 검은색
-                            },
-                            '&:hover fieldset': {
-                              borderColor: 'black', // 호버 시에도 검은색 유지
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderColor: 'black', // 포커스 시에도 검은색 유지
-                            },
-                          },
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
                         }}
-                      />
-                    </TableCell>
-
-                    <TableCell sx={{ border: '1px solid  #9CA3AF' }}>
-                      <div className="flex gap-4">
-                        <CommonSelectByName
-                          value={m.inputType === 'manual' ? '직접입력' : m.name || '선택'}
-                          onChange={async (value) => {
-                            if (value === '직접입력') {
-                              updateItemField('mealListData', m.id, 'inputType', 'manual')
-                              updateItemField('mealListData', m.id, 'name', '') // 직접입력 모드 전환 시 빈 값
-                              if (isEditMode === true) {
-                                updateItemField('mealListData', m.id, 'laborId', null)
-                              } else {
-                                updateItemField('mealListData', m.id, 'laborId', null)
-                              }
-                              return
-                            }
-
-                            const selectedProduct = personDataOptions.find(
-                              (opt) => opt.name === value,
-                            )
-                            if (!selectedProduct) return
-                            updateItemField('mealListData', m.id, 'inputType', 'select')
-                            updateItemField('mealListData', m.id, 'name', selectedProduct.name)
-                            updateItemField('mealListData', m.id, 'laborId', selectedProduct.id)
-                          }}
-                          options={[{ id: -1, name: '직접입력' }, ...personDataOptions]}
-                          onScrollToBottom={() => {
-                            if (PersonSearchhasNextPage && !PersonSearchFetching)
-                              PersonSearchFetchNextPage()
-                          }}
-                          onInputChange={(value) => setPersonSearch(value)}
-                          loading={PersonSearchLoading}
+                      >
+                        {label === '비고' || label === '계' || label === '단가' ? (
+                          label
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {mealFeelDetails.map((m) => (
+                    <TableRow key={m.id}>
+                      <TableCell
+                        padding="checkbox"
+                        align="center"
+                        sx={{ border: '1px solid  #9CA3AF' }}
+                      >
+                        <Checkbox
+                          checked={checkedMealIds.includes(m.id)}
+                          onChange={(e) => toggleCheckItem('mealListData', m.id, e.target.checked)}
                         />
+                      </TableCell>
 
+                      <TableCell sx={{ border: '1px solid  #9CA3AF' }}>
+                        <div className="flex gap-4">
+                          <CommonSelect
+                            value={m.laborId || 0}
+                            onChange={(value) => {
+                              // const selectedEmployee = employeeInfoOptions.find(
+                              //   (opt) => opt.id === value,
+                              // )
+
+                              updateItemField('mealListData', m.id, 'laborId', value)
+                            }}
+                            options={employeeInfoOptions}
+                            onScrollToBottom={() => {
+                              if (employeehasNextPage && !employeeFetching) employeeFetchNextPage()
+                            }}
+                            loading={employeeLoading}
+                          />
+                        </div>
+                      </TableCell>
+
+                      <TableCell sx={{ border: '1px solid #9CA3AF' }}>
+                        {/* 조식 */}
+                        <TableRow>
+                          <TableCell sx={{ fontSize: '16px', whiteSpace: 'nowrap' }}>
+                            조식
+                          </TableCell>
+                          <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자만 입력"
+                              value={
+                                m.breakfastCount === 0 || m.breakfastCount === null
+                                  ? ''
+                                  : formatNumber(m.breakfastCount)
+                              }
+                              onChange={(e) =>
+                                updateItemField(
+                                  'mealListData',
+                                  m.id,
+                                  'breakfastCount',
+                                  e.target.value,
+                                )
+                              }
+                              variant="outlined"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': { borderColor: 'black' },
+                                },
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+
+                        {/* 중식 */}
+                        <TableRow>
+                          <TableCell sx={{ fontSize: '16px', whiteSpace: 'nowrap' }}>
+                            중식
+                          </TableCell>
+                          <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자만 입력"
+                              value={
+                                m.lunchCount === 0 || m.lunchCount === null
+                                  ? ''
+                                  : formatNumber(m.lunchCount)
+                              }
+                              onChange={(e) =>
+                                updateItemField('mealListData', m.id, 'lunchCount', e.target.value)
+                              }
+                              variant="outlined"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': { borderColor: 'black' },
+                                },
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+
+                        {/* 석식 */}
+
+                        <TableRow>
+                          <TableCell sx={{ fontSize: '16px', whiteSpace: 'nowrap' }}>
+                            석식
+                          </TableCell>
+                          <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자만 입력"
+                              value={
+                                m.dinnerCount === 0 || m.dinnerCount === null
+                                  ? ''
+                                  : formatNumber(m.dinnerCount)
+                              }
+                              onChange={(e) =>
+                                updateItemField('mealListData', m.id, 'dinnerCount', e.target.value)
+                              }
+                              variant="outlined"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': { borderColor: 'black' },
+                                },
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                         <TextField
                           size="small"
-                          placeholder="텍스트 입력"
-                          value={m.inputType === 'manual' ? m.name : ''} // manual 모드일 때만 값 표시
-                          onChange={(e) =>
-                            updateItemField('mealListData', m.id, 'name', e.target.value)
+                          placeholder="자동 계산"
+                          value={
+                            Number(m.breakfastCount) + Number(m.lunchCount) === 0 ||
+                            Number(m.breakfastCount) + Number(m.lunchCount) === null
+                              ? ''
+                              : Number(m.breakfastCount) + Number(m.lunchCount)
+                          }
+                          // value={Number(m.breakfastCount) + Number(m.lunchCount)}
+                          variant="outlined"
+                          InputProps={{
+                            readOnly: true,
+                            sx: {
+                              textAlign: 'center', // 가운데 정렬
+                              input: {
+                                textAlign: 'center', // 실제 입력 텍스트도 가운데 정렬
+                              },
+                            },
+                          }}
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': {
+                                borderColor: 'black', // 기본 테두리 색 검은색
+                              },
+                              '&:hover fieldset': {
+                                borderColor: 'black',
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: 'black',
+                              },
+                            },
+                          }}
+                        />
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="자동 계산"
+                          value={
+                            m.unitPrice === 0 || m.unitPrice === null
+                              ? ''
+                              : formatNumber(m.unitPrice)
                           }
                           variant="outlined"
                           sx={textFieldStyle}
-                          disabled={m.inputType !== 'manual'} // manual 모드일 때만 활성화
+                          inputProps={{
+                            style: {
+                              textAlign: 'right',
+                            },
+                          }}
                         />
-                      </div>
-                    </TableCell>
+                      </TableCell>
 
-                    <TableCell sx={{ border: '1px solid #9CA3AF' }}>
-                      {/* 조식 */}
-                      <TableRow>
-                        <TableCell sx={{ fontSize: '16px', whiteSpace: 'nowrap' }}>조식</TableCell>
-                        <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
-                          <TextField
-                            size="small"
-                            placeholder="숫자만 입력"
-                            value={
-                              m.breakfastCount === 0 || m.breakfastCount === null
-                                ? ''
-                                : formatNumber(m.breakfastCount)
-                            }
-                            onChange={(e) =>
-                              updateItemField(
-                                'mealListData',
-                                m.id,
-                                'breakfastCount',
-                                e.target.value,
-                              )
-                            }
-                            variant="outlined"
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                '& fieldset': { borderColor: 'black' },
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="숫자만 입력"
+                          value={m.amount === 0 || m.amount === null ? '' : formatNumber(m.amount)}
+                          onChange={(e) => {
+                            const numericValue =
+                              e.target.value === '' ? 0 : Number(unformatNumber(e.target.value))
+                            updateItemField('mealListData', m.id, 'amount', numericValue)
+
+                            const peopleCount = Number(m.breakfastCount) + Number(m.lunchCount)
+
+                            let calculatedUnitPrice =
+                              peopleCount > 0 ? numericValue / peopleCount : 0
+                            calculatedUnitPrice = Math.floor(calculatedUnitPrice) // 소수점 버림
+
+                            updateItemField('mealListData', m.id, 'unitPrice', calculatedUnitPrice)
+                          }}
+                          variant="outlined"
+                          sx={textFieldStyle}
+                          inputProps={{
+                            style: {
+                              textAlign: 'right',
+                            },
+                          }}
+                          // InputProps={{
+                          //   sx: {
+                          //     textAlign: 'center',
+                          //     input: { textAlign: 'center' },
+                          //   },
+                          // }}
+                        />
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="텍스트 입력"
+                          value={m.memo}
+                          onChange={(e) =>
+                            updateItemField('mealListData', m.id, 'memo', e.target.value)
+                          }
+                          variant="outlined"
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': {
+                                borderColor: 'black', // 기본 테두리 색 검은색
                               },
-                            }}
-                          />
-                        </TableCell>
-                      </TableRow>
-
-                      {/* 중식 */}
-                      <TableRow>
-                        <TableCell sx={{ fontSize: '16px', whiteSpace: 'nowrap' }}>중식</TableCell>
-                        <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
-                          <TextField
-                            size="small"
-                            placeholder="숫자만 입력"
-                            value={
-                              m.lunchCount === 0 || m.lunchCount === null
-                                ? ''
-                                : formatNumber(m.lunchCount)
-                            }
-                            onChange={(e) =>
-                              updateItemField('mealListData', m.id, 'lunchCount', e.target.value)
-                            }
-                            variant="outlined"
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                '& fieldset': { borderColor: 'black' },
+                              '&:hover fieldset': {
+                                borderColor: 'black', // 호버 시에도 검은색 유지
                               },
-                            }}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    </TableCell>
-
-                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      <TextField
-                        size="small"
-                        placeholder="자동 계산"
-                        value={
-                          Number(m.breakfastCount) + Number(m.lunchCount) === 0 ||
-                          Number(m.breakfastCount) + Number(m.lunchCount) === null
-                            ? ''
-                            : Number(m.breakfastCount) + Number(m.lunchCount)
-                        }
-                        // value={Number(m.breakfastCount) + Number(m.lunchCount)}
-                        variant="outlined"
-                        InputProps={{
-                          readOnly: true,
-                          sx: {
-                            textAlign: 'center', // 가운데 정렬
-                            input: {
-                              textAlign: 'center', // 실제 입력 텍스트도 가운데 정렬
+                              '&.Mui-focused fieldset': {
+                                borderColor: 'black', // 포커스 시에도 검은색 유지
+                              },
                             },
-                          },
-                        }}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            '& fieldset': {
-                              borderColor: 'black', // 기본 테두리 색 검은색
-                            },
-                            '&:hover fieldset': {
-                              borderColor: 'black',
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderColor: 'black',
-                            },
-                          },
-                        }}
-                      />
-                    </TableCell>
+                          }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </div>
 
-                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      <TextField
-                        size="small"
-                        placeholder="자동 계산"
-                        value={
-                          m.unitPrice === 0 || m.unitPrice === null ? '' : formatNumber(m.unitPrice)
-                        }
-                        variant="outlined"
-                        sx={textFieldStyle}
-                        inputProps={{
-                          style: {
-                            textAlign: 'right',
-                          },
-                        }}
-                      />
-                    </TableCell>
-
-                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      <TextField
-                        size="small"
-                        placeholder="숫자만 입력"
-                        value={m.amount === 0 || m.amount === null ? '' : formatNumber(m.amount)}
-                        onChange={(e) => {
-                          const numericValue =
-                            e.target.value === '' ? 0 : Number(unformatNumber(e.target.value))
-                          updateItemField('mealListData', m.id, 'amount', numericValue)
-
-                          const peopleCount = Number(m.breakfastCount) + Number(m.lunchCount)
-
-                          let calculatedUnitPrice = peopleCount > 0 ? numericValue / peopleCount : 0
-                          calculatedUnitPrice = Math.floor(calculatedUnitPrice) // 소수점 버림
-
-                          updateItemField('mealListData', m.id, 'unitPrice', calculatedUnitPrice)
-                        }}
-                        variant="outlined"
-                        sx={textFieldStyle}
-                        inputProps={{
-                          style: {
-                            textAlign: 'right',
-                          },
-                        }}
-                        // InputProps={{
-                        //   sx: {
-                        //     textAlign: 'center',
-                        //     input: { textAlign: 'center' },
-                        //   },
-                        // }}
-                      />
-                    </TableCell>
-
-                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                      <TextField
-                        size="small"
-                        placeholder="텍스트 입력"
-                        value={m.memo}
+          {/* 직영 */}
+          <div>
+            <div className="flex justify-between items-center mt-10 mb-2">
+              <span className="font-bold border-b-2 mb-4">직영</span>
+              <div className="flex gap-4">
+                <CommonButton
+                  label="삭제"
+                  className="px-7"
+                  variant="danger"
+                  onClick={() => removeCheckedItems('mealFeeDetailDirectContracts')}
+                />
+                <CommonButton
+                  label="추가"
+                  className="px-7"
+                  variant="secondary"
+                  onClick={() => addItem('mealFeeDetailDirectContracts')}
+                />
+              </div>
+            </div>
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <Checkbox
+                        checked={isAllMealDirectChecked}
+                        indeterminate={checkedMealDirectIds.length > 0 && !isAllMealDirectChecked}
                         onChange={(e) =>
-                          updateItemField('mealListData', m.id, 'memo', e.target.value)
+                          toggleCheckAllItems('mealFeeDetailDirectContracts', e.target.checked)
                         }
-                        variant="outlined"
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            '& fieldset': {
-                              borderColor: 'black', // 기본 테두리 색 검은색
-                            },
-                            '&:hover fieldset': {
-                              borderColor: 'black', // 호버 시에도 검은색 유지
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderColor: 'black', // 포커스 시에도 검은색 유지
-                            },
-                          },
-                        }}
+                        sx={{ color: 'black' }}
                       />
                     </TableCell>
+                    {['이름', '구분', '계', '단가', '금액', '비고'].map((label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        {label === '비고' || label === '계' || label === '단가' ? (
+                          label
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    ))}
                   </TableRow>
-                ))}
-                <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
-                  <TableCell
-                    colSpan={3}
-                    align="right"
-                    sx={{
-                      border: '1px solid #9CA3AF',
-                      fontSize: '16px',
-                      textAlign: 'center',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    소계
-                  </TableCell>
+                </TableHead>
+                <TableBody>
+                  {mealFeelDirectContractDetails.map((m) => (
+                    <TableRow key={m.id}>
+                      <TableCell
+                        padding="checkbox"
+                        align="center"
+                        sx={{ border: '1px solid  #9CA3AF' }}
+                      >
+                        <Checkbox
+                          checked={checkedMealDirectIds.includes(m.id)}
+                          onChange={(e) =>
+                            toggleCheckItem('mealFeeDetailDirectContracts', m.id, e.target.checked)
+                          }
+                        />
+                      </TableCell>
+                      <TableCell sx={{ border: '1px solid  #9CA3AF' }}>
+                        <div className="flex gap-4">
+                          <CommonSelect
+                            value={m.laborId || 0}
+                            onChange={(value) => {
+                              // const selectedEmployee = employeeInfoOptions.find(
+                              //   (opt) => opt.id === value,
+                              // )
 
-                  <TableCell
-                    align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
-                  ></TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
-                  >
-                    {getMealTotal().toLocaleString()}
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
-                  >
-                    {getMealPriceTotal().toLocaleString()}
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
-                  >
-                    {getMealTotalCount().toLocaleString()}
-                  </TableCell>
-                  <TableCell sx={{ border: '1px solid #9CA3AF' }} />
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </div>
+                              updateItemField(
+                                'mealFeeDetailDirectContracts',
+                                m.id,
+                                'laborId',
+                                value,
+                              )
+                            }}
+                            options={laborContractInfoOptions}
+                            onScrollToBottom={() => {
+                              if (laborContracthasNextPage && !laborContractFetching)
+                                laborContractFetchNextPage()
+                            }}
+                            loading={laborContractLoading}
+                          />
+                        </div>
+                      </TableCell>
+
+                      <TableCell sx={{ border: '1px solid #9CA3AF' }}>
+                        {/* 조식 */}
+                        <TableRow>
+                          <TableCell sx={{ fontSize: '16px', whiteSpace: 'nowrap' }}>
+                            조식
+                          </TableCell>
+                          <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자만 입력"
+                              value={
+                                m.breakfastCount === 0 || m.breakfastCount === null
+                                  ? ''
+                                  : formatNumber(m.breakfastCount)
+                              }
+                              onChange={(e) =>
+                                updateItemField(
+                                  'mealFeeDetailDirectContracts',
+                                  m.id,
+                                  'breakfastCount',
+                                  e.target.value,
+                                )
+                              }
+                              variant="outlined"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': { borderColor: 'black' },
+                                },
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+
+                        {/* 중식 */}
+                        <TableRow>
+                          <TableCell sx={{ fontSize: '16px', whiteSpace: 'nowrap' }}>
+                            중식
+                          </TableCell>
+                          <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자만 입력"
+                              value={
+                                m.lunchCount === 0 || m.lunchCount === null
+                                  ? ''
+                                  : formatNumber(m.lunchCount)
+                              }
+                              onChange={(e) =>
+                                updateItemField(
+                                  'mealFeeDetailDirectContracts',
+                                  m.id,
+                                  'lunchCount',
+                                  e.target.value,
+                                )
+                              }
+                              variant="outlined"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': { borderColor: 'black' },
+                                },
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+
+                        {/* 석식 */}
+
+                        <TableRow>
+                          <TableCell sx={{ fontSize: '16px', whiteSpace: 'nowrap' }}>
+                            석식
+                          </TableCell>
+                          <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자만 입력"
+                              value={
+                                m.dinnerCount === 0 || m.dinnerCount === null
+                                  ? ''
+                                  : formatNumber(m.dinnerCount)
+                              }
+                              onChange={(e) =>
+                                updateItemField(
+                                  'mealFeeDetailDirectContracts',
+                                  m.id,
+                                  'dinnerCount',
+                                  e.target.value,
+                                )
+                              }
+                              variant="outlined"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': { borderColor: 'black' },
+                                },
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="자동 계산"
+                          value={
+                            Number(m.breakfastCount) + Number(m.lunchCount) === 0 ||
+                            Number(m.breakfastCount) + Number(m.lunchCount) === null
+                              ? ''
+                              : Number(m.breakfastCount) + Number(m.lunchCount)
+                          }
+                          // value={Number(m.breakfastCount) + Number(m.lunchCount)}
+                          variant="outlined"
+                          InputProps={{
+                            readOnly: true,
+                            sx: {
+                              textAlign: 'center', // 가운데 정렬
+                              input: {
+                                textAlign: 'center', // 실제 입력 텍스트도 가운데 정렬
+                              },
+                            },
+                          }}
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': {
+                                borderColor: 'black', // 기본 테두리 색 검은색
+                              },
+                              '&:hover fieldset': {
+                                borderColor: 'black',
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: 'black',
+                              },
+                            },
+                          }}
+                        />
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="자동 계산"
+                          value={
+                            m.unitPrice === 0 || m.unitPrice === null
+                              ? ''
+                              : formatNumber(m.unitPrice)
+                          }
+                          variant="outlined"
+                          sx={textFieldStyle}
+                          inputProps={{
+                            style: {
+                              textAlign: 'right',
+                            },
+                          }}
+                        />
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="숫자만 입력"
+                          value={m.amount === 0 || m.amount === null ? '' : formatNumber(m.amount)}
+                          onChange={(e) => {
+                            const numericValue =
+                              e.target.value === '' ? 0 : Number(unformatNumber(e.target.value))
+                            updateItemField(
+                              'mealFeeDetailDirectContracts',
+                              m.id,
+                              'amount',
+                              numericValue,
+                            )
+
+                            const peopleCount = Number(m.breakfastCount) + Number(m.lunchCount)
+
+                            let calculatedUnitPrice =
+                              peopleCount > 0 ? numericValue / peopleCount : 0
+                            calculatedUnitPrice = Math.floor(calculatedUnitPrice) // 소수점 버림
+
+                            updateItemField(
+                              'mealFeeDetailDirectContracts',
+                              m.id,
+                              'unitPrice',
+                              calculatedUnitPrice,
+                            )
+                          }}
+                          variant="outlined"
+                          sx={textFieldStyle}
+                          inputProps={{
+                            style: {
+                              textAlign: 'right',
+                            },
+                          }}
+                          // InputProps={{
+                          //   sx: {
+                          //     textAlign: 'center',
+                          //     input: { textAlign: 'center' },
+                          //   },
+                          // }}
+                        />
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="텍스트 입력"
+                          value={m.memo}
+                          onChange={(e) =>
+                            updateItemField(
+                              'mealFeeDetailDirectContracts',
+                              m.id,
+                              'memo',
+                              e.target.value,
+                            )
+                          }
+                          variant="outlined"
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': {
+                                borderColor: 'black', // 기본 테두리 색 검은색
+                              },
+                              '&:hover fieldset': {
+                                borderColor: 'black', // 호버 시에도 검은색 유지
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: 'black', // 포커스 시에도 검은색 유지
+                              },
+                            },
+                          }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </div>
+
+          {/* 용역 */}
+          <div>
+            <div className="flex justify-between items-center mt-10 mb-2">
+              <span className="font-bold border-b-2 mb-4">용역</span>
+              <div className="flex gap-4">
+                <CommonButton
+                  label="삭제"
+                  className="px-7"
+                  variant="danger"
+                  onClick={() => removeCheckedItems('mealFeeDetailOutsourcings')}
+                />
+                <CommonButton
+                  label="추가"
+                  className="px-7"
+                  variant="secondary"
+                  onClick={() => addItem('mealFeeDetailOutsourcings')}
+                />
+              </div>
+            </div>
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <Checkbox
+                        checked={isAllMealFeelOutDataChecked}
+                        indeterminate={
+                          checkedmealFeelOutDataIds.length > 0 && !isAllMealFeelOutDataChecked
+                        }
+                        onChange={(e) =>
+                          toggleCheckAllItems('mealFeeDetailOutsourcings', e.target.checked)
+                        }
+                        sx={{ color: 'black' }}
+                      />
+                    </TableCell>
+                    {['업체명', '이름', '구분', '계', '단가', '금액', '비고'].map((label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        {label === '비고' || label === '계' || label === '단가' ? (
+                          label
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {mealFeelOutData.map((m) => (
+                    <TableRow key={m.id}>
+                      <TableCell
+                        padding="checkbox"
+                        align="center"
+                        sx={{ border: '1px solid  #9CA3AF' }}
+                      >
+                        <Checkbox
+                          checked={checkedmealFeelOutDataIds.includes(m.id)}
+                          onChange={(e) =>
+                            toggleCheckItem('mealFeeDetailOutsourcings', m.id, e.target.checked)
+                          }
+                        />
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <CommonSelect
+                          fullWidth
+                          value={m.outsourcingCompanyId ?? 0}
+                          onChange={async (value) => {
+                            const selectedCompany = companyOptions.find((opt) => opt.id === value)
+                            if (!selectedCompany) return
+
+                            // 해당 row만 업데이트
+                            setSelectedCompanyIds((prev) => ({
+                              ...prev,
+                              [m.id]: selectedCompany.id,
+                            }))
+
+                            setSelectId(m.id)
+
+                            updateItemField(
+                              'mealFeeDetailOutsourcings',
+                              m.id,
+                              'outsourcingCompanyId',
+                              selectedCompany.id,
+                            )
+                          }}
+                          options={companyOptions}
+                          onScrollToBottom={() => {
+                            if (comPanyNamehasNextPage && !comPanyNameFetching)
+                              comPanyNameFetchNextPage()
+                          }}
+                          loading={comPanyNameLoading}
+                        />
+                      </TableCell>
+
+                      <TableCell sx={{ border: '1px solid  #9CA3AF' }}>
+                        <div className="flex gap-4">
+                          <CommonSelect
+                            value={m.laborId || 0}
+                            onChange={(value) => {
+                              const selectedContractName = (
+                                outSourcingByDirectContract[m.outsourcingCompanyId ?? 0] ?? []
+                              ).find((opt) => opt.id === value)
+
+                              if (!selectedContractName) return
+
+                              updateItemField('mealFeeDetailOutsourcings', m.id, 'laborId', value)
+                            }}
+                            options={
+                              outSourcingByDirectContract[m.outsourcingCompanyId ?? 0] ?? [
+                                { id: 0, name: '선택' },
+                              ]
+                            }
+                            onScrollToBottom={() => {
+                              if (NameByOutsourcinghasNextPage && !NameByOutsourcingFetching)
+                                NameByOutsourcingFetchNextPage()
+                            }}
+                            loading={NameByOutsourcingLoading}
+                          />
+                        </div>
+                      </TableCell>
+
+                      <TableCell sx={{ border: '1px solid #9CA3AF' }}>
+                        {/* 조식 */}
+                        <TableRow>
+                          <TableCell sx={{ fontSize: '16px', whiteSpace: 'nowrap' }}>
+                            조식
+                          </TableCell>
+                          <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자만 입력"
+                              value={
+                                m.breakfastCount === 0 || m.breakfastCount === null
+                                  ? ''
+                                  : formatNumber(m.breakfastCount)
+                              }
+                              onChange={(e) =>
+                                updateItemField(
+                                  'mealFeeDetailOutsourcings',
+                                  m.id,
+                                  'breakfastCount',
+                                  e.target.value,
+                                )
+                              }
+                              variant="outlined"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': { borderColor: 'black' },
+                                },
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+
+                        {/* 중식 */}
+                        <TableRow>
+                          <TableCell sx={{ fontSize: '16px', whiteSpace: 'nowrap' }}>
+                            중식
+                          </TableCell>
+                          <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자만 입력"
+                              value={
+                                m.lunchCount === 0 || m.lunchCount === null
+                                  ? ''
+                                  : formatNumber(m.lunchCount)
+                              }
+                              onChange={(e) =>
+                                updateItemField(
+                                  'mealFeeDetailOutsourcings',
+                                  m.id,
+                                  'lunchCount',
+                                  e.target.value,
+                                )
+                              }
+                              variant="outlined"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': { borderColor: 'black' },
+                                },
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+
+                        {/* 석식 */}
+
+                        <TableRow>
+                          <TableCell sx={{ fontSize: '16px', whiteSpace: 'nowrap' }}>
+                            석식
+                          </TableCell>
+                          <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자만 입력"
+                              value={
+                                m.dinnerCount === 0 || m.dinnerCount === null
+                                  ? ''
+                                  : formatNumber(m.dinnerCount)
+                              }
+                              onChange={(e) =>
+                                updateItemField(
+                                  'mealFeeDetailOutsourcings',
+                                  m.id,
+                                  'dinnerCount',
+                                  e.target.value,
+                                )
+                              }
+                              variant="outlined"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': { borderColor: 'black' },
+                                },
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="자동 계산"
+                          value={
+                            Number(m.breakfastCount) + Number(m.lunchCount) === 0 ||
+                            Number(m.breakfastCount) + Number(m.lunchCount) === null
+                              ? ''
+                              : Number(m.breakfastCount) + Number(m.lunchCount)
+                          }
+                          // value={Number(m.breakfastCount) + Number(m.lunchCount)}
+                          variant="outlined"
+                          InputProps={{
+                            readOnly: true,
+                            sx: {
+                              textAlign: 'center', // 가운데 정렬
+                              input: {
+                                textAlign: 'center', // 실제 입력 텍스트도 가운데 정렬
+                              },
+                            },
+                          }}
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': {
+                                borderColor: 'black', // 기본 테두리 색 검은색
+                              },
+                              '&:hover fieldset': {
+                                borderColor: 'black',
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: 'black',
+                              },
+                            },
+                          }}
+                        />
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="자동 계산"
+                          value={
+                            m.unitPrice === 0 || m.unitPrice === null
+                              ? ''
+                              : formatNumber(m.unitPrice)
+                          }
+                          variant="outlined"
+                          sx={textFieldStyle}
+                          inputProps={{
+                            style: {
+                              textAlign: 'right',
+                            },
+                          }}
+                        />
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="숫자만 입력"
+                          value={m.amount === 0 || m.amount === null ? '' : formatNumber(m.amount)}
+                          onChange={(e) => {
+                            const numericValue =
+                              e.target.value === '' ? 0 : Number(unformatNumber(e.target.value))
+                            updateItemField(
+                              'mealFeeDetailOutsourcings',
+                              m.id,
+                              'amount',
+                              numericValue,
+                            )
+
+                            const peopleCount = Number(m.breakfastCount) + Number(m.lunchCount)
+
+                            let calculatedUnitPrice =
+                              peopleCount > 0 ? numericValue / peopleCount : 0
+                            calculatedUnitPrice = Math.floor(calculatedUnitPrice) // 소수점 버림
+
+                            updateItemField(
+                              'mealFeeDetailOutsourcings',
+                              m.id,
+                              'unitPrice',
+                              calculatedUnitPrice,
+                            )
+                          }}
+                          variant="outlined"
+                          sx={textFieldStyle}
+                          inputProps={{
+                            style: {
+                              textAlign: 'right',
+                            },
+                          }}
+                          // InputProps={{
+                          //   sx: {
+                          //     textAlign: 'center',
+                          //     input: { textAlign: 'center' },
+                          //   },
+                          // }}
+                        />
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="텍스트 입력"
+                          value={m.memo}
+                          onChange={(e) =>
+                            updateItemField(
+                              'mealFeeDetailOutsourcings',
+                              m.id,
+                              'memo',
+                              e.target.value,
+                            )
+                          }
+                          variant="outlined"
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': {
+                                borderColor: 'black', // 기본 테두리 색 검은색
+                              },
+                              '&:hover fieldset': {
+                                borderColor: 'black', // 호버 시에도 검은색 유지
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: 'black', // 포커스 시에도 검은색 유지
+                              },
+                            },
+                          }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </div>
+
+          {/* 장비기사 */}
+          <div>
+            <div className="flex justify-between items-center mt-10 mb-2">
+              <span className="font-bold border-b-2 mb-4">장비기사</span>
+              <div className="flex gap-4">
+                <CommonButton
+                  label="삭제"
+                  className="px-7"
+                  variant="danger"
+                  onClick={() => removeCheckedItems('mealFeeDetailEquipments')}
+                />
+                <CommonButton
+                  label="추가"
+                  className="px-7"
+                  variant="secondary"
+                  onClick={() => addItem('mealFeeDetailEquipments')}
+                />
+              </div>
+            </div>
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <Checkbox
+                        checked={isAllcheckedMealFeeDetailEquipment}
+                        indeterminate={
+                          checkedMealFeeDetailEquipmentIds.length > 0 &&
+                          !isAllcheckedMealFeeDetailEquipment
+                        }
+                        onChange={(e) =>
+                          toggleCheckAllItems('mealFeeDetailEquipments', e.target.checked)
+                        }
+                        sx={{ color: 'black' }}
+                      />
+                    </TableCell>
+                    {['업체명', '이름', '구분', '계', '단가', '금액', '비고'].map((label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        {label === '비고' || label === '계' || label === '단가' ? (
+                          label
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {mealFeeDetailEquipmentData.map((m) => (
+                    <TableRow key={m.id}>
+                      <TableCell
+                        padding="checkbox"
+                        align="center"
+                        sx={{ border: '1px solid  #9CA3AF' }}
+                      >
+                        <Checkbox
+                          checked={checkedMealFeeDetailEquipmentIds.includes(m.id)}
+                          onChange={(e) =>
+                            toggleCheckItem('mealFeeDetailEquipments', m.id, e.target.checked)
+                          }
+                        />
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <CommonSelect
+                          fullWidth
+                          value={m.outsourcingCompanyId ?? 0}
+                          onChange={async (value) => {
+                            const selectedCompany = companyOptions.find((opt) => opt.id === value)
+                            if (!selectedCompany) return
+
+                            // 해당 row만 업데이트
+                            setSelectedCompanyIds((prev) => ({
+                              ...prev,
+                              [m.id]: selectedCompany.id,
+                            }))
+
+                            setSelectId(m.id)
+
+                            updateItemField(
+                              'mealFeeDetailEquipments',
+                              m.id,
+                              'outsourcingCompanyId',
+                              selectedCompany.id,
+                            )
+                          }}
+                          options={companyOptions}
+                          onScrollToBottom={() => {
+                            if (comPanyNamehasNextPage && !comPanyNameFetching)
+                              comPanyNameFetchNextPage()
+                          }}
+                          loading={comPanyNameLoading}
+                        />
+                      </TableCell>
+
+                      <TableCell sx={{ border: '1px solid  #9CA3AF' }}>
+                        <div className="flex gap-4">
+                          <CommonSelect
+                            value={m.outsourcingCompanyContractDriverId || 0}
+                            onChange={(value) => {
+                              const selectedContractName = (
+                                outSourcingDriverNameByCost[m.outsourcingCompanyId ?? 0] ?? []
+                              ).find((opt) => opt.id === value)
+
+                              if (!selectedContractName) return
+
+                              updateItemField(
+                                'mealFeeDetailEquipments',
+                                m.id,
+                                'outsourcingCompanyContractDriverId',
+                                value,
+                              )
+                            }}
+                            options={
+                              outSourcingDriverNameByCost[m.outsourcingCompanyId ?? 0] ?? [
+                                { id: 0, name: '선택' },
+                              ]
+                            }
+                            onScrollToBottom={() => {
+                              if (fuelDriverHasNextPage && !fuelDriverIsFetching)
+                                fuelDriverFetchNextPage()
+                            }}
+                            loading={fuelDriverLoading}
+                          />
+                        </div>
+                      </TableCell>
+
+                      <TableCell sx={{ border: '1px solid #9CA3AF' }}>
+                        {/* 조식 */}
+                        <TableRow>
+                          <TableCell sx={{ fontSize: '16px', whiteSpace: 'nowrap' }}>
+                            조식
+                          </TableCell>
+                          <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자만 입력"
+                              value={
+                                m.breakfastCount === 0 || m.breakfastCount === null
+                                  ? ''
+                                  : formatNumber(m.breakfastCount)
+                              }
+                              onChange={(e) =>
+                                updateItemField(
+                                  'mealFeeDetailEquipments',
+                                  m.id,
+                                  'breakfastCount',
+                                  e.target.value,
+                                )
+                              }
+                              variant="outlined"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': { borderColor: 'black' },
+                                },
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+
+                        {/* 중식 */}
+                        <TableRow>
+                          <TableCell sx={{ fontSize: '16px', whiteSpace: 'nowrap' }}>
+                            중식
+                          </TableCell>
+                          <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자만 입력"
+                              value={
+                                m.lunchCount === 0 || m.lunchCount === null
+                                  ? ''
+                                  : formatNumber(m.lunchCount)
+                              }
+                              onChange={(e) =>
+                                updateItemField(
+                                  'mealFeeDetailEquipments',
+                                  m.id,
+                                  'lunchCount',
+                                  e.target.value,
+                                )
+                              }
+                              variant="outlined"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': { borderColor: 'black' },
+                                },
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+
+                        {/* 석식 */}
+
+                        <TableRow>
+                          <TableCell sx={{ fontSize: '16px', whiteSpace: 'nowrap' }}>
+                            석식
+                          </TableCell>
+                          <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자만 입력"
+                              value={
+                                m.dinnerCount === 0 || m.dinnerCount === null
+                                  ? ''
+                                  : formatNumber(m.dinnerCount)
+                              }
+                              onChange={(e) =>
+                                updateItemField(
+                                  'mealFeeDetailEquipments',
+                                  m.id,
+                                  'dinnerCount',
+                                  e.target.value,
+                                )
+                              }
+                              variant="outlined"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': { borderColor: 'black' },
+                                },
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="자동 계산"
+                          value={
+                            Number(m.breakfastCount) + Number(m.lunchCount) === 0 ||
+                            Number(m.breakfastCount) + Number(m.lunchCount) === null
+                              ? ''
+                              : Number(m.breakfastCount) + Number(m.lunchCount)
+                          }
+                          // value={Number(m.breakfastCount) + Number(m.lunchCount)}
+                          variant="outlined"
+                          InputProps={{
+                            readOnly: true,
+                            sx: {
+                              textAlign: 'center', // 가운데 정렬
+                              input: {
+                                textAlign: 'center', // 실제 입력 텍스트도 가운데 정렬
+                              },
+                            },
+                          }}
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': {
+                                borderColor: 'black', // 기본 테두리 색 검은색
+                              },
+                              '&:hover fieldset': {
+                                borderColor: 'black',
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: 'black',
+                              },
+                            },
+                          }}
+                        />
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="자동 계산"
+                          value={
+                            m.unitPrice === 0 || m.unitPrice === null
+                              ? ''
+                              : formatNumber(m.unitPrice)
+                          }
+                          variant="outlined"
+                          sx={textFieldStyle}
+                          inputProps={{
+                            style: {
+                              textAlign: 'right',
+                            },
+                          }}
+                        />
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="숫자만 입력"
+                          value={m.amount === 0 || m.amount === null ? '' : formatNumber(m.amount)}
+                          onChange={(e) => {
+                            const numericValue =
+                              e.target.value === '' ? 0 : Number(unformatNumber(e.target.value))
+                            updateItemField('mealFeeDetailEquipments', m.id, 'amount', numericValue)
+
+                            const peopleCount = Number(m.breakfastCount) + Number(m.lunchCount)
+
+                            let calculatedUnitPrice =
+                              peopleCount > 0 ? numericValue / peopleCount : 0
+                            calculatedUnitPrice = Math.floor(calculatedUnitPrice) // 소수점 버림
+
+                            updateItemField(
+                              'mealFeeDetailEquipments',
+                              m.id,
+                              'unitPrice',
+                              calculatedUnitPrice,
+                            )
+                          }}
+                          variant="outlined"
+                          sx={textFieldStyle}
+                          inputProps={{
+                            style: {
+                              textAlign: 'right',
+                            },
+                          }}
+                        />
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="텍스트 입력"
+                          value={m.memo}
+                          onChange={(e) =>
+                            updateItemField('mealFeeDetailEquipments', m.id, 'memo', e.target.value)
+                          }
+                          variant="outlined"
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': {
+                                borderColor: 'black', // 기본 테두리 색 검은색
+                              },
+                              '&:hover fieldset': {
+                                borderColor: 'black', // 호버 시에도 검은색 유지
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: 'black', // 포커스 시에도 검은색 유지
+                              },
+                            },
+                          }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </div>
+
+          {/* 외주인력 */}
+          <div>
+            <div className="flex justify-between items-center mt-10 mb-2">
+              <span className="font-bold border-b-2 mb-4">외주인력</span>
+              <div className="flex gap-4">
+                <CommonButton
+                  label="삭제"
+                  className="px-7"
+                  variant="danger"
+                  onClick={() => removeCheckedItems('mealFeeDetailOutsourcingContracts')}
+                />
+                <CommonButton
+                  label="추가"
+                  className="px-7"
+                  variant="secondary"
+                  onClick={() => addItem('mealFeeDetailOutsourcingContracts')}
+                />
+              </div>
+            </div>
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <Checkbox
+                        checked={isAllMealFeelOutPersonDataChecked}
+                        indeterminate={
+                          checkedMealFeelOutPersonDataIds.length > 0 &&
+                          !isAllMealFeelOutPersonDataChecked
+                        }
+                        onChange={(e) =>
+                          toggleCheckAllItems('mealFeeDetailOutsourcingContracts', e.target.checked)
+                        }
+                        sx={{ color: 'black' }}
+                      />
+                    </TableCell>
+                    {['업체명', '이름', '구분', '계', '단가', '금액', '비고'].map((label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        {label === '비고' || label === '계' || label === '단가' ? (
+                          label
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {mealFeelOutPersonData.map((m) => (
+                    <TableRow key={m.id}>
+                      <TableCell
+                        padding="checkbox"
+                        align="center"
+                        sx={{ border: '1px solid  #9CA3AF' }}
+                      >
+                        <Checkbox
+                          checked={checkedMealFeelOutPersonDataIds.includes(m.id)}
+                          onChange={(e) =>
+                            toggleCheckItem(
+                              'mealFeeDetailOutsourcingContracts',
+                              m.id,
+                              e.target.checked,
+                            )
+                          }
+                        />
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <CommonSelect
+                          fullWidth
+                          value={m.outsourcingCompanyId ?? 0}
+                          onChange={async (value) => {
+                            const selectedCompany = companyOptions.find((opt) => opt.id === value)
+                            if (!selectedCompany) return
+
+                            // 해당 row만 업데이트
+                            setSelectedCompanyIds((prev) => ({
+                              ...prev,
+                              [m.id]: selectedCompany.id,
+                            }))
+
+                            setSelectId(m.id)
+
+                            updateItemField(
+                              'mealFeeDetailOutsourcingContracts',
+                              m.id,
+                              'outsourcingCompanyId',
+                              selectedCompany.id,
+                            )
+                          }}
+                          options={companyOptions}
+                          onScrollToBottom={() => {
+                            if (comPanyNamehasNextPage && !comPanyNameFetching)
+                              comPanyNameFetchNextPage()
+                          }}
+                          loading={comPanyNameLoading}
+                        />
+                      </TableCell>
+
+                      <TableCell sx={{ border: '1px solid  #9CA3AF' }}>
+                        <div className="flex gap-4">
+                          <CommonSelect
+                            value={m.laborId || 0}
+                            onChange={(value) => {
+                              const selectedContractName = (
+                                outSourcingDirectByCost[m.outsourcingCompanyId ?? 0] ?? []
+                              ).find((opt) => opt.id === value)
+
+                              if (!selectedContractName) return
+
+                              updateItemField(
+                                'mealFeeDetailOutsourcingContracts',
+                                m.id,
+                                'laborId',
+                                value,
+                              )
+                            }}
+                            options={
+                              outSourcingDirectByCost[m.outsourcingCompanyId ?? 0] ?? [
+                                { id: 0, name: '선택' },
+                              ]
+                            }
+                            onScrollToBottom={() => {
+                              if (
+                                OutSourcingNameByCosthasNextPage &&
+                                !OutSourcingNameByCostFetching
+                              )
+                                OutSourcingNameByCostFetchNextPage()
+                            }}
+                            loading={OutSourcingNameByCostLoading}
+                          />
+                        </div>
+                      </TableCell>
+
+                      <TableCell sx={{ border: '1px solid #9CA3AF' }}>
+                        {/* 조식 */}
+                        <TableRow>
+                          <TableCell sx={{ fontSize: '16px', whiteSpace: 'nowrap' }}>
+                            조식
+                          </TableCell>
+                          <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자만 입력"
+                              value={
+                                m.breakfastCount === 0 || m.breakfastCount === null
+                                  ? ''
+                                  : formatNumber(m.breakfastCount)
+                              }
+                              onChange={(e) =>
+                                updateItemField(
+                                  'mealFeeDetailOutsourcingContracts',
+                                  m.id,
+                                  'breakfastCount',
+                                  e.target.value,
+                                )
+                              }
+                              variant="outlined"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': { borderColor: 'black' },
+                                },
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+
+                        {/* 중식 */}
+                        <TableRow>
+                          <TableCell sx={{ fontSize: '16px', whiteSpace: 'nowrap' }}>
+                            중식
+                          </TableCell>
+                          <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자만 입력"
+                              value={
+                                m.lunchCount === 0 || m.lunchCount === null
+                                  ? ''
+                                  : formatNumber(m.lunchCount)
+                              }
+                              onChange={(e) =>
+                                updateItemField(
+                                  'mealFeeDetailOutsourcingContracts',
+                                  m.id,
+                                  'lunchCount',
+                                  e.target.value,
+                                )
+                              }
+                              variant="outlined"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': { borderColor: 'black' },
+                                },
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+
+                        {/* 석식 */}
+
+                        <TableRow>
+                          <TableCell sx={{ fontSize: '16px', whiteSpace: 'nowrap' }}>
+                            석식
+                          </TableCell>
+                          <TableCell sx={{ borderLeft: '1px solid #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자만 입력"
+                              value={
+                                m.dinnerCount === 0 || m.dinnerCount === null
+                                  ? ''
+                                  : formatNumber(m.dinnerCount)
+                              }
+                              onChange={(e) =>
+                                updateItemField(
+                                  'mealFeeDetailOutsourcingContracts',
+                                  m.id,
+                                  'dinnerCount',
+                                  e.target.value,
+                                )
+                              }
+                              variant="outlined"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': { borderColor: 'black' },
+                                },
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="자동 계산"
+                          value={
+                            Number(m.breakfastCount) + Number(m.lunchCount) === 0 ||
+                            Number(m.breakfastCount) + Number(m.lunchCount) === null
+                              ? ''
+                              : Number(m.breakfastCount) + Number(m.lunchCount)
+                          }
+                          // value={Number(m.breakfastCount) + Number(m.lunchCount)}
+                          variant="outlined"
+                          InputProps={{
+                            readOnly: true,
+                            sx: {
+                              textAlign: 'center', // 가운데 정렬
+                              input: {
+                                textAlign: 'center', // 실제 입력 텍스트도 가운데 정렬
+                              },
+                            },
+                          }}
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': {
+                                borderColor: 'black', // 기본 테두리 색 검은색
+                              },
+                              '&:hover fieldset': {
+                                borderColor: 'black',
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: 'black',
+                              },
+                            },
+                          }}
+                        />
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="자동 계산"
+                          value={
+                            m.unitPrice === 0 || m.unitPrice === null
+                              ? ''
+                              : formatNumber(m.unitPrice)
+                          }
+                          variant="outlined"
+                          sx={textFieldStyle}
+                          inputProps={{
+                            style: {
+                              textAlign: 'right',
+                            },
+                          }}
+                        />
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="숫자만 입력"
+                          value={m.amount === 0 || m.amount === null ? '' : formatNumber(m.amount)}
+                          onChange={(e) => {
+                            const numericValue =
+                              e.target.value === '' ? 0 : Number(unformatNumber(e.target.value))
+                            updateItemField(
+                              'mealFeeDetailOutsourcingContracts',
+                              m.id,
+                              'amount',
+                              numericValue,
+                            )
+
+                            const peopleCount = Number(m.breakfastCount) + Number(m.lunchCount)
+
+                            let calculatedUnitPrice =
+                              peopleCount > 0 ? numericValue / peopleCount : 0
+                            calculatedUnitPrice = Math.floor(calculatedUnitPrice) // 소수점 버림
+
+                            updateItemField(
+                              'mealFeeDetailOutsourcingContracts',
+                              m.id,
+                              'unitPrice',
+                              calculatedUnitPrice,
+                            )
+                          }}
+                          variant="outlined"
+                          sx={textFieldStyle}
+                          inputProps={{
+                            style: {
+                              textAlign: 'right',
+                            },
+                          }}
+                        />
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TextField
+                          size="small"
+                          placeholder="텍스트 입력"
+                          value={m.memo}
+                          onChange={(e) =>
+                            updateItemField(
+                              'mealFeeDetailOutsourcingContracts',
+                              m.id,
+                              'memo',
+                              e.target.value,
+                            )
+                          }
+                          variant="outlined"
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': {
+                                borderColor: 'black', // 기본 테두리 색 검은색
+                              },
+                              '&:hover fieldset': {
+                                borderColor: 'black', // 호버 시에도 검은색 유지
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: 'black', // 포커스 시에도 검은색 유지
+                              },
+                            },
+                          }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </div>
+
+          {/* 총 소계 */}
+
+          <div className="flex justify-between items-center mt-4 mb-2">
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableBody>
+                  <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
+                    <TableCell
+                      colSpan={3}
+                      align="right"
+                      sx={{
+                        border: '1px solid #9CA3AF',
+                        fontSize: '16px',
+                        textAlign: 'center',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      소계
+                    </TableCell>
+
+                    <TableCell
+                      align="center"
+                      colSpan={1}
+                      sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                    >
+                      {getMealTotal().toLocaleString()}
+                    </TableCell>
+                    <TableCell
+                      colSpan={1}
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                    >
+                      {getMealPriceTotal().toLocaleString()}
+                    </TableCell>
+                    <TableCell
+                      colSpan={1}
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                    >
+                      {getMealTotalCount().toLocaleString()}
+                    </TableCell>
+                    <TableCell sx={{ border: '1px solid #9CA3AF' }} />
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </div>
+        </>
       )}
 
       {form.itemType === 'KEY_MONEY' && (
@@ -1634,7 +3683,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       sx={{ color: 'black' }}
                     />
                   </TableCell>
-                  {['계정', '공제여부', '사용목적', '인원수', '금액', '비고'].map((label) => (
+                  {['계정', '사용목적', '인원수', '금액', '비고'].map((label) => (
                     <TableCell
                       key={label}
                       align="center"
@@ -1697,7 +3746,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       />
                     </TableCell>
 
-                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                    {/* <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <Checkbox
                         checked={m.isDeductible ?? ''} // 초기값은 false라서 체크 안됨
                         onChange={(e) => {
@@ -1706,7 +3755,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                         }}
                         size="small"
                       />
-                    </TableCell>
+                    </TableCell> */}
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                       <TextField
                         size="small"
@@ -1805,7 +3854,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
                 <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
                   <TableCell
-                    colSpan={3}
+                    colSpan={2}
                     align="right"
                     sx={{
                       border: '1px solid #9CA3AF',

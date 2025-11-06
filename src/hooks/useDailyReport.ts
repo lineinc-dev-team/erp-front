@@ -6,6 +6,7 @@ import {
   CreatedailyReport,
   DailyAlreadyFuelInfo,
   DailyListInfoService,
+  GetContractNameInfoService,
   GetEmployeeInfoService,
   GetWithEquipmentService,
   ModifyContractReport,
@@ -533,6 +534,40 @@ export function useDailyReport() {
     return [...defaultOptions, ...options]
   }, [employeeInfo])
 
+  // 직영 데이터 조회 (노무에서 사용 할)
+
+  const {
+    data: laborContractInfo,
+    fetchNextPage: laborContractFetchNextPage,
+    hasNextPage: laborContracthasNextPage,
+    isFetching: laborContractFetching,
+    isLoading: laborContractLoading,
+  } = useInfiniteQuery({
+    queryKey: ['laborContractInfo'],
+    queryFn: ({ pageParam = 0 }) => GetContractNameInfoService({ pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      const nextPage = sliceInfo.page + 1
+      return sliceInfo.hasNext ? nextPage : undefined
+    },
+  })
+
+  const laborContractInfoOptions = useMemo(() => {
+    const defaultOptions = [{ id: 0, name: '선택', type: '', grade: '' }]
+
+    const options = (laborContractInfo?.pages || [])
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+        type: user.type,
+        grade: user.grade,
+      }))
+
+    return [...defaultOptions, ...options]
+  }, [laborContractInfo])
+
   // 업체명의 인력 조회cp
 
   // // 회사 변경
@@ -615,5 +650,12 @@ export function useDailyReport() {
     useOutsourcingNameByFuel,
 
     createAlreadyFuelMutation,
+
+    // 노무에서의 직영 데이터 출력
+    laborContractInfoOptions,
+    laborContractFetchNextPage,
+    laborContracthasNextPage,
+    laborContractFetching,
+    laborContractLoading,
   }
 }

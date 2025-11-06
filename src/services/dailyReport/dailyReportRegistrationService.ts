@@ -183,6 +183,44 @@ export async function GetContractNameInfoByOutsourcing({
   return data
 }
 
+//현재 관리비에서 사용하고 있는 외주인력명 조회 이름 가져오기  외주 인력 데이터만 가져옴
+
+export async function GetOutSourcingContractByLabor({
+  pageParam = 0,
+  size = 200,
+  keyword = '',
+  outsourcingCompanyId = 0,
+}: {
+  pageParam?: number
+  size?: number
+  keyword?: string
+  outsourcingCompanyId?: string | number | ''
+}) {
+  const url = `${
+    API.LABOR
+  }/search?page=${pageParam}&outsourcingCompanyId=${outsourcingCompanyId}  &size=${size}&keyword=${encodeURIComponent(
+    keyword,
+  )}&types=OUTSOURCING_CONTRACT`
+
+  const resData = await fetch(url, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+
 // 외주 (직영/용역)에서의 계약명 가져오기
 
 // 계약/인력 쪽 인력 데이터 조회
@@ -411,7 +449,7 @@ export async function ModifyDirectContractReport({
   return await res.status
 }
 
-// 노무쪽 인력 데이터 조회
+// 노무쪽 인력 데이터 조회(정직원))
 export async function GetEmployeeInfoService({
   pageParam = 0,
   size = 200,
