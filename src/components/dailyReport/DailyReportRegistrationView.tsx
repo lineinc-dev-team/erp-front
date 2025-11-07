@@ -2579,8 +2579,6 @@ export default function DailyReportRegistrationView() {
   //   setSpecificationOptionsByCompany(newSpecificationOptions)
   // }, [resultOutsourcing])
 
-  const [selectedDriverIds, setSelectedDriverIds] = useState<{ [rowId: number]: number }>({})
-
   // 옵션에 따른 상태값
 
   // 업체명 id
@@ -2625,6 +2623,8 @@ export default function DailyReportRegistrationView() {
     }))
   }, [fuelDriver, selectedCompanyIds, selectId])
 
+  // 기사
+  const [selectedDriverIds, setSelectedDriverIds] = useState<{ [rowId: number]: number }>({})
   //차량번호 & 규격 무한 스크롤
   const [selectedCarNumberIds, setSelectedCarNumberIds] = useState<{ [rowId: number]: number }>({})
 
@@ -3293,7 +3293,6 @@ export default function DailyReportRegistrationView() {
             }),
           ])
 
-          // ✅ 기사 옵션
           const driverOptions = (driverRes?.data?.content ?? []).map((user: any) => ({
             id: user.id,
             name: user.name,
@@ -6758,6 +6757,7 @@ export default function DailyReportRegistrationView() {
                                 onChange={() => {
                                   setFuelRadioBtn(m.id, 'CONSTRUCTION')
                                   updateItemField('fuel', m.id, 'equipmentId', '')
+                                  updateItemField('fuel', m.id, 'specificationName', '')
                                 }}
                                 value="CONSTRUCTION"
                                 name={`categoryType-${m.id}`} // 각 행별로 고유 그룹
@@ -6772,6 +6772,7 @@ export default function DailyReportRegistrationView() {
                                   setFuelRadioBtn(m.id, 'EQUIPMENT')
 
                                   updateItemField('fuel', m.id, 'equipmentId', '')
+                                  updateItemField('fuel', m.id, 'specificationName', '')
                                 }}
                                 value="EQUIPMENT"
                                 name={`categoryType-${m.id}`} // 각 행별로 고유 그룹
@@ -6780,30 +6781,6 @@ export default function DailyReportRegistrationView() {
                             </label>
                           </div>
                         </TableCell>
-
-                        {/* <CommonSelect
-                            fullWidth
-                            value={selectedDriverIds[m.id] || m.driverId || 0}
-                            onChange={async (value) => {
-                              const selectedDriver = (
-                                driverOptionsByCompany[m.outsourcingCompanyId] ?? []
-                              ).find((opt) => opt.id === value)
-
-                              if (!selectedDriver) return
-
-                              updateItemField('fuel', m.id, 'driverId', selectedDriver.id)
-                            }}
-                            options={
-                              driverOptionsByCompany[m.outsourcingCompanyId] ?? [
-                                { id: 0, name: '선택', category: '' },
-                              ]
-                            }
-                            onScrollToBottom={() => {
-                              if (fuelDriverHasNextPage && !fuelDriverIsFetching)
-                                fuelDriverFetchNextPage()
-                            }}
-                            loading={fuelDriverLoading}
-                          /> */}
 
                         <TableCell
                           align="center"

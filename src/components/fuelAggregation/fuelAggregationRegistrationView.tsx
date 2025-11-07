@@ -248,7 +248,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
         checkId: item.id,
         outsourcingCompanyId: item.outsourcingCompany?.id ?? 0,
         businessNumber: item.outsourcingCompany?.businessNumber ?? '',
-        driverId: item.driver?.id ?? 0,
+        driverId: item.driver?.id || 0,
         categoryType: item.categoryTypeCode,
         specificationName: item.equipment?.specification ?? '',
         fuelType: item.fuelTypeCode ?? '',
@@ -752,7 +752,6 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
             }),
           ])
 
-          // ✅ 기사 옵션
           const driverOptions = (driverRes?.data?.content ?? []).map((user: any) => ({
             id: user.id,
             name: user.name,
@@ -1214,6 +1213,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                           onChange={() => {
                             setFuelRadioBtn(m.checkId, 'CONSTRUCTION')
                             updateItemField('FuelInfo', m.checkId, 'equipmentId', '')
+                            updateItemField('FuelInfo', m.checkId, 'specificationName', '')
                           }}
                           value="CONSTRUCTION"
                           name={`categoryType-${m.checkId}`} // 각 행별로 고유 그룹
@@ -1227,6 +1227,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                           onChange={() => {
                             setFuelRadioBtn(m.checkId, 'EQUIPMENT')
                             updateItemField('FuelInfo', m.checkId, 'equipmentId', '')
+                            updateItemField('FuelInfo', m.checkId, 'specificationName', '')
                           }}
                           value="EQUIPMENT"
                           name={`categoryType-${m.checkId}`} // 각 행별로 고유 그룹
