@@ -324,6 +324,7 @@ export const outsourcingContractListData: GridColDef[] = [
 export const AreaCode = [
   { id: '지역번호', name: '지역번호' },
   { id: '02', name: '02' },
+  { id: '010', name: '010' },
   { id: '031', name: '031' },
   { id: '032', name: '032' },
   { id: '033', name: '033' },
