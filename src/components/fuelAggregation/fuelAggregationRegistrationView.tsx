@@ -63,6 +63,8 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     toggleCheckItem,
     updateContractDetailField,
     setFuelRadioBtn,
+    getGasUseTotal,
+    getAmountTotal,
   } = useFuelFormStore()
 
   const { showSnackbar } = useSnackbarStore()
@@ -1440,6 +1442,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                         const formatted = unformatNumber(e.target.value)
                         updateItemField('FuelInfo', m.checkId, 'amount', formatted)
                       }}
+                      disabled
                     />
 
                     {m.subEquipments &&
@@ -1458,6 +1461,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                               )
                             }}
                             fullWidth
+                            disabled
                           />
                         </div>
                       ))}
@@ -1551,6 +1555,37 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                   )}
                 </TableRow>
               ))}
+              <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
+                <TableCell
+                  colSpan={6}
+                  align="right"
+                  sx={{
+                    border: '1px solid #9CA3AF',
+                    fontSize: '16px',
+                    textAlign: 'center',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  소계
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                >
+                  {getGasUseTotal().toLocaleString()}
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                >
+                  {getAmountTotal().toLocaleString()}
+                </TableCell>
+                <TableCell
+                  align="center"
+                  colSpan={3}
+                  sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                ></TableCell>
+              </TableRow>
             </TableBody>
           </Table>
         </TableContainer>

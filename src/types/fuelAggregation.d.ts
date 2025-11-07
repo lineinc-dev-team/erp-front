@@ -172,4 +172,7 @@ type FuelFormStore = {
   newFuelData: () => void
 
   calculateFuelAmount: () => void
+
+  getGasUseTotal: () => number
+  getAmountTotal: () => number
 }

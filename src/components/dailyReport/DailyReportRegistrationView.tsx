@@ -114,6 +114,9 @@ export default function DailyReportRegistrationView() {
 
     updateSubEqByFuel,
 
+    getGasUseTotal,
+    getAmountTotal,
+
     // 직원 정보
   } = useDailyFormStore()
 
@@ -7018,6 +7021,7 @@ export default function DailyReportRegistrationView() {
                               pattern: '[0-9]*',
                               style: { textAlign: 'right' }, // ← 오른쪽 정렬
                             }}
+                            disabled
                           />
 
                           {m.subEquipments &&
@@ -7036,6 +7040,7 @@ export default function DailyReportRegistrationView() {
                                     pattern: '[0-9]*',
                                     style: { textAlign: 'right' }, // ← 오른쪽 정렬
                                   }}
+                                  disabled
                                 />
                               </div>
                             ))}
@@ -7129,6 +7134,38 @@ export default function DailyReportRegistrationView() {
                       </TableRow>
                     ))
                   )}
+
+                  <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
+                    <TableCell
+                      colSpan={6}
+                      align="right"
+                      sx={{
+                        border: '1px solid #9CA3AF',
+                        fontSize: '16px',
+                        textAlign: 'center',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      소계
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                    >
+                      {getGasUseTotal().toLocaleString()}
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                    >
+                      {getAmountTotal().toLocaleString()}
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      colSpan={3}
+                      sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                    ></TableCell>
+                  </TableRow>
                 </TableBody>
               </Table>
 

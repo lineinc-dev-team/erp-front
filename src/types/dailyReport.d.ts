@@ -570,4 +570,9 @@ type DailyReportFormStore = {
   modifyFuel: () => void
   modifyFile: () => void
   modifyWeather: (activeTab: string) => void
+
+  // 출열일보 유류에서 주유량 계산
+
+  getGasUseTotal: () => number
+  getAmountTotal: () => number
 }
