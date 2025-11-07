@@ -330,6 +330,10 @@ type CostFormStore = {
   getAmountTotal: () => number
 
   // 식대에서 계산 값
+  getBreakfastTotalCount: () => number
+  getLunchTotalCount: () => number
+  getDinnerTotalCount: () => number
+
   getMealTotal: () => number
   getMealPriceTotal: () => number
   getMealTotalCount: () => number

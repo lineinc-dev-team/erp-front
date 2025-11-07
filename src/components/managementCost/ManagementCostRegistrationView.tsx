@@ -7,6 +7,7 @@ import CommonSelect from '../common/Select'
 import CommonButton from '../common/Button'
 import CommonFileInput from '../common/FileInput'
 import {
+  Box,
   Checkbox,
   Paper,
   Table,
@@ -70,6 +71,9 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     getVatTotal,
     getTotalCount,
 
+    getBreakfastTotalCount,
+    getLunchTotalCount,
+    getDinnerTotalCount,
     getMealTotal,
     getMealPriceTotal,
     getMealTotalCount,
@@ -2053,10 +2057,18 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                           size="small"
                           placeholder="자동 계산"
                           value={
-                            Number(m.breakfastCount) + Number(m.lunchCount) === 0 ||
-                            Number(m.breakfastCount) + Number(m.lunchCount) === null
+                            Number(m.breakfastCount) +
+                              Number(m.lunchCount) +
+                              Number(m.dinnerCount) ===
+                              0 ||
+                            Number(m.breakfastCount) +
+                              Number(m.lunchCount) +
+                              Number(m.dinnerCount) ===
+                              null
                               ? ''
-                              : Number(m.breakfastCount) + Number(m.lunchCount)
+                              : Number(m.breakfastCount) +
+                                Number(m.lunchCount) +
+                                Number(m.dinnerCount)
                           }
                           // value={Number(m.breakfastCount) + Number(m.lunchCount)}
                           variant="outlined"
@@ -2370,10 +2382,18 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                           size="small"
                           placeholder="자동 계산"
                           value={
-                            Number(m.breakfastCount) + Number(m.lunchCount) === 0 ||
-                            Number(m.breakfastCount) + Number(m.lunchCount) === null
+                            Number(m.breakfastCount) +
+                              Number(m.lunchCount) +
+                              Number(m.dinnerCount) ===
+                              0 ||
+                            Number(m.breakfastCount) +
+                              Number(m.lunchCount) +
+                              Number(m.dinnerCount) ===
+                              null
                               ? ''
-                              : Number(m.breakfastCount) + Number(m.lunchCount)
+                              : Number(m.breakfastCount) +
+                                Number(m.lunchCount) +
+                                Number(m.dinnerCount)
                           }
                           // value={Number(m.breakfastCount) + Number(m.lunchCount)}
                           variant="outlined"
@@ -2738,10 +2758,18 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                           size="small"
                           placeholder="자동 계산"
                           value={
-                            Number(m.breakfastCount) + Number(m.lunchCount) === 0 ||
-                            Number(m.breakfastCount) + Number(m.lunchCount) === null
+                            Number(m.breakfastCount) +
+                              Number(m.lunchCount) +
+                              Number(m.dinnerCount) ===
+                              0 ||
+                            Number(m.breakfastCount) +
+                              Number(m.lunchCount) +
+                              Number(m.dinnerCount) ===
+                              null
                               ? ''
-                              : Number(m.breakfastCount) + Number(m.lunchCount)
+                              : Number(m.breakfastCount) +
+                                Number(m.lunchCount) +
+                                Number(m.dinnerCount)
                           }
                           // value={Number(m.breakfastCount) + Number(m.lunchCount)}
                           variant="outlined"
@@ -3112,10 +3140,18 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                           size="small"
                           placeholder="자동 계산"
                           value={
-                            Number(m.breakfastCount) + Number(m.lunchCount) === 0 ||
-                            Number(m.breakfastCount) + Number(m.lunchCount) === null
+                            Number(m.breakfastCount) +
+                              Number(m.lunchCount) +
+                              Number(m.dinnerCount) ===
+                              0 ||
+                            Number(m.breakfastCount) +
+                              Number(m.lunchCount) +
+                              Number(m.dinnerCount) ===
+                              null
                               ? ''
-                              : Number(m.breakfastCount) + Number(m.lunchCount)
+                              : Number(m.breakfastCount) +
+                                Number(m.lunchCount) +
+                                Number(m.dinnerCount)
                           }
                           // value={Number(m.breakfastCount) + Number(m.lunchCount)}
                           variant="outlined"
@@ -3477,10 +3513,18 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                           size="small"
                           placeholder="자동 계산"
                           value={
-                            Number(m.breakfastCount) + Number(m.lunchCount) === 0 ||
-                            Number(m.breakfastCount) + Number(m.lunchCount) === null
+                            Number(m.breakfastCount) +
+                              Number(m.lunchCount) +
+                              Number(m.dinnerCount) ===
+                              0 ||
+                            Number(m.breakfastCount) +
+                              Number(m.lunchCount) +
+                              Number(m.dinnerCount) ===
+                              null
                               ? ''
-                              : Number(m.breakfastCount) + Number(m.lunchCount)
+                              : Number(m.breakfastCount) +
+                                Number(m.lunchCount) +
+                                Number(m.dinnerCount)
                           }
                           // value={Number(m.breakfastCount) + Number(m.lunchCount)}
                           variant="outlined"
@@ -3604,46 +3648,165 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
           {/* 총 소계 */}
 
-          <div className="flex justify-between items-center mt-4 mb-2">
+          <div className="flex justify-between items-center mt-6 mb-4">
             <TableContainer component={Paper}>
               <Table size="small">
                 <TableBody>
-                  <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
+                  <TableRow sx={{ backgroundColor: '#E5E7EB' }}>
+                    {/* 제목 */}
                     <TableCell
                       colSpan={3}
-                      align="right"
+                      align="center"
                       sx={{
                         border: '1px solid #9CA3AF',
-                        fontSize: '16px',
-                        textAlign: 'center',
                         fontWeight: 'bold',
+                        fontSize: 16,
+                        width: '13.3%',
+                        whiteSpace: 'nowrap',
+                        '@media screen and (max-width: 1500px)': {
+                          width: '16%',
+                          fontSize: 15,
+                        },
                       }}
                     >
                       소계
                     </TableCell>
 
+                    {/* 조식 / 중식 / 석식 */}
+                    <TableCell
+                      sx={{
+                        border: '1px solid #9CA3AF',
+                        width: '14%',
+                        verticalAlign: 'top',
+                        padding: 0,
+                        '@media screen and (max-width: 1500px)': {
+                          width: '14.8%',
+                        },
+                      }}
+                    >
+                      <Box display="flex" flexDirection="column" gap={1.5}>
+                        {['조식', '중식', '석식'].map((label) => {
+                          const getCount =
+                            label === '조식'
+                              ? getBreakfastTotalCount()
+                              : label === '중식'
+                              ? getLunchTotalCount()
+                              : getDinnerTotalCount()
+
+                          return (
+                            <Box
+                              key={label}
+                              display="flex"
+                              alignItems="center"
+                              justifyContent="space-between"
+                              borderBottom={label !== '석식' ? '1px solid #9CA3AF' : 'none'}
+                              px={2}
+                              py={1.2}
+                            >
+                              <Typography
+                                sx={{
+                                  fontSize: 17,
+                                  fontWeight: 'bold',
+                                  whiteSpace: 'nowrap',
+                                  width: 60,
+                                  '@media screen and (max-width: 1460px)': {
+                                    fontSize: 18,
+                                    width: 70,
+                                  },
+                                }}
+                              >
+                                {label}
+                              </Typography>
+
+                              <TextField
+                                size="small"
+                                value={getCount.toLocaleString()}
+                                variant="standard"
+                                InputProps={{
+                                  readOnly: true,
+                                  disableUnderline: true,
+                                  inputProps: { style: { textAlign: 'right' } },
+                                }}
+                                sx={{
+                                  width: 90,
+                                  '& .MuiInputBase-input': {
+                                    border: 'none',
+                                    backgroundColor: 'transparent',
+                                    fontSize: 15,
+                                  },
+                                  '@media screen and (max-width: 1460px)': {
+                                    width: 105,
+                                    '& .MuiInputBase-input': { fontSize: 16 },
+                                  },
+                                }}
+                              />
+                            </Box>
+                          )
+                        })}
+                      </Box>
+                    </TableCell>
+
+                    {/* 계 */}
                     <TableCell
                       align="center"
-                      colSpan={1}
-                      sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                      sx={{
+                        border: '1px solid #9CA3AF',
+                        fontSize: 16,
+                        fontWeight: 'bold',
+                        width: '10%',
+                        '@media screen and (max-width: 1460px)': {
+                          width: '11%',
+                        },
+                      }}
                     >
                       {getMealTotal().toLocaleString()}
                     </TableCell>
+
+                    {/* 단가 */}
                     <TableCell
-                      colSpan={1}
                       align="center"
-                      sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                      sx={{
+                        border: '1px solid #9CA3AF',
+                        fontSize: 16,
+                        fontWeight: 'bold',
+                        width: '10%',
+                        '@media screen and (max-width: 1460px)': {
+                          width: '11%',
+                        },
+                      }}
                     >
                       {getMealPriceTotal().toLocaleString()}
                     </TableCell>
+
+                    {/* 금액 */}
                     <TableCell
-                      colSpan={1}
                       align="center"
-                      sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                      sx={{
+                        border: '1px solid #9CA3AF',
+                        fontSize: 16,
+                        fontWeight: 'bold',
+                        width: '10%',
+                        '@media screen and (max-width: 1460px)': {
+                          width: '11%',
+                        },
+                      }}
                     >
                       {getMealTotalCount().toLocaleString()}
                     </TableCell>
-                    <TableCell sx={{ border: '1px solid #9CA3AF' }} />
+
+                    {/* 비고 */}
+                    <TableCell
+                      align="center"
+                      sx={{
+                        border: '1px solid #9CA3AF',
+                        fontSize: 16,
+                        fontWeight: 'bold',
+                        width: '10%',
+                        '@media screen and (max-width: 1460px)': {
+                          width: '11%',
+                        },
+                      }}
+                    />
                   </TableRow>
                 </TableBody>
               </Table>

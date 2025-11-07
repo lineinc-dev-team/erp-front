@@ -590,17 +590,94 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
     }, 0)
   },
 
+  // 조식 , 중식 , 석식
+
+  getBreakfastTotalCount: () => {
+    const {
+      mealFeeDetails,
+      mealFeeDetailDirectContracts,
+      mealFeeDetailOutsourcings,
+      mealFeeDetailEquipments,
+      mealFeeDetailOutsourcingContracts,
+    } = get().form
+
+    const allItems = [
+      ...mealFeeDetails,
+      ...mealFeeDetailDirectContracts,
+      ...mealFeeDetailOutsourcings,
+      ...mealFeeDetailEquipments,
+      ...mealFeeDetailOutsourcingContracts,
+    ]
+
+    return allItems.reduce((sum, item) => {
+      const count = Number(item.breakfastCount)
+      return sum + (isNaN(count) ? 0 : count)
+    }, 0)
+  },
+
+  getLunchTotalCount: () => {
+    const form = get().form
+    const allItems = [
+      ...form.mealFeeDetails,
+      ...form.mealFeeDetailDirectContracts,
+      ...form.mealFeeDetailOutsourcings,
+      ...form.mealFeeDetailEquipments,
+      ...form.mealFeeDetailOutsourcingContracts,
+    ]
+
+    return allItems.reduce((sum, item) => {
+      const count = Number(item.lunchCount)
+      return sum + (isNaN(count) ? 0 : count)
+    }, 0)
+  },
+
+  getDinnerTotalCount: () => {
+    const form = get().form
+    const allItems = [
+      ...form.mealFeeDetails,
+      ...form.mealFeeDetailDirectContracts,
+      ...form.mealFeeDetailOutsourcings,
+      ...form.mealFeeDetailEquipments,
+      ...form.mealFeeDetailOutsourcingContracts,
+    ]
+
+    return allItems.reduce((sum, item) => {
+      const count = Number(item.dinnerCount)
+      return sum + (isNaN(count) ? 0 : count)
+    }, 0)
+  },
+
+  // 계에대한 변수를 만들어서 다시 넣어야함
   getMealTotal: () => {
-    const { mealFeeDetails } = get().form
-    return mealFeeDetails.reduce((sum, item) => {
-      const amount = Number(item.breakfastCount) + Number(item.lunchCount)
+    const form = get().form
+
+    const mealArrays = [
+      form.mealFeeDetails,
+      form.mealFeeDetailDirectContracts,
+      form.mealFeeDetailOutsourcings,
+      form.mealFeeDetailEquipments,
+      form.mealFeeDetailOutsourcingContracts,
+    ]
+
+    return mealArrays.flat().reduce((sum, item) => {
+      const amount =
+        Number(item.breakfastCount) + Number(item.lunchCount) + Number(item.dinnerCount)
       return sum + (isNaN(amount) ? 0 : amount)
     }, 0)
   },
 
   getMealPriceTotal: () => {
-    const { mealFeeDetails } = get().form
-    const total = mealFeeDetails.reduce((sum, item) => {
+    const form = get().form
+
+    const mealArrays = [
+      form.mealFeeDetails,
+      form.mealFeeDetailDirectContracts,
+      form.mealFeeDetailOutsourcings,
+      form.mealFeeDetailEquipments,
+      form.mealFeeDetailOutsourcingContracts,
+    ]
+
+    const total = mealArrays.flat().reduce((sum, item) => {
       const amount = Number(item.unitPrice)
       return sum + (isNaN(amount) ? 0 : amount)
     }, 0)
@@ -608,8 +685,17 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
     return Math.floor(total) // 소수점 버림
   },
   getMealTotalCount: () => {
-    const { mealFeeDetails } = get().form
-    return mealFeeDetails.reduce((sum, item) => {
+    const form = get().form
+
+    const mealArrays = [
+      form.mealFeeDetails,
+      form.mealFeeDetailDirectContracts,
+      form.mealFeeDetailOutsourcings,
+      form.mealFeeDetailEquipments,
+      form.mealFeeDetailOutsourcingContracts,
+    ]
+
+    return mealArrays.flat().reduce((sum, item) => {
       const amount = Number(item.amount)
       return sum + (isNaN(amount) ? 0 : amount)
     }, 0)
