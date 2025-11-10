@@ -64,9 +64,11 @@ const menuNameToBasePath: Record<string, string> = {
   '노무명세서 관리': '/laborStatement',
   '계정 관리': '/account',
   '현장/본사 관리비 관리': '/siteManagement',
+  '집계 관리': '/aggregation',
 }
 
 const menuNameToIcon: Record<string, React.ReactNode> = {
+  '집계 관리': <ManageAccounts />, // 권한 설정 → 계정 관리 아이콘
   '권한 관리': <ManageAccounts />, // 권한 설정 → 계정 관리 아이콘
   '발주처 관리': <Business />, // 회사/거래처 → 건물 아이콘
   '현장 관리': <Apartment />, // 현장/프로젝트 → 아파트 아이콘
@@ -103,6 +105,14 @@ function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {
     if (menu.name === '노무명세서 관리') {
       filteredPermissions = filteredPermissions.filter(
         (perm: ApiPermission) => perm.action !== '등록',
+      )
+    }
+
+    if (menu.name === '집계 관리') {
+      filteredPermissions = filteredPermissions.map((perm: ApiPermission) =>
+        perm.action === '등록'
+          ? { ...perm, action: '집계표(본사)' } // '등록' → '집계표(본사)'로 변경
+          : perm,
       )
     }
 
