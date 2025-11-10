@@ -73,3 +73,74 @@ export async function FuelPriceInfoServiceByAggregate(params = {}) {
 }
 
 // 집계에서 노무비 조회
+
+export async function LaborCostInfoServiceByAggregate(params = {}) {
+  const query = new URLSearchParams(params).toString()
+
+  const resData = await fetch(`${API.AGGREGATE}/labor-cost?${query}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      throw new Error('권한이 없습니다.')
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+// 집계 노무비에서 사용하는 (용역별 데이터 조회)
+
+export async function OutsourcingLaborCostInfoServiceByAggregate(params = {}) {
+  const query = new URLSearchParams(params).toString()
+
+  const resData = await fetch(`${API.AGGREGATE}/outsourcing-labor-cost?${query}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      throw new Error('권한이 없습니다.')
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+
+// 집계에서 장비비  조회
+
+// 집계 노무비에서 사용하는 (용역별 데이터 조회)
+
+export async function EquipmentCostInfoServiceByAggregate(params = {}) {
+  const query = new URLSearchParams(params).toString()
+
+  const resData = await fetch(`${API.AGGREGATE}/equipment-cost?${query}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      throw new Error('권한이 없습니다.')
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}

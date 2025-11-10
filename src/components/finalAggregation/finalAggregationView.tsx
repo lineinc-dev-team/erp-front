@@ -12,6 +12,8 @@ import CommonMonthPicker from '../common/MonthPicker'
 import CommonButton from '../common/Button'
 import AggregateMaterialView from '../aggregateMaterialView/aggregateMaterialView'
 import AggregateOilCountView from '../aggregateOilCountView/aggregateOilCountView'
+import AggregateLaborCostView from '../aggregateLaborCostView/aggregateLaborCostView'
+import AggregateEquipmentCostView from '../aggregateEquipmentCostView/aggregateEquipmentCostView'
 
 const TAB_CONFIG = [
   { label: '재료비', value: 'MATERIAL' },
@@ -252,6 +254,8 @@ export default function FinalAggregationView() {
 
       {activeTab === 'MATERIAL' && <AggregateMaterialView />}
       {activeTab === 'FUEL' && <AggregateOilCountView fuelType={['DIESEL', 'GASOLINE', 'UREA']} />}
+      {activeTab === 'LABOR' && <AggregateLaborCostView />}
+      {activeTab === 'EQUIPMENT' && <AggregateEquipmentCostView />}
     </>
   )
 }

@@ -1,7 +1,10 @@
 import {
+  EquipmentCostInfoServiceByAggregate,
   FuelInfoServiceByAggregate,
   FuelPriceInfoServiceByAggregate,
+  LaborCostInfoServiceByAggregate,
   MaterialInfoServiceByAggregate,
+  OutsourcingLaborCostInfoServiceByAggregate,
 } from '@/services/finalAggregation/finalAggregationService'
 import { useQuery } from '@tanstack/react-query'
 
@@ -10,12 +13,14 @@ export default function useFinalAggregationView({
   siteId,
   siteProcessId,
   fuelType,
+  laborType,
   tabName,
 }: {
   yearMonth: string
   siteId: number
   siteProcessId: number
   fuelType?: string
+  laborType?: string
   tabName: string
 }) {
   // 재료비 집계
@@ -96,5 +101,89 @@ export default function useFinalAggregationView({
     enabled: tabName === 'FUEL' && !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
   })
 
-  return { MaterialListQuery, OilListQuery, fuelPricelListQuery }
+  // 노무비 조회
+
+  const LaborCostListQuery = useQuery({
+    queryKey: ['LaborCostInfo', { yearMonth, siteId, siteProcessId, laborType }],
+    queryFn: async () => {
+      const rawParams = {
+        siteId: siteId === 0 ? undefined : siteId,
+        siteProcessId: siteProcessId === 0 ? undefined : siteProcessId,
+        yearMonth,
+        laborType,
+      }
+
+      const filteredParams = Object.fromEntries(
+        Object.entries(rawParams).filter(
+          ([, value]) =>
+            value !== undefined &&
+            value !== null &&
+            value !== '' &&
+            !(typeof value === 'number' && isNaN(value)),
+        ),
+      )
+
+      return await LaborCostInfoServiceByAggregate(filteredParams)
+    },
+    enabled: tabName === 'LABOR' && [yearMonth, siteId, siteProcessId, laborType].every(Boolean),
+  })
+
+  // 노무비에서 용역 데이터 불러오기
+  const OutSourcingLaborCostListQuery = useQuery({
+    queryKey: ['outSourcingLaborInfo', yearMonth, siteId, siteProcessId],
+    queryFn: () => {
+      const rawParams = {
+        siteId: siteId === 0 ? undefined : siteId,
+        siteProcessId: siteProcessId === 0 ? undefined : siteProcessId,
+        yearMonth: yearMonth,
+      }
+
+      const filteredParams = Object.fromEntries(
+        Object.entries(rawParams).filter(
+          ([, value]) =>
+            value !== undefined &&
+            value !== null &&
+            value !== '' &&
+            !(typeof value === 'number' && isNaN(value)),
+        ),
+      )
+
+      return OutsourcingLaborCostInfoServiceByAggregate(filteredParams)
+    },
+    enabled: tabName === 'LABOR' && !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
+  })
+
+  // 노무비에서 용역 데이터 불러오기
+  const EquipmentLaborCostListQuery = useQuery({
+    queryKey: ['equipmentLaborInfo', yearMonth, siteId, siteProcessId],
+    queryFn: () => {
+      const rawParams = {
+        siteId: siteId === 0 ? undefined : siteId,
+        siteProcessId: siteProcessId === 0 ? undefined : siteProcessId,
+        yearMonth: yearMonth,
+      }
+
+      const filteredParams = Object.fromEntries(
+        Object.entries(rawParams).filter(
+          ([, value]) =>
+            value !== undefined &&
+            value !== null &&
+            value !== '' &&
+            !(typeof value === 'number' && isNaN(value)),
+        ),
+      )
+
+      return EquipmentCostInfoServiceByAggregate(filteredParams)
+    },
+    enabled: tabName === 'EQUIPMENT' && !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
+  })
+
+  return {
+    MaterialListQuery,
+    OilListQuery,
+    fuelPricelListQuery,
+    LaborCostListQuery,
+    OutSourcingLaborCostListQuery,
+    EquipmentLaborCostListQuery,
+  }
 }
