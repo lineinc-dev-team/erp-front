@@ -1002,6 +1002,9 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
         // 'EQUIPMENT' 타입일 때만 유효성 검사 실행
         if (form.type === 'EQUIPMENT') {
           if (!item.unitPrice) return '장비의 단가를 입력해주세요.'
+          if (!item.type?.trim() || item.type === 'BASE') {
+            return '장비의 구분(유형)을 선택해주세요.'
+          }
 
           if (item.subEquipments?.length) {
             for (const sub of item.subEquipments) {

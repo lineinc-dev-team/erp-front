@@ -14,6 +14,7 @@ import AggregateMaterialView from '../aggregateMaterialView/aggregateMaterialVie
 import AggregateOilCountView from '../aggregateOilCountView/aggregateOilCountView'
 import AggregateLaborCostView from '../aggregateLaborCostView/aggregateLaborCostView'
 import AggregateEquipmentCostView from '../aggregateEquipmentCostView/aggregateEquipmentCostView'
+import AggregateEquipmentOperationStatusView from '../aggregateEquipmentOperationStatusView/aggregateEquipmentOperationStatusView'
 
 const TAB_CONFIG = [
   { label: '재료비', value: 'MATERIAL' },
@@ -256,6 +257,7 @@ export default function FinalAggregationView() {
       {activeTab === 'FUEL' && <AggregateOilCountView fuelType={['DIESEL', 'GASOLINE', 'UREA']} />}
       {activeTab === 'LABOR' && <AggregateLaborCostView />}
       {activeTab === 'EQUIPMENT' && <AggregateEquipmentCostView />}
+      {activeTab === 'EQUIPMENT_OPERATION' && <AggregateEquipmentOperationStatusView />}
     </>
   )
 }

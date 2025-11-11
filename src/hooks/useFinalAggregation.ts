@@ -1,10 +1,12 @@
 import {
   EquipmentCostInfoServiceByAggregate,
+  EquipmentStatusInfoServiceByAggregate,
   FuelInfoServiceByAggregate,
   FuelPriceInfoServiceByAggregate,
   LaborCostInfoServiceByAggregate,
   MaterialInfoServiceByAggregate,
   OutsourcingLaborCostInfoServiceByAggregate,
+  WeatherInfoServiceByAggregate,
 } from '@/services/finalAggregation/finalAggregationService'
 import { useQuery } from '@tanstack/react-query'
 
@@ -178,6 +180,57 @@ export default function useFinalAggregationView({
     enabled: tabName === 'EQUIPMENT' && !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
   })
 
+  // 장비비 가동현황에서 용역 데이터 불러오기
+  const EquipmentStatusLaborCostListQuery = useQuery({
+    queryKey: ['equipmentStatusLaborInfo', yearMonth, siteId, siteProcessId],
+    queryFn: () => {
+      const rawParams = {
+        siteId: siteId === 0 ? undefined : siteId,
+        siteProcessId: siteProcessId === 0 ? undefined : siteProcessId,
+        yearMonth: yearMonth,
+      }
+
+      const filteredParams = Object.fromEntries(
+        Object.entries(rawParams).filter(
+          ([, value]) =>
+            value !== undefined &&
+            value !== null &&
+            value !== '' &&
+            !(typeof value === 'number' && isNaN(value)),
+        ),
+      )
+
+      return EquipmentStatusInfoServiceByAggregate(filteredParams)
+    },
+    enabled: tabName === 'EQUIPMENT_OPERATION' && !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
+  })
+
+  // 장비비 가동현황 날씨 조회
+
+  const WeatherInfoListQuery = useQuery({
+    queryKey: ['weatherInfo', yearMonth, siteId, siteProcessId],
+    queryFn: () => {
+      const rawParams = {
+        siteId: siteId === 0 ? undefined : siteId,
+        siteProcessId: siteProcessId === 0 ? undefined : siteProcessId,
+        yearMonth: yearMonth,
+      }
+
+      const filteredParams = Object.fromEntries(
+        Object.entries(rawParams).filter(
+          ([, value]) =>
+            value !== undefined &&
+            value !== null &&
+            value !== '' &&
+            !(typeof value === 'number' && isNaN(value)),
+        ),
+      )
+
+      return WeatherInfoServiceByAggregate(filteredParams)
+    },
+    enabled: tabName === 'EQUIPMENT_OPERATION' && !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
+  })
+
   return {
     MaterialListQuery,
     OilListQuery,
@@ -185,5 +238,7 @@ export default function useFinalAggregationView({
     LaborCostListQuery,
     OutSourcingLaborCostListQuery,
     EquipmentLaborCostListQuery,
+    EquipmentStatusLaborCostListQuery,
+    WeatherInfoListQuery,
   }
 }
