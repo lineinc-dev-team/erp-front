@@ -2751,7 +2751,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                         sx={{ color: 'black' }}
                       />
                     </TableCell>
-                    {['이름', '기사저격증', '안전교육', '기타서류', '비고'].map((label) => (
+                    {['이름', '기사자격증', '안전교육', '기타서류', '비고'].map((label) => (
                       <TableCell
                         key={label}
                         align="center"
@@ -2763,7 +2763,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                         }}
                       >
                         {label === '비고' ||
-                        label === '기사저격증' ||
+                        label === '기사자격증' ||
                         label === '안전교육' ||
                         label === '기타서류' ? (
                           label
@@ -3266,7 +3266,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       sx={{ color: 'black' }}
                     />
                   </TableCell>
-                  {['이름', '기사저격증', '안전교육', '기타서류', '비고'].map((label) => (
+                  {['이름', '기사자격증', '안전교육', '기타서류', '비고'].map((label) => (
                     <TableCell
                       key={label}
                       align="center"
@@ -3278,7 +3278,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       }}
                     >
                       {label === '비고' ||
-                      label === '기사저격증' ||
+                      label === '기사자격증' ||
                       label === '안전교육' ||
                       label === '기타서류' ? (
                         label
