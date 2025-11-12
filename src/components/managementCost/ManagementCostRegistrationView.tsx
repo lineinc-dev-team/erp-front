@@ -2617,6 +2617,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                               'outsourcingCompanyId',
                               selectedCompany.id,
                             )
+                            updateItemField('mealFeeDetailOutsourcings', m.id, 'laborId', 0)
                           }}
                           options={companyOptions}
                           onScrollToBottom={() => {
@@ -2993,6 +2994,13 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                               m.id,
                               'outsourcingCompanyId',
                               selectedCompany.id,
+                            )
+
+                            updateItemField(
+                              'mealFeeDetailEquipments',
+                              m.id,
+                              'outsourcingCompanyContractDriverId',
+                              0,
                             )
                           }}
                           options={companyOptions}
