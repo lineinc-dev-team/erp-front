@@ -112,6 +112,7 @@ export type SteelExcelFieldKey = (typeof SteelExcelFieldMap)[SteelExcelFieldLabe
 
 export const SiteManamentExcelFieldMap = {
   No: 'id',
+  연월: 'yearMonth',
   현장명: 'siteName',
   공정명: 'siteProcessName',
   '퇴직연금(정규직)': 'regularRetirementPension',

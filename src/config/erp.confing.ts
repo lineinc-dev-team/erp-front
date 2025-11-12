@@ -142,6 +142,7 @@ export const SteelColumnList: GridColDef[] = [
 
 export const SiteManamentColumnList: GridColDef[] = [
   { field: 'no', headerName: 'No', width: 10 },
+  { field: 'yearMonth', headerName: '연월', width: 130 },
   { field: 'siteName', headerName: '현장명', width: 130 },
   { field: 'siteProcessName', headerName: '공정명', width: 130 },
   { field: 'employeeSalary', headerName: '직원급여', width: 180 },

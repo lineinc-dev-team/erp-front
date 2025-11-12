@@ -51,6 +51,7 @@ export default function SiteManagement() {
   const updateSiteManamentList = SiteManamentList.flatMap((item: any) => {
     return {
       id: item.id, // 고유 ID
+      yearMonth: item.yearMonth,
       siteName: item.site.name,
       siteProcessName: item.siteProcess.name,
       employeeSalary: formatNumber(item.employeeSalary || 0),
@@ -293,7 +294,7 @@ export default function SiteManagement() {
 
           <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              등록일
+              일자(기간)
             </label>
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonMonthPicker

@@ -106,7 +106,7 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
     // ✅ 기본정보
     siteName: '현장명',
     siteProcessId: '공정명',
-    yearMonth: '일자',
+    yearMonth: '연월',
 
     // ✅ 현장 관리비
     employeeSalary: '직원급여',
@@ -277,7 +277,7 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
     }
 
     if (!form.yearMonth) {
-      return '일자를 선택하세요.'
+      return '연월를 선택하세요.'
     }
 
     if (form.employeeSalary === undefined || form.employeeSalary === null) {
@@ -434,7 +434,7 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              일자 <span className="text-red-500 ml-1">*</span>
+              연월 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
               <CommonMonthPicker
