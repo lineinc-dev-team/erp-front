@@ -158,8 +158,6 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     if (laborDetailData && isEditMode === true) {
       const client = laborDetailData.data
 
-      console.log('24', client)
-
       // 첨부파일 데이터 가공
       const formattedFiles = (client.files ?? [])
         .map((item: AttachedFile) => ({
@@ -232,6 +230,15 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       setField(
         'outsourcingCompanyId',
         client?.outsourcingCompany ? client.outsourcingCompany.id : 0,
+      )
+
+      setField(
+        'outsourcingCompanyContractName',
+        client?.outsourcingCompanyContract ? client.outsourcingCompanyContract.contractName : '',
+      )
+      setField(
+        'outsourcingCompanyContractId',
+        client?.outsourcingCompanyContract ? client.outsourcingCompanyContract.id : 0,
       )
 
       setField('tenureMonths', client.tenureMonths === null ? '-' : client.tenureMonths + '개월')
