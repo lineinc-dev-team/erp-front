@@ -2134,8 +2134,6 @@ export default function DailyReportRegistrationView() {
   useEffect(() => {
     if (!ContractOutsourcings.length) return
 
-    console.log('해당 데이터 확인', ContractOutsourcings)
-
     ContractOutsourcings.forEach(async (row) => {
       const companyId = row.outsourcingCompanyId
       const worker = row.laborId

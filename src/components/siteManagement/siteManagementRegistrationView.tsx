@@ -925,7 +925,6 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                         whiteSpace: 'pre-line',
                       }}
                     >
-                      <span style={{ fontWeight: 600, color: '#377be8' }}>{item.description}</span>
                       <span style={{ color: '#111827' }}>{item.content}</span>
                     </TableCell>
 
