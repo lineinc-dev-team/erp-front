@@ -193,6 +193,10 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
       return '전화번호를 올바른 형식(지역번호-국번-번호)으로 입력하세요.'
     }
 
+    if (form.isHeadOffice === '0' || !form.isHeadOffice) {
+      return '본사 직원 여부를 선택하세요.'
+    }
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       return '유효한 이메일을 입력하세요.'
     }
@@ -396,7 +400,7 @@ export default function ManagementRegistrationView({ isEditMode = false }) {
           )}
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              본사 직원 여부
+              본사 직원 여부 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center gap-4 p-2 border-gray-400 px-2 w-full">
               <CommonSelect
