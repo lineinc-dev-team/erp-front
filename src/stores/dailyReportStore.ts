@@ -465,7 +465,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           // id: Date.now(),
           id: null,
           checkId: Date.now(),
-          outsourcingCompanyId: -1,
+          outsourcingCompanyId: null,
           laborId: 0,
           position: '',
           workContent: '',
@@ -485,7 +485,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           // id: Date.now(),
           id: null,
           checkId: Date.now(),
-          outsourcingCompanyId: -1,
+          outsourcingCompanyId: 0,
           laborId: 0,
           position: '',
           workContent: '',
@@ -1734,7 +1734,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         const file = item.files[0]
 
         return {
-          outsourcingCompanyId: item.outsourcingCompanyId,
+          outsourcingCompanyId: null,
           laborId: item.laborId,
           position: item.position,
           workContent: item.workContent,

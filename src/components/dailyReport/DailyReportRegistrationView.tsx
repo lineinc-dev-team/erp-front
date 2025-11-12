@@ -2860,45 +2860,75 @@ export default function DailyReportRegistrationView() {
   }
 
   const validateContract = () => {
+    // 1️⃣ 계약직 유효성 체크
     for (const c of contractData) {
-      // 이름(직원) 선택 여부
       if (c.laborId === 0) {
         return showSnackbar('계약직원의 이름을 선택해주세요.', 'warning')
       }
-
       if (!c.position || c.position.trim() === '') {
         return showSnackbar('계약직원의 직급을 입력해주세요.', 'warning')
       }
-
-      // 작업내용 필수
       if (!c.workContent || c.workContent.trim() === '') {
         return showSnackbar('계약직원의 작업내용을 입력해주세요.', 'warning')
       }
-
       if (!c.unitPrice || c.unitPrice === 0) {
         return showSnackbar('계약직원의 단가를 입력해주세요.', 'warning')
       }
-
-      // 공수 필수 (0, null, NaN 불가)
       if (c.workQuantity === null || c.workQuantity === 0 || isNaN(c.workQuantity)) {
         return showSnackbar('계약직원의 공수는 0보다 큰 숫자를 입력해야 합니다.', 'warning')
       }
-
-      // 비고는 500자 제한
       if (c.memo && c.memo.length > 500) {
         return showSnackbar('계약직원의 비고는 500자를 초과할 수 없습니다.', 'warning')
       }
     }
 
+    // 2️⃣ 용역(outsourcingByDirectContract) 유효성 체크
+    for (const o of directContractByData) {
+      // 임시 인력 여부에 따라 이름 체크
+      if (o.isTemporary) {
+        if (!o.temporaryLaborName || o.temporaryLaborName.trim() === '') {
+          return showSnackbar('용역 임시 인력의 이름을 입력해주세요.', 'warning')
+        }
+      } else {
+        if (!o.laborId || o.laborId === 0) {
+          return showSnackbar('용역 직원의 이름을 선택해주세요.', 'warning')
+        }
+      }
+
+      if (!o.position || o.position.trim() === '') {
+        return showSnackbar('용역 직원의 직급을 입력해주세요.', 'warning')
+      }
+      if (!o.workContent || o.workContent.trim() === '') {
+        return showSnackbar('용역 직원의 작업내용을 입력해주세요.', 'warning')
+      }
+      if (!o.unitPrice || o.unitPrice === 0) {
+        return showSnackbar('용역 직원의 단가를 입력해주세요.', 'warning')
+      }
+      if (o.workQuantity === null || o.workQuantity === 0 || isNaN(o.workQuantity)) {
+        return showSnackbar('용역 직원의 공수는 0보다 큰 숫자를 입력해야 합니다.', 'warning')
+      }
+      if (o.memo && o.memo.length > 500) {
+        return showSnackbar('용역 직원의 비고는 500자를 초과할 수 없습니다.', 'warning')
+      }
+
+      // // 첨부파일 체크 (필요시)
+      // if (o.files && o.files.some((f) => !f.name || f.name.trim() === '')) {
+      //   return showSnackbar('용역 직원의 첨부파일 이름을 확인해주세요.', 'warning')
+      // }
+    }
+
+    // 3️⃣ 증빙 파일 체크
     for (const contractFile of contractFileProof) {
       if (!contractFile.name || contractFile.name.trim() === '') {
         return showSnackbar('증빙서류의 문서명을 입력해주세요.', 'warning')
       }
     }
 
+    // 4️⃣ 날씨 선택 체크
     if (form.weather === 'BASE' || form.weather === '' || form.weather === undefined) {
       return showSnackbar('날씨를 선택해주세요.', 'warning')
     }
+
     return true
   }
 
