@@ -3315,7 +3315,6 @@ export default function DailyReportRegistrationView() {
               pageParam: 0,
               id: companyId,
               siteIdList: Number(siteIdList),
-              types: categoryType,
               size: 200,
             }),
           ])
@@ -6880,11 +6879,13 @@ export default function DailyReportRegistrationView() {
                               //   updateItemField('fuel', m.id, 'subEquipments', [])
                               // }
                             }}
-                            options={
-                              carNumberOptionsByCompany[m.outsourcingCompanyId] ?? [
-                                { id: 0, name: '선택', category: '' },
-                              ]
-                            }
+                            options={(
+                              carNumberOptionsByCompany[m.outsourcingCompanyId] ?? []
+                            ).filter(
+                              (opt) =>
+                                opt.id === selectedCarNumberIds[m.id] || // 현재 row의 선택값은 그대로
+                                !Object.values(selectedCarNumberIds).includes(opt.id),
+                            )}
                             onScrollToBottom={() => {
                               if (fuelEquipmentHasNextPage && !fuelEquipmentIsFetching)
                                 fuelEquipmentFetchNextPage()
