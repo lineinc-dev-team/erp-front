@@ -3066,51 +3066,63 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       </div>
 
                       {m.subEquipments &&
-                        m.subEquipments.map((item, idx) => (
-                          <div
-                            key={item.id ?? idx}
-                            style={{
-                              display: 'flex',
-                              flexDirection: 'column',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              textAlign: 'center',
-                              marginTop: 8,
-                            }}
-                          >
-                            <div className="flex gap-6 ">
-                              <CommonSelect
-                                className="text-2xl w-[110px]"
-                                value={item.type || 'BASE'}
-                                onChange={(value) =>
-                                  updateSubEquipmentField(m.id, item.id, 'type', value)
-                                }
-                                options={EquipmentType}
-                              />
-                              <TextField
-                                size="small"
-                                value={item.description ?? ''}
-                                onChange={(e) =>
-                                  updateSubEquipmentField(
-                                    m.id,
-                                    item.id,
-                                    'description',
-                                    e.target.value,
-                                  )
-                                }
-                                disabled={item.type !== 'ETC'} // 🔥 '기타'일 때만 활성화
-                                placeholder={item.type === 'ETC' ? '기타 내용을 입력하세요' : ''}
-                              />
+                        m.subEquipments.map((item, idx) => {
+                          // 현재 선택된 다른 subEquipments 값들
+                          const selectedTypes = (m.subEquipments ?? [])
+                            .filter((i) => i.id !== item.id)
+                            .map((i) => i.type)
 
-                              <CommonButton
-                                label="삭제"
-                                variant="danger"
-                                onClick={() => removeSubEquipment(m.id, item.id)}
-                                className="whitespace-nowrap"
-                              />
+                          // 중복된 값 제거
+                          const filteredOptions = EquipmentType.filter(
+                            (opt) => !selectedTypes.includes(opt.code), // opt.value 기준으로 중복 제거
+                          )
+
+                          return (
+                            <div
+                              key={item.id ?? idx}
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                textAlign: 'center',
+                                marginTop: 8,
+                              }}
+                            >
+                              <div className="flex gap-6 ">
+                                <CommonSelect
+                                  className="text-2xl w-[110px]"
+                                  value={item.type || 'BASE'}
+                                  onChange={(value) =>
+                                    updateSubEquipmentField(m.id, item.id, 'type', value)
+                                  }
+                                  options={filteredOptions}
+                                />
+                                <TextField
+                                  size="small"
+                                  value={item.description ?? ''}
+                                  onChange={(e) =>
+                                    updateSubEquipmentField(
+                                      m.id,
+                                      item.id,
+                                      'description',
+                                      e.target.value,
+                                    )
+                                  }
+                                  disabled={item.type !== 'ETC'} // 🔥 '기타'일 때만 활성화
+                                  placeholder={item.type === 'ETC' ? '기타 내용을 입력하세요' : ''}
+                                />
+
+                                <CommonButton
+                                  label="삭제"
+                                  variant="danger"
+                                  onClick={() => removeSubEquipment(m.id, item.id)}
+                                  className="whitespace-nowrap"
+                                />
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          )
+                        })}
                     </TableCell>
 
                     <TableCell
