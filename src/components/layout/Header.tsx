@@ -108,6 +108,24 @@ function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {
       )
     }
 
+    if (menu.name === '출역일보') {
+      filteredPermissions = filteredPermissions.filter(
+        (perm: ApiPermission) => perm.action !== '등록',
+      )
+    }
+
+    if (menu.name === '강재수불부 관리') {
+      filteredPermissions = filteredPermissions.filter(
+        (perm: ApiPermission) => perm.action !== '등록',
+      )
+    }
+
+    if (menu.name === '현장/본사 관리비 관리') {
+      filteredPermissions = filteredPermissions.filter(
+        (perm: ApiPermission) => perm.action !== '등록',
+      )
+    }
+
     if (menu.name === '집계 관리') {
       filteredPermissions = filteredPermissions.map((perm: ApiPermission) =>
         perm.action === '등록'
