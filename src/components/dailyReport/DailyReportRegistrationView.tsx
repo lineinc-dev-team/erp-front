@@ -42,6 +42,7 @@ import {
   GetMainProcessService,
   GetMaterialStatusService,
   GetOutsoucingByFilterService,
+  GetOutSourcingNameInfoByLabor,
   GetReportByEvidenceFilterService,
   GetViewDirectContractList,
   GetWorkerStatusService,
@@ -187,6 +188,12 @@ export default function DailyReportRegistrationView() {
 
   const [selectedCompanyIds, setSelectedCompanyIds] = useState<Record<number, number>>({})
 
+  // 직영/용역에서 사용하는 외주 계약명 이름 id
+
+  const [selectedOutSourcingContractIds, setSelectedOutSourcingContractIds] = useState<
+    Record<number, number>
+  >({})
+
   const [selectId, setSelectId] = useState(0)
 
   // 직영 계약직에서 사용하는 해당 변수
@@ -210,6 +217,12 @@ export default function DailyReportRegistrationView() {
 
   const [directContarctNameOptionsByCompany, setDirectContarctNameOptionsByCompany] = useState<
     Record<number, any[]>
+  >({})
+
+  // 직영/용역에서 외주의 이름 가져오는 변수
+
+  const [directContarctPersonNameByCompany, setDirectContarctPersonNameByCompany] = useState<
+    Record<any, any[]>
   >({})
 
   const [modifyFuelNumber, setModifyFuelNumber] = useState(0)
@@ -2375,15 +2388,59 @@ export default function DailyReportRegistrationView() {
 
   const directContractOutsourcingsDetail = directContractOutsourcings
 
+  const { data: outDatacontractInfo } = useInfiniteQuery({
+    queryKey: [
+      'OutsourcingContractInfo',
+      selectedCompanyIds[selectId],
+      selectedOutSourcingContractIds[selectId],
+    ],
+    queryFn: ({ pageParam = 0 }) =>
+      GetOutSourcingNameInfoByLabor({
+        pageParam,
+        outsourcingCompanyId: selectedCompanyIds[selectId] || 0,
+        outsourcingCompanyContractId: selectedOutSourcingContractIds[selectId],
+        size: 100,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { sliceInfo } = lastPage.data
+      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+    },
+    enabled: !!selectedCompanyIds[selectId] && !!selectedOutSourcingContractIds[selectId], // testId가 있을 때만 호출
+  })
+
+  // 직영/용역에서 직영 데이터 조회
+  useEffect(() => {
+    if (!outDatacontractInfo) return
+
+    const options = outDatacontractInfo.pages
+      .flatMap((page) => page.data.content)
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+      }))
+
+    setDirectContarctPersonNameByCompany((prev) => ({
+      ...prev,
+      [selectedOutSourcingContractIds[selectId]]: [
+        {
+          id: 0,
+          name: '선택',
+        },
+        ...options,
+      ],
+    }))
+  }, [outDatacontractInfo, selectedOutSourcingContractIds, selectId])
+
   useEffect(() => {
     if (!directContractOutsourcingsDetail.length) return
 
     const configList = [
       {
-        key: 'direct', // 구분자
+        key: 'direct',
         api: GetDirectContractNameInfoService,
         setState: setDirectContarctNameOptionsByCompany,
-        optionsByCompany: ContarctNameOptionsByCompany, // 직접 연결 시 state 구분 가능
+        optionsByCompany: ContarctNameOptionsByCompany,
         extract: (row: any) => ({
           companyId: row.outsourcingCompanyId,
           selectedId: row.outsourcingCompanyContractId,
@@ -2409,39 +2466,76 @@ export default function DailyReportRegistrationView() {
       },
     ]
 
-    configList.forEach(({ api, setState, optionsByCompany, extract, mapData }) => {
-      directContractOutsourcingsDetail.forEach(async (row) => {
-        const { companyId, selectedId } = extract(row)
-        if (companyId === null) return
-        if (optionsByCompany[companyId]) return
+    // 계약명 조회
+    const fetchData = async () => {
+      for (const config of configList) {
+        const { api, setState, optionsByCompany, extract, mapData } = config
+
+        for (const row of directContractOutsourcingsDetail) {
+          const { companyId, selectedId } = extract(row)
+          if (!companyId || optionsByCompany[companyId]) continue
+
+          try {
+            const res = await api({
+              pageParam: 0,
+              outsourcingCompanyId: companyId,
+              size: 200,
+            })
+
+            const options = res.data.content.map(mapData)
+            const exists = options.some((opt: any) => opt.id === selectedId)
+
+            setState((prev: any) => ({
+              ...prev,
+              [companyId]: [
+                { id: 0, name: '선택' },
+                ...options,
+                ...(selectedId && !exists ? [{ id: selectedId, name: '' }] : []),
+              ],
+            }))
+          } catch (err) {
+            console.error('업체별 계약명 조회 실패:', err)
+          }
+        }
+      }
+
+      // 인력 정보 조회
+      for (const row of directContractOutsourcingsDetail) {
+        const companyId = row.outsourcingCompanyId
+        const contractId = row.outsourcingCompanyContractId
+        if (!companyId || !contractId) continue
+
+        const key = `${companyId}_${contractId}` // ✅ 고유 키로 관리
 
         try {
-          const res = await api({
+          const res = await GetOutSourcingNameInfoByLabor({
             pageParam: 0,
             outsourcingCompanyId: companyId,
+            outsourcingCompanyContractId: contractId,
             size: 200,
           })
 
-          const options = res.data.content.map(mapData)
-          const exists = options.some((opt: any) => opt.id === selectedId)
+          console.log('해당 옵션 데이터 res', res)
 
-          setState((prev: any) => ({
+          const options = res.data.content.map((user: any) => ({
+            id: user.id,
+            name: user.name,
+          }))
+
+          setDirectContarctPersonNameByCompany((prev: any) => ({
             ...prev,
-            [companyId]: [
-              {
-                id: 0,
-                name: '선택',
-              },
-              ...options,
-              ...(selectedId && !exists ? [{ id: selectedId, name: '' }] : []),
-            ],
+            [key]: [{ id: 0, name: '선택' }, ...options],
           }))
         } catch (err) {
-          console.error('업체별 데이터 조회 실패', err)
+          console.error('업체별 인력 조회 실패:', err)
         }
-      })
-    })
+      }
+    }
+
+    fetchData()
   }, [directContractOutsourcingsDetail])
+
+  // 공사의 이름을 불러오는 코드
 
   const {
     data: contractGroupList,
@@ -5147,10 +5241,12 @@ export default function DailyReportRegistrationView() {
                                 directContarctNameOptionsByCompany[m.outsourcingCompanyId] ?? []
                               ).find((opt) => opt.id === value)
 
-                              console.log(
-                                'selectedDirectContractNameselectedDirectContractName',
-                                selectedDirectContractName,
-                              )
+                              setSelectedOutSourcingContractIds((prev) => ({
+                                ...prev,
+                                [m.id]: selectedDirectContractName
+                                  ? selectedDirectContractName.id
+                                  : 0,
+                              }))
 
                               if (!selectedDirectContractName) return
 
@@ -5178,18 +5274,19 @@ export default function DailyReportRegistrationView() {
                           <CommonSelect
                             value={m.laborId || 0}
                             onChange={(value) => {
+                              const key = `${m.outsourcingCompanyId}_${m.outsourcingCompanyContractId}` // ✅ 키 변경
                               const selectedContractName = (
-                                ContarctNameOptionsByCompany[m.outsourcingCompanyId] ?? []
+                                directContarctPersonNameByCompany[key] ?? []
                               ).find((opt) => opt.id === value)
 
+                              console.log()
                               if (!selectedContractName) return
-
                               updateItemField('directContractOutsourcings', m.id, 'laborId', value)
                             }}
                             options={
-                              ContarctNameOptionsByCompany[m.outsourcingCompanyId] ?? [
-                                { id: 0, name: '선택' },
-                              ]
+                              directContarctPersonNameByCompany[
+                                `${m.outsourcingCompanyId}_${m.outsourcingCompanyContractId}`
+                              ] ?? [{ id: 0, name: '선택' }]
                             }
                             onScrollToBottom={() => {
                               if (contractNamehasNextPage && !contractNameFetching)

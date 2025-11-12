@@ -1770,3 +1770,43 @@ export async function DailyAlreadyFuelInfo() {
 
   return await res.status
 }
+
+// 직영/용역에서 외주의 이름을 가져오기 위함이다.
+
+export async function GetOutSourcingNameInfoByLabor({
+  pageParam = 0,
+  size = 200,
+  keyword = '',
+  outsourcingCompanyId = 0,
+  outsourcingCompanyContractId = 0,
+}: {
+  pageParam?: number
+  size?: number
+  keyword?: string
+  outsourcingCompanyId?: string | number | ''
+  outsourcingCompanyContractId: number
+}) {
+  const url = `${
+    API.LABOR
+  }/search?page=${pageParam}&outsourcingCompanyId=${outsourcingCompanyId}&outsourcingCompanyContractId=${outsourcingCompanyContractId}&size=${size}&keyword=${encodeURIComponent(
+    keyword,
+  )}&types=OUTSOURCING_CONTRACT`
+
+  const resData = await fetch(url, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
