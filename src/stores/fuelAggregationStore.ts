@@ -293,13 +293,13 @@ export const useFuelFormStore = create<FuelFormStore>((set, get) => ({
     const { fuelInfos } = get().form
     return fuelInfos.reduce((sum, item) => {
       const mainAmount = Number(item.fuelAmount)
-      const subTotal =
-        item.subEquipments?.reduce((subSum, sub) => {
-          const subAmount = Number(sub.fuelAmount)
-          return subSum + (isNaN(subAmount) ? 0 : subAmount)
-        }, 0) ?? 0
+      // const subTotal =
+      //   item.subEquipments?.reduce((subSum, sub) => {
+      //     const subAmount = Number(sub.fuelAmount)
+      //     return subSum + (isNaN(subAmount) ? 0 : subAmount)
+      //   }, 0) ?? 0
 
-      return sum + (isNaN(mainAmount) ? 0 : mainAmount) + subTotal
+      return sum + (isNaN(mainAmount) ? 0 : mainAmount)
     }, 0)
   },
 
@@ -307,13 +307,13 @@ export const useFuelFormStore = create<FuelFormStore>((set, get) => ({
     const { fuelInfos } = get().form
     return fuelInfos.reduce((sum, item) => {
       const mainAmount = Number(item.amount)
-      const subTotal =
-        item.subEquipments?.reduce((subSum, sub) => {
-          const subAmount = Number(sub.amount)
-          return subSum + (isNaN(subAmount) ? 0 : subAmount)
-        }, 0) ?? 0
+      // const subTotal =
+      //   item.subEquipments?.reduce((subSum, sub) => {
+      //     const subAmount = Number(sub.amount)
+      //     return subSum + (isNaN(subAmount) ? 0 : subAmount)
+      //   }, 0) ?? 0
 
-      return sum + (isNaN(mainAmount) ? 0 : mainAmount) + subTotal
+      return sum + (isNaN(mainAmount) ? 0 : mainAmount)
     }, 0)
   },
 
@@ -341,7 +341,7 @@ export const useFuelFormStore = create<FuelFormStore>((set, get) => ({
           fileUrl: file?.fileUrl || null,
           originalFileName: file?.originalFileName || null,
           memo: item.memo,
-          subEquipments: item.subEquipments,
+          subEquipments: null,
         }
       }),
     }

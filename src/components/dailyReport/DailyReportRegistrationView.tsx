@@ -112,8 +112,6 @@ export default function DailyReportRegistrationView() {
 
     updateContractDetailField,
 
-    updateSubEqByFuel,
-
     getGasUseTotal,
     getAmountTotal,
 
@@ -3255,9 +3253,7 @@ export default function DailyReportRegistrationView() {
     fuelAmount: number
   }
 
-  const [subEquipmentByRow, setSubEquipmentByRow] = useState<
-    Record<number, subEquipmentTypeOption[]>
-  >({})
+  const [, setSubEquipmentByRow] = useState<Record<number, subEquipmentTypeOption[]>>({})
 
   useEffect(() => {
     if (!outsourcingfuel.length) return
@@ -3289,6 +3285,7 @@ export default function DailyReportRegistrationView() {
               pageParam: 0,
               id: companyId,
               siteIdList: Number(siteIdList),
+              types: categoryType,
               size: 200,
             }),
           ])
@@ -6805,44 +6802,51 @@ export default function DailyReportRegistrationView() {
                                 selectedCarNumber.specification || '-',
                               )
 
-                              const subEquipments = selectedCarNumber.subEquipments ?? []
+                              updateItemField(
+                                'fuel',
+                                m.id,
+                                'amount',
+                                selectedCarNumber.unitPrice || '-',
+                              )
 
-                              if (subEquipments.length > 0) {
-                                const formattedSubEquipments = subEquipments.map((sub: any) => ({
-                                  id: null,
-                                  checkId: sub.id,
-                                  outsourcingCompanyContractSubEquipmentId: sub.id,
-                                  type: sub.type || sub.typeCode || '-',
-                                  memo: sub.memo || '',
-                                }))
+                              // const subEquipments = selectedCarNumber.subEquipments ?? []
 
-                                updateItemField(
-                                  'fuel',
-                                  m.id,
-                                  'subEquipments',
-                                  formattedSubEquipments,
-                                )
+                              // if (subEquipments.length > 0) {
+                              //   const formattedSubEquipments = subEquipments.map((sub: any) => ({
+                              //     id: null,
+                              //     checkId: sub.id,
+                              //     outsourcingCompanyContractSubEquipmentId: sub.id,
+                              //     type: sub.type || sub.typeCode || '-',
+                              //     memo: sub.memo || '',
+                              //   }))
 
-                                const subEquipmentsOptions = formattedSubEquipments.map(
-                                  (sub: any) => ({
-                                    id: sub.id,
-                                    checkId: sub.id,
-                                    name: sub.type || sub.typeCode || '-',
-                                    taskDescription: sub.workContent,
-                                    unitPrice: sub.unitPrice,
-                                  }),
-                                )
+                              //   updateItemField(
+                              //     'fuel',
+                              //     m.id,
+                              //     'subEquipments',
+                              //     formattedSubEquipments,
+                              //   )
 
-                                setSubEquipmentByRow((prev) => ({
-                                  ...prev,
-                                  [selectedCarNumber.id]: [
-                                    { id: 0, name: '선택' },
-                                    ...subEquipmentsOptions,
-                                  ],
-                                }))
-                              } else {
-                                updateItemField('fuel', m.id, 'subEquipments', [])
-                              }
+                              //   const subEquipmentsOptions = formattedSubEquipments.map(
+                              //     (sub: any) => ({
+                              //       id: sub.id,
+                              //       checkId: sub.id,
+                              //       name: sub.type || sub.typeCode || '-',
+                              //       taskDescription: sub.workContent,
+                              //       unitPrice: sub.unitPrice,
+                              //     }),
+                              //   )
+
+                              //   setSubEquipmentByRow((prev) => ({
+                              //     ...prev,
+                              //     [selectedCarNumber.id]: [
+                              //       { id: 0, name: '선택' },
+                              //       ...subEquipmentsOptions,
+                              //     ],
+                              //   }))
+                              // } else {
+                              //   updateItemField('fuel', m.id, 'subEquipments', [])
+                              // }
                             }}
                             options={
                               carNumberOptionsByCompany[m.outsourcingCompanyId] ?? [
@@ -6872,7 +6876,7 @@ export default function DailyReportRegistrationView() {
                             className=" flex-1"
                           />
 
-                          {m.subEquipments && m.subEquipments?.length > 0 && (
+                          {/* {m.subEquipments && m.subEquipments?.length > 0 && (
                             <div className="flex flex-col gap-2 mt-2">
                               {m.subEquipments.map((item) => (
                                 <div
@@ -6901,7 +6905,7 @@ export default function DailyReportRegistrationView() {
                                 </div>
                               ))}
                             </div>
-                          )}
+                          )} */}
                         </TableCell>
 
                         <TableCell
@@ -6918,7 +6922,7 @@ export default function DailyReportRegistrationView() {
                             options={OilTypeMethodOptions}
                           />
 
-                          {m.subEquipments &&
+                          {/* {m.subEquipments &&
                             m.subEquipments?.map((detail, index) => (
                               <div key={index} className="flex gap-2 mt-1 items-center">
                                 <CommonSelect
@@ -6931,7 +6935,7 @@ export default function DailyReportRegistrationView() {
                                   options={OilTypeMethodOptions}
                                 />
                               </div>
-                            ))}
+                            ))} */}
                         </TableCell>
 
                         <TableCell
@@ -6954,7 +6958,7 @@ export default function DailyReportRegistrationView() {
                             }}
                           />
 
-                          {m.subEquipments &&
+                          {/* {m.subEquipments &&
                             m.subEquipments?.map((detail, index) => (
                               <div key={index} className="flex gap-2 mt-1 items-center">
                                 <TextField
@@ -6978,7 +6982,7 @@ export default function DailyReportRegistrationView() {
                                   }}
                                 />
                               </div>
-                            ))}
+                            ))} */}
                         </TableCell>
 
                         <TableCell
@@ -7001,7 +7005,7 @@ export default function DailyReportRegistrationView() {
                             disabled
                           />
 
-                          {m.subEquipments &&
+                          {/* {m.subEquipments &&
                             m.subEquipments?.map((detail, index) => (
                               <div key={index} className="flex gap-2 mt-1 items-center">
                                 <TextField
@@ -7020,7 +7024,7 @@ export default function DailyReportRegistrationView() {
                                   disabled
                                 />
                               </div>
-                            ))}
+                            ))} */}
                         </TableCell>
 
                         <TableCell
@@ -7079,7 +7083,7 @@ export default function DailyReportRegistrationView() {
                             onChange={(e) => updateItemField('fuel', m.id, 'memo', e.target.value)}
                           />
 
-                          {m.subEquipments &&
+                          {/* {m.subEquipments &&
                             m.subEquipments?.map((detail, index) => (
                               <div key={index} className="flex gap-2 mt-1 items-center">
                                 <TextField
@@ -7092,7 +7096,7 @@ export default function DailyReportRegistrationView() {
                                   fullWidth
                                 />
                               </div>
-                            ))}
+                            ))} */}
                         </TableCell>
 
                         {/* 등록/수정일 (임시: Date.now 기준) */}

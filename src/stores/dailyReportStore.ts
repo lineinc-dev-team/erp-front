@@ -1628,13 +1628,13 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
     const { fuelInfos } = get().form
     return fuelInfos.reduce((sum, item) => {
       const mainAmount = Number(item.fuelAmount)
-      const subTotal =
-        item.subEquipments?.reduce((subSum, sub) => {
-          const subAmount = Number(sub.fuelAmount)
-          return subSum + (isNaN(subAmount) ? 0 : subAmount)
-        }, 0) ?? 0
+      // const subTotal =
+      //   item.subEquipments?.reduce((subSum, sub) => {
+      //     const subAmount = Number(sub.fuelAmount)
+      //     return subSum + (isNaN(subAmount) ? 0 : subAmount)
+      //   }, 0) ?? 0
 
-      return sum + (isNaN(mainAmount) ? 0 : mainAmount) + subTotal
+      return sum + (isNaN(mainAmount) ? 0 : mainAmount)
     }, 0)
   },
 
@@ -1642,13 +1642,13 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
     const { fuelInfos } = get().form
     return fuelInfos.reduce((sum, item) => {
       const mainAmount = Number(item.amount)
-      const subTotal =
-        item.subEquipments?.reduce((subSum, sub) => {
-          const subAmount = Number(sub.amount)
-          return subSum + (isNaN(subAmount) ? 0 : subAmount)
-        }, 0) ?? 0
+      // const subTotal =
+      //   item.subEquipments?.reduce((subSum, sub) => {
+      //     const subAmount = Number(sub.amount)
+      //     return subSum + (isNaN(subAmount) ? 0 : subAmount)
+      //   }, 0) ?? 0
 
-      return sum + (isNaN(mainAmount) ? 0 : mainAmount) + subTotal
+      return sum + (isNaN(mainAmount) ? 0 : mainAmount)
     }, 0)
   },
 
@@ -1817,7 +1817,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           fileUrl: file?.fileUrl || null,
           originalFileName: file?.originalFileName || null,
           memo: item.memo,
-          subEquipments: item.subEquipments,
+          subEquipments: null,
         }
       }),
 
@@ -2221,7 +2221,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
 
         fileUrl: item.files?.[0]?.fileUrl ?? null,
         originalFileName: item.files?.[0]?.originalFileName ?? null,
-        subEquipments: item.subEquipments,
+        subEquipments: null,
       })),
     }
   },

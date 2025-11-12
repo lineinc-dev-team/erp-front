@@ -61,7 +61,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     updateMemo,
     toggleCheckAllItems,
     toggleCheckItem,
-    updateContractDetailField,
+    // updateContractDetailField,
     setFuelRadioBtn,
     getGasUseTotal,
     getAmountTotal,
@@ -716,7 +716,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     fuelAmount: number
   }
 
-  const [testArrayByRow, setTestArrayByRow] = useState<Record<number, EquipmentTypeOption[]>>({})
+  const [, setTestArrayByRow] = useState<Record<number, EquipmentTypeOption[]>>({})
 
   useEffect(() => {
     if (!outsourcings.length) return
@@ -1270,6 +1270,13 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                         updateItemField(
                           'FuelInfo',
                           m.checkId,
+                          'amount',
+                          selectedCarNumber.unitPrice || '',
+                        )
+
+                        updateItemField(
+                          'FuelInfo',
+                          m.checkId,
                           'type',
                           selectedCarNumber.category || '-', // type 없으면 '-'
                         )
@@ -1336,7 +1343,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                       className=" flex-1"
                     />
 
-                    {m.subEquipments && m.subEquipments?.length > 0 && (
+                    {/* {m.subEquipments && m.subEquipments?.length > 0 && (
                       <div className="flex flex-col gap-2 mt-2">
                         {m.subEquipments.map((item) => (
                           <div
@@ -1365,7 +1372,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                           </div>
                         ))}
                       </div>
-                    )}
+                    )} */}
                   </TableCell>
                   {/* 유종 */}
                   <TableCell sx={{ border: '1px solid  #9CA3AF' }}>
@@ -1378,7 +1385,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                       }}
                       options={OilTypeMethodOptions}
                     />
-                    {m.subEquipments &&
+                    {/* {m.subEquipments &&
                       m.subEquipments?.map((detail, index) => (
                         <div key={index} className="flex gap-2 mt-1 items-center">
                           <CommonSelect
@@ -1396,7 +1403,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                             options={OilTypeMethodOptions}
                           />
                         </div>
-                      ))}
+                      ))} */}
                   </TableCell>
 
                   <TableCell align="center" sx={{ border: '1px solid #9CA3AF', width: '120px' }}>
@@ -1412,7 +1419,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                       }}
                     />
 
-                    {m.subEquipments &&
+                    {/* {m.subEquipments &&
                       m.subEquipments?.map((detail, index) => (
                         <div key={index} className="flex gap-2 mt-1 items-center">
                           <TextField
@@ -1431,7 +1438,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                             fullWidth
                           />
                         </div>
-                      ))}
+                      ))} */}
                   </TableCell>
 
                   {/* 금액 */}
@@ -1446,7 +1453,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                       disabled
                     />
 
-                    {m.subEquipments &&
+                    {/* {m.subEquipments &&
                       m.subEquipments?.map((detail, index) => (
                         <div key={index} className="flex gap-2 mt-1 items-center">
                           <TextField
@@ -1465,7 +1472,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                             disabled
                           />
                         </div>
-                      ))}
+                      ))} */}
                   </TableCell>
 
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -1523,7 +1530,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                       sx={textFieldStyle}
                     />
 
-                    {m.subEquipments &&
+                    {/* {m.subEquipments &&
                       m.subEquipments?.map((detail, index) => (
                         <div key={index} className="flex gap-2 mt-1 items-center">
                           <TextField
@@ -1541,7 +1548,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                             fullWidth
                           />
                         </div>
-                      ))}
+                      ))} */}
                   </TableCell>
                   {isEditMode && (
                     <TableCell align="center" sx={{ border: '1px solid  #9CA3AF', width: '260px' }}>
