@@ -751,7 +751,7 @@ export default function DailyReportRegistrationView() {
       outsourcingCompanyContractDriverId: item.outsourcingCompanyContractDriver?.id ?? 0,
       outsourcingCompanyContractEquipmentId: item.outsourcingCompanyContractEquipment?.id ?? 0,
       taskDescription: item.outsourcingCompanyContractEquipment?.taskDescription ?? '',
-      specificationName: item.outsourcingCompanyContractEquipment?.category ?? '',
+      specificationName: item.outsourcingCompanyContractEquipment?.specification ?? '',
       type: item.outsourcingCompanyContractEquipment?.category ?? '',
       workContent: item.workContent,
       unitPrice: item?.unitPrice ?? 0,
@@ -2133,6 +2133,8 @@ export default function DailyReportRegistrationView() {
   // 1. 상세페이지 들어올 때 각 업체별 worker 데이터 API 호출 (직영 용역 데이터 불러옴 언제? 셀렉트 박스 선택 시 )
   useEffect(() => {
     if (!ContractOutsourcings.length) return
+
+    console.log('해당 데이터 확인', ContractOutsourcings)
 
     ContractOutsourcings.forEach(async (row) => {
       const companyId = row.outsourcingCompanyId
@@ -5923,6 +5925,8 @@ export default function DailyReportRegistrationView() {
                               ]?.find((opt) => opt.id === value)
                               if (!selectedCarNumber) return
 
+                              console.log('selectedCarNumber24', selectedCarNumber)
+
                               // 차량 및 관련 필드 업데이트
                               updateItemField(
                                 'equipment',
@@ -5934,7 +5938,7 @@ export default function DailyReportRegistrationView() {
                                 'equipment',
                                 m.id,
                                 'specificationName',
-                                selectedCarNumber.category || '',
+                                selectedCarNumber.specification || '',
                               )
                               updateItemField(
                                 'equipment',
