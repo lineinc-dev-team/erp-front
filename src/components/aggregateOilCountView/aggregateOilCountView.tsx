@@ -123,10 +123,11 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
   }
 
   // 엑셀 다운로드
+  // 엑셀 다운로드
   const handleExcelDownload = () => {
     const formattedData: any[] = []
 
-    // 1️⃣ 유종별 데이터 및 합계 행 추가
+    // 1️⃣ 유종별 데이터 및 소계
     fuelTypes.forEach((fuelType) => {
       const fuelRows = rows.filter((r) => r.fuelType === fuelType)
       fuelRows.forEach((r) => {
@@ -142,8 +143,8 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
         })
       })
 
-      // 유종별 합계 행
-      const fuelTotalRow: any = {
+      // ✅ 유종별 소계
+      const subtotalRow: any = {
         NO: '소계',
         유류종류: fuelTypeMap[fuelType] + ' 계',
         장비명: '',
@@ -151,24 +152,16 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
         대표자: '',
         차량번호: '',
       }
-
       dateColumns.forEach((d) => {
-        fuelTotalRow[d + '일'] = fuelRows
-          .reduce(
-            (acc: number, r: any) => acc + (Number(String(r.days[d]).replace(/,/g, '')) || 0),
-            0,
-          )
+        subtotalRow[d + '일'] = fuelRows
+          .reduce((acc, r) => acc + (r.days[d] || 0), 0)
           .toLocaleString()
       })
-
-      fuelTotalRow['합계'] = fuelRows
-        .reduce((acc: number, r: any) => acc + (Number(r.total) || 0), 0)
-        .toLocaleString()
-
-      formattedData.push(fuelTotalRow)
+      subtotalRow['합계'] = fuelRows.reduce((acc, r) => acc + r.total, 0).toLocaleString()
+      formattedData.push(subtotalRow)
     })
 
-    // 직영 계 (모든 유종 합)
+    // 2️⃣ 직영 계
     const directRow: any = {
       NO: '직영 계',
       유류종류: '직영 계',
@@ -177,17 +170,68 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
       대표자: '',
       차량번호: '',
     }
-
     dateColumns.forEach((d) => {
-      directRow[d + '일'] = rows
-        .reduce((acc, r) => acc + (Number(String(r.days[d]).replace(/,/g, '')) || 0), 0)
-        .toLocaleString()
+      directRow[d + '일'] = rows.reduce((acc, r) => acc + (r.days[d] || 0), 0).toLocaleString()
     })
-
-    directRow['합계'] = rows.reduce((acc, r) => acc + (Number(r.total) || 0), 0).toLocaleString()
+    directRow['합계'] = rows.reduce((acc, r) => acc + r.total, 0).toLocaleString()
     formattedData.push(directRow)
 
-    // 총 합계(VAT 포함)
+    // 3️⃣ 수량 / 단가(VAT포함)
+    const fuelsForPrice = ['DIESEL', 'GASOLINE', 'UREA']
+    fuelsForPrice.forEach((ft) => {
+      const fuelRows = rows.filter((r) => r.fuelType === ft)
+
+      // ✅ 수량
+      const qtyRow: any = {
+        NO: '',
+        유류종류: '',
+        장비명: '직영 + 외주', // 병합 대상 1
+        업체명: '',
+        대표자: '',
+        차량번호: fuelTypeMap[ft], // 병합 대상 2
+      }
+      dateColumns.forEach((d) => {
+        qtyRow[d + '일'] = fuelRows.reduce((acc, r) => acc + (r.days[d] || 0), 0).toLocaleString()
+      })
+      qtyRow['합계'] = fuelRows.reduce((acc, r) => acc + r.total, 0).toLocaleString()
+      formattedData.push(qtyRow)
+
+      const priceRow: any = {
+        NO: '',
+        유류종류: '',
+        장비명: '직영 + 외주',
+        업체명: '',
+        대표자: '',
+        차량번호: fuelTypeMap[ft],
+      }
+      dateColumns.forEach((d) => {
+        const rawPrice =
+          ft === 'DIESEL'
+            ? getFuelPrice(d, 'dieselPrice')
+            : ft === 'GASOLINE'
+            ? getFuelPrice(d, 'gasolinePrice')
+            : getFuelPrice(d, 'ureaPrice')
+        priceRow[d + '일'] = Number(
+          String(rawPrice).replaceAll(',', '').trim() || 0,
+        ).toLocaleString()
+      })
+
+      priceRow['합계'] = dateColumns
+        .reduce((acc, d) => {
+          const rawPrice =
+            ft === 'DIESEL'
+              ? getFuelPrice(d, 'dieselPrice')
+              : ft === 'GASOLINE'
+              ? getFuelPrice(d, 'gasolinePrice')
+              : getFuelPrice(d, 'ureaPrice')
+          return acc + (Number(String(rawPrice).replaceAll(',', '').trim()) || 0)
+        }, 0)
+        .toLocaleString()
+
+      formattedData.push(priceRow)
+    })
+
+    // 4️⃣ 총합(VAT 포함)
     const grandTotalRow: any = {
       NO: '총합계',
       유류종류: '총 합계(VAT포함)',
@@ -197,64 +241,81 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
       차량번호: '',
     }
 
+    // 날짜별 (수량 × 단가)
     dateColumns.forEach((d) => {
-      const totalForDate = rows.reduce((acc, r) => {
-        let price = 0
-        if (r.fuelType === 'DIESEL')
-          price = Number(String(getFuelPrice(d, 'dieselPrice')).replace(/,/g, '')) || 0
-        if (r.fuelType === 'GASOLINE')
-          price = Number(String(getFuelPrice(d, 'gasolinePrice')).replace(/,/g, '')) || 0
-        if (r.fuelType === 'UREA')
-          price = Number(String(getFuelPrice(d, 'ureaPrice')).replace(/,/g, '')) || 0
+      const dieselAmount = rows
+        .filter((r) => r.fuelType === 'DIESEL')
+        .reduce((acc, r) => acc + (r.days[d] || 0), 0)
+      const gasolineAmount = rows
+        .filter((r) => r.fuelType === 'GASOLINE')
+        .reduce((acc, r) => acc + (r.days[d] || 0), 0)
+      const ureaAmount = rows
+        .filter((r) => r.fuelType === 'UREA')
+        .reduce((acc, r) => acc + (r.days[d] || 0), 0)
 
-        const amount = Number(String(r.days[d]).replace(/,/g, '')) || 0
-        return acc + amount * price
-      }, 0)
+      const dieselPrice =
+        Number(String(getFuelPrice(d, 'dieselPrice')).replaceAll(',', '').trim()) || 0
+      const gasolinePrice =
+        Number(String(getFuelPrice(d, 'gasolinePrice')).replaceAll(',', '').trim()) || 0
+      const ureaPrice = Number(String(getFuelPrice(d, 'ureaPrice')).replaceAll(',', '').trim()) || 0
 
-      grandTotalRow[d + '일'] = totalForDate.toLocaleString()
+      const totalForDay =
+        dieselAmount * dieselPrice + gasolineAmount * gasolinePrice + ureaAmount * ureaPrice
+
+      grandTotalRow[d + '일'] = totalForDay.toLocaleString()
     })
 
-    grandTotalRow['합계'] = dateColumns
-      .reduce((acc, d) => {
-        const val = Number(String(grandTotalRow[d + '일']).replace(/,/g, '')) || 0
-        return acc + val
+    grandTotalRow['합계'] = (() => {
+      const dieselVatTotal = dateColumns.reduce((acc, d) => {
+        const raw = getFuelPrice(d, 'dieselPrice')
+        const price = Number(String(raw).replaceAll(',', '').trim()) || 0
+        return acc + price
       }, 0)
-      .toLocaleString()
+      const gasolineVatTotal = dateColumns.reduce((acc, d) => {
+        const raw = getFuelPrice(d, 'gasolinePrice')
+        const price = Number(String(raw).replaceAll(',', '').trim()) || 0
+        return acc + price
+      }, 0)
+      const ureaVatTotal = dateColumns.reduce((acc, d) => {
+        const raw = getFuelPrice(d, 'ureaPrice')
+        const price = Number(String(raw).replaceAll(',', '').trim()) || 0
+        return acc + price
+      }, 0)
+
+      return (dieselVatTotal + gasolineVatTotal + ureaVatTotal).toLocaleString()
+    })()
 
     formattedData.push(grandTotalRow)
 
-    // 워크시트 생성
+    // 5️⃣ 워크시트 생성
     const worksheet = XLSX.utils.json_to_sheet(formattedData)
 
-    // ✅ 합계/소계 행과 합계 컬럼 오른쪽 정렬
-    const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1')
-    for (let R = range.s.r; R <= range.e.r; R++) {
-      for (let C = range.s.c; C <= range.e.c; C++) {
-        const cellRef = XLSX.utils.encode_cell({ r: R, c: C })
-        const cell = worksheet[cellRef]
-        if (!cell) continue
+    worksheet['!merges'] = [
+      {
+        s: { r: formattedData.findIndex((r) => r.장비명 === '직영 + 외주') + 1, c: 3 },
+        e: { r: formattedData.findIndex((r) => r.장비명 === '직영 + 외주') + 1, c: 4 },
+      },
+      {
+        s: { r: formattedData.findIndex((r) => r.차량번호 === '경유') + 1, c: 6 },
+        e: { r: formattedData.findIndex((r) => r.차량번호 === '경유') + 1, c: 7 },
+      },
+      // 휘발유
+      {
+        s: { r: formattedData.findIndex((r) => r.차량번호 === '휘발유') + 1, c: 6 },
+        e: { r: formattedData.findIndex((r) => r.차량번호 === '휘발유') + 1, c: 7 },
+      },
+      // 요소수
+      {
+        s: { r: formattedData.findIndex((r) => r.차량번호 === '요소수') + 1, c: 6 },
+        e: { r: formattedData.findIndex((r) => r.차량번호 === '요소수') + 1, c: 7 },
+      },
+    ]
 
-        const cellValue = cell.v
-        const isNumericColumn =
-          dateColumns.map((d) => d + '일').includes(Object.keys(formattedData[R] || {})[C]) ||
-          Object.keys(formattedData[R] || {})[C] === '합계'
-
-        const isSubtotalRow =
-          typeof cellValue === 'string' && ['소계', '직영 계', '총합계'].includes(cellValue)
-
-        if (isNumericColumn || isSubtotalRow) {
-          if (!cell.s) cell.s = {}
-          cell.s.alignment = { horizontal: 'right' }
-        }
-      }
-    }
-
-    // 엑셀 파일 저장
+    // 6️⃣ 엑셀 저장
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, '유류집계')
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
-    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' })
-    saveAs(blob, '유류집계_집계표.xlsx')
+    saveAs(new Blob([excelBuffer], { type: 'application/octet-stream' }), '유류집계_집계표.xlsx')
   }
 
   return (
@@ -303,8 +364,6 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
             <TableBody>
               {fuelTypes.map((fuelType) => {
                 const fuelRows = rows.filter((r) => r.fuelType === fuelType)
-
-                console.log('fuelRowsfuelRows2', fuelRows)
 
                 return (
                   <React.Fragment key={fuelType}>

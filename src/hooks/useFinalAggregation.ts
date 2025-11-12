@@ -4,6 +4,7 @@ import {
   FuelInfoServiceByAggregate,
   FuelPriceInfoServiceByAggregate,
   LaborCostInfoServiceByAggregate,
+  LaborPayInfoServiceByAggregate,
   MaterialInfoServiceByAggregate,
   OutsourcingLaborCostInfoServiceByAggregate,
   WeatherInfoServiceByAggregate,
@@ -16,6 +17,7 @@ export default function useFinalAggregationView({
   siteProcessId,
   fuelType,
   laborType,
+  type,
   tabName,
 }: {
   yearMonth: string
@@ -23,6 +25,7 @@ export default function useFinalAggregationView({
   siteProcessId: number
   fuelType?: string
   laborType?: string
+  type?: string
   tabName: string
 }) {
   // 재료비 집계
@@ -231,6 +234,32 @@ export default function useFinalAggregationView({
     enabled: tabName === 'EQUIPMENT_OPERATION' && !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
   })
 
+  // 노무비 명세서
+  const LaborPayCostListQuery = useQuery({
+    queryKey: ['LaborPayInfo', { yearMonth, siteId, siteProcessId, type }],
+    queryFn: async () => {
+      const rawParams = {
+        siteId: siteId === 0 ? undefined : siteId,
+        siteProcessId: siteProcessId === 0 ? undefined : siteProcessId,
+        yearMonth,
+        type,
+      }
+
+      const filteredParams = Object.fromEntries(
+        Object.entries(rawParams).filter(
+          ([, value]) =>
+            value !== undefined &&
+            value !== null &&
+            value !== '' &&
+            !(typeof value === 'number' && isNaN(value)),
+        ),
+      )
+
+      return await LaborPayInfoServiceByAggregate(filteredParams)
+    },
+    enabled: tabName === 'LABOR_DETAIL' && [yearMonth, siteId, siteProcessId, type].every(Boolean),
+  })
+
   return {
     MaterialListQuery,
     OilListQuery,
@@ -240,5 +269,6 @@ export default function useFinalAggregationView({
     EquipmentLaborCostListQuery,
     EquipmentStatusLaborCostListQuery,
     WeatherInfoListQuery,
+    LaborPayCostListQuery,
   }
 }

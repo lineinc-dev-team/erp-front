@@ -15,6 +15,7 @@ import AggregateOilCountView from '../aggregateOilCountView/aggregateOilCountVie
 import AggregateLaborCostView from '../aggregateLaborCostView/aggregateLaborCostView'
 import AggregateEquipmentCostView from '../aggregateEquipmentCostView/aggregateEquipmentCostView'
 import AggregateEquipmentOperationStatusView from '../aggregateEquipmentOperationStatusView/aggregateEquipmentOperationStatusView'
+import AggregateLaborPayRollView from '../aggregateLaborPayRollView/aggregateLaborPayRollView'
 
 const TAB_CONFIG = [
   { label: '재료비', value: 'MATERIAL' },
@@ -68,12 +69,8 @@ export default function FinalAggregationView() {
   const handleTabClick = (value: string | undefined, label: string) => {
     if (activeTab === value) return // 같은 탭 클릭 시 무시
 
-    const confirmMove = window.confirm(`${label} 탭으로 이동합니다.\n이동하시겠습니까?`)
-    if (confirmMove) {
-      search.reset()
-      setActiveTab(value || '')
-      console.log(`${label} 탭으로 이동했습니다.`)
-    }
+    setActiveTab(value || '')
+    console.log(`${label} 탭으로 이동했습니다.`)
   }
 
   useEffect(() => {
@@ -258,6 +255,7 @@ export default function FinalAggregationView() {
       {activeTab === 'LABOR' && <AggregateLaborCostView />}
       {activeTab === 'EQUIPMENT' && <AggregateEquipmentCostView />}
       {activeTab === 'EQUIPMENT_OPERATION' && <AggregateEquipmentOperationStatusView />}
+      {activeTab === 'LABOR_DETAIL' && <AggregateLaborPayRollView />}
     </>
   )
 }

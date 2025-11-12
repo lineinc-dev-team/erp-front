@@ -153,17 +153,18 @@ export default function AggregateEquipmentOperationStatusView() {
   })
 
   const handleExcelDownload = () => {
-    const formattedData: any[] = []
+    const formattedRows: any[][] = []
 
+    // 데이터 행 생성 (각 행은 배열)
     rows.forEach((r: any) => {
       r.allEquipments.forEach((eq: any, idx: number) => {
-        // 총계(시간)
+        // 총시간
         const totalHours: number = Object.values(eq.days).reduce(
           (acc: number, cur: any) => acc + (cur.amount || 0),
           0,
         )
 
-        // 단가 평균 계산
+        // 단가 평균 계산 (unitPrice가 있는 날만)
         const unitPriceDays = Object.values(eq.days).filter((d: any) => (d.unitPrice || 0) > 0)
         const totalUnitPrice: number = unitPriceDays.reduce(
           (acc: number, cur: any) => acc + (cur.unitPrice as number),
@@ -171,9 +172,9 @@ export default function AggregateEquipmentOperationStatusView() {
         )
         const unitPriceDaysCount = unitPriceDays.length
         const averageUnitPrice = unitPriceDaysCount > 0 ? totalUnitPrice / unitPriceDaysCount : 0
-        const subtotal = totalHours * averageUnitPrice
+        // const subtotal = totalHours * averageUnitPrice
 
-        // ✅ 유류대 전용 단가 계산
+        // 유류대 전용 단가 표시 로직 (기존 로직 유지)
         let displayUnitPrice = averageUnitPrice
         if (eq.type === '유류대') {
           const firstEqTotalHours = Object.values(r.allEquipments[0].days).reduce(
@@ -183,62 +184,121 @@ export default function AggregateEquipmentOperationStatusView() {
           displayUnitPrice = firstEqTotalHours > 0 ? totalHours / firstEqTotalHours : 0
         }
 
-        // ✅ 유류대 전용 소계 계산
         const displaySubtotal =
           eq.type === '유류대' ? totalHours * displayUnitPrice : totalHours * averageUnitPrice
 
-        formattedData.push({
-          No: idx === 0 ? r.no : '',
-          직영: idx === 0 ? r.mainEquipment.name : '',
-          규격: idx === 0 ? r.mainEquipment.specification : '',
-          업체명: idx === 0 ? r.mainEquipment.company : '',
-          '대표/기사': idx === 0 ? r.mainEquipment.ceo : '',
-          차량번호: idx === 0 ? r.mainEquipment.carNumber : '',
-          구분: eq.type,
-          // 날짜별 데이터
-          ...Object.fromEntries(dateColumns.map((d) => [`${d}일`, eq.days[d]?.amount || 0])),
-          총계: totalHours,
-          단가:
-            eq.type === '유류대'
-              ? displayUnitPrice.toLocaleString()
-              : averageUnitPrice.toLocaleString(),
-          소계: eq.type === '유류대' ? displaySubtotal.toLocaleString() : subtotal.toLocaleString(),
-          총합계: idx === 0 ? verticalSums.totalSubtotal.toLocaleString() : '',
-        })
+        // 행 배열 생성 (날짜는 숫자으로 넣음)
+        const rowArr = [
+          idx === 0 ? r.no : '',
+          idx === 0 ? r.mainEquipment.name : '',
+          idx === 0 ? r.mainEquipment.specification : '',
+          idx === 0 ? r.mainEquipment.company : '',
+          idx === 0 ? r.mainEquipment.ceo : '',
+          idx === 0 ? r.mainEquipment.carNumber : '',
+          eq.type,
+          ...dateColumns.map((d) => eq.days[d]?.amount || 0), // 1~31일
+          totalHours,
+          // 단가와 소계는 숫자 넣되 보기 편하게 string으로 포맷해도 됨. 여기선 숫자로 넣고 셀 포맷은 엑셀에 맡김
+          Number(
+            (eq.type === '유류대' ? displayUnitPrice : averageUnitPrice) === 0
+              ? 0
+              : eq.type === '유류대'
+              ? displayUnitPrice
+              : averageUnitPrice,
+          ),
+          Number(displaySubtotal || 0),
+          idx === 0 ? Number(verticalSums.totalSubtotal || 0) : '',
+        ]
+
+        formattedRows.push(rowArr)
       })
     })
 
-    // ✅ 마지막 총합계 행
-    const totalRow: any = {
-      No: '총합계',
-      직영: '',
-      규격: '',
-      업체명: '',
-      '대표/기사': '',
-      차량번호: '',
-      구분: '',
-      ...Object.fromEntries(dateColumns.map((d, idx) => [`${d}일`, verticalSums.amounts[idx]])),
-      총계: verticalSums.totalHours,
-      단가: verticalSums.totalUnitPrice.toLocaleString(),
-      소계: verticalSums.totalSubtotal.toLocaleString(),
-      총합계: verticalSums.totalSubtotal.toLocaleString(),
-    }
+    // 헤더 행 구성
+    const headerRowDates = [
+      'No',
+      '직영',
+      '규격',
+      '업체명',
+      '대표/기사',
+      '차량번호',
+      '구분',
+      ...dateColumns.map((d) => `${d}`), // 날짜(1,2,3...)
+      '총계',
+      '단가',
+      '소계',
+      '총합계',
+    ]
 
-    formattedData.push(totalRow)
+    const headerRowWeather = [
+      '', // No
+      '', // 직영
+      '', // 규격
+      '', // 업체명
+      '', // 대표/기사
+      '', // 차량번호
+      '', // 구분
+      ...dateColumns.map((d) => {
+        const key = `day${d.toString().padStart(2, '0')}`
+        const value = WeatherInfo[key]
+        return value ? weatherMap[value] || value : '-'
+      }), // 날씨(1~31일)
+      '', // 총계
+      '', // 단가
+      '', // 소계
+      '', // 총합계
+    ]
 
-    // ✅ 엑셀 생성
-    const worksheet = XLSX.utils.json_to_sheet(formattedData)
+    // 합계 행 생성 (날짜별 합계 및 총합계)
+    const totalRow = [
+      '총합계',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      ...dateColumns.map((d, idx) => verticalSums.amounts[idx] || 0),
+      verticalSums.totalHours || 0,
+      Number(verticalSums.totalUnitPrice || 0),
+      Number(verticalSums.totalSubtotal || 0),
+      Number(verticalSums.totalSubtotal || 0),
+    ]
+
+    // 시트 생성 (2단 헤더 + 데이터 + 합계)
+    const sheetAoA = [headerRowDates, headerRowWeather, ...formattedRows, totalRow]
+    const worksheet = XLSX.utils.aoa_to_sheet(sheetAoA)
+
+    // 병합 설정: 상단 고정 칼럼들 (No ~ 구분)은 두 행 병합 (r:0~1)
+    worksheet['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, // No
+      { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } }, // 직영
+      { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } }, // 규격
+      { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } }, // 업체명
+      { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } }, // 대표/기사
+      { s: { r: 0, c: 5 }, e: { r: 1, c: 5 } }, // 차량번호
+      { s: { r: 0, c: 6 }, e: { r: 1, c: 6 } }, // 구분
+      // 총계 / 단가 / 소계 / 총합계 컬럼도 2행 병합
+      { s: { r: 0, c: 7 + dateColumns.length }, e: { r: 1, c: 7 + dateColumns.length } }, // 총계
+      { s: { r: 0, c: 8 + dateColumns.length }, e: { r: 1, c: 8 + dateColumns.length } }, // 단가
+      { s: { r: 0, c: 9 + dateColumns.length }, e: { r: 1, c: 9 + dateColumns.length } }, // 소계
+      { s: { r: 0, c: 10 + dateColumns.length }, e: { r: 1, c: 10 + dateColumns.length } }, // 총합계
+    ]
+
+    // 열 너비 자동설정 (간단)
+    const colCount = headerRowDates.length
+    worksheet['!cols'] = Array.from({ length: colCount }).map((_, i) => {
+      const headerText = headerRowDates[i] ?? ''
+      return { wch: Math.max(8, String(headerText).length + 5) }
+    })
+
+    // 워크북 생성 및 저장
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, '장비운행집계')
-
-    // ✅ 엑셀 스타일 자동 열 너비 조정
-    const colWidths = Object.keys(formattedData[0] || {}).map((key) => ({
-      wch: key.length + 5,
-    }))
-    worksheet['!cols'] = colWidths
-
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
-    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' })
+    const blob = new Blob([excelBuffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    })
     saveAs(blob, '장비가동현황_집계표.xlsx')
   }
 

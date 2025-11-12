@@ -192,3 +192,27 @@ export async function WeatherInfoServiceByAggregate(params = {}) {
   const data = await resData.json()
   return data
 }
+
+// 집계에서 노무명세서
+
+export async function LaborPayInfoServiceByAggregate(params = {}) {
+  const query = new URLSearchParams(params).toString()
+
+  const resData = await fetch(`${API.AGGREGATE}/labor-payroll?${query}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      throw new Error('권한이 없습니다.')
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
