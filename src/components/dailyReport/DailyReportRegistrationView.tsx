@@ -6940,20 +6940,32 @@ export default function DailyReportRegistrationView() {
                                 selectedCarNumber.unitPrice || '-',
                               )
                             }}
-                            options={
-                              carNumberOptionsByCompany[
-                                `${m.outsourcingCompanyId}_${m.categoryType}_${m.id}`
-                              ] ?? [{ id: 0, name: '선택' }]
-                            }
-                            // options={(
+                            // options={
                             //   carNumberOptionsByCompany[
                             //     `${m.outsourcingCompanyId}_${m.categoryType}_${m.id}`
-                            //   ] ?? []
-                            // ).filter(
-                            //   (opt) =>
-                            //     opt.id === selectedCarNumberIds[m.id] || // 현재 row의 선택값은 그대로
-                            //     !Object.values(selectedCarNumberIds).includes(opt.id),
-                            // )}
+                            //   ] ?? [{ id: 0, name: '선택' }]
+                            // }
+                            options={(() => {
+                              const key = `${m.outsourcingCompanyId}_${m.categoryType}_${m.id}`
+                              const currentSelectedId = selectedCarNumberIds[m.id]
+
+                              // ✅ 같은 업체 + 같은 구분(categoryType) 내에서만 중복 제한
+                              const otherSelectedIds = outsourcingfuel
+                                .filter(
+                                  (o) =>
+                                    o.outsourcingCompanyId === m.outsourcingCompanyId &&
+                                    o.categoryType === m.categoryType &&
+                                    o.id !== m.id,
+                                )
+                                .map((o) => selectedCarNumberIds[o.id])
+                                .filter(Boolean)
+
+                              return (carNumberOptionsByCompany[key] ?? []).filter(
+                                (opt) =>
+                                  opt.id === currentSelectedId ||
+                                  !otherSelectedIds.includes(opt.id),
+                              )
+                            })()}
                             onScrollToBottom={() => {
                               if (fuelEquipmentHasNextPage && !fuelEquipmentIsFetching)
                                 fuelEquipmentFetchNextPage()

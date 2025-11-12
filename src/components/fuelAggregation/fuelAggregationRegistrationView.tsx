@@ -1300,21 +1300,26 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                           updateItemField('FuelInfo', m.checkId, 'subEquipments', [])
                         }
                       }}
-                      options={(
-                        carNumberOptionsByCompany[
-                          `${m.outsourcingCompanyId}_${m.categoryType}_${m.checkId}`
-                        ] ?? []
-                      ).filter((opt) => {
+                      options={(() => {
+                        const key = `${m.outsourcingCompanyId}_${m.categoryType}_${m.checkId}`
                         const currentSelectedId = selectedCarNumberIds[m.checkId]
-                        const otherSelectedIds = Object.entries(selectedCarNumberIds)
-                          .filter(([key]) => Number(key) !== m.checkId) // ✅ 자기 자신 제외
-                          .map(([, val]) => val)
 
-                        // ✅ 자기 자신 선택은 유지, 나머지 선택값 제외
-                        return (
-                          opt.id === currentSelectedId || !otherSelectedIds.includes(opt.checkId)
+                        // ✅ 같은 업체 + 같은 구분(categoryType) 내에서만 중복 제한
+                        const otherSelectedIds = outsourcings
+                          .filter(
+                            (o) =>
+                              o.outsourcingCompanyId === m.outsourcingCompanyId &&
+                              o.categoryType === m.categoryType &&
+                              o.checkId !== m.checkId,
+                          )
+                          .map((o) => selectedCarNumberIds[o.checkId])
+                          .filter(Boolean)
+
+                        return (carNumberOptionsByCompany[key] ?? []).filter(
+                          (opt) =>
+                            opt.id === currentSelectedId || !otherSelectedIds.includes(opt.id),
                         )
-                      })}
+                      })()}
                       onScrollToBottom={() => {
                         if (fuelEquipmentHasNextPage && !fuelEquipmentIsFetching)
                           fuelEquipmentFetchNextPage()
