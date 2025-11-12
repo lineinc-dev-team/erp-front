@@ -204,7 +204,7 @@ export default function DailyReportRegistrationView() {
   // const [workerOptionsByCompany] = useState<Record<number, any[]>>({})
 
   const [ContarctNameOptionsByCompany, setContarctNameOptionsByCompany] = useState<
-    Record<number, any[]>
+    Record<any, any[]>
   >({})
 
   // 직영/용역에서  용역의 이름을 가져올 변수명
@@ -2077,9 +2077,7 @@ export default function DailyReportRegistrationView() {
   // "계정 관리" 메뉴에 대한 권한
   const { hasApproval } = useMenuPermission(roleId, '출역일보', enabled)
 
-  const [carNumberOptionsByCompany, setCarNumberOptionsByCompany] = useState<Record<number, any[]>>(
-    {},
-  )
+  const [carNumberOptionsByCompany, setCarNumberOptionsByCompany] = useState<Record<any, any[]>>({})
 
   const [driverOptionsByCompany, setDriverOptionsByCompany] = useState<Record<number, any[]>>({})
 
@@ -3389,8 +3387,10 @@ export default function DailyReportRegistrationView() {
         const carNumberId = row.equipmentId
         const categoryType = row.categoryType
 
+        const keyRow = `${companyId}_${categoryType}_${row.id}`
+
         const hasDriverData = driverOptionsByCompany[companyId]
-        const hasCarData = carNumberOptionsByCompany[companyId]?.some(
+        const hasCarData = carNumberOptionsByCompany[keyRow]?.some(
           (opt) => opt.categoryType === categoryType,
         )
 
@@ -3410,6 +3410,7 @@ export default function DailyReportRegistrationView() {
               id: companyId,
               siteIdList: Number(siteIdList),
               size: 200,
+              types: categoryType,
             }),
           ])
 
@@ -3451,7 +3452,7 @@ export default function DailyReportRegistrationView() {
 
           setCarNumberOptionsByCompany((prev) => ({
             ...prev,
-            [companyId]: [
+            [keyRow]: [
               {
                 id: 0,
                 checkId: 0,
@@ -6913,10 +6914,12 @@ export default function DailyReportRegistrationView() {
                         >
                           <CommonSelect
                             fullWidth
-                            value={selectedCarNumberIds[m.id] || m.equipmentId || 0}
+                            value={selectedCarNumberIds[m.id] ?? m.equipmentId ?? 0}
                             onChange={async (value) => {
                               const selectedCarNumber = (
-                                carNumberOptionsByCompany[m.outsourcingCompanyId] ?? []
+                                carNumberOptionsByCompany[
+                                  `${m.outsourcingCompanyId}_${m.categoryType}_${m.id}`
+                                ] ?? []
                               ).find((opt) => opt.id === value)
 
                               if (!selectedCarNumber) return
@@ -6936,53 +6939,21 @@ export default function DailyReportRegistrationView() {
                                 'amount',
                                 selectedCarNumber.unitPrice || '-',
                               )
-
-                              // const subEquipments = selectedCarNumber.subEquipments ?? []
-
-                              // if (subEquipments.length > 0) {
-                              //   const formattedSubEquipments = subEquipments.map((sub: any) => ({
-                              //     id: null,
-                              //     checkId: sub.id,
-                              //     outsourcingCompanyContractSubEquipmentId: sub.id,
-                              //     type: sub.type || sub.typeCode || '-',
-                              //     memo: sub.memo || '',
-                              //   }))
-
-                              //   updateItemField(
-                              //     'fuel',
-                              //     m.id,
-                              //     'subEquipments',
-                              //     formattedSubEquipments,
-                              //   )
-
-                              //   const subEquipmentsOptions = formattedSubEquipments.map(
-                              //     (sub: any) => ({
-                              //       id: sub.id,
-                              //       checkId: sub.id,
-                              //       name: sub.type || sub.typeCode || '-',
-                              //       taskDescription: sub.workContent,
-                              //       unitPrice: sub.unitPrice,
-                              //     }),
-                              //   )
-
-                              //   setSubEquipmentByRow((prev) => ({
-                              //     ...prev,
-                              //     [selectedCarNumber.id]: [
-                              //       { id: 0, name: '선택' },
-                              //       ...subEquipmentsOptions,
-                              //     ],
-                              //   }))
-                              // } else {
-                              //   updateItemField('fuel', m.id, 'subEquipments', [])
-                              // }
                             }}
-                            options={(
-                              carNumberOptionsByCompany[m.outsourcingCompanyId] ?? []
-                            ).filter(
-                              (opt) =>
-                                opt.id === selectedCarNumberIds[m.id] || // 현재 row의 선택값은 그대로
-                                !Object.values(selectedCarNumberIds).includes(opt.id),
-                            )}
+                            options={
+                              carNumberOptionsByCompany[
+                                `${m.outsourcingCompanyId}_${m.categoryType}_${m.id}`
+                              ] ?? [{ id: 0, name: '선택' }]
+                            }
+                            // options={(
+                            //   carNumberOptionsByCompany[
+                            //     `${m.outsourcingCompanyId}_${m.categoryType}_${m.id}`
+                            //   ] ?? []
+                            // ).filter(
+                            //   (opt) =>
+                            //     opt.id === selectedCarNumberIds[m.id] || // 현재 row의 선택값은 그대로
+                            //     !Object.values(selectedCarNumberIds).includes(opt.id),
+                            // )}
                             onScrollToBottom={() => {
                               if (fuelEquipmentHasNextPage && !fuelEquipmentIsFetching)
                                 fuelEquipmentFetchNextPage()

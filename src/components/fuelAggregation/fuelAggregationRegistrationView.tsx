@@ -568,9 +568,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
 
   const [selectedCarNumberIds, setSelectedCarNumberIds] = useState<{ [rowId: number]: number }>({})
 
-  const [carNumberOptionsByCompany, setCarNumberOptionsByCompany] = useState<Record<number, any[]>>(
-    {},
-  )
+  const [carNumberOptionsByCompany, setCarNumberOptionsByCompany] = useState<Record<any, any[]>>({})
 
   const {
     data: fuelEquipment,
@@ -723,20 +721,22 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
 
     const fetchData = async () => {
       for (const row of outsourcings) {
-        const companyId = row.outsourcingCompanyId
-        const driverData = row.driverId
-        const carNumberId = row.equipmentId
-        const categoryType = row.categoryType
+        const {
+          outsourcingCompanyId: companyId,
+          equipmentId: carNumberId,
+          categoryType,
+          checkId,
+        } = row
+
+        // ✅ 고유 키 생성
+        const key = `${companyId}_${categoryType}_${checkId}`
 
         const hasDriverData = driverOptionsByCompany[companyId]
-        const hasCarData = carNumberOptionsByCompany[companyId]?.some(
-          (opt) => opt.categoryType === categoryType,
-        )
+        const hasCarData = carNumberOptionsByCompany[key]
 
         if (hasDriverData && hasCarData) continue
 
         try {
-          // 기사 + 차량 병렬 요청
           const [driverRes, carNumberRes] = await Promise.all([
             FuelDriverNameScroll({
               pageParam: 0,
@@ -748,6 +748,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
               pageParam: 0,
               id: companyId,
               siteIdList: Number(siteIdList),
+              types: categoryType,
               size: 200,
             }),
           ])
@@ -758,44 +759,33 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
             deleted: user.deleted ?? false,
           }))
 
-          setDriverOptionsByCompany((prev) => {
-            const exists = driverOptions.some((opt: any) => opt.id === driverData)
-            return {
-              ...prev,
-              [companyId]: [
-                { id: 0, name: '선택', deleted: false },
-                ...driverOptions,
-                ...(driverData && !exists ? [{ id: driverData, name: '', deleted: false }] : []),
-              ],
-            }
-          })
+          setDriverOptionsByCompany((prev) => ({
+            ...prev,
+            [companyId]: [{ id: 0, name: '선택', deleted: false }, ...driverOptions],
+          }))
 
-          const carOptions = (carNumberRes?.data?.content ?? []).map((user: any) => ({
-            id: user.id,
-            specification: user.specification,
-            vehicleNumber: user.vehicleNumber,
-            category: user.category,
-            unitPrice: user.unitPrice,
-            taskDescription: user.taskDescription,
+          const carOptions = (carNumberRes?.data?.content ?? []).map((car: any) => ({
+            id: car.id,
+            specification: car.specification,
+            vehicleNumber: car.vehicleNumber,
+            category: car.category,
+            unitPrice: car.unitPrice,
+            taskDescription: car.taskDescription,
             subEquipments:
-              user.subEquipments?.map((item: any) => ({
+              car.subEquipments?.map((item: any) => ({
                 id: item.id,
-                checkId: item.id,
                 type: item.type,
-                typeCode: item.typeCode,
-                workContent: item.taskDescription ?? '',
                 unitPrice: item.unitPrice ?? 0,
               })) ?? [],
           }))
 
           setCarNumberOptionsByCompany((prev) => ({
             ...prev,
-            [companyId]: [
+            [key]: [
               {
                 id: 0,
-                checkId: 0,
-                specification: '',
                 vehicleNumber: '선택',
+                specification: '',
                 category: '',
                 unitPrice: '',
                 taskDescription: '',
@@ -804,24 +794,6 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
               ...carOptions,
             ],
           }))
-
-          carOptions.forEach((car: any) => {
-            if (car.subEquipments?.length) {
-              setTestArrayByRow((prev) => ({
-                ...prev,
-                [car.id]: [
-                  { id: 0, name: '선택' },
-                  ...car.subEquipments.map((sub: any) => ({
-                    id: sub.id,
-                    checkId: sub.id,
-                    name: sub.type || sub.typeCode || '-',
-                    taskDescription: sub.workContent,
-                    unitPrice: sub.unitPrice,
-                  })),
-                ],
-              }))
-            }
-          })
 
           setSelectedCarNumberIds((prev) => ({ ...prev, [row.checkId]: carNumberId || 0 }))
         } catch (err) {
@@ -1134,7 +1106,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
             </TableHead>
             <TableBody>
               {fuelInfo.map((m) => (
-                <TableRow key={m.id}>
+                <TableRow key={`${m.outsourcingCompanyId}_${m.categoryType}_${m.checkId}`}>
                   {/* 체크박스 */}
                   <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
                     <Checkbox
@@ -1243,42 +1215,52 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                   >
                     <CommonSelect
                       fullWidth
-                      value={selectedCarNumberIds[m.checkId] || m.equipmentId || 0}
+                      value={selectedCarNumberIds[m.checkId] ?? m.equipmentId ?? 0}
                       onChange={async (value) => {
                         if (value === 0) {
                           updateItemField('FuelInfo', m.checkId, 'equipmentId', null)
                           updateItemField('FuelInfo', m.checkId, 'specificationName', '')
                           updateItemField('FuelInfo', m.checkId, 'type', '-')
+
                           return
                         }
 
                         const selectedCarNumber = (
-                          carNumberOptionsByCompany[m.outsourcingCompanyId] ?? []
+                          carNumberOptionsByCompany[
+                            `${m.outsourcingCompanyId}_${m.categoryType}_${m.checkId}`
+                          ] ?? []
                         ).find((opt) => opt.id === value)
 
                         if (!selectedCarNumber) return
 
-                        updateItemField('FuelInfo', m.checkId, 'equipmentId', selectedCarNumber.id)
+                        setSelectedCarNumberIds((prev) => ({
+                          ...prev,
+                          [m.checkId]: value,
+                        }))
 
+                        updateItemField(
+                          'FuelInfo',
+                          m.checkId,
+                          'equipmentId',
+                          selectedCarNumber.id || 0,
+                        )
                         updateItemField(
                           'FuelInfo',
                           m.checkId,
                           'specificationName',
                           selectedCarNumber.specification || '',
                         )
-
                         updateItemField(
                           'FuelInfo',
                           m.checkId,
                           'amount',
                           selectedCarNumber.unitPrice || '',
                         )
-
                         updateItemField(
                           'FuelInfo',
                           m.checkId,
                           'type',
-                          selectedCarNumber.category || '-', // type 없으면 '-'
+                          selectedCarNumber.category || '-',
                         )
 
                         const subEquipments = selectedCarNumber.subEquipments ?? []
@@ -1318,11 +1300,21 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                           updateItemField('FuelInfo', m.checkId, 'subEquipments', [])
                         }
                       }}
-                      options={
-                        carNumberOptionsByCompany[m.outsourcingCompanyId] ?? [
-                          { id: 0, name: '선택', category: '' },
-                        ]
-                      }
+                      options={(
+                        carNumberOptionsByCompany[
+                          `${m.outsourcingCompanyId}_${m.categoryType}_${m.checkId}`
+                        ] ?? []
+                      ).filter((opt) => {
+                        const currentSelectedId = selectedCarNumberIds[m.checkId]
+                        const otherSelectedIds = Object.entries(selectedCarNumberIds)
+                          .filter(([key]) => Number(key) !== m.checkId) // ✅ 자기 자신 제외
+                          .map(([, val]) => val)
+
+                        // ✅ 자기 자신 선택은 유지, 나머지 선택값 제외
+                        return (
+                          opt.id === currentSelectedId || !otherSelectedIds.includes(opt.checkId)
+                        )
+                      })}
                       onScrollToBottom={() => {
                         if (fuelEquipmentHasNextPage && !fuelEquipmentIsFetching)
                           fuelEquipmentFetchNextPage()
