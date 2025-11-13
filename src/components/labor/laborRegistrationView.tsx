@@ -322,6 +322,20 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     new Map(OutsourcingContractRawList.map((user) => [user.contractName, user])).values(),
   )
 
+  const handleSetField = (key: any, value: any) => {
+    setField(key, value)
+
+    if (key === 'name') {
+      setField('accountHolder', value)
+    }
+
+    if (key === 'type') {
+      if (value === 'REGULAR_EMPLOYEE') {
+        setField('accountHolder', '') // 직영 선택 시 예금주 초기화
+      }
+    }
+  }
+
   const formatChangeDetail = (getChanges: string) => {
     try {
       const parsed = JSON.parse(getChanges)
@@ -724,7 +738,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
             <div className="border border-gray-400 flex items-center px-2 w-full">
               <CommonInput
                 value={form.name ?? ''}
-                onChange={(value) => setField('name', value)}
+                // onChange={(value) => setField('name', value)}
+                onChange={(value) => handleSetField('name', value)}
                 className=" flex-1"
                 placeholder="텍스트 입력"
               />
@@ -938,6 +953,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                 onChange={(value) => setField('accountHolder', value)}
                 className=" flex-1"
                 placeholder="예금주"
+                disabled={form.type === 'DIRECT_CONTRACT'}
               />
             </div>
           </div>
