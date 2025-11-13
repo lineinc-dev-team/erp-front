@@ -230,7 +230,7 @@ export default function DailyReportRegistrationView() {
   // 체크 박스에 활용
   //   const employees = form.employees
   //'외주(공사)',
-  const tabs = ['직원', '직영/용역', '장비', '유류', '공사일보', '현장 사진 등록']
+  const tabs = ['직원', '직영/용역', '장비', '유류', '외주(공사)', '공사일보', '현장 사진 등록']
   const [activeTab, setActiveTab] = useState('직원')
 
   const handleTabClick = (tab: string) => {
@@ -672,40 +672,33 @@ export default function DailyReportRegistrationView() {
 
     const fetched = allOutsourcingContents.map((item: any) => ({
       id: item.id,
-      checkId: item.id,
       outsourcingCompanyId: item.outsourcingCompany?.id ?? 0,
-      groups: item.groups.map((groupItem: any) => ({
-        id: groupItem.id,
-        checkId: groupItem.id,
-        outsourcingCompanyContractConstructionGroupId:
-          groupItem.outsourcingCompanyContractConstructionGroup?.id ?? 0,
+      outsourcingCompanyContractConstructionGroupId:
+        item.outsourcingCompanyContractConstructionGroup.id ?? 0,
+      items: item.items.map((it: any) => ({
+        id: it.id,
+        specification: it.outsourcingCompanyContractConstruction.specification ?? '',
+        quantity: it.quantity ?? 0,
+        unit: it.outsourcingCompanyContractConstruction.unit ?? '',
+        memo: it.memo ?? '',
+        files:
+          it.fileUrl && it.originalFileName
+            ? [
+                {
+                  fileUrl: it.fileUrl,
+                  originalFileName: it.originalFileName,
+                },
+              ]
+            : [],
 
-        items: groupItem.items.map((it: any) => ({
-          id: it.id,
-          checkId: it.id,
-          specification: it.specification ?? '',
-          quantity: it.quantity ?? 0,
-          unit: it.unit ?? '',
-          memo: it.memo ?? '',
-          files:
-            it.fileUrl && it.originalFileName
-              ? [
-                  {
-                    fileUrl: it.fileUrl,
-                    originalFileName: it.originalFileName,
-                  },
-                ]
-              : [],
-
-          outsourcingCompanyContractConstructionId:
-            it.outsourcingCompanyContractConstruction?.outsourcingCompanyContractConstructionId ??
-            0,
-        })),
-        isSubVisible: true, // <- 서브 항목 렌더링 여부 플래그 추가
+        outsourcingCompanyContractConstructionId:
+          it.outsourcingCompanyContractConstruction?.id ?? 0,
+        outsourcingCompanyContractConstructionName:
+          it.outsourcingCompanyContractConstruction?.item ?? 0,
       })),
     }))
 
-    console.log('setSelectedCompanyIdssetSelectedCompanyIds', fetched)
+    console.log('외주 공사용 fetch', fetched)
 
     setIsEditMode(true)
     setField('outsourcingConstructions', fetched)
@@ -720,7 +713,6 @@ export default function DailyReportRegistrationView() {
   const isOutsourcingAllChecked =
     resultOutsourcing.length > 0 && checkedOutsourcingIds.length === resultOutsourcing.length
 
-  console.log('처음 생성 리스트 확인', resultOutsourcing)
   //   장비
   const {
     // data: outsourcingData,
@@ -2081,6 +2073,10 @@ export default function DailyReportRegistrationView() {
 
   const [driverOptionsByCompany, setDriverOptionsByCompany] = useState<Record<number, any[]>>({})
 
+  // 외주(공사)의 항목명 가져온느 변수 값
+
+  const [itemNameByOutSourcing, setItemNameByOutSourcing] = useState<Record<any, any[]>>({})
+
   // 직영/계약직에서  이름 불러오기
 
   // 계약직만 데이터 조회
@@ -2535,12 +2531,14 @@ export default function DailyReportRegistrationView() {
 
   // 공사의 이름을 불러오는 코드
 
+  // const [outSourcingSubItems, setOutSourcingSubItems] = useState<Record<number, any[]>>({})
+
   const {
     data: contractGroupList,
-    // fetchNextPage: contractGroupFetchNextPage,
-    // hasNextPage: contractGroupHasNextPage,
-    // isFetching: contractGroupIsFetching,
-    // isLoading: contractGroupLoading,
+    fetchNextPage: contractGroupFetchNextPage,
+    hasNextPage: contractGroupHasNextPage,
+    isFetching: contractGroupIsFetching,
+    isLoading: contractGroupLoading,
   } = useInfiniteQuery({
     queryKey: ['ContractGroupInfo', selectedCompanyIds[selectId], siteIdList],
     queryFn: ({ pageParam = 0 }) =>
@@ -2561,117 +2559,80 @@ export default function DailyReportRegistrationView() {
   useEffect(() => {
     if (!contractGroupList) return
 
-    // 1️⃣ 백엔드에서 받아온 그룹 데이터를 정리
-    // const options = contractGroupList.pages
-    //   .flatMap((page) => page.data.content)
-    //   .map((group) => ({
-    //     id: group.outsourcingCompanyContractConstructionGroupId,
-    //     name: group.itemName,
-    //     items: group.items
-    //       .filter((item: any) => !item.deleted)
-    //       .map((item: any) => ({
-    //         id: item.outsourcingCompanyContractConstructionId,
-    //         item: item.item,
-    //         specification: item.specification,
-    //         unit: item.unit,
-    //         quantity: item.quantity ?? 0,
-    //       })),
-    //     deleted: group.deleted,
-    //   }))
+    const options = contractGroupList.pages
+      .flatMap((page) => page.data?.content ?? [])
+      .filter((group) => !group.deleted)
+      .map((group) => ({
+        id: group.outsourcingCompanyContractConstructionGroupId,
+        name: group.itemName,
+        items:
+          group.items
+            ?.filter((item: any) => !item.deleted)
+            .map((item: any) => ({
+              id: item.id,
+              item: item.item,
+              specification: item.specification,
+              unit: item.unit,
+              quantity: item.quantity ?? 0,
+            })) ?? [],
+      }))
+
+    setItemNameByOutSourcing((prev) => ({
+      ...prev,
+      [selectedCompanyIds[selectId]]: [{ id: 0, name: '선택' }, ...options],
+    }))
   }, [contractGroupList, selectedCompanyIds, selectId])
 
-  // useEffect(() => {
-  //   co
-  //   // 모든 외주공사 데이터를 순회
-  //   resultOutsourcing.forEach((row) => {
-  //     const groupOptions = contractGroupOptionsByCompany[row.outsourcingCompanyId] ?? []
-  //     const firstGroup = groupOptions.find((g) => g.id !== 0)
-  //     if (!firstGroup) return
+  // 외주(공사) 에서 항목명을 상세페이지에서 받아온 다음 화면에 세팅 해주는 코드
 
-  //     console.log('firstGroupfirstGroup', firstGroup)
-  //     // 상위 그룹 선택값 초기화
-  //     setSelectedConstructionGroupId((prev) => ({
-  //       ...prev,
-  //       [row.checkId]: firstGroup.id,
-  //     }))
-  //   })
-  // }, [contractGroupOptionsByCompany])
+  useEffect(() => {
+    if (!resultOutsourcing.length) return
 
-  // // 하위 그룹 선택값 초기화 (첫 번째 그룹이 있다면)
-  // setSelectedConstructionSubGroupIds((prev) => ({
-  //   ...prev,
-  //   [row.checkId]: firstGroup.id,
-  // }))
+    resultOutsourcing.forEach(async (row) => {
+      const companyId = row.outsourcingCompanyId
 
-  // 출역일보 외주(공사) 데이터를 불러올때 사용하는 로직 상세페이지 로직임
-  // useEffect(() => {
-  //   if (!resultOutsourcing.length) return
+      try {
+        const res = await GetContractGroup({
+          pageParam: 0,
+          id: companyId,
+          siteId: Number(siteIdList),
+          size: 200,
+        })
 
-  //   const companyIds = [
-  //     ...new Set(resultOutsourcing.map((m) => m.outsourcingCompanyId).filter(Boolean)),
-  //   ]
+        console.log('@@24 res ', res)
 
-  //   companyIds.forEach(async (companyId) => {
-  //     try {
-  //       const res = await GetContractGroup({
-  //         pageParam: 0,
-  //         id: companyId,
-  //         siteId: Number(siteIdList),
-  //         size: 10,
-  //       })
+        const options = res.data.content.map((user: any) => ({
+          id: user.outsourcingCompanyContractConstructionGroupId,
+          name: user.itemName,
+          items:
+            user.items
+              ?.filter((item: any) => !item.deleted)
+              .map((item: any) => ({
+                id: item.id,
+                item: item.item,
+                specification: item.specification,
+                unit: item.unit,
+                quantity: item.quantity ?? 0,
+              })) ?? [],
+        }))
 
-  //       const content = res?.data?.content ?? []
-
-  //       const options = content.map((item: any) => ({
-  //         id: item.outsourcingCompanyContractConstructionGroupId,
-  //         name: item.itemName,
-  //         items: item.items ?? [],
-  //       }))
-
-  //     } catch (err) {
-  //       console.error(`ContractGroup 불러오기 실패 - companyId: ${companyId}`, err)
-  //     }
-  //   })
-  // }, [resultOutsourcing, siteIdList])
-
-  // 외주(공사)에 대한 규격 데이터 확인
-
-  // 규격을 관리 할 수 있는 변수
-
-  // 외주(공사)에서 규격 다루는 변수
-  // const [specificationOptionsByCompany, setSpecificationOptionsByCompany] = useState<{
-  //   [key: string]: { id: number; name: string }[]
-  // }>({})
-
-  // resultOutsourcing이 갱신될 때마다 규격 옵션 세팅
-  // useEffect(() => {
-  //   if (!resultOutsourcing.length) return
-
-  //   const newSpecificationOptions: typeof specificationOptionsByCompany = {}
-
-  //   resultOutsourcing.forEach((item) => {
-  //     const companyId = item.outsourcingCompanyId
-  //     const allSpecs = item.groups
-  //       .flatMap((group) => group.items)
-  //       .map((it) => it.specification)
-  //       .filter(Boolean) // 빈 값 제거
-
-  //     if (allSpecs.length > 0) {
-  //       newSpecificationOptions[companyId] = [
-  //         { id: 0, name: '선택' },
-  //         ...allSpecs.map((spec, idx) => ({ id: idx + 1, name: spec })),
-  //       ]
-  //     } else {
-  //       newSpecificationOptions[companyId] = [{ id: 0, name: '선택' }]
-  //     }
-  //   })
-
-  //   setSpecificationOptionsByCompany(newSpecificationOptions)
-  // }, [resultOutsourcing])
-
-  // 옵션에 따른 상태값
-
-  // 업체명 id
+        setItemNameByOutSourcing((prev) => {
+          return {
+            ...prev,
+            [companyId]: [
+              {
+                id: 0,
+                name: '선택',
+              },
+              ...options,
+            ],
+          }
+        })
+      } catch (err) {
+        console.error('업체별 인력 조회 실패', err)
+      }
+    })
+  }, [resultOutsourcing])
 
   const {
     data: fuelDriver,
@@ -5638,7 +5599,7 @@ export default function DailyReportRegistrationView() {
                         sx={{ color: 'black' }}
                       />
                     </TableCell>
-                    {['업체명', '항목명', '항목', '규격', '단위', '수량', '비고', '첨부파일'].map(
+                    {['업체명', '항목명', '항목', '규격', '단위', '수량', '첨부파일', '비고'].map(
                       (label) => (
                         <TableCell
                           key={label}
@@ -5674,18 +5635,366 @@ export default function DailyReportRegistrationView() {
                     </TableRow>
                   ) : (
                     resultOutsourcing.map((m) => (
-                      <TableRow key={m.checkId}>
+                      <TableRow key={m.id}>
                         <TableCell
                           padding="checkbox"
                           align="center"
                           sx={{ border: '1px solid  #9CA3AF' }}
                         >
                           <Checkbox
-                            checked={checkedOutsourcingIds.includes(m.checkId)}
+                            checked={checkedOutsourcingIds.includes(m.id)}
                             onChange={(e) =>
-                              toggleCheckItem('outsourcings', m.checkId, e.target.checked)
+                              toggleCheckItem('outsourcings', m.id, e.target.checked)
                             }
                           />
+                        </TableCell>
+
+                        <TableCell align="center" sx={cellStyle}>
+                          <CommonSelect
+                            fullWidth
+                            value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
+                            onChange={async (value) => {
+                              const selectedCompany = withEquipmentInfoOptions.find(
+                                (opt) => opt.id === value,
+                              )
+                              if (!selectedCompany) return
+
+                              // 선택한 업체 업데이트
+                              setSelectedCompanyIds((prev) => ({
+                                ...prev,
+                                [m.id]: selectedCompany.id,
+                              }))
+                              setSelectId(m.id)
+
+                              // 하위 항목 초기화
+                              updateItemField(
+                                'outsourcings',
+                                m.id,
+                                'outsourcingCompanyId',
+                                selectedCompany.id,
+                              )
+                              updateItemField(
+                                'outsourcings',
+                                m.id,
+                                'outsourcingCompanyContractConstructionGroupId',
+                                0,
+                              )
+                              updateItemField('outsourcings', m.id, 'items', [])
+                            }}
+                            options={withEquipmentInfoOptions}
+                            onScrollToBottom={() => {
+                              if (withEquipmenthasNextPage && !withEquipmentFetching)
+                                withEquipmentFetchNextPage()
+                            }}
+                            loading={withEquipmentLoading}
+                          />
+                        </TableCell>
+
+                        <TableCell align="center" sx={cellStyle}>
+                          <CommonSelect
+                            fullWidth
+                            value={m.outsourcingCompanyContractConstructionGroupId || 0}
+                            onChange={async (value) => {
+                              if (value === 0) {
+                                updateItemField(
+                                  'outsourcings',
+                                  m.id,
+                                  'outsourcingCompanyContractConstructionGroupId',
+                                  0,
+                                )
+                                updateItemField('outsourcings', m.id, 'items', [])
+                                return
+                              }
+
+                              const selectedItemName = (
+                                itemNameByOutSourcing[m.outsourcingCompanyId] ?? []
+                              ).find((opt) => opt.id === value)
+
+                              if (!selectedItemName) return
+
+                              updateItemField(
+                                'outsourcings',
+                                m.id,
+                                'outsourcingCompanyContractConstructionGroupId',
+                                selectedItemName.id,
+                              )
+
+                              if (selectedItemName.items && selectedItemName.items.length > 0) {
+                                updateItemField(
+                                  'outsourcings',
+                                  m.id,
+                                  'items',
+                                  selectedItemName.items.map((item: any) => ({
+                                    id: item.id, // 내부 관리용
+                                    outsourcingCompanyContractConstructionName: item.item,
+                                    outsourcingCompanyContractConstructionId: item.id,
+                                    specification: item.specification,
+                                    unit: item.unit,
+                                    quantity: item.quantity ?? 0,
+                                    memo: '',
+                                    fileUrl: '',
+                                  })),
+                                )
+                              }
+                            }}
+                            options={(() => {
+                              const allOptions = itemNameByOutSourcing[m.outsourcingCompanyId] ?? []
+
+                              // ✅ 동일한 업체에서 이미 선택된 항목 ID들
+                              const selectedGroupIds = form.outsourcingConstructions
+                                .filter(
+                                  (o) =>
+                                    o.outsourcingCompanyId === m.outsourcingCompanyId &&
+                                    o.id !== m.id && // 자기 자신 제외
+                                    o.outsourcingCompanyContractConstructionGroupId,
+                                )
+                                .map((o) => o.outsourcingCompanyContractConstructionGroupId)
+
+                              // ✅ 이미 선택된 항목은 options에서 제거
+                              const filteredOptions = allOptions.filter(
+                                (opt) => !selectedGroupIds.includes(opt.id),
+                              )
+
+                              return filteredOptions.length
+                                ? filteredOptions
+                                : [{ id: 0, name: '선택' }]
+                            })()}
+                            onScrollToBottom={() => {
+                              if (contractGroupHasNextPage && !contractGroupIsFetching)
+                                contractGroupFetchNextPage()
+                            }}
+                            loading={contractGroupLoading}
+                          />
+                        </TableCell>
+
+                        <TableCell align="center" sx={cellStyle}>
+                          {m.items && m.items.length > 0 ? (
+                            <div className="flex flex-col my-[-8px]">
+                              {m.items.map((item, index) => (
+                                <div
+                                  key={`${m.id}-${item.id}-${index} + 1`}
+                                  className="flex items-center justify-between gap-[4px] mb-[-4px]  w-full"
+                                >
+                                  <CommonInput
+                                    className="text-2xl "
+                                    value={item.outsourcingCompanyContractConstructionName || '-'}
+                                    onChange={() => {}}
+                                    disabled
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="my-[-8px]">
+                              <CommonInput
+                                className="text-2xl "
+                                value={'-'}
+                                onChange={() => {}}
+                                disabled
+                              />
+                            </div>
+                          )}
+                        </TableCell>
+
+                        <TableCell align="center" sx={cellStyle}>
+                          {m.items && m.items.length > 0 ? (
+                            <div className="flex flex-col my-[-8px]">
+                              {m.items.map((item, index) => (
+                                <div
+                                  key={`${m.id}-${item.id}-${index} + 2`}
+                                  className="flex items-center justify-between gap-[4px] mb-[-4px]  w-full"
+                                >
+                                  <CommonInput
+                                    className="text-2xl "
+                                    value={item.specification || '-'}
+                                    onChange={() => {}}
+                                    disabled
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="my-[-8px]">
+                              <CommonInput
+                                className="text-2xl "
+                                value={'-'}
+                                onChange={() => {}}
+                                disabled
+                              />
+                            </div>
+                          )}
+                        </TableCell>
+
+                        <TableCell align="center" sx={cellStyle}>
+                          {m.items && m.items.length > 0 ? (
+                            <div className="flex flex-col my-[-8px]">
+                              {m.items.map((item, index) => (
+                                <div
+                                  key={`${m.id}-${item.id}-${index} +  3`}
+                                  className="flex items-center justify-between gap-[4px] mb-[-4px]  w-full"
+                                >
+                                  <CommonInput
+                                    className="text-2xl "
+                                    value={item.unit || '-'}
+                                    onChange={() => {}}
+                                    disabled
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="my-[-8px]">
+                              <CommonInput
+                                className="text-2xl "
+                                value={'-'}
+                                onChange={() => {}}
+                                disabled
+                              />
+                            </div>
+                          )}
+                        </TableCell>
+
+                        <TableCell align="center" sx={cellStyle}>
+                          {m.items && m.items.length > 0 ? (
+                            <div className="flex flex-col my-[-8px]">
+                              {m.items.map((item, index) => (
+                                <div
+                                  key={`${m.id}-${item.id}-${index} + 4`}
+                                  className="flex items-center justify-between gap-[4px] mb-[-4px]  w-full"
+                                >
+                                  <CommonInput
+                                    className="text-2xl "
+                                    value={item.quantity ?? 0}
+                                    onChange={(value: number) => {
+                                      const numericValue = Number(value)
+                                      updateContractDetailField(
+                                        'construction',
+                                        m.id,
+                                        item.id,
+                                        'quantity',
+                                        numericValue,
+                                      )
+                                    }}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="my-[-8px]">
+                              <CommonInput
+                                className="text-2xl "
+                                value={'-'}
+                                onChange={() => {}}
+                                disabled
+                              />
+                            </div>
+                          )}
+                        </TableCell>
+
+                        <TableCell align="center" sx={cellStyle}>
+                          {m.items && m.items.length > 0 ? (
+                            <div className="flex flex-col my-[-8px]">
+                              {m.items.map((item, index) => (
+                                <div
+                                  key={item.id ?? index}
+                                  className="px-2 p-2 w-full flex gap-2.5 items-center justify-center"
+                                >
+                                  <CommonFileInput
+                                    acceptedExtensions={[
+                                      'pdf',
+                                      'txt',
+                                      'rtf',
+                                      'docx',
+                                      'hwp',
+                                      'xlsx',
+                                      'csv',
+                                      'ods',
+                                      'pptx',
+                                      'ppt',
+                                      'odp',
+                                      'jpg',
+                                      'jpeg',
+                                      'png',
+                                      'gif',
+                                      'tif',
+                                      'tiff',
+                                      'bmp',
+                                      'zip',
+                                      '7z',
+                                      'mp3',
+                                      'wav',
+                                      'mp4',
+                                      'mov',
+                                      'avi',
+                                      'wmv',
+                                      'dwg',
+                                    ]}
+                                    multiple={false}
+                                    files={item.files || []}
+                                    onChange={(newFiles) => {
+                                      updateItemField(
+                                        'outsourcings',
+                                        m.id,
+                                        'items',
+                                        m.items.map((it) =>
+                                          it.id === item.id
+                                            ? { ...it, files: newFiles.slice(0, 1) }
+                                            : it,
+                                        ),
+                                      )
+                                    }}
+                                    uploadTarget="WORK_DAILY_REPORT"
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="my-[-8px]">
+                              <CommonInput
+                                className="text-2xl "
+                                value={'-'}
+                                onChange={() => {}}
+                                disabled
+                              />
+                            </div>
+                          )}
+                        </TableCell>
+
+                        <TableCell align="center" sx={cellStyle}>
+                          {m.items && m.items.length > 0 ? (
+                            <div className="flex flex-col my-[-8px]">
+                              {m.items.map((item, index) => (
+                                <div
+                                  key={`${m.id}-${item.id}-${index} + 4`}
+                                  className="flex items-center justify-between gap-[4px] mb-[-4px]  w-full"
+                                >
+                                  <CommonInput
+                                    className="text-2xl "
+                                    value={item.memo ?? 0}
+                                    onChange={(value) => {
+                                      const numericValue = value
+                                      updateContractDetailField(
+                                        'construction',
+                                        m.id,
+                                        item.id,
+                                        'memo',
+                                        numericValue,
+                                      )
+                                    }}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="my-[-8px]">
+                              <CommonInput
+                                className="text-2xl "
+                                value={'-'}
+                                onChange={() => {}}
+                                disabled
+                              />
+                            </div>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))
@@ -6163,6 +6472,7 @@ export default function DailyReportRegistrationView() {
                                     value={item.outsourcingCompanyContractSubEquipmentId || 0}
                                     onChange={(value) => {
                                       updateContractDetailField(
+                                        'equipment',
                                         m.id,
                                         item.id,
                                         'outsourcingCompanyContractSubEquipmentId',
@@ -6216,6 +6526,7 @@ export default function DailyReportRegistrationView() {
                                   value={detail.workContent}
                                   onChange={(e) =>
                                     updateContractDetailField(
+                                      'equipment',
                                       m.id,
                                       detail.id,
                                       'workContent',
@@ -6256,6 +6567,7 @@ export default function DailyReportRegistrationView() {
                                   onChange={(e) => {
                                     const numericValue = unformatNumber(e.target.value)
                                     updateContractDetailField(
+                                      'equipment',
                                       m.id,
                                       detail.id,
                                       'unitPrice',
@@ -6338,6 +6650,7 @@ export default function DailyReportRegistrationView() {
 
                                     // dailyWork 배열 idx 위치 업데이트
                                     updateContractDetailField(
+                                      'equipment',
                                       m.id,
                                       detail.id,
                                       'workHours',
@@ -6437,6 +6750,7 @@ export default function DailyReportRegistrationView() {
                                   value={detail.memo}
                                   onChange={(e) =>
                                     updateContractDetailField(
+                                      'equipment',
                                       m.id,
                                       detail.id,
                                       'memo',
@@ -6949,7 +7263,6 @@ export default function DailyReportRegistrationView() {
                               const key = `${m.outsourcingCompanyId}_${m.categoryType}_${m.id}`
                               const currentSelectedId = selectedCarNumberIds[m.id]
 
-                              // ✅ 같은 업체 + 같은 구분(categoryType) 내에서만 중복 제한
                               const otherSelectedIds = outsourcingfuel
                                 .filter(
                                   (o) =>

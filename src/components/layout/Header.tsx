@@ -122,7 +122,7 @@ function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {
       return {
         title: menu.name,
         icon,
-        path: basePath, // ✅ 상위 메뉴 클릭 시 조회 페이지로 바로 이동
+        path: basePath,
         children: filteredPermissions.map((perm: ApiPermission) => {
           let path = basePath
           if (perm.action === '등록') path = `${basePath}/registration`

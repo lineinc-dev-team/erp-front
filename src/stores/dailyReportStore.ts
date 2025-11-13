@@ -13,6 +13,7 @@ import {
   MainProcessesItem,
   MaterialStatuses,
   outSourcingByDirectContractItem,
+  OutsourcingConstructionItem,
   OutsourcingsItem,
   SubEquipmentByFuleItems,
   SubEquipmentItems,
@@ -525,28 +526,20 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
         }
       } else if (type === 'outsourcings') {
         const newItem: OutsourcingsItem = {
-          id: null,
-          checkId: Date.now(),
+          id: Date.now(),
           outsourcingCompanyId: 0, // 업체명
-          groups: [
+          outsourcingCompanyContractConstructionGroupId: 0, // 항목명
+          items: [
             {
-              id: null,
-              checkId: Date.now() + 1,
-              outsourcingCompanyContractConstructionGroupId: 0, // 항목명
-              items: [
-                {
-                  id: null,
-                  checkId: Date.now() + 2,
-                  outsourcingCompanyContractConstructionId: 0, // 항목
-                  specification: '', // 규격 데이터
-                  unit: '', // 단위
-                  quantity: 0, // 수량
-                  memo: '', // 비고
-                  fileUrl: '', // 첨부파일 (URL)
-                  originalFileName: '', // 첨부파일명
-                  files: [],
-                },
-              ],
+              id: Date.now() + 1,
+              outsourcingCompanyContractConstructionId: 0, // 항목
+              specification: '', // 규격 데이터
+              unit: '', // 단위
+              quantity: 0, // 수량
+              memo: '', // 비고
+              fileUrl: '', // 첨부파일 (URL)
+              originalFileName: '', // 첨부파일명
+              files: [],
             },
           ],
         }
@@ -806,7 +799,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           form: {
             ...state.form,
             outsourcingConstructions: state.form.outsourcingConstructions.map((m) =>
-              m.checkId === id ? { ...m, [field]: value } : m,
+              m.id === id ? { ...m, [field]: value } : m,
             ),
           },
         }
@@ -1470,28 +1463,54 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
 
   // 세부 항목 수정
   updateContractDetailField: (
+    type: 'equipment' | 'construction', // ✅ 어떤 데이터에 적용할지 구분
     managerId: number,
     itemId: number,
-    field: keyof SubEquipmentItems,
+    field: keyof SubEquipmentItems | keyof OutsourcingConstructionItem,
     value: string | number,
   ) =>
-    set((state) => ({
-      form: {
-        ...state.form,
-        outsourcingEquipments: state.form.outsourcingEquipments.map((manager) =>
-          manager.id === managerId
-            ? {
-                ...manager,
-                subEquipments:
-                  manager.subEquipments &&
-                  manager.subEquipments.map((detail) =>
-                    detail.id === itemId ? { ...detail, [field]: value } : detail,
-                  ),
-              }
-            : manager,
-        ),
-      },
-    })),
+    set((state) => {
+      // 장비 업데이트 로직
+      if (type === 'equipment') {
+        return {
+          form: {
+            ...state.form,
+            outsourcingEquipments: state.form.outsourcingEquipments.map((manager) =>
+              manager.id === managerId
+                ? {
+                    ...manager,
+                    subEquipments:
+                      manager.subEquipments?.map((detail) =>
+                        detail.id === itemId ? { ...detail, [field]: value } : detail,
+                      ) ?? [],
+                  }
+                : manager,
+            ),
+          },
+        }
+      }
+
+      // 외주공사 업데이트 로직
+      if (type === 'construction') {
+        return {
+          form: {
+            ...state.form,
+            outsourcingConstructions: state.form.outsourcingConstructions.map((outsourcing) =>
+              outsourcing.id === managerId
+                ? {
+                    ...outsourcing,
+                    items: outsourcing.items.map((item) =>
+                      item.id === itemId ? { ...item, [field]: value } : item,
+                    ),
+                  }
+                : outsourcing,
+            ),
+          },
+        }
+      }
+
+      return state // 기본 반환 (type이 잘못 들어온 경우)
+    }),
 
   //유류 에서 서브 장비 가져옴
 
@@ -1765,26 +1784,22 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       outsourcingConstructions: form.outsourcingConstructions.map((contract) => ({
         id: contract.id,
         outsourcingCompanyId: contract.outsourcingCompanyId,
+        outsourcingCompanyContractConstructionGroupId:
+          contract.outsourcingCompanyContractConstructionGroupId,
 
-        groups: contract.groups.map((group) => ({
-          id: group.id,
-          outsourcingCompanyContractConstructionGroupId:
-            group.outsourcingCompanyContractConstructionGroupId,
-          items: group.items.map((item) => {
-            const file = item.files?.[0] ?? null // 파일이 없으면 null 처리
-            return {
-              id: item.id,
-              outsourcingCompanyContractConstructionId:
-                item.outsourcingCompanyContractConstructionId,
-              specification: item.specification,
-              unit: item.unit,
-              quantity: item.quantity,
-              fileUrl: file?.fileUrl ?? null,
-              originalFileName: file?.originalFileName ?? null,
-              memo: item.memo,
-            }
-          }),
-        })),
+        items: contract.items.map((item) => {
+          const file = item.files?.[0] ?? null // 파일이 없으면 null 처리
+          return {
+            id: item.id,
+            outsourcingCompanyContractConstructionId: item.outsourcingCompanyContractConstructionId,
+            specification: item.specification,
+            unit: item.unit,
+            quantity: item.quantity,
+            fileUrl: file?.fileUrl ?? null,
+            originalFileName: file?.originalFileName ?? null,
+            memo: item.memo,
+          }
+        }),
       })),
 
       outsourcingEquipments: form.outsourcingEquipments.map((item) => {
@@ -2011,40 +2026,26 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
       weather: undefined,
       employees: undefined,
 
-      outsourcingCompanies: form.outsourcingConstructions.map((item: OutsourcingsItem) => ({
-        id: item.id, // 수정이면 기존 id, 신규면 0 또는 undefined
-
+      constructionGroups: form.outsourcingConstructions.map((item: OutsourcingsItem) => ({
+        id: item.id,
         outsourcingCompanyId: item.outsourcingCompanyId,
-        groups: item.groups.map((groupItems) => {
+        outsourcingCompanyContractConstructionGroupId:
+          item.outsourcingCompanyContractConstructionGroupId,
+
+        items: item.items.map((itemDetail) => {
+          const file = itemDetail.files?.[0] ?? null // 파일이 없으면 null 처리
           return {
-            id: groupItems.id,
-            outsourcingCompanyContractConstructionGroupId:
-              groupItems.outsourcingCompanyContractConstructionGroupId,
-            items: groupItems.items.map((lastItems) => {
-              const file = lastItems.files?.[0] ?? null // 파일이 없으면 null 처리
-              return {
-                id: lastItems.id,
-                outsourcingCompanyContractConstructionId:
-                  lastItems.outsourcingCompanyContractConstructionId,
-                specification: lastItems.specification,
-                unit: lastItems.unit,
-                quantity: lastItems.quantity,
-                fileUrl: file?.fileUrl || null,
-                originalFileName: file?.originalFileName || null,
-                memo: lastItems.memo,
-              }
-            }),
+            id: itemDetail.id,
+            outsourcingCompanyContractConstructionId:
+              itemDetail.outsourcingCompanyContractConstructionId,
+            specification: itemDetail.specification,
+            unit: itemDetail.unit,
+            quantity: itemDetail.quantity,
+            fileUrl: file?.fileUrl ?? null,
+            originalFileName: file?.originalFileName ?? null,
+            memo: itemDetail.memo,
           }
         }),
-        // outsourcingCompanyContractWorkerId: item.outsourcingCompanyContractConstructionGroupId,
-        // outsourcingCompanyContractConstructionId: item.outsourcingCompanyContractConstructionId,
-        // category: item.category,
-        // workContent: item.workContent,
-        // workQuantity: item.workQuantity,
-        // memo: item.memo,
-
-        // fileUrl: item.files?.[0]?.fileUrl ?? null,
-        // originalFileName: item.files?.[0]?.originalFileName ?? null,
       })),
 
       outsourcingEquipments: undefined,

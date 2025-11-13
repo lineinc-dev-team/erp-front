@@ -2082,7 +2082,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    계약금액 <span className="text-red-500 ml-1">*</span>
+                    도급금액 <span className="text-red-500 ml-1">*</span>
                   </TableCell>
                   <TableCell
                     colSpan={3}

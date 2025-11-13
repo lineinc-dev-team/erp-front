@@ -114,11 +114,11 @@ export type outSourcingByDirectContractItem = {
 // 외주(공사) 타입 설정
 
 export interface OutsourcingConstructionItem {
-  id: T
-  checkId: number
+  id: number
   outsourcingCompanyContractConstructionId: number
-  specification: string
-  unit: string
+  outsourcingCompanyContractConstructionName?: string
+  specification?: string
+  unit?: string
   quantity: number
   fileUrl?: string
   originalFileName?: string
@@ -126,34 +126,12 @@ export interface OutsourcingConstructionItem {
   memo: string
 }
 
-// 그룹 (groups)
-export interface OutsourcingConstructionGroup {
-  id: T
-  checkId: number
+export interface OutsourcingsItem {
+  id: number
+  outsourcingCompanyId: number
   outsourcingCompanyContractConstructionGroupId: number
   items: OutsourcingConstructionItem[]
 }
-
-export interface OutsourcingsItem {
-  id: T
-  checkId: number
-  outsourcingCompanyId: number
-  groups: OutsourcingConstructionGroup[]
-}
-
-// export type OutsourcingsItem = {
-//   id: number
-//   outsourcingCompanyId: number
-//   outsourcingCompanyContractWorkerId: number
-//   category?: string
-//   workContent: string
-//   workQuantity: number
-//   fileUrl?: string
-//   originalFileName?: string
-//   files: FileUploadInfo[]
-//   memo: string
-//   modifyDate?: string
-// }
 
 export type SubEquipmentItems = {
   id: number
@@ -394,9 +372,10 @@ type DailyReportFormStore = {
 
   // 여기 추가
   updateContractDetailField: (
+    type: T,
     managerId: number,
     itemId: number,
-    field: keyof SubEquipmentItems,
+    field: keyof SubEquipmentItems | keyof OutsourcingConstructionItem,
     value: T,
   ) => void
 
