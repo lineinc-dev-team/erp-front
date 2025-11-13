@@ -16,6 +16,7 @@ import AggregateLaborCostView from '../aggregateLaborCostView/aggregateLaborCost
 import AggregateEquipmentCostView from '../aggregateEquipmentCostView/aggregateEquipmentCostView'
 import AggregateEquipmentOperationStatusView from '../aggregateEquipmentOperationStatusView/aggregateEquipmentOperationStatusView'
 import AggregateLaborPayRollView from '../aggregateLaborPayRollView/aggregateLaborPayRollView'
+import AggregateManagementCostView from '../aggregateManagementCostView/aggregateManagementCostView'
 
 const TAB_CONFIG = [
   { label: '재료비', value: 'MATERIAL' },
@@ -256,6 +257,7 @@ export default function FinalAggregationView() {
       {activeTab === 'EQUIPMENT' && <AggregateEquipmentCostView />}
       {activeTab === 'EQUIPMENT_OPERATION' && <AggregateEquipmentOperationStatusView />}
       {activeTab === 'LABOR_DETAIL' && <AggregateLaborPayRollView />}
+      {activeTab === 'MANAGEMENT' && <AggregateManagementCostView />}
     </>
   )
 }

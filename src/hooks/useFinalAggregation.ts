@@ -5,6 +5,7 @@ import {
   FuelPriceInfoServiceByAggregate,
   LaborCostInfoServiceByAggregate,
   LaborPayInfoServiceByAggregate,
+  ManagementCostInfoServiceByAggregate,
   MaterialInfoServiceByAggregate,
   OutsourcingLaborCostInfoServiceByAggregate,
   WeatherInfoServiceByAggregate,
@@ -260,6 +261,33 @@ export default function useFinalAggregationView({
     enabled: tabName === 'LABOR_DETAIL' && [yearMonth, siteId, siteProcessId, type].every(Boolean),
   })
 
+  // 관리비 조회
+
+  // 재료비 집계
+  const ManagementCostListQuery = useQuery({
+    queryKey: ['managementCostInfo', yearMonth, siteId, siteProcessId],
+    queryFn: () => {
+      const rawParams = {
+        siteId: siteId === 0 ? undefined : siteId,
+        siteProcessId: siteProcessId === 0 ? undefined : siteProcessId,
+        yearMonth: yearMonth,
+      }
+
+      const filteredParams = Object.fromEntries(
+        Object.entries(rawParams).filter(
+          ([, value]) =>
+            value !== undefined &&
+            value !== null &&
+            value !== '' &&
+            !(typeof value === 'number' && isNaN(value)),
+        ),
+      )
+
+      return ManagementCostInfoServiceByAggregate(filteredParams)
+    },
+    enabled: tabName === 'MANAGEMENT' && !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
+  })
+
   return {
     MaterialListQuery,
     OilListQuery,
@@ -270,5 +298,6 @@ export default function useFinalAggregationView({
     EquipmentStatusLaborCostListQuery,
     WeatherInfoListQuery,
     LaborPayCostListQuery,
+    ManagementCostListQuery,
   }
 }
