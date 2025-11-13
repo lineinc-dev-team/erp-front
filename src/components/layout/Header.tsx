@@ -108,22 +108,33 @@ function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {
       )
     }
 
-    if (menu.name === '출역일보') {
+    if (
+      menu.name === '출역일보' ||
+      menu.name === '강재수불부 관리' ||
+      menu.name === '현장/본사 관리비 관리'
+    ) {
       filteredPermissions = filteredPermissions.filter(
         (perm: ApiPermission) => perm.action !== '등록',
       )
-    }
 
-    if (menu.name === '강재수불부 관리') {
-      filteredPermissions = filteredPermissions.filter(
-        (perm: ApiPermission) => perm.action !== '등록',
-      )
-    }
+      const basePath = menuNameToBasePath[menu.name]
 
-    if (menu.name === '현장/본사 관리비 관리') {
-      filteredPermissions = filteredPermissions.filter(
-        (perm: ApiPermission) => perm.action !== '등록',
-      )
+      return {
+        title: menu.name,
+        icon,
+        path: basePath, // ✅ 상위 메뉴 클릭 시 조회 페이지로 바로 이동
+        children: filteredPermissions.map((perm: ApiPermission) => {
+          let path = basePath
+          if (perm.action === '등록') path = `${basePath}/registration`
+          else if (perm.action === '조회') path = basePath
+
+          const labelPrefix = ' - '
+          return {
+            label: `${labelPrefix}${perm.action}`,
+            path,
+          }
+        }),
+      }
     }
 
     if (menu.name === '집계 관리') {
@@ -240,7 +251,20 @@ export default function Header() {
       if (hasChildren) {
         return (
           <React.Fragment key={key}>
-            <ListItemButton sx={{ pl: level * 3 }} onClick={() => handleToggleSection(key)}>
+            <ListItemButton
+              sx={{ pl: level * 3 }}
+              onClick={() => {
+                if (item.path) {
+                  // 출역일보처럼 상위 메뉴 클릭 시 이동할 수 있게
+                  const label = Array.isArray(parentTitles) ? [...parentTitles, key].join('') : key
+                  useTabStore.getState().addTab({ label, path: item.path })
+                  router.push(item.path)
+                  setOpen(false)
+                } else {
+                  handleToggleSection(key)
+                }
+              }}
+            >
               {level === 1 && item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
               <ListItemText primary={key} />
               {isOpen ? <ExpandLess /> : <ExpandMore />}
