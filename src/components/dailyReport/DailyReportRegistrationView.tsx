@@ -7246,13 +7246,6 @@ export default function DailyReportRegistrationView() {
                                 'specificationName',
                                 selectedCarNumber.specification || '-',
                               )
-
-                              updateItemField(
-                                'fuel',
-                                m.id,
-                                'amount',
-                                selectedCarNumber.unitPrice || '-',
-                              )
                             }}
                             // options={
                             //   carNumberOptionsByCompany[
