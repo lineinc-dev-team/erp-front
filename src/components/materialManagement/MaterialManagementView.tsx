@@ -290,7 +290,6 @@ export default function MaterialManagementView() {
 
   useEffect(() => {
     const headerData = sessionStorage.getItem('myInfo')
-    search.reset()
     if (headerData) {
       setMyInfo(JSON.parse(headerData))
     }
