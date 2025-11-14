@@ -2924,7 +2924,7 @@ export default function DailyReportRegistrationView() {
         return showSnackbar('계약직원의 이름을 선택해주세요.', 'warning')
       }
       if (!c.position || c.position.trim() === '') {
-        return showSnackbar('계약직원의 직급을 입력해주세요.', 'warning')
+        return showSnackbar('계약직원의 직종을 입력해주세요.', 'warning')
       }
       if (!c.workContent || c.workContent.trim() === '') {
         return showSnackbar('계약직원의 작업내용을 입력해주세요.', 'warning')
@@ -2954,7 +2954,7 @@ export default function DailyReportRegistrationView() {
       }
 
       if (!o.position || o.position.trim() === '') {
-        return showSnackbar('용역 직원의 직급을 입력해주세요.', 'warning')
+        return showSnackbar('용역 직원의 직종을 입력해주세요.', 'warning')
       }
       if (!o.workContent || o.workContent.trim() === '') {
         return showSnackbar('용역 직원의 작업내용을 입력해주세요.', 'warning')
@@ -4293,7 +4293,7 @@ export default function DailyReportRegistrationView() {
                                 e.target.value,
                               )
                             }
-                            disabled
+                            disabled={m.isTemporary == false}
                           />
                         </TableCell>
                         <TableCell
@@ -4819,7 +4819,7 @@ export default function DailyReportRegistrationView() {
                                 e.target.value,
                               )
                             }
-                            disabled
+                            disabled={m.isTemporary == false}
                           />
                         </TableCell>
                         <TableCell

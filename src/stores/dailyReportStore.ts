@@ -669,7 +669,10 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           temporaryLaborName: '',
         }
         return {
-          form: { ...state.form, directContracts: [...state.form.directContracts, newItem] },
+          form: {
+            ...state.form,
+            directContractOutsourcings: [...state.form.directContractOutsourcings, newItem],
+          },
         }
       }
       return state
