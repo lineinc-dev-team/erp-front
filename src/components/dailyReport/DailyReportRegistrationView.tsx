@@ -440,7 +440,7 @@ export default function DailyReportRegistrationView() {
       checkId: item.id,
       outsourcingCompanyId: item.outsourcingCompany?.id ?? null,
       laborId: item.labor?.id ?? 0,
-      position: item.position,
+      position: item.position || item.labor.workType,
       workContent: item.workContent,
       previousPrice: item.labor.previousDailyWage,
       unitPrice: item.unitPrice,
@@ -2923,9 +2923,12 @@ export default function DailyReportRegistrationView() {
       if (c.laborId === 0) {
         return showSnackbar('계약직원의 이름을 선택해주세요.', 'warning')
       }
-      if (!c.position || c.position.trim() === '') {
-        return showSnackbar('계약직원의 직종을 입력해주세요.', 'warning')
+      if (!c.isTemporary) {
+        if (!c.position || c.position.trim() === '') {
+          return showSnackbar('계약직원의 직종을 입력해주세요.', 'warning')
+        }
       }
+
       if (!c.workContent || c.workContent.trim() === '') {
         return showSnackbar('계약직원의 작업내용을 입력해주세요.', 'warning')
       }
@@ -2940,7 +2943,6 @@ export default function DailyReportRegistrationView() {
       }
     }
 
-    // 2️⃣ 용역(outsourcingByDirectContract) 유효성 체크
     for (const o of directContractByData) {
       // 임시 인력 여부에 따라 이름 체크
       if (o.isTemporary) {
@@ -2953,9 +2955,12 @@ export default function DailyReportRegistrationView() {
         }
       }
 
-      if (!o.position || o.position.trim() === '') {
-        return showSnackbar('용역 직원의 직종을 입력해주세요.', 'warning')
+      if (!o.isTemporary) {
+        if (!o.position || o.position.trim() === '') {
+          return showSnackbar('용역 직원의 직종을 입력해주세요.', 'warning')
+        }
       }
+
       if (!o.workContent || o.workContent.trim() === '') {
         return showSnackbar('용역 직원의 작업내용을 입력해주세요.', 'warning')
       }
@@ -2975,14 +2980,12 @@ export default function DailyReportRegistrationView() {
       // }
     }
 
-    // 3️⃣ 증빙 파일 체크
     for (const contractFile of contractFileProof) {
       if (!contractFile.name || contractFile.name.trim() === '') {
         return showSnackbar('증빙서류의 문서명을 입력해주세요.', 'warning')
       }
     }
 
-    // 4️⃣ 날씨 선택 체크
     if (form.weather === 'BASE' || form.weather === '' || form.weather === undefined) {
       return showSnackbar('날씨를 선택해주세요.', 'warning')
     }
@@ -3712,15 +3715,12 @@ export default function DailyReportRegistrationView() {
                           <CommonSelect
                             value={m.laborId || 0}
                             onChange={(value) => {
-                              // 1️⃣ 선택된 직원 정보 찾기
                               const selectedEmployee = employeeInfoOptions.find(
                                 (opt) => opt.id === value,
                               )
 
-                              // 2️⃣ laborId 업데이트
                               updateItemField('Employees', m.id, 'laborId', value)
 
-                              // 3️⃣ grade 값 자동 반영
                               updateItemField(
                                 'Employees',
                                 m.id,
@@ -4293,7 +4293,7 @@ export default function DailyReportRegistrationView() {
                                 e.target.value,
                               )
                             }
-                            disabled={m.isTemporary == false}
+                            disabled
                           />
                         </TableCell>
                         <TableCell
@@ -4667,25 +4667,49 @@ export default function DailyReportRegistrationView() {
                         </TableCell>
                         <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                           {m.isTemporary ? (
-                            <TextField
-                              size="small"
+                            <CommonSelect
                               fullWidth
-                              value={'라인공영(임시)'}
-                              onChange={(e) =>
+                              value={selectedCompanyIds[m.checkId] || m.outsourcingCompanyId || 0}
+                              onChange={async (value) => {
+                                const selectedCompany = companyOptions.find(
+                                  (opt) => opt.id === value,
+                                )
+                                if (!selectedCompany) return
+
+                                // 해당 row만 업데이트
+                                setSelectedCompanyIds((prev) => ({
+                                  ...prev,
+                                  [m.checkId]: selectedCompany.id,
+                                }))
+
+                                setSelectId(m.checkId)
+
                                 updateItemField(
                                   'outsourcingByDirectContract',
                                   m.checkId,
-                                  'temporaryCompanyName',
-                                  e.target.value,
+                                  'outsourcingCompanyId',
+                                  selectedCompany.id,
                                 )
-                              }
-                              placeholder="업체명 입력"
-                              InputProps={{
-                                sx: {
-                                  color: 'red', // 글자색 빨강
-                                  WebkitTextFillColor: 'red', // disabled 상태에서도 빨강 유지
-                                },
+
+                                updateItemField(
+                                  'outsourcingByDirectContract',
+                                  m.checkId,
+                                  'outsourcingCompanyName',
+                                  selectedCompany.name,
+                                )
+
+                                // 해당 row 워커만 초기화
+                                setSelectContractIds((prev) => ({
+                                  ...prev,
+                                  [m.checkId]: 0,
+                                }))
                               }}
+                              options={companyOptions}
+                              onScrollToBottom={() => {
+                                if (comPanyNamehasNextPage && !comPanyNameFetching)
+                                  comPanyNameFetchNextPage()
+                              }}
+                              loading={comPanyNameLoading}
                             />
                           ) : (
                             <CommonSelect
@@ -4819,7 +4843,7 @@ export default function DailyReportRegistrationView() {
                                 e.target.value,
                               )
                             }
-                            disabled={m.isTemporary == false}
+                            disabled
                           />
                         </TableCell>
                         <TableCell

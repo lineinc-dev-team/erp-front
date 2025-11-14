@@ -24,11 +24,13 @@ import {
   ModifyWorkerReport,
 } from '@/services/dailyReport/dailyReportRegistrationService'
 import { useDailyFormStore, useDailySearchList } from '@/stores/dailyReportStore'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { getTodayDateString } from '@/utils/formatters'
 
 export function useDailyReport() {
   const { showSnackbar } = useSnackbarStore()
+
+  const router = useRouter()
 
   // 출역일보 조회
 
@@ -519,6 +521,21 @@ export function useDailyReport() {
     },
   })
 
+  // 출역일보 직원에서  이름 키워드 검색 로직
+
+  // const useEmployeeInfoInfiniteScroll = (keyword: string) => {
+  //   return useInfiniteQuery({
+  //     queryKey: ['employeeInfo', keyword],
+  //     queryFn: ({ pageParam }) => GetEmployeeInfoService({ pageParam, keyword }),
+  //     initialPageParam: 0,
+  //     getNextPageParam: (lastPage) => {
+  //       const { sliceInfo } = lastPage.data
+  //       const nextPage = sliceInfo.page + 1
+  //       return sliceInfo.hasNext ? nextPage : undefined
+  //     },
+  //   })
+  // }
+
   const employeeInfoOptions = useMemo(() => {
     const defaultOptions = [{ id: 0, name: '선택', type: '', grade: '' }]
 
@@ -585,9 +602,8 @@ export function useDailyReport() {
   // const newTestId = useOutSourcingInfoClientId(selectedCompanyIds)
 
   const reportCancel = () => {
-    // router.push('dailyReport/registration')
+    router.push('/dailyReport')
     // router.refresh()
-    window.location.reload() // push 후 강제 새로고침
   }
 
   // 유류집계 관리등록

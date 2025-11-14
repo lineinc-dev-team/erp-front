@@ -194,7 +194,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       setField('name', client.name)
       setField('type', client.typeCode)
 
-      setField('gradeId', client?.grade.id ?? null)
+      setField('gradeId', client?.grade?.id ?? null)
 
       setField('residentNumber', client.residentNumber)
 
@@ -218,7 +218,12 @@ export default function LaborRegistrationView({ isEditMode = false }) {
         setField('bankName', '0') // 혹은 기본값 처리
       }
       setField('accountNumber', client.accountNumber)
-      setField('accountHolder', client.accountHolder)
+
+      if (client.typeCode === 'DIRECT_CONTRACT') {
+        setField('accountHolder', client.name)
+      } else {
+        setField('accountHolder', client?.outsourcingCompany?.accountHolder ?? '')
+      }
 
       setField('hireDate', new Date(client.hireDate))
       setField('resignationDate', new Date(client.resignationDate))
@@ -329,12 +334,16 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     setField(key, value)
 
     if (key === 'name') {
-      setField('accountHolder', value)
+      if (form.type === 'DIRECT_CONTRACT') {
+        setField('accountHolder', value)
+      }
     }
 
     if (key === 'type') {
-      if (value === 'REGULAR_EMPLOYEE') {
-        setField('accountHolder', '') // 직영 선택 시 예금주 초기화
+      if (value === 'DIRECT_CONTRACT') {
+        setField('accountHolder', form.name ?? '')
+      } else {
+        setField('accountHolder', '')
       }
     }
   }
