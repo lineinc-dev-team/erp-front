@@ -2126,7 +2126,10 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                               e.target.value === '' ? 0 : Number(unformatNumber(e.target.value))
                             updateItemField('mealListData', m.id, 'amount', numericValue)
 
-                            const peopleCount = Number(m.breakfastCount) + Number(m.lunchCount)
+                            const peopleCount =
+                              Number(m.breakfastCount) +
+                              Number(m.lunchCount) +
+                              Number(m.dinnerCount)
 
                             let calculatedUnitPrice =
                               peopleCount > 0 ? numericValue / peopleCount : 0
@@ -2456,7 +2459,10 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                               numericValue,
                             )
 
-                            const peopleCount = Number(m.breakfastCount) + Number(m.lunchCount)
+                            const peopleCount =
+                              Number(m.breakfastCount) +
+                              Number(m.lunchCount) +
+                              Number(m.dinnerCount)
 
                             let calculatedUnitPrice =
                               peopleCount > 0 ? numericValue / peopleCount : 0
@@ -2833,7 +2839,10 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                               numericValue,
                             )
 
-                            const peopleCount = Number(m.breakfastCount) + Number(m.lunchCount)
+                            const peopleCount =
+                              Number(m.breakfastCount) +
+                              Number(m.lunchCount) +
+                              Number(m.dinnerCount)
 
                             let calculatedUnitPrice =
                               peopleCount > 0 ? numericValue / peopleCount : 0
@@ -3217,7 +3226,10 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                               e.target.value === '' ? 0 : Number(unformatNumber(e.target.value))
                             updateItemField('mealFeeDetailEquipments', m.id, 'amount', numericValue)
 
-                            const peopleCount = Number(m.breakfastCount) + Number(m.lunchCount)
+                            const peopleCount =
+                              Number(m.breakfastCount) +
+                              Number(m.lunchCount) +
+                              Number(m.dinnerCount)
 
                             let calculatedUnitPrice =
                               peopleCount > 0 ? numericValue / peopleCount : 0
@@ -3595,7 +3607,10 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                               numericValue,
                             )
 
-                            const peopleCount = Number(m.breakfastCount) + Number(m.lunchCount)
+                            const peopleCount =
+                              Number(m.breakfastCount) +
+                              Number(m.lunchCount) +
+                              Number(m.dinnerCount)
 
                             let calculatedUnitPrice =
                               peopleCount > 0 ? numericValue / peopleCount : 0
