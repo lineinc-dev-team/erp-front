@@ -2116,6 +2116,7 @@ export default function DailyReportRegistrationView() {
         previousDailyWage: user.previousDailyWage || user.dailyWage,
         dailyWage: user.dailyWage,
         isSeverancePayEligible: user.isSeverancePayEligible,
+        workType: user.workType,
       }))
 
     setContarctNameOptionsByCompany((prev) => ({
@@ -2128,6 +2129,7 @@ export default function DailyReportRegistrationView() {
           previousDailyWage: '',
           dailyWage: '',
           isSeverancePayEligible: false,
+          workType: '',
         },
         ...options,
       ],
@@ -2167,6 +2169,7 @@ export default function DailyReportRegistrationView() {
           previousDailyWage: user.previousDailyWage || user.dailyWage,
           dailyWage: user.dailyWage,
           isSeverancePayEligible: user.isSeverancePayEligible,
+          workType: user.workType,
         }))
 
         setContarctNameOptionsByCompany((prev) => {
@@ -2182,6 +2185,7 @@ export default function DailyReportRegistrationView() {
                 previousDailyWage: '',
                 dailyWage: '',
                 isSeverancePayEligible: false,
+                workType: '',
               },
               ...options,
               // 만약 선택된 worker가 목록에 없으면 추가
@@ -2194,6 +2198,7 @@ export default function DailyReportRegistrationView() {
                       previousDailyWage: '',
                       dailyWage: '',
                       isSeverancePayEligible: false,
+                      workType: '',
                     },
                   ]
                 : []),
@@ -4081,7 +4086,7 @@ export default function DailyReportRegistrationView() {
                     </TableCell>
                     {[
                       '이름',
-                      '직급(직책)',
+                      '직종',
                       '작업내용',
                       '이전(기준)단가',
                       '단가',
@@ -4229,6 +4234,10 @@ export default function DailyReportRegistrationView() {
                                   ContarctNameOptionsByCompany[m.outsourcingCompanyId] ?? []
                                 ).find((opt) => opt.id === value)
 
+                                console.log(
+                                  'selectedContractNameselecte24dContractName',
+                                  selectedContractName,
+                                )
                                 if (!selectedContractName) return
 
                                 if (selectedContractName?.isSeverancePayEligible) {
@@ -4239,6 +4248,13 @@ export default function DailyReportRegistrationView() {
                                 }
 
                                 updateItemField('directContracts', m.checkId, 'laborId', value)
+
+                                updateItemField(
+                                  'directContracts',
+                                  m.checkId,
+                                  'position',
+                                  selectedContractName.workType,
+                                )
 
                                 updateItemField(
                                   'directContracts',
@@ -4277,6 +4293,7 @@ export default function DailyReportRegistrationView() {
                                 e.target.value,
                               )
                             }
+                            disabled
                           />
                         </TableCell>
                         <TableCell
@@ -4590,7 +4607,7 @@ export default function DailyReportRegistrationView() {
                     {[
                       '업체명',
                       '이름',
-                      '직급(직책)',
+                      '직종',
                       '작업내용',
                       '이전(기준)단가',
                       '단가',
@@ -4754,6 +4771,13 @@ export default function DailyReportRegistrationView() {
                                 updateItemField(
                                   'outsourcingByDirectContract',
                                   m.checkId,
+                                  'position',
+                                  selectedContractName.type,
+                                )
+
+                                updateItemField(
+                                  'outsourcingByDirectContract',
+                                  m.checkId,
                                   'laborId',
                                   value,
                                 )
@@ -4795,6 +4819,7 @@ export default function DailyReportRegistrationView() {
                                 e.target.value,
                               )
                             }
+                            disabled
                           />
                         </TableCell>
                         <TableCell

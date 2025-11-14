@@ -193,6 +193,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       setField('name', client.name)
       setField('type', client.typeCode)
 
+      setField('gradeId', client?.grade.id ?? null)
+
       setField('residentNumber', client.residentNumber)
 
       setField('typeDescription', client.typeDescription)
