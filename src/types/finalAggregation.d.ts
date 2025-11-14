@@ -5,6 +5,7 @@ export type FinalAggregationSearchState = {
   siteProcessId: number
   siteProcessName: string
   yearMonth: string
+  outsourcingCompanyId: number
 
   reset: () => void
 

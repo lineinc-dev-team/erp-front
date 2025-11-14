@@ -3,6 +3,8 @@ import {
   EquipmentStatusInfoServiceByAggregate,
   FuelInfoServiceByAggregate,
   FuelPriceInfoServiceByAggregate,
+  GetMealFeeCompanyServiceByAggregate,
+  GetMealFeeDetailServiceByAggregate,
   LaborCostInfoServiceByAggregate,
   LaborPayInfoServiceByAggregate,
   ManagementCostInfoServiceByAggregate,
@@ -20,6 +22,7 @@ export default function useFinalAggregationView({
   laborType,
   type,
   tabName,
+  outsourcingCompanyId,
 }: {
   yearMonth: string
   siteId: number
@@ -28,6 +31,7 @@ export default function useFinalAggregationView({
   laborType?: string
   type?: string
   tabName: string
+  outsourcingCompanyId?: number
 }) {
   // 재료비 집계
   const MaterialListQuery = useQuery({
@@ -262,8 +266,6 @@ export default function useFinalAggregationView({
   })
 
   // 관리비 조회
-
-  // 재료비 집계
   const ManagementCostListQuery = useQuery({
     queryKey: ['managementCostInfo', yearMonth, siteId, siteProcessId],
     queryFn: () => {
@@ -285,7 +287,74 @@ export default function useFinalAggregationView({
 
       return ManagementCostInfoServiceByAggregate(filteredParams)
     },
-    enabled: tabName === 'MANAGEMENT' && !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
+    enabled:
+      tabName === 'MANAGEMENT' &&
+      !!yearMonth &&
+      !!siteId &&
+      !!siteProcessId &&
+      outsourcingCompanyId === 0, // 필수값 있을 때만 실행
+  })
+
+  // 관리비에서 식대 거래처명 조회
+  const MealFeeCompanyListQuery = useQuery({
+    queryKey: ['mealFeeCompanyInfo', yearMonth, siteId, siteProcessId],
+    queryFn: () => {
+      const rawParams = {
+        siteId: siteId === 0 ? undefined : siteId,
+        siteProcessId: siteProcessId === 0 ? undefined : siteProcessId,
+        yearMonth: yearMonth,
+      }
+
+      const filteredParams = Object.fromEntries(
+        Object.entries(rawParams).filter(
+          ([, value]) =>
+            value !== undefined &&
+            value !== null &&
+            value !== '' &&
+            !(typeof value === 'number' && isNaN(value)),
+        ),
+      )
+
+      return GetMealFeeCompanyServiceByAggregate(filteredParams)
+    },
+    enabled:
+      tabName === 'MANAGEMENT' &&
+      !!yearMonth &&
+      !!siteId &&
+      !!siteProcessId &&
+      outsourcingCompanyId === 0, // 필수값 있을 때만 실행
+  })
+
+  // 집계 관리비에서 상세 데이터 조회
+
+  const MealFeeDetailListQuery = useQuery({
+    queryKey: ['mealFeeDetailInfo', yearMonth, siteId, siteProcessId, outsourcingCompanyId],
+    queryFn: () => {
+      const rawParams = {
+        siteId: siteId === 0 ? undefined : siteId,
+        siteProcessId: siteProcessId === 0 ? undefined : siteProcessId,
+        yearMonth: yearMonth,
+        outsourcingCompanyId: outsourcingCompanyId === 0 ? undefined : outsourcingCompanyId,
+      }
+
+      const filteredParams = Object.fromEntries(
+        Object.entries(rawParams).filter(
+          ([, value]) =>
+            value !== undefined &&
+            value !== null &&
+            value !== '' &&
+            !(typeof value === 'number' && isNaN(value)),
+        ),
+      )
+
+      return GetMealFeeDetailServiceByAggregate(filteredParams)
+    },
+    enabled:
+      tabName === 'MANAGEMENT' &&
+      !!yearMonth &&
+      !!siteId &&
+      !!siteProcessId &&
+      !!outsourcingCompanyId, // 필수값 있을 때만 실행
   })
 
   return {
@@ -299,5 +368,7 @@ export default function useFinalAggregationView({
     WeatherInfoListQuery,
     LaborPayCostListQuery,
     ManagementCostListQuery,
+    MealFeeCompanyListQuery,
+    MealFeeDetailListQuery,
   }
 }

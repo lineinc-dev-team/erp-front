@@ -10,6 +10,7 @@ export const useFinalAggregationSearchStore = create<{ search: FinalAggregationS
       siteProcessId: 0,
       siteProcessName: '',
       yearMonth: '',
+      outsourcingCompanyId: 0,
 
       setField: (field, value) =>
         set((state) => ({
@@ -34,6 +35,7 @@ export const useFinalAggregationSearchStore = create<{ search: FinalAggregationS
             siteProcessId: 0,
             siteProcessName: '',
             yearMonth: '',
+            outsourcingCompanyId: 0,
           },
         })),
     },
