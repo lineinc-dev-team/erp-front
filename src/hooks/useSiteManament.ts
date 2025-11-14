@@ -90,7 +90,7 @@ export default function useSiteManament() {
       router.push('/siteManagement')
     },
     onError: () => {
-      showSnackbar('현장/본사 관리비 등록에 실패했습니다.', 'error')
+      showSnackbar('중복된 데이터가 이미 존재합니다.', 'error')
     },
   })
 
