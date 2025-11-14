@@ -1707,7 +1707,7 @@ export default function DailyReportRegistrationView() {
       setField('outsourcingCompanyId', fuelCompany?.data?.outsourcingCompany?.id)
       setField('outsourcingCompanyName', fuelCompany?.data?.outsourcingCompany?.name)
 
-      if (!isEditMode) setIsEditMode(true) // 최초 로딩 시 editMode 설정
+      // if (!isEditMode) setIsEditMode(false) // 최초 로딩 시 editMode 설정
     }
   }, [detailReport, oilPrice, fuelCompany])
 
