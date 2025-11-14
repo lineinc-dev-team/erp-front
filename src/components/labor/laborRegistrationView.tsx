@@ -110,6 +110,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     originalFileName: '파일 추가',
     outsourcingCompanyName: '소속업체',
     address: '주소',
+    gradeName: '직급',
   }
 
   const [searchTerm, setSearchTerm] = useState('') // 인풋 텍스트
