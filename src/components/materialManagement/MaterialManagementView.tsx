@@ -122,7 +122,7 @@ export default function MaterialManagementView() {
 
         // detail 정보
         name: detail.name ?? '-',
-        standard: detail.standard !== undefined ? formatNumber(detail.standard) : '-',
+        standard: detail.standard !== undefined ? detail.standard : '-',
         unit: detail.unit ?? '-',
         count: detail.count !== undefined ? formatNumber(detail.count) : '-',
         length: detail.length !== undefined ? formatNumber(detail.length) : '-',
