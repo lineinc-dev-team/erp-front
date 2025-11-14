@@ -1114,6 +1114,16 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     // }
 
     if (!form.outsourcingCompanyInfo?.ceoName) return '대표자명을 입력해주세요.'
+
+    if (form.isDeductible) {
+      if (!form.deductionCompanyId) {
+        return '공제 업체명을 선택하세요.'
+      }
+      if (!form.deductionCompanyContractId) {
+        return '공제 업체계약을 선택하세요.'
+      }
+    }
+
     if (form.outsourcingCompanyInfo?.bankName == '선택') return '은행을 선택해주세요.'
     if (!form.outsourcingCompanyInfo?.accountNumber) return '계좌번호를 입력해주세요.'
     if (!form.outsourcingCompanyInfo?.accountHolder) return '예금주명을 입력해주세요.'
@@ -1495,11 +1505,21 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
               </label>
 
               <div className="border border-gray-400 px-2 w-full flex items-center gap-2">
-                {/* ✅ 체크박스 + 공제 텍스트 */}
                 <div className="flex items-center gap-1">
                   <Checkbox
                     checked={form.isDeductible ?? false}
-                    onChange={(e) => setField('isDeductible', e.target.checked)}
+                    onChange={(e) => {
+                      const checked = e.target.checked
+                      setField('isDeductible', checked)
+
+                      // ✅ 체크 해제하면 관련 필드 전체 초기화
+                      if (!checked) {
+                        setField('deductionCompanyName', '')
+                        setField('deductionCompanyId', 0)
+                        setField('deductionCompanyContractName', '')
+                        setField('deductionCompanyContractId', null)
+                      }
+                    }}
                     size="small"
                   />
                   <span className="text-[16px] font-medium  whitespace-nowrap">공제</span>
