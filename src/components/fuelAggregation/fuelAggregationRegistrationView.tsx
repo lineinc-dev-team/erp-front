@@ -1079,7 +1079,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                       fontWeight: 'bold',
                     }}
                   >
-                    {label === '비고' || label === '첨부파일' ? (
+                    {label === '비고' || label === '첨부파일' || label === '금액' ? (
                       label
                     ) : (
                       <div className="flex items-center justify-center">

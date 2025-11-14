@@ -6966,7 +6966,7 @@ export default function DailyReportRegistrationView() {
                 </label>
                 <div className="flex-1 border border-gray-400 px-2 py-2">
                   <AmountInput
-                    value={formatNumber(form.gasolinePrice) ?? ''}
+                    value={formatNumber(form.gasolinePrice) || 0}
                     onChange={(val) => {
                       const numericValue = unformatNumber(val)
                       setField('gasolinePrice', numericValue)
@@ -6982,7 +6982,7 @@ export default function DailyReportRegistrationView() {
                 </label>
                 <div className="flex-1 border border-gray-400 px-2 py-2">
                   <AmountInput
-                    value={formatNumber(form.dieselPrice) ?? ''}
+                    value={formatNumber(form.dieselPrice) || 0}
                     onChange={(val) => {
                       const numericValue = unformatNumber(val)
                       setField('dieselPrice', numericValue)
@@ -6998,7 +6998,7 @@ export default function DailyReportRegistrationView() {
                 </label>
                 <div className="flex-1 border border-gray-400 px-2 py-2">
                   <AmountInput
-                    value={formatNumber(form.ureaPrice) ?? ''}
+                    value={formatNumber(form.ureaPrice) || 0}
                     onChange={(val) => {
                       const numericValue = unformatNumber(val)
                       setField('ureaPrice', numericValue)
@@ -7111,7 +7111,10 @@ export default function DailyReportRegistrationView() {
                           whiteSpace: 'nowrap',
                         }}
                       >
-                        {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
+                        {label === '비고' ||
+                        label === '등록/수정일' ||
+                        label === '첨부파일' ||
+                        label === '금액' ? (
                           label
                         ) : (
                           <div className="flex items-center justify-center">
