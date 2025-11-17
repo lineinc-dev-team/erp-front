@@ -73,13 +73,14 @@ export default function AggregateManagementCostDetailView() {
   const handleExcelDownload = () => {
     const formattedRows: any[][] = []
 
+    // 사람별 데이터
     rows.forEach((r: any) => {
-      // 전체 식사 합계
-      const totalMeals = r.meals.reduce((sum: number, meal: any) => {
-        return sum + Object.values(meal.days).reduce((a: number, b: any) => a + b.count, 0)
-      }, 0)
+      const totalMeals = r.meals.reduce(
+        (sum: number, meal: any) =>
+          sum + Object.values(meal.days).reduce((a: number, b: any) => a + b.count, 0),
+        0,
+      )
 
-      // 단가 계산
       const allUnitPrices = r.meals.flatMap((meal: any) =>
         Object.values(meal.days).map((d: any) => d.unitPrice),
       )
@@ -87,7 +88,6 @@ export default function AggregateManagementCostDetailView() {
       const unitPriceCount = allUnitPrices.filter((v: any) => v > 0).length
       const avgUnitPrice = unitPriceCount ? unitPriceSum / unitPriceCount : 0
 
-      // 총합계 계산(amount 평균)
       const allAmounts = r.meals.flatMap((meal: any) =>
         Object.values(meal.days).map((d: any) => d.amount),
       )
@@ -113,6 +113,69 @@ export default function AggregateManagementCostDetailView() {
       })
     })
 
+    // 총합계 계산
+    const totalPerDayByMeal = ['조식', '중식', '석식'].map((mealType) =>
+      dateColumns.map((d) =>
+        rows.reduce((sum: number, r: any) => {
+          const meal = r.meals.find((m: any) => m.type === mealType)
+          return sum + (meal?.days[d]?.count || 0)
+        }, 0),
+      ),
+    )
+
+    const totalMealsByMeal = rows.reduce((sum: number, r: any) => {
+      return (
+        sum +
+        r.meals.reduce(
+          (mealSum: number, meal: any) =>
+            mealSum +
+            Object.values(meal.days || {}).reduce((c: number, d: any) => c + (d.count || 0), 0),
+          0,
+        )
+      )
+    }, 0)
+
+    const totalUnitPriceByMeal = rows.reduce((sum: number, r: any) => {
+      const allPrices = r.meals.flatMap((meal: any) =>
+        Object.values(meal.days || {}).map((d: any) => d.unitPrice),
+      )
+      const filtered = allPrices.filter((v: any) => v > 0)
+      const avg = filtered.length
+        ? filtered.reduce((a: any, b: any) => a + b, 0) / filtered.length
+        : 0
+      return sum + avg
+    }, 0)
+
+    const totalAmountByMeal = rows.reduce((sum: number, r: any) => {
+      const allAmounts = r.meals.flatMap((meal: any) =>
+        Object.values(meal.days || {}).map((d: any) => d.amount),
+      )
+      const filtered = allAmounts.filter((v: any) => v > 0)
+      const avg = filtered.length
+        ? filtered.reduce((a: any, b: any) => a + b, 0) / filtered.length
+        : 0
+      return sum + avg
+    }, 0)
+
+    const meals = ['조식', '중식', '석식']
+
+    meals.forEach((mealType: any, idx: any) => {
+      const row: any[] = []
+      if (idx === 0) {
+        row.push('계', '', '') // No, 직종, 성명
+      } else {
+        row.push('', '', '')
+      }
+      row.push(mealType)
+      row.push(...totalPerDayByMeal[idx])
+      if (idx === 0) {
+        row.push(totalMealsByMeal, totalUnitPriceByMeal, totalAmountByMeal)
+      } else {
+        row.push('', '', '')
+      }
+      formattedRows.push(row)
+    })
+
     const headerRow = [
       'No',
       '직종',
@@ -127,7 +190,6 @@ export default function AggregateManagementCostDetailView() {
     const sheetAoA = [headerRow, ...formattedRows]
     const worksheet = XLSX.utils.aoa_to_sheet(sheetAoA)
 
-    // 칼럼 너비 자동 조절
     worksheet['!cols'] = sheetAoA[0].map((h) => ({
       wch: Math.max(10, String(h).length + 5),
     }))
@@ -250,11 +312,80 @@ export default function AggregateManagementCostDetailView() {
               })
             })}
 
-            <TableRow sx={{ backgroundColor: '#f9fafb', fontWeight: 'bold' }}>
-              <TableCell align="center" colSpan={3} sx={cellStyle} rowSpan={3}>
-                계
-              </TableCell>
-            </TableRow>
+            {/* 최종 총계 행 */}
+            {['조식', '중식', '석식'].map((mealType, idx) => {
+              const totalPerDayByMeal = dateColumns.map((d) =>
+                rows.reduce((sum: number, r: any) => {
+                  const meal = r.meals.find((m: any) => m.type === mealType)
+                  return sum + (meal?.days[d]?.count || 0)
+                }, 0),
+              )
+
+              // 모든 식사 총합 계산 (한 번만)
+              const totalMealsByMeal = rows.reduce((sum: number, r: any) => {
+                return (
+                  sum +
+                  r.meals.reduce(
+                    (mealSum: number, meal: any) =>
+                      mealSum +
+                      Object.values(meal.days || {}).reduce(
+                        (c: number, d: any) => c + (d.count || 0),
+                        0,
+                      ),
+                    0,
+                  )
+                )
+              }, 0)
+
+              const totalUnitPriceByMeal = rows.reduce((sum: number, r: any) => {
+                const meal = r.meals.find((m: any) => m.type === mealType)
+                const prices = Object.values(meal?.days || {}).map((d: any) => d.unitPrice)
+                const filtered = prices.filter((v) => v > 0)
+                const avg = filtered.length
+                  ? filtered.reduce((a, b) => a + b, 0) / filtered.length
+                  : 0
+                return sum + avg
+              }, 0)
+
+              const totalAmountByMeal = rows.reduce((sum: number, r: any) => {
+                const meal = r.meals.find((m: any) => m.type === mealType)
+                const prices = Object.values(meal?.days || {}).map((d: any) => d.amount)
+                const filtered = prices.filter((v) => v > 0)
+                const avg = filtered.length
+                  ? filtered.reduce((a, b) => a + b, 0) / filtered.length
+                  : 0
+                return sum + avg
+              }, 0)
+
+              return (
+                <TableRow key={mealType} sx={{ backgroundColor: '#e5e7eb', fontWeight: 'bold' }}>
+                  {idx === 0 && (
+                    <TableCell align="center" rowSpan={3} colSpan={3} sx={cellStyle}>
+                      계
+                    </TableCell>
+                  )}
+                  <TableCell sx={cellStyle}>{mealType}</TableCell>
+                  {totalPerDayByMeal.map((v, d) => (
+                    <TableCell key={d} sx={cellStyle}>
+                      {v.toLocaleString()}
+                    </TableCell>
+                  ))}
+                  {idx === 0 && (
+                    <>
+                      <TableCell rowSpan={3} sx={cellStyle}>
+                        {totalMealsByMeal.toLocaleString()}
+                      </TableCell>
+                      <TableCell rowSpan={3} sx={cellStyle}>
+                        {totalUnitPriceByMeal.toLocaleString()}
+                      </TableCell>
+                      <TableCell rowSpan={3} sx={cellStyle}>
+                        {totalAmountByMeal.toLocaleString()}
+                      </TableCell>
+                    </>
+                  )}
+                </TableRow>
+              )
+            })}
           </TableBody>
         </Table>
       </TableContainer>
