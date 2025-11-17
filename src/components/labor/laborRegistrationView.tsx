@@ -93,7 +93,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
   const PROPERTY_NAME_MAP: Record<string, string> = {
     phoneNumber: '개인 휴대폰',
-    name: '업체명',
+    name: '이름',
     mainWork: '주 작업',
     dailyWage: '기준일당',
     hireDateFormat: '입사일',
@@ -276,26 +276,26 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     isLoading: OutsourcingNameIsLoading,
   } = useOutsourcingNameListInfiniteScroll(debouncedOutsourcingKeyword)
 
-  // const OutsourcingRawList = OutsourcingNameData?.pages.flatMap((page) => page.data.content) ?? []
-  // const outsourcingList = Array.from(
-  //   new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
-  // )
-
   const OutsourcingRawList = OutsourcingNameData?.pages.flatMap((page) => page.data.content) ?? []
-
-  let outsourcingList = Array.from(
+  const outsourcingList = Array.from(
     new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
   )
 
-  if (
-    debouncedOutsourcingKeyword === '' || // 아무것도 입력 안 한 상태
-    debouncedOutsourcingKeyword.includes('라인') // '라인'이 포함된 경우
-  ) {
-    const alreadyExists = outsourcingList.some((item) => item.name === '라인공영')
-    if (!alreadyExists) {
-      outsourcingList = [{ id: 0, name: '라인공영' }, ...outsourcingList]
-    }
-  }
+  // const OutsourcingRawList = OutsourcingNameData?.pages.flatMap((page) => page.data.content) ?? []
+
+  // let outsourcingList = Array.from(
+  //   new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
+  // )
+
+  // if (
+  //   debouncedOutsourcingKeyword === '' || // 아무것도 입력 안 한 상태
+  //   debouncedOutsourcingKeyword.includes('라인') // '라인'이 포함된 경우
+  // ) {
+  //   const alreadyExists = outsourcingList.some((item) => item.name === '라인공영')
+  //   if (!alreadyExists) {
+  //     outsourcingList = [{ id: 0, name: '라인공영' }, ...outsourcingList]
+  //   }
+  // }
 
   // 구분에서  외주 입력 시 해당 업체계약을 입력 할 수 있게 한다.
 
@@ -303,7 +303,6 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
   // 유저 선택 시 처리
   const handleSelectOutsourcingContract = (selectedUser: any) => {
-    console.log('selectedUserselectedUser', selectedUser)
     setField('outsourcingCompanyContractName', selectedUser.contractName)
     setField('outsourcingCompanyContractId', selectedUser.id ?? null)
   }
