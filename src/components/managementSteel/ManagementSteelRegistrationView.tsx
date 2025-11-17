@@ -37,7 +37,7 @@ import {
   unformatNumber,
 } from '@/utils/formatters'
 import { HistoryItem } from '@/types/ordering'
-import { useDebouncedArrayValue, useDebouncedValue } from '@/hooks/useDebouncedEffect'
+import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 import CommonSelectByName from '../common/CommonSelectByName'
 import { steelTypeOptions } from '@/config/erp.confing'
@@ -435,8 +435,6 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     }
   }
 
-  const [isOutsourcingFocused, setIsOutsourcingFocused] = useState(false)
-
   // 유저 선택 시 처리
   const handleSelectOutsourcing = (id: number, selectedCompany: any) => {
     if (!selectedCompany) {
@@ -449,22 +447,49 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     updateItemField('MaterialItem', id, 'outsourcingCompanyName', selectedCompany.name)
   }
 
-  const outsoucingLine = form.details.map((item) => item.outsourcingCompanyName ?? '')
+  function OutsourcingRow({ row }: { row: any }) {
+    const [isFocused, setIsFocused] = useState(false) // row별 포커스 상태
+    const debouncedKeyword = useDebouncedValue(row.outsourcingCompanyName ?? '', 300)
 
-  const debouncedOutsourcingKeyword = useDebouncedArrayValue(outsoucingLine, 300)
+    const {
+      data: OutsourcingNameData,
+      fetchNextPage,
+      hasNextPage,
+      isFetching,
+      isLoading,
+    } = useOutsourcingNameListInfiniteScroll(debouncedKeyword)
 
-  const {
-    data: OutsourcingNameData,
-    fetchNextPage: OutsourcingeNameFetchNextPage,
-    hasNextPage: OutsourcingNameHasNextPage,
-    isFetching: OutsourcingNameIsFetching,
-    isLoading: OutsourcingNameIsLoading,
-  } = useOutsourcingNameListInfiniteScroll(debouncedOutsourcingKeyword)
+    const outsourcingList = Array.from(
+      new Map(
+        OutsourcingNameData?.pages.flatMap((page) => page.data.content).map((u) => [u.name, u]),
+      )?.values() ?? [],
+    )
 
-  const OutsourcingRawList = OutsourcingNameData?.pages.flatMap((page) => page.data.content) ?? []
-  const outsourcingList = Array.from(
-    new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
-  )
+    return (
+      <InfiniteScrollSelect
+        keyword={row.outsourcingCompanyName || ''}
+        placeholder="업체명을 입력해주세요."
+        debouncedKeyword={debouncedKeyword}
+        items={outsourcingList}
+        hasNextPage={hasNextPage ?? false}
+        fetchNextPage={fetchNextPage}
+        isLoading={isLoading || isFetching}
+        onChangeKeyword={(newKeyword) =>
+          updateItemField('MaterialItem', row.checkId, 'outsourcingCompanyName', newKeyword)
+        }
+        renderItem={(item, isHighlighted) => (
+          <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+            {item.name}
+          </div>
+        )}
+        onSelect={(selectedCompany) => handleSelectOutsourcing(row.checkId ?? 0, selectedCompany)}
+        shouldShowList={isFocused} // row별 포커스
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        disabled={row.isModifyType === false || row.category === 'OWN_MATERIAL'}
+      />
+    )
+  }
 
   const incomingSubtotalWeight =
     (data?.data?.incomingOwnMaterialTotalWeight || 0) +
@@ -1534,39 +1559,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           },
                         }}
                       >
-                        <InfiniteScrollSelect
-                          placeholder="업체명을 입력하세요"
-                          keyword={m.outsourcingCompanyName || ''} // 각 row의 값 사용
-                          onChangeKeyword={(newKeyword) =>
-                            updateItemField(
-                              'MaterialItem',
-                              m.checkId,
-                              'outsourcingCompanyName',
-                              newKeyword,
-                            )
-                          }
-                          items={outsourcingList}
-                          hasNextPage={OutsourcingNameHasNextPage ?? false}
-                          fetchNextPage={OutsourcingeNameFetchNextPage}
-                          renderItem={(item, isHighlighted) => (
-                            <div
-                              className={
-                                isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''
-                              }
-                            >
-                              {item.name}
-                            </div>
-                          )}
-                          onSelect={(selectedCompany) =>
-                            handleSelectOutsourcing(m.checkId ?? 0, selectedCompany)
-                          }
-                          isLoading={OutsourcingNameIsLoading || OutsourcingNameIsFetching}
-                          debouncedKeyword={debouncedOutsourcingKeyword}
-                          shouldShowList={isOutsourcingFocused}
-                          onFocus={() => setIsOutsourcingFocused(true)}
-                          onBlur={() => setIsOutsourcingFocused(false)}
-                          disabled={m.isModifyType === false || m.category === 'OWN_MATERIAL'}
-                        />
+                        <OutsourcingRow key={m.checkId} row={m} />
                       </TableCell>
                     )}
 
