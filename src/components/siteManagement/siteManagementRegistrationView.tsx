@@ -35,7 +35,7 @@ import { SiteManamentFormState } from '@/types/siteManagement'
 import CommonMonthPicker from '../common/MonthPicker'
 
 export default function SiteManagementRegistrationView({ isEditMode = true }) {
-  const { setField, form, updateMemo, reset } = useSiteManamentFormStore()
+  const { setField, AutomaticAmount, form, updateMemo, reset } = useSiteManamentFormStore()
 
   const {
     createSiteManamentMutation,
@@ -73,26 +73,66 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
       setField('siteId', client.site.id)
       setField('siteName', client.site.name)
       setField('siteProcessId', client.siteProcess.id)
+      setField('siteProcessName', client.siteProcess.name)
       setField('yearMonth', new Date(client.yearMonth))
 
+      // 직원급여
+      setField('employeeSalarySupplyPrice', client.employeeSalarySupplyPrice)
+      setField('employeeSalaryVat', client.employeeSalaryVat)
+      setField('employeeSalaryDeduction', client.employeeSalaryDeduction)
       setField('employeeSalary', client.employeeSalary)
       setField('employeeSalaryMemo', client.employeeSalaryMemo)
+
+      // 퇴직연금(정규직)
+      setField('regularRetirementPensionSupplyPrice', client.regularRetirementPensionSupplyPrice)
+      setField('regularRetirementPensionVat', client.regularRetirementPensionVat)
+      setField('regularRetirementPensionDeduction', client.regularRetirementPensionDeduction)
       setField('regularRetirementPension', client.regularRetirementPension)
       setField('regularRetirementPensionMemo', client.regularRetirementPensionMemo)
+
+      // 퇴직공제부금
+      setField('retirementDeductionSupplyPrice', client.retirementDeductionSupplyPrice)
+      setField('retirementDeductionVat', client.retirementDeductionVat)
+      setField('retirementDeductionDeduction', client.retirementDeductionDeduction)
       setField('retirementDeduction', client.retirementDeduction)
       setField('retirementDeductionMemo', client.retirementDeductionMemo)
+
+      // 4대보험 - 상용
+      setField('majorInsuranceRegularSupplyPrice', client.majorInsuranceRegularSupplyPrice)
+      setField('majorInsuranceRegularVat', client.majorInsuranceRegularVat)
+      setField('majorInsuranceRegularDeduction', client.majorInsuranceRegularDeduction)
       setField('majorInsuranceRegular', client.majorInsuranceRegular)
       setField('majorInsuranceRegularMemo', client.majorInsuranceRegularMemo)
+
+      // 4대보험 - 일용
+      setField('majorInsuranceDailySupplyPrice', client.majorInsuranceDailySupplyPrice)
+      setField('majorInsuranceDailyVat', client.majorInsuranceDailyVat)
+      setField('majorInsuranceDailyDeduction', client.majorInsuranceDailyDeduction)
       setField('majorInsuranceDaily', client.majorInsuranceDaily)
       setField('majorInsuranceDailyMemo', client.majorInsuranceDailyMemo)
+
+      // 보증수수료(계약보증)
+      setField('contractGuaranteeFeeSupplyPrice', client.contractGuaranteeFeeSupplyPrice)
+      setField('contractGuaranteeFeeVat', client.contractGuaranteeFeeVat)
+      setField('contractGuaranteeFeeDeduction', client.contractGuaranteeFeeDeduction)
       setField('contractGuaranteeFee', client.contractGuaranteeFee)
       setField('contractGuaranteeFeeMemo', client.contractGuaranteeFeeMemo)
+
+      // 보증수수료(현장별건설기계)
+      setField('equipmentGuaranteeFeeSupplyPrice', client.equipmentGuaranteeFeeSupplyPrice)
+      setField('equipmentGuaranteeFeeVat', client.equipmentGuaranteeFeeVat)
+      setField('equipmentGuaranteeFeeDeduction', client.equipmentGuaranteeFeeDeduction)
       setField('equipmentGuaranteeFee', client.equipmentGuaranteeFee)
       setField('equipmentGuaranteeFeeMemo', client.equipmentGuaranteeFeeMemo)
+
+      // 국세납부
+      setField('nationalTaxPaymentSupplyPrice', client.nationalTaxPaymentSupplyPrice)
+      setField('nationalTaxPaymentVat', client.nationalTaxPaymentVat)
+      setField('nationalTaxPaymentDeduction', client.nationalTaxPaymentDeduction)
       setField('nationalTaxPayment', client.nationalTaxPayment)
       setField('nationalTaxPaymentMemo', client.nationalTaxPaymentMemo)
 
-      // ✅ 본사 관리비 항목
+      // 본사 관리비
       setField('headquartersManagementCost', client.headquartersManagementCost)
       setField('headquartersManagementCostMemo', client.headquartersManagementCostMemo)
     } else {
@@ -103,32 +143,72 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
   const { handleCancelData } = SiteMSCancel()
 
   const PROPERTY_NAME_MAP: Record<string, string> = {
-    // ✅ 기본정보
     siteName: '현장명',
     siteProcessId: '공정명',
     yearMonth: '연월',
 
-    // ✅ 현장 관리비
-    employeeSalary: '직원급여',
+    // 직원급여
+    employeeSalarySupplyPrice: '직원급여 공급가',
+    employeeSalaryVat: '직원급여 부가세',
+    employeeSalaryDeduction: '직원급여 공제금액',
+    employeeSalary: '직원급여 금액',
     employeeSalaryMemo: '직원급여 비고',
-    regularRetirementPension: '퇴직연금(정규직)',
+
+    // 퇴직연금(정규직)
+    regularRetirementPensionSupplyPrice: '퇴직연금(정규직) 공급가',
+    regularRetirementPensionVat: '퇴직연금(정규직) 부가세',
+    regularRetirementPensionDeduction: '퇴직연금(정규직) 공제금액',
+    regularRetirementPension: '퇴직연금(정규직) 금액',
     regularRetirementPensionMemo: '퇴직연금(정규직) 비고',
-    retirementDeduction: '퇴직공제부금',
+
+    // 퇴직공제부금
+    retirementDeductionSupplyPrice: '퇴직공제부금 공급가',
+    retirementDeductionVat: '퇴직공제부금 부가세',
+    retirementDeductionDeduction: '퇴직공제부금 공제금액',
+    retirementDeduction: '퇴직공제부금 금액',
     retirementDeductionMemo: '퇴직공제부금 비고',
-    majorInsuranceRegular: '4대보험(상용)',
+
+    // 4대보험 상용
+    majorInsuranceRegularSupplyPrice: '4대보험(상용) 공급가',
+    majorInsuranceRegularVat: '4대보험(상용) 부가세',
+    majorInsuranceRegularDeduction: '4대보험(상용) 공제금액',
+    majorInsuranceRegular: '4대보험(상용) 금액',
     majorInsuranceRegularMemo: '4대보험(상용) 비고',
-    majorInsuranceDaily: '4대보험(일용)',
+
+    // 4대보험 일용
+    majorInsuranceDailySupplyPrice: '4대보험(일용) 공급가',
+    majorInsuranceDailyVat: '4대보험(일용) 부가세',
+    majorInsuranceDailyDeduction: '4대보험(일용) 공제금액',
+    majorInsuranceDaily: '4대보험(일용) 금액',
     majorInsuranceDailyMemo: '4대보험(일용) 비고',
-    contractGuaranteeFee: '보증수수료(계약보증)',
+
+    // 보증수수료(계약보증)
+    contractGuaranteeFeeSupplyPrice: '보증수수료(계약보증) 공급가',
+    contractGuaranteeFeeVat: '보증수수료(계약보증) 부가세',
+    contractGuaranteeFeeDeduction: '보증수수료(계약보증) 공제금액',
+    contractGuaranteeFee: '보증수수료(계약보증) 금액',
     contractGuaranteeFeeMemo: '보증수수료(계약보증) 비고',
-    equipmentGuaranteeFee: '보증수수료(현장별건설기계)',
+
+    // 보증수수료(현장별건설기계)
+    equipmentGuaranteeFeeSupplyPrice: '보증수수료(현장별건설기계) 공급가',
+    equipmentGuaranteeFeeVat: '보증수수료(현장별건설기계) 부가세',
+    equipmentGuaranteeFeeDeduction: '보증수수료(현장별건설기계) 공제금액',
+    equipmentGuaranteeFee: '보증수수료(현장별건설기계) 금액',
     equipmentGuaranteeFeeMemo: '보증수수료(현장별건설기계) 비고',
-    nationalTaxPayment: '국세납부',
+
+    // 국세납부
+    nationalTaxPaymentSupplyPrice: '국세납부 공급가',
+    nationalTaxPaymentVat: '국세납부 부가세',
+    nationalTaxPaymentDeduction: '국세납부 공제금액',
+    nationalTaxPayment: '국세납부 금액',
     nationalTaxPaymentMemo: '국세납부 비고',
 
-    // ✅ 본사 관리비
+    // 본사 관리비
     headquartersManagementCost: '본사 관리비',
     headquartersManagementCostMemo: '본사 관리비 비고',
+
+    // 수정 이력 관련
+    changeHistories: '수정 이력',
   }
 
   const {
@@ -243,12 +323,9 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
     [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading],
   )
 
-  const [totalAmount, setTotalAmount] = useState(0)
-
   // 숫자 포맷 관련 유틸 있다고 가정
-  const calculateTotal = (form: any) => {
-    // 합계에 포함할 항목 키 정의
-    const keys = [
+  const calculateTotals = (form: any) => {
+    const fields = [
       'employeeSalary',
       'regularRetirementPension',
       'retirementDeduction',
@@ -259,13 +336,37 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
       'nationalTaxPayment',
     ]
 
-    return keys.reduce((sum, key) => sum + (Number(form[key]) || 0), 0)
+    let supplyTotal = 0
+    let vatTotal = 0
+    let deductionTotal = 0
+    let total = 0
+
+    fields.forEach((key) => {
+      supplyTotal += Number(form[`${key}SupplyPrice`] || 0)
+      vatTotal += Number(form[`${key}Vat`] || 0)
+      deductionTotal += Number(form[`${key}Deduction`] || 0)
+      total += Number(form[key] || 0)
+    })
+
+    return {
+      supplyTotal,
+      vatTotal,
+      deductionTotal,
+      total,
+    }
   }
 
+  const [totals, setTotals] = useState({
+    supplyTotal: 0,
+    vatTotal: 0,
+    deductionTotal: 0,
+    total: 0,
+  })
+
   useEffect(() => {
-    const total = calculateTotal(form)
-    setTotalAmount(total)
-  }, [form]) // form이 변경될 때마다 자동 계산
+    const result = calculateTotals(form)
+    setTotals(result)
+  }, [form])
 
   function validateClientForm(form: SiteManamentFormState) {
     if (!form.siteName || form.siteName.trim() === '') {
@@ -467,7 +568,12 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                   <TableCell
                     align="center"
                     colSpan={2}
-                    sx={{ fontWeight: 'bold', color: 'white', border: '1px solid #999', width: 50 }}
+                    sx={{
+                      fontWeight: 'bold',
+                      color: 'white',
+                      border: '1px solid #999',
+                      width: 200,
+                    }}
                   >
                     항목명
                   </TableCell>
@@ -478,7 +584,42 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                       fontWeight: 'bold',
                       color: 'white',
                       border: '1px solid #999',
-                      width: 500,
+                      width: 200,
+                    }}
+                  >
+                    공급가
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: 'bold',
+                      color: 'white',
+                      border: '1px solid #999',
+                      width: 200,
+                    }}
+                  >
+                    부가세
+                  </TableCell>
+
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: 'bold',
+                      color: 'white',
+                      border: '1px solid #999',
+                      width: 200,
+                    }}
+                  >
+                    공제금액
+                  </TableCell>
+
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: 'bold',
+                      color: 'white',
+                      border: '1px solid #999',
+                      width: 200,
                     }}
                   >
                     금액
@@ -489,7 +630,7 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                       fontWeight: 'bold',
                       color: 'white',
                       border: '1px solid #999',
-                      width: 500,
+                      width: 200,
                     }}
                   >
                     비고
@@ -508,6 +649,58 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                       fullWidth
                       size="small"
                       placeholder="입력"
+                      value={formatNumber(form.employeeSalarySupplyPrice) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('employeeSalarySupplyPrice', formatted)
+                        AutomaticAmount('employeeSalary')
+                      }}
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                    />
+                  </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.employeeSalaryVat) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('employeeSalaryVat', formatted)
+                        AutomaticAmount('employeeSalary')
+                      }}
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                      disabled
+                    />
+                  </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.employeeSalaryDeduction) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('employeeSalaryDeduction', formatted)
+                        AutomaticAmount('employeeSalary')
+                      }}
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                    />
+                  </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="입력"
                       value={formatNumber(form.employeeSalary) || 0}
                       onChange={(e) => {
                         const formatted = unformatNumber(e.target.value)
@@ -516,8 +709,10 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                       inputProps={{
                         style: { textAlign: 'right' },
                       }}
+                      disabled
                     />
                   </TableCell>
+
                   <TableCell align="right" sx={{ border: '1px solid #999' }}>
                     <TextField
                       size="small"
@@ -541,10 +736,11 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                     <TextField
                       size="small"
                       placeholder="입력"
-                      value={formatNumber(form.regularRetirementPension) || 0}
+                      value={formatNumber(form.regularRetirementPensionSupplyPrice) || 0}
                       onChange={(e) => {
                         const formatted = unformatNumber(e.target.value)
-                        setField('regularRetirementPension', formatted)
+                        setField('regularRetirementPensionSupplyPrice', formatted)
+                        AutomaticAmount('regularRetirementPension')
                       }}
                       fullWidth
                       inputProps={{
@@ -552,6 +748,56 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                       }}
                     />
                   </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.regularRetirementPensionVat) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('regularRetirementPensionVat', formatted)
+                        AutomaticAmount('regularRetirementPension')
+                      }}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                      disabled
+                    />
+                  </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.regularRetirementPensionDeduction) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('regularRetirementPensionDeduction', formatted)
+                        AutomaticAmount('regularRetirementPension')
+                      }}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                    />
+                  </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.regularRetirementPension) || 0}
+                      onChange={() => {}}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                      disabled
+                    />
+                  </TableCell>
+
                   <TableCell align="right" sx={{ border: '1px solid #999' }}>
                     <TextField
                       size="small"
@@ -575,6 +821,58 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                     <TextField
                       size="small"
                       placeholder="입력"
+                      value={formatNumber(form.retirementDeductionSupplyPrice) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('retirementDeductionSupplyPrice', formatted)
+                        AutomaticAmount('retirementDeduction')
+                      }}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                    />
+                  </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.retirementDeductionVat) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('retirementDeductionVat', formatted)
+                        AutomaticAmount('retirementDeduction')
+                      }}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                      disabled
+                    />
+                  </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.retirementDeductionDeduction) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('retirementDeductionDeduction', formatted)
+                        AutomaticAmount('retirementDeduction')
+                      }}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                    />
+                  </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
                       value={formatNumber(form.retirementDeduction) || 0}
                       onChange={(e) => {
                         const formatted = unformatNumber(e.target.value)
@@ -584,8 +882,10 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                       inputProps={{
                         style: { textAlign: 'right' },
                       }}
+                      disabled
                     />
                   </TableCell>
+
                   <TableCell align="right" sx={{ border: '1px solid #999' }}>
                     <TextField
                       size="small"
@@ -607,6 +907,59 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                   <TableCell align="center" sx={{ border: '1px solid #999' }}>
                     상용
                   </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.majorInsuranceRegularSupplyPrice) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('majorInsuranceRegularSupplyPrice', formatted)
+                        AutomaticAmount('majorInsuranceRegular')
+                      }}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                    />
+                  </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.majorInsuranceRegularVat) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('majorInsuranceRegularVat', formatted)
+                        AutomaticAmount('majorInsuranceRegular')
+                      }}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                      disabled
+                    />
+                  </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.majorInsuranceRegularDeduction) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('majorInsuranceRegularDeduction', formatted)
+                        AutomaticAmount('majorInsuranceRegular')
+                      }}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                    />
+                  </TableCell>
+
                   <TableCell align="right" sx={{ border: '1px solid #999' }}>
                     <TextField
                       size="small"
@@ -620,8 +973,10 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                       inputProps={{
                         style: { textAlign: 'right' },
                       }}
+                      disabled
                     />
                   </TableCell>
+
                   <TableCell align="right" sx={{ border: '1px solid #999' }}>
                     <TextField
                       size="small"
@@ -639,6 +994,59 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                   <TableCell align="center" sx={{ border: '1px solid #999' }}>
                     일용
                   </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.majorInsuranceDailySupplyPrice) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('majorInsuranceDailySupplyPrice', formatted)
+                        AutomaticAmount('majorInsuranceDaily')
+                      }}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                    />
+                  </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.majorInsuranceDailyVat) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('majorInsuranceDailyVat', formatted)
+                        AutomaticAmount('majorInsuranceDaily')
+                      }}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                      disabled
+                    />
+                  </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.majorInsuranceDailyDeduction) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('majorInsuranceDailyDeduction', formatted)
+                        AutomaticAmount('majorInsuranceDaily')
+                      }}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                    />
+                  </TableCell>
+
                   <TableCell align="right" sx={{ border: '1px solid #999' }}>
                     <TextField
                       size="small"
@@ -652,8 +1060,10 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                       inputProps={{
                         style: { textAlign: 'right' },
                       }}
+                      disabled
                     />
                   </TableCell>
+
                   <TableCell align="right" sx={{ border: '1px solid #999' }}>
                     <TextField
                       size="small"
@@ -677,10 +1087,11 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                     <TextField
                       size="small"
                       placeholder="입력"
-                      value={formatNumber(form.contractGuaranteeFee) || 0}
+                      value={formatNumber(form.contractGuaranteeFeeSupplyPrice) || 0}
                       onChange={(e) => {
                         const formatted = unformatNumber(e.target.value)
-                        setField('contractGuaranteeFee', formatted)
+                        setField('contractGuaranteeFeeSupplyPrice', formatted)
+                        AutomaticAmount('contractGuaranteeFee')
                       }}
                       fullWidth
                       inputProps={{
@@ -688,6 +1099,60 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                       }}
                     />
                   </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.contractGuaranteeFeeVat) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('contractGuaranteeFeeVat', formatted)
+                        AutomaticAmount('contractGuaranteeFee')
+                      }}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                      disabled
+                    />
+                  </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.contractGuaranteeFeeDeduction) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('contractGuaranteeFeeDeduction', formatted)
+                        AutomaticAmount('contractGuaranteeFee')
+                      }}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                    />
+                  </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.contractGuaranteeFee) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('contractGuaranteeFee', formatted)
+                        AutomaticAmount('contractGuaranteeFee')
+                      }}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                      disabled
+                    />
+                  </TableCell>
+
                   <TableCell align="right" sx={{ border: '1px solid #999' }}>
                     <TextField
                       size="small"
@@ -698,6 +1163,7 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                       inputProps={{
                         style: { textAlign: 'right' },
                       }}
+                      disabled
                     />
                   </TableCell>
                 </TableRow>
@@ -705,6 +1171,58 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                 <TableRow>
                   <TableCell colSpan={2} align="center" sx={{ border: '1px solid #999' }}>
                     보증수수료(현장별건설기계)
+                  </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.equipmentGuaranteeFeeSupplyPrice) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('equipmentGuaranteeFeeSupplyPrice', formatted)
+                        AutomaticAmount('equipmentGuaranteeFee')
+                      }}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                    />
+                  </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.equipmentGuaranteeFeeVat) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('equipmentGuaranteeFeeVat', formatted)
+                        AutomaticAmount('equipmentGuaranteeFee')
+                      }}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                      disabled
+                    />
+                  </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.equipmentGuaranteeFeeDeduction) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('equipmentGuaranteeFeeDeduction', formatted)
+                        AutomaticAmount('equipmentGuaranteeFee')
+                      }}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                    />
                   </TableCell>
 
                   <TableCell align="right" sx={{ border: '1px solid #999' }}>
@@ -720,8 +1238,10 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                       inputProps={{
                         style: { textAlign: 'right' },
                       }}
+                      disabled
                     />
                   </TableCell>
+
                   <TableCell align="right" sx={{ border: '1px solid #999' }}>
                     <TextField
                       size="small"
@@ -745,6 +1265,58 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                     <TextField
                       size="small"
                       placeholder="입력"
+                      value={formatNumber(form.nationalTaxPaymentSupplyPrice) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('nationalTaxPaymentSupplyPrice', formatted)
+                        AutomaticAmount('nationalTaxPayment')
+                      }}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                    />
+                  </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.nationalTaxPaymentVat) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('nationalTaxPaymentVat', formatted)
+                        AutomaticAmount('nationalTaxPayment')
+                      }}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                      disabled
+                    />
+                  </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
+                      value={formatNumber(form.nationalTaxPaymentDeduction) || 0}
+                      onChange={(e) => {
+                        const formatted = unformatNumber(e.target.value)
+                        setField('nationalTaxPaymentDeduction', formatted)
+                        AutomaticAmount('nationalTaxPayment')
+                      }}
+                      fullWidth
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                      }}
+                    />
+                  </TableCell>
+
+                  <TableCell align="right" sx={{ border: '1px solid #999' }}>
+                    <TextField
+                      size="small"
+                      placeholder="입력"
                       value={formatNumber(form.nationalTaxPayment) || 0}
                       onChange={(e) => {
                         const formatted = unformatNumber(e.target.value)
@@ -754,8 +1326,10 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                       inputProps={{
                         style: { textAlign: 'right' },
                       }}
+                      disabled
                     />
                   </TableCell>
+
                   <TableCell align="right" sx={{ border: '1px solid #999' }}>
                     <TextField
                       size="small"
@@ -770,20 +1344,56 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                   </TableCell>
                 </TableRow>
 
-                {/* 합계 */}
                 <TableRow sx={{ backgroundColor: '#e0e0e0', fontWeight: 'bold' }}>
                   <TableCell colSpan={2} align="center" sx={{ border: '1px solid #999' }}>
                     합계
                   </TableCell>
+
                   <TableCell
                     align="right"
                     sx={{
                       border: '1px solid #999',
                       fontWeight: 'bold',
-                      fontSize: '1rem', // 예: 16px 정도
+                      fontSize: '1rem',
                     }}
                   >
-                    {formatNumber(totalAmount)}
+                    {formatNumber(totals.supplyTotal)}
+                  </TableCell>
+
+                  {/* 부가세 합계 */}
+                  <TableCell
+                    align="right"
+                    sx={{
+                      border: '1px solid #999',
+                      fontWeight: 'bold',
+                      fontSize: '1rem',
+                    }}
+                  >
+                    {formatNumber(totals.vatTotal)}
+                  </TableCell>
+
+                  {/* 공제액 합계 */}
+                  <TableCell
+                    align="right"
+                    sx={{
+                      border: '1px solid #999',
+                      fontWeight: 'bold',
+                      fontSize: '1rem',
+                    }}
+                  >
+                    {formatNumber(totals.deductionTotal)}
+                  </TableCell>
+
+                  {/* 대표 금액 합계 */}
+                  <TableCell
+                    align="right"
+                    sx={{
+                      border: '1px solid #999',
+                      fontWeight: 'bold',
+                      fontSize: '1rem',
+                    }}
+                  >
+                    {formatNumber(totals.total)}
                   </TableCell>
 
                   <TableCell align="right" sx={{ border: '1px solid #999' }}>

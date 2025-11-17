@@ -32,21 +32,67 @@ export type SiteManamentFormState = {
   siteProcessName: string
 
   employeeSalary: number
+  employeeSalarySupplyPrice: number
+  employeeSalaryVat: number
+  employeeSalaryDeduction: number
+
   employeeSalaryMemo: string
+
   regularRetirementPension: number
+
+  regularRetirementPensionSupplyPrice: number
+  regularRetirementPensionVat: number
+  regularRetirementPensionDeduction: number
+
   regularRetirementPensionMemo: string
+
   retirementDeduction: number
+
+  retirementDeductionSupplyPrice: number
+  retirementDeductionVat: number
+  retirementDeductionDeduction: number
+
   retirementDeductionMemo: string
+
   majorInsuranceRegular: number
+
+  majorInsuranceRegularSupplyPrice: number
+  majorInsuranceRegularVat: number
+  majorInsuranceRegularDeduction: number
+
   majorInsuranceRegularMemo: string
+
   majorInsuranceDaily: number
+
+  majorInsuranceDailySupplyPrice: number
+  majorInsuranceDailyVat: number
+  majorInsuranceDailyDeduction: number
+
   majorInsuranceDailyMemo: string
+
   contractGuaranteeFee: number
+
+  contractGuaranteeFeeSupplyPrice: number
+  contractGuaranteeFeeVat: number
+  contractGuaranteeFeeDeduction: number
+
   contractGuaranteeFeeMemo: string
+
   equipmentGuaranteeFee: number
+
+  equipmentGuaranteeFeeSupplyPrice: number
+  equipmentGuaranteeFeeVat: number
+  equipmentGuaranteeFeeDeduction: number
+
   equipmentGuaranteeFeeMemo: string
+
+  nationalTaxPaymentSupplyPrice: number
+  nationalTaxPaymentVat: number
+  nationalTaxPaymentDeduction: number
+
   nationalTaxPayment: number
   nationalTaxPaymentMemo: string
+
   headquartersManagementCost: number
   headquartersManagementCostMemo: string
 
@@ -75,4 +121,6 @@ type SiteManamentStore = {
 
   //메모 값 수정 시
   newSiteManamentSummary: () => void
+
+  AutomaticAmount: (prefix: string) => void
 }
