@@ -3073,9 +3073,13 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                             .map((i) => i.type)
 
                           // 중복된 값 제거
-                          const filteredOptions = EquipmentType.filter(
-                            (opt) => !selectedTypes.includes(opt.code), // opt.value 기준으로 중복 제거
-                          )
+                          const filteredOptions = EquipmentType.filter((opt) => {
+                            // ETC는 중복 허용 → 항상 포함
+                            if (opt.code === 'ETC') return true
+
+                            // 기타 외 타입은 중복 제거
+                            return !selectedTypes.includes(opt.code)
+                          })
 
                           return (
                             <div
