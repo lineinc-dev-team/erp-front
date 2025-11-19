@@ -138,6 +138,7 @@ export interface OutsourcingsItem {
 export type SubEquipmentItems = {
   id: number
   outsourcingCompanyContractSubEquipmentId: T
+  description?: T
   type: string
   typeCode?: string
   workContent: string

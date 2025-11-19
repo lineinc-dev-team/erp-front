@@ -2807,6 +2807,7 @@ export default function DailyReportRegistrationView() {
               user.subEquipments?.map((item: any) => ({
                 id: item.id,
                 type: item.type,
+                description: item.description,
                 typeCode: item.typeCode,
                 workContent: item.taskDescription ?? '',
                 unitPrice: item.unitPrice ?? 0,
@@ -2841,6 +2842,7 @@ export default function DailyReportRegistrationView() {
                     name: sub.type || sub.typeCode || '-',
                     taskDescription: sub.workContent,
                     unitPrice: sub.unitPrice,
+                    description: sub.description,
                   })),
                 ],
               }))
@@ -6281,7 +6283,10 @@ export default function DailyReportRegistrationView() {
                           whiteSpace: 'nowrap',
                         }}
                       >
-                        {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
+                        {label === '비고' ||
+                        label === '등록/수정일' ||
+                        label === '첨부파일' ||
+                        label === '작업내용' ? (
                           label
                         ) : (
                           <div className="flex items-center justify-center">
@@ -6445,6 +6450,7 @@ export default function DailyReportRegistrationView() {
                                   outsourcingCompanyContractSubEquipmentId: sub.id,
                                   type: sub.type || sub.typeCode || '-',
                                   workContent: sub.workContent || sub.taskDescription || '',
+                                  description: sub.description || ' ',
                                   unitPrice: sub.unitPrice || 0,
                                   workHours: sub.workHours || 0,
                                   memo: sub.memo || '',
@@ -6463,6 +6469,7 @@ export default function DailyReportRegistrationView() {
                                     name: sub.type || sub.typeCode || '-',
                                     taskDescription: sub.workContent,
                                     unitPrice: sub.unitPrice,
+                                    description: sub.description || ' ',
                                   }),
                                 )
 
@@ -6508,7 +6515,6 @@ export default function DailyReportRegistrationView() {
                             />
                           </div>
 
-                          {/* ✅ subEquipments 있을 때만 표시 */}
                           {m.subEquipments && m.subEquipments?.length > 0 && (
                             <div className="flex flex-col gap-2 mt-2">
                               {m.subEquipments.map((item) => (
@@ -6537,6 +6543,13 @@ export default function DailyReportRegistrationView() {
                                       ]
                                     }
                                   />
+
+                                  <CommonInput
+                                    className="flex-1 text-2xl"
+                                    value={item.description || ''}
+                                    onChange={() => {}}
+                                    disabled
+                                  />
                                 </div>
                               ))}
                             </div>
@@ -6564,7 +6577,6 @@ export default function DailyReportRegistrationView() {
                               updateItemField('equipment', m.id, 'workContent', e.target.value)
                             }
                             fullWidth
-                            disabled
                           />
 
                           {m.subEquipments &&
@@ -6584,7 +6596,6 @@ export default function DailyReportRegistrationView() {
                                     )
                                   }
                                   fullWidth
-                                  disabled
                                 />
                               </div>
                             ))}
@@ -6649,7 +6660,7 @@ export default function DailyReportRegistrationView() {
                             type="number" // type을 number로 변경
                             placeholder="숫자를 입력해주세요."
                             inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
-                            value={m.workHours === 0 || m.workHours === null ? '' : m.workHours}
+                            value={m.workHours ?? ''}
                             onChange={(e) => {
                               const value = e.target.value
                               const numericValue = value === '' ? null : parseFloat(value)
@@ -6689,11 +6700,7 @@ export default function DailyReportRegistrationView() {
                                   type="number" // type을 number로 변경
                                   placeholder="숫자를 입력해주세요."
                                   inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
-                                  value={
-                                    detail.workHours === 0 || detail.workHours === null
-                                      ? ''
-                                      : detail.workHours
-                                  }
+                                  value={detail.workHours ?? ''}
                                   onChange={(e) => {
                                     const value = e.target.value
                                     const numericValue = value === '' ? null : parseFloat(value)
