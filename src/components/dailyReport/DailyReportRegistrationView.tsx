@@ -1641,9 +1641,9 @@ export default function DailyReportRegistrationView() {
         reportDate: getTodayDateString(form.reportDate) || '',
       }),
     enabled: !!form.siteId && !!form.siteProcessId && !!form.reportDate,
-    refetchOnWindowFocus: false, // 포커스 바뀌어도 재요청 안 함
-    refetchOnReconnect: false, // 네트워크 재연결해도 재요청 안 함
-    retry: false, // 실패했을 때 자동 재시도 X
+    refetchOnWindowFocus: true, // 포커스 바뀌어도 재요청 안 함
+    refetchOnReconnect: true, // 네트워크 재연결해도 재요청 안 함
+    retry: true, // 실패했을 때 자동 재시도 X
   })
 
   const { data: detailReport } = detailReportQuery
