@@ -18,7 +18,7 @@ type Props = {
 }
 
 export default function CreateModal({ open, onClose, title }: Props) {
-  const { form, setField } = useDailyFormStore()
+  const { form, setField, reset } = useDailyFormStore()
   const { WeatherTypeMethodOptions } = useFuelAggregation()
   const {
     sitesOptions,
@@ -36,6 +36,10 @@ export default function CreateModal({ open, onClose, title }: Props) {
   const { createDailyMutation } = useDailyReport()
 
   const { search } = useDailySearchList()
+
+  useEffect(() => {
+    reset()
+  }, [reset])
 
   useEffect(() => {
     if (createDailyMutation.isSuccess) {

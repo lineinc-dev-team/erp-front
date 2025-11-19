@@ -3740,7 +3740,7 @@ export default function DailyReportRegistrationView() {
                           <TextField
                             placeholder="텍스트 입력"
                             size="small"
-                            value={m.grade}
+                            value={m.grade ?? ''}
                             onChange={(e) =>
                               updateItemField('Employees', m.id, 'grade', e.target.value)
                             }
@@ -3751,7 +3751,7 @@ export default function DailyReportRegistrationView() {
                           <TextField
                             placeholder="텍스트 입력"
                             size="small"
-                            value={m.workContent}
+                            value={m.workContent ?? 0}
                             onChange={(e) =>
                               updateItemField('Employees', m.id, 'workContent', e.target.value)
                             }
@@ -3845,7 +3845,7 @@ export default function DailyReportRegistrationView() {
                           <TextField
                             size="small"
                             placeholder="500자 이하 텍스트 입력"
-                            value={m.memo}
+                            value={m.memo ?? ''}
                             onChange={(e) =>
                               updateItemField('Employees', m.id, 'memo', e.target.value)
                             }
