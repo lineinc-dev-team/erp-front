@@ -3,11 +3,15 @@ import {
   EquipmentStatusInfoServiceByAggregate,
   FuelInfoServiceByAggregate,
   FuelPriceInfoServiceByAggregate,
+  GetConstructionDetailServiceByAggregate,
+  GetConstructionServiceByAggregate,
+  GetdeductionAmountServiceByAggregate,
   GetMealFeeCompanyServiceByAggregate,
   GetMealFeeDetailServiceByAggregate,
   LaborCostInfoServiceByAggregate,
   LaborPayInfoServiceByAggregate,
   ManagementCostInfoServiceByAggregate,
+  ManagementOutSourcingInfoServiceByAggregate,
   MaterialInfoServiceByAggregate,
   OutsourcingLaborCostInfoServiceByAggregate,
   WeatherInfoServiceByAggregate,
@@ -23,8 +27,9 @@ export default function useFinalAggregationView({
   type,
   tabName,
   outsourcingCompanyId,
+  outsourcingCompanyContractId,
 }: {
-  yearMonth: string
+  yearMonth?: string
   siteId: number
   siteProcessId: number
   fuelType?: string
@@ -32,6 +37,7 @@ export default function useFinalAggregationView({
   type?: string
   tabName: string
   outsourcingCompanyId?: number
+  outsourcingCompanyContractId?: number
 }) {
   // 재료비 집계
   const MaterialListQuery = useQuery({
@@ -357,6 +363,140 @@ export default function useFinalAggregationView({
       !!outsourcingCompanyId, // 필수값 있을 때만 실행
   })
 
+  console.log('90', outsourcingCompanyContractId)
+  // 외주 조회
+  const ManagementOutSourcingListQuery = useQuery({
+    queryKey: ['managementOutSourcingInfo', yearMonth, siteId, siteProcessId],
+    queryFn: () => {
+      const rawParams = {
+        siteId: siteId === 0 ? undefined : siteId,
+        siteProcessId: siteProcessId === 0 ? undefined : siteProcessId,
+        yearMonth: yearMonth,
+      }
+
+      const filteredParams = Object.fromEntries(
+        Object.entries(rawParams).filter(
+          ([, value]) =>
+            value !== undefined &&
+            value !== null &&
+            value !== '' &&
+            !(typeof value === 'number' && isNaN(value)),
+        ),
+      )
+
+      return ManagementOutSourcingInfoServiceByAggregate(filteredParams)
+    },
+    enabled:
+      tabName === 'OUTSOURCING' &&
+      !!yearMonth &&
+      !!siteId &&
+      !!siteProcessId &&
+      outsourcingCompanyContractId === 0, // 필수값 있을 때만 실행
+  })
+
+  // 외주에서 거래처명 조회
+  const ConstructionListQuery = useQuery({
+    queryKey: ['constructionInfo', siteId, siteProcessId],
+    queryFn: () => {
+      const rawParams = {
+        siteId: siteId === 0 ? undefined : siteId,
+        siteProcessId: siteProcessId === 0 ? undefined : siteProcessId,
+      }
+
+      const filteredParams = Object.fromEntries(
+        Object.entries(rawParams).filter(
+          ([, value]) =>
+            value !== undefined && value !== null && !(typeof value === 'number' && isNaN(value)),
+        ),
+      )
+
+      return GetConstructionServiceByAggregate(filteredParams)
+    },
+    enabled:
+      tabName === 'OUTSOURCING' &&
+      !!siteId &&
+      !!siteProcessId &&
+      outsourcingCompanyContractId === 0, // 필수값 있을 때만 실행
+  })
+
+  // 집계 관리비에서 상세 데이터 조회
+
+  const ConstructionDetailListQuery = useQuery({
+    queryKey: [
+      'constructionDetailInfo',
+      yearMonth,
+      siteId,
+      siteProcessId,
+      outsourcingCompanyContractId,
+    ],
+    queryFn: () => {
+      const rawParams = {
+        siteId: siteId === 0 ? undefined : siteId,
+        siteProcessId: siteProcessId === 0 ? undefined : siteProcessId,
+        yearMonth: yearMonth,
+        outsourcingCompanyContractId:
+          outsourcingCompanyContractId === 0 ? undefined : outsourcingCompanyContractId,
+      }
+
+      const filteredParams = Object.fromEntries(
+        Object.entries(rawParams).filter(
+          ([, value]) =>
+            value !== undefined &&
+            value !== null &&
+            value !== '' &&
+            !(typeof value === 'number' && isNaN(value)),
+        ),
+      )
+
+      return GetConstructionDetailServiceByAggregate(filteredParams)
+    },
+    enabled:
+      tabName === 'OUTSOURCING' &&
+      !!yearMonth &&
+      !!siteId &&
+      !!siteProcessId &&
+      !!outsourcingCompanyContractId, // 필수값 있을 때만 실행
+  })
+
+  // 외주(공사)에서 공제금액의 집계 조회
+
+  const DeductionAmountDetailListQuery = useQuery({
+    queryKey: [
+      'DeductionAmountDetailInfo',
+      yearMonth,
+      siteId,
+      siteProcessId,
+      outsourcingCompanyContractId,
+    ],
+    queryFn: () => {
+      const rawParams = {
+        siteId: siteId === 0 ? undefined : siteId,
+        siteProcessId: siteProcessId === 0 ? undefined : siteProcessId,
+        yearMonth: yearMonth,
+        outsourcingCompanyContractId:
+          outsourcingCompanyContractId === 0 ? undefined : outsourcingCompanyContractId,
+      }
+
+      const filteredParams = Object.fromEntries(
+        Object.entries(rawParams).filter(
+          ([, value]) =>
+            value !== undefined &&
+            value !== null &&
+            value !== '' &&
+            !(typeof value === 'number' && isNaN(value)),
+        ),
+      )
+
+      return GetdeductionAmountServiceByAggregate(filteredParams)
+    },
+    enabled:
+      tabName === 'OUTSOURCING' &&
+      !!yearMonth &&
+      !!siteId &&
+      !!siteProcessId &&
+      !!outsourcingCompanyContractId, // 필수값 있을 때만 실행
+  })
+
   return {
     MaterialListQuery,
     OilListQuery,
@@ -370,5 +510,10 @@ export default function useFinalAggregationView({
     ManagementCostListQuery,
     MealFeeCompanyListQuery,
     MealFeeDetailListQuery,
+    ManagementOutSourcingListQuery,
+
+    ConstructionListQuery,
+    ConstructionDetailListQuery,
+    DeductionAmountDetailListQuery,
   }
 }

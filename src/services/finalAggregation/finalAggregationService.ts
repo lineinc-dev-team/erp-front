@@ -288,3 +288,98 @@ export async function GetMealFeeDetailServiceByAggregate(params = {}) {
   const data = await resData.json()
   return data
 }
+
+// 집계에서 외주의 데이터 가져오기
+export async function ManagementOutSourcingInfoServiceByAggregate(params = {}) {
+  const query = new URLSearchParams(params).toString()
+
+  const resData = await fetch(`${API.AGGREGATE}/outsourcing-companies?${query}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      throw new Error('권한이 없습니다.')
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+
+// // 집계_외주 조회에서 거래처 이름들 가져오는 함수
+export async function GetConstructionServiceByAggregate(params = {}) {
+  const query = new URLSearchParams(params).toString()
+
+  const resData = await fetch(`${API.AGGREGATE}/outsourcing-companies/construction?${query}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      throw new Error('권한이 없습니다.')
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+
+// 집계 외주에서 거래처 상세 조회
+export async function GetConstructionDetailServiceByAggregate(params = {}) {
+  const query = new URLSearchParams(params).toString()
+
+  const resData = await fetch(
+    `${API.AGGREGATE}/outsourcing-companies/construction-detail?${query}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    },
+  )
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      throw new Error('권한이 없습니다.')
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
+
+// 집계 외주에서 공제금액 집계 조회
+export async function GetdeductionAmountServiceByAggregate(params = {}) {
+  const query = new URLSearchParams(params).toString()
+
+  const resData = await fetch(`${API.AGGREGATE}/outsourcing-companies/deduction-amount?${query}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      throw new Error('권한이 없습니다.')
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
