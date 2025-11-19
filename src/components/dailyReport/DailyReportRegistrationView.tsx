@@ -518,12 +518,13 @@ export default function DailyReportRegistrationView() {
       checkId: item.id,
       outsourcingCompanyId: item.outsourcingCompany?.id ?? null,
       laborId: item.labor?.id ?? 0,
-      position: item.position,
       workContent: item.workContent,
       previousPrice: item.labor.previousDailyWage,
       unitPrice: item.unitPrice,
       workQuantity: item.workQuantity,
       memo: item.memo,
+      actualTemporaryData: false,
+      position: item.labor.workType,
       isTemporary: item.labor.isTemporary,
       temporaryLaborName: item.labor.name,
 
@@ -4284,7 +4285,7 @@ export default function DailyReportRegistrationView() {
                           <TextField
                             size="small"
                             placeholder="텍스트 입력"
-                            value={m.position}
+                            value={m.position ?? ''}
                             onChange={(e) =>
                               updateItemField(
                                 'directContracts',
@@ -4303,7 +4304,7 @@ export default function DailyReportRegistrationView() {
                           <TextField
                             size="small"
                             placeholder="텍스트 입력 "
-                            value={m.workContent}
+                            value={m.workContent ?? ''}
                             onChange={(e) =>
                               updateItemField(
                                 'directContracts',

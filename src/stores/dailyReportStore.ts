@@ -647,6 +647,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           files: [],
           memo: '',
           isTemporary: true,
+          actualTemporaryData: true,
           temporaryLaborName: '',
         }
         return {
@@ -666,6 +667,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           files: [],
           memo: '',
           isTemporary: true,
+          actualTemporaryData: true,
           temporaryLaborName: '',
         }
         return {
@@ -1968,7 +1970,7 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
           unitPrice: item.unitPrice, // 단가
           workQuantity: item.workQuantity, // 수량
           memo: item.memo, // 메모
-          isTemporary: item.isTemporary ?? false, // 임시 근로자 여부
+          isTemporary: item.actualTemporaryData ? true : false, // 임시 근로자 여부
           temporaryLaborName: item.temporaryLaborName === '' ? null : item.temporaryLaborName,
 
           fileUrl: item.files?.[0]?.fileUrl ?? null,

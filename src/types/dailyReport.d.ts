@@ -74,6 +74,7 @@ export type directContractsItem = {
   originalFileName?: string
   files: FileUploadInfo[]
   isTemporary: boolean
+  actualTemporaryData?: boolean
   temporaryLaborName: string
   modifyDate?: string
 }
@@ -107,6 +108,7 @@ export type outSourcingByDirectContractItem = {
   originalFileName?: string
   files: FileUploadInfo[]
   isTemporary: boolean
+  actualTemporaryData?: boolean
   temporaryLaborName: string
   modifyDate?: string
 }
