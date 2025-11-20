@@ -95,13 +95,6 @@ function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {
       (perm: ApiPermission) => !['승인', '수정', '삭제', '엑셀 다운로드'].includes(perm.action),
     )
 
-    // 출역일보에서는 등록도 제거
-    // if (menu.name === '출역일보') {
-    //   filteredPermissions = filteredPermissions.filter(
-    //     (perm: ApiPermission) => perm.action !== '등록',
-    //   )
-    // }
-
     if (menu.name === '노무명세서 관리') {
       filteredPermissions = filteredPermissions.filter(
         (perm: ApiPermission) => perm.action !== '등록',
@@ -116,8 +109,6 @@ function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {
       filteredPermissions = filteredPermissions.filter(
         (perm: ApiPermission) => perm.action !== '등록',
       )
-
-      const basePath = menuNameToBasePath[menu.name]
 
       return {
         title: menu.name,
@@ -137,11 +128,10 @@ function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {
       }
     }
 
+    // 집계 관리 - 등록 → 집계표(본사)로 이름/경로 변경
     if (menu.name === '집계 관리') {
       filteredPermissions = filteredPermissions.map((perm: ApiPermission) =>
-        perm.action === '등록'
-          ? { ...perm, action: '집계표(본사)' } // '등록' → '집계표(본사)'로 변경
-          : perm,
+        perm.action === '등록' ? { ...perm, action: '집계표(본사)', path: '/headOffice' } : perm,
       )
     }
 
@@ -151,12 +141,14 @@ function convertApiMenusToMenuItems(apiMenus: ApiMenu[]): HeaderMenuItem[] {
       )
     }
 
-    const children = filteredPermissions.map((perm: ApiPermission) => {
-      let path = basePath
-      if (perm.action === '등록') path = `${basePath}/registration`
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const children = filteredPermissions.map((perm: any) => {
+      // perm.path가 있으면 사용, 없으면 기본 basePath
+      let path = perm.path || basePath
+      if (perm.action === '등록' && menu.name !== '집계 관리') path = `${basePath}/registration`
       else if (perm.action === '조회') path = basePath
 
-      const labelPrefix = ' - ' // 항상 붙임
+      const labelPrefix = ' - '
 
       return {
         label: `${labelPrefix}${perm.action}`,

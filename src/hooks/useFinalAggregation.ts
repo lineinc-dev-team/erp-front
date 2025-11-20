@@ -6,6 +6,7 @@ import {
   GetConstructionDetailServiceByAggregate,
   GetConstructionServiceByAggregate,
   GetdeductionAmountServiceByAggregate,
+  GetHeadOfficeServiceByAggregate,
   GetMealFeeCompanyServiceByAggregate,
   GetMealFeeDetailServiceByAggregate,
   LaborCostInfoServiceByAggregate,
@@ -35,7 +36,7 @@ export default function useFinalAggregationView({
   fuelType?: string
   laborType?: string
   type?: string
-  tabName: string
+  tabName?: string
   outsourcingCompanyId?: number
   outsourcingCompanyContractId?: number
 }) {
@@ -62,6 +63,32 @@ export default function useFinalAggregationView({
       return MaterialInfoServiceByAggregate(filteredParams)
     },
     enabled: tabName === 'MATERIAL' && !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
+  })
+
+  // 본사 집계 조회
+
+  const HeadOfficeListQuery = useQuery({
+    queryKey: ['headOfficeInfo', yearMonth, siteId, siteProcessId],
+    queryFn: () => {
+      const rawParams = {
+        siteId: siteId === 0 ? undefined : siteId,
+        siteProcessId: siteProcessId === 0 ? undefined : siteProcessId,
+        yearMonth: yearMonth,
+      }
+
+      const filteredParams = Object.fromEntries(
+        Object.entries(rawParams).filter(
+          ([, value]) =>
+            value !== undefined &&
+            value !== null &&
+            value !== '' &&
+            !(typeof value === 'number' && isNaN(value)),
+        ),
+      )
+
+      return GetHeadOfficeServiceByAggregate(filteredParams)
+    },
+    enabled: !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
   })
 
   // 유류집계 리스트 조회
@@ -515,5 +542,6 @@ export default function useFinalAggregationView({
     ConstructionListQuery,
     ConstructionDetailListQuery,
     DeductionAmountDetailListQuery,
+    HeadOfficeListQuery,
   }
 }
