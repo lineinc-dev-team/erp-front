@@ -504,52 +504,52 @@ export function useDailyReport() {
   //   })
   // }
 
-  const {
-    data: employeeInfo,
-    fetchNextPage: employeeFetchNextPage,
-    hasNextPage: employeehasNextPage,
-    isFetching: employeeFetching,
-    isLoading: employeeLoading,
-  } = useInfiniteQuery({
-    queryKey: ['employeeInfo'],
-    queryFn: ({ pageParam = 0 }) => GetEmployeeInfoService({ pageParam }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
-      const { sliceInfo } = lastPage.data
-      const nextPage = sliceInfo.page + 1
-      return sliceInfo.hasNext ? nextPage : undefined
-    },
-  })
+  // const {
+  //   data: employeeInfo,
+  //   fetchNextPage: employeeFetchNextPage,
+  //   hasNextPage: employeehasNextPage,
+  //   isFetching: employeeFetching,
+  //   isLoading: employeeLoading,
+  // } = useInfiniteQuery({
+  //   queryKey: ['employeeInfo'],
+  //   queryFn: ({ pageParam = 0 }) => GetEmployeeInfoService({ pageParam }),
+  //   initialPageParam: 0,
+  //   getNextPageParam: (lastPage) => {
+  //     const { sliceInfo } = lastPage.data
+  //     const nextPage = sliceInfo.page + 1
+  //     return sliceInfo.hasNext ? nextPage : undefined
+  //   },
+  // })
 
   // 출역일보 직원에서  이름 키워드 검색 로직
 
-  // const useEmployeeInfoInfiniteScroll = (keyword: string) => {
-  //   return useInfiniteQuery({
-  //     queryKey: ['employeeInfo', keyword],
-  //     queryFn: ({ pageParam }) => GetEmployeeInfoService({ pageParam, keyword }),
-  //     initialPageParam: 0,
-  //     getNextPageParam: (lastPage) => {
-  //       const { sliceInfo } = lastPage.data
-  //       const nextPage = sliceInfo.page + 1
-  //       return sliceInfo.hasNext ? nextPage : undefined
-  //     },
-  //   })
-  // }
+  const useEmployeeInfoInfiniteScroll = (keyword: string) => {
+    return useInfiniteQuery({
+      queryKey: ['employeeInfo', keyword],
+      queryFn: ({ pageParam }) => GetEmployeeInfoService({ pageParam, keyword }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        const nextPage = sliceInfo.page + 1
+        return sliceInfo.hasNext ? nextPage : undefined
+      },
+    })
+  }
 
-  const employeeInfoOptions = useMemo(() => {
-    const defaultOptions = [{ id: 0, name: '선택', type: '', grade: '' }]
+  // const employeeInfoOptions = useMemo(() => {
+  //   const defaultOptions = [{ id: 0, name: '선택', type: '', grade: '' }]
 
-    const options = (employeeInfo?.pages || [])
-      .flatMap((page) => page.data.content)
-      .map((user) => ({
-        id: user.id,
-        name: user.name,
-        type: user.type,
-        grade: user.grade,
-      }))
+  //   const options = (employeeInfo?.pages || [])
+  //     .flatMap((page) => page.data.content)
+  //     .map((user) => ({
+  //       id: user.id,
+  //       name: user.name,
+  //       type: user.type,
+  //       grade: user.grade,
+  //     }))
 
-    return [...defaultOptions, ...options]
-  }, [employeeInfo])
+  //   return [...defaultOptions, ...options]
+  // }, [employeeInfo])
 
   // 직영 데이터 조회 (노무에서 사용 할)
 
@@ -637,13 +637,8 @@ export function useDailyReport() {
     CompleteInfoMutation,
 
     reportCancel,
-    // useEmployeeInfoInfiniteScroll,
+    useEmployeeInfoInfiniteScroll,
 
-    employeeInfoOptions,
-    employeeFetchNextPage,
-    employeehasNextPage,
-    employeeFetching,
-    employeeLoading,
     // 계약직 이름
 
     // 인력 정보 조회

@@ -149,7 +149,7 @@ export async function GetContractNameInfoService({
 
 export async function GetContractNameInfoByOutsourcing({
   pageParam = 0,
-  size = 200,
+  size = 40,
   keyword = '',
   outsourcingCompanyId = 0,
 }: {
@@ -226,7 +226,7 @@ export async function GetOutSourcingContractByLabor({
 // 계약/인력 쪽 인력 데이터 조회
 export async function GetDirectContractNameInfoService({
   pageParam = 0,
-  size = 200,
+  size = 40,
   keyword = '',
   outsourcingCompanyId = 0,
 }: {
@@ -452,7 +452,7 @@ export async function ModifyDirectContractReport({
 // 노무쪽 인력 데이터 조회(정직원))
 export async function GetEmployeeInfoService({
   pageParam = 0,
-  size = 200,
+  size = 40,
   keyword = '',
   types = 'REGULAR_EMPLOYEE',
 }) {
@@ -1661,16 +1661,19 @@ export async function GetContractGroup({
   siteId = 0,
   pageParam = 0,
   size = 10,
+  keyword = '',
 }: {
   id: number
   siteId?: number
   pageParam?: number
   size?: number
+  keyword: string
 }) {
   const query = new URLSearchParams({
     siteId: siteId.toString(),
     page: pageParam.toString(),
     size: size.toString(),
+    keyword,
   })
 
   const res = await fetch(

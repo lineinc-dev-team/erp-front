@@ -402,13 +402,6 @@ export default function LaborView() {
             className="mt-3 px-20"
           />
 
-          {/* <CommonButton
-            label="검색"
-            variant="secondary"
-            onClick={search.handleSearch}
-            className="mt-3 px-20"
-          /> */}
-
           <CommonButton
             label="검색"
             variant="secondary"

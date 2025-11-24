@@ -21,7 +21,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import { useManagementSteelFormStore } from '@/stores/managementSteelStore'
 import { useManagementSteel } from '@/hooks/useManagementSteel'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
   SteelDetailExcelDownload,
   SteelDetailService,
@@ -46,6 +46,7 @@ import { TotalInput, VatInput } from '@/utils/supplyVatTotalInput'
 import CommonDatePicker from '../common/DatePicker'
 import { myInfoProps } from '@/types/user'
 import { useMenuPermission } from '../common/MenuPermissionView'
+import { useFocusStore } from '@/stores/focusStore'
 
 export default function ManagementSteelRegistrationView({ isEditMode = false }) {
   const { showSnackbar } = useSnackbarStore()
@@ -448,8 +449,20 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
   }
 
   function OutsourcingRow({ row }: { row: any }) {
-    const [isFocused, setIsFocused] = useState(false) // row별 포커스 상태
-    const debouncedKeyword = useDebouncedValue(row.outsourcingCompanyName ?? '', 300)
+    const focusedRowId = useFocusStore((s) => s.focusedRowId)
+    const setFocusedRowId = useFocusStore((s) => s.setFocusedRowId)
+
+    const [localKeyword, setLocalKeyword] = React.useState(row.outsourcingCompanyName ?? '')
+
+    const isFocused = focusedRowId === row.checkId
+
+    // 입력값이 외부에서 바뀌면 로컬 상태도 업데이트
+    React.useEffect(() => {
+      setLocalKeyword(row.outsourcingCompanyName ?? '')
+    }, [row.outsourcingCompanyName])
+
+    // debounce 적용 (백엔드 호출용)
+    const debouncedKeyword = useDebouncedValue(localKeyword, 300)
 
     const {
       data: OutsourcingNameData,
@@ -465,27 +478,33 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
       )?.values() ?? [],
     )
 
+    // onBlur 딜레이용 ref
+    const blurTimeout = React.useRef<NodeJS.Timeout | null>(null)
+
     return (
       <InfiniteScrollSelect
-        keyword={row.outsourcingCompanyName || ''}
+        keyword={localKeyword}
         placeholder="업체명을 입력해주세요."
         debouncedKeyword={debouncedKeyword}
         items={outsourcingList}
         hasNextPage={hasNextPage ?? false}
         fetchNextPage={fetchNextPage}
         isLoading={isLoading || isFetching}
-        onChangeKeyword={(newKeyword) =>
-          updateItemField('MaterialItem', row.checkId, 'outsourcingCompanyName', newKeyword)
-        }
+        onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
         renderItem={(item, isHighlighted) => (
           <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
             {item.name}
           </div>
         )}
         onSelect={(selectedCompany) => handleSelectOutsourcing(row.checkId ?? 0, selectedCompany)}
-        shouldShowList={isFocused} // row별 포커스
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
+        shouldShowList={isFocused} // 포커스 기반 리스트 표시
+        onFocus={() => {
+          if (blurTimeout.current) clearTimeout(blurTimeout.current)
+          setFocusedRowId(row.checkId)
+        }}
+        onBlur={() => {
+          blurTimeout.current = setTimeout(() => setFocusedRowId(null), 200) // 200ms 딜레이
+        }}
         disabled={row.isModifyType === false || row.category === 'OWN_MATERIAL'}
       />
     )

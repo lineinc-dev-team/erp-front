@@ -46,6 +46,7 @@ export type DailyDataSearchState = {
 export type EmployeesItem = {
   id: number
   laborId?: number
+  laborName?: string
   grade: string
   name?: string
   type?: string
@@ -64,6 +65,7 @@ export type directContractsItem = {
   outsourcingCompanyId: T
   outsourcingCompanyName?: string
   laborId: T
+  laborName?: string
   position: string
   workContent: string
   previousPrice: number
@@ -82,8 +84,11 @@ export type directContractsItem = {
 export type directContractOutsourcingContractsItem = {
   id: T
   outsourcingCompanyId: number
+  outsourcingCompanyName?: number
   outsourcingCompanyContractId: number
+  outsourcingCompanyContractName?: number
   laborId: number
+  laborName?: number
   workQuantity: number
   memo: string
   fileUrl?: string
@@ -98,6 +103,7 @@ export type outSourcingByDirectContractItem = {
   outsourcingCompanyId: T
   outsourcingCompanyName?: string
   laborId: T
+  laborName?: string
   position: string
   workContent: string
   previousPrice: number
@@ -131,13 +137,16 @@ export interface OutsourcingConstructionItem {
 export interface OutsourcingsItem {
   id: number
   outsourcingCompanyId: number
+  outsourcingCompanyName?: string
   outsourcingCompanyContractConstructionGroupId: number
+  outsourcingCompanyContractConstructionGroupName?: string
   items: OutsourcingConstructionItem[]
 }
 
 export type SubEquipmentItems = {
   id: number
   outsourcingCompanyContractSubEquipmentId: T
+  outsourcingCompanyContractSubEquipmentName?: string
   description?: T
   type: string
   typeCode?: string
@@ -150,8 +159,11 @@ export type SubEquipmentItems = {
 export type EquipmentsItem = {
   id: number
   outsourcingCompanyId: number
+  outsourcingCompanyName?: string
   outsourcingCompanyContractDriverId: number
+  outsourcingCompanyContractDriverName?: string
   outsourcingCompanyContractEquipmentId: number
+  outsourcingCompanyContractEquipmentName?: string
   specificationName?: string
   type?: string
   workContent: string
@@ -169,6 +181,7 @@ export type SubEquipmentByFuleItems = {
   checkId: number
   id: number | null
   outsourcingCompanyContractSubEquipmentId: number
+
   fuelType: string
   fuelAmount: number
   amount: number
@@ -178,9 +191,11 @@ export type SubEquipmentByFuleItems = {
 export type FuelsItem = {
   id: number
   outsourcingCompanyId: number
+  outsourcingCompanyName?: string
   driverId: number
   categoryType: string
   equipmentId: number
+  equipmentName?: string
   specificationName?: string
   fuelType: string
   fuelAmount: number

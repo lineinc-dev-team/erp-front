@@ -33,6 +33,7 @@ import {
   GetContractNameInfoService,
   GetDirectContractByFilterService,
   GetDirectContractNameInfoService,
+  GetEmployeeInfoService,
   GetEmployeesByFilterService,
   GetEquipmentByFilterService,
   GetFuelByFilterService,
@@ -70,7 +71,8 @@ import AmountInput from '../common/AmountInput'
 import { useSiteId } from '@/hooks/useSiteIdNumber'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
-import { useManagementCost } from '@/hooks/useManagementCost'
+import { useFocusStore } from '@/stores/focusStore'
+import { GetCompanyNameInfoService } from '@/services/outsourcingContract/outsourcingContractRegistrationService'
 
 export default function DailyReportRegistrationView() {
   const {
@@ -137,13 +139,13 @@ export default function DailyReportRegistrationView() {
     processInfoLoading,
   } = useOutSourcingContract()
 
-  const {
-    companyOptions,
-    comPanyNameFetchNextPage,
-    comPanyNamehasNextPage,
-    comPanyNameFetching,
-    comPanyNameLoading,
-  } = useManagementCost()
+  // const {
+  //   companyOptions,
+  //   comPanyNameFetchNextPage,
+  //   comPanyNamehasNextPage,
+  //   comPanyNameFetching,
+  //   comPanyNameLoading,
+  // } = useManagementCost()
 
   const {
     createDailyMutation,
@@ -161,24 +163,61 @@ export default function DailyReportRegistrationView() {
     CompleteInfoMutation,
 
     reportCancel,
-    employeeInfoOptions,
-    employeeFetchNextPage,
-    employeehasNextPage,
-    employeeFetching,
-    employeeLoading,
 
     // 인력의 정보 조회
-
-    withEquipmentInfoOptions,
-    withEquipmentFetchNextPage,
-    withEquipmenthasNextPage,
-    withEquipmentFetching,
-    withEquipmentLoading,
 
     MainProcessModifyMutation,
 
     MaterialStatusMutation,
   } = useDailyReport()
+
+  // 전역에서 포커싱 해제
+  const setClearFocusedRowId = useFocusStore((s) => s.setFocusedRowId)
+
+  const setClearServiceCompanyFocusedId = useFocusStore((s) => s.setServiceCompanyFocusedId)
+
+  const setClearPersonNameFocusedId = useFocusStore((s) => s.setPersonNameFocusedId)
+
+  // 직영/용역에서의 외주의 업체명 포커싱
+  const setClearServiceOutsourcingCompanyFocusedId = useFocusStore(
+    (s) => s.setServiceOutsourcingCompanyFocusedId,
+  )
+
+  // 직영/용역에 계약명  포커싱
+
+  const setClearServiceOutsourcingContractFocusedId = useFocusStore(
+    (s) => s.setServiceOutsourcingContractFocusedId,
+  )
+
+  // 직영/용역에 외주 이름  포커싱
+
+  const setClearServiceOutsourcingContractPersonNameFocusedId = useFocusStore(
+    (s) => s.setServiceOutsourcingContractPersonNameFocusedId,
+  )
+
+  // 장비 업체명 장비명 차량번호 포커싱 제거
+  const setClearEquipmentOutsourcingNameFocusedId = useFocusStore(
+    (s) => s.setEquipmentOutsourcingNameFocusedId,
+  )
+  const setClearEquipmentDriverNameFocusedId = useFocusStore(
+    (s) => s.setEquipmentDriverNameFocusedId,
+  )
+  const setClearEquipmentCarNumberFocusedId = useFocusStore((s) => s.setEquipmentCarNumberFocusedId)
+
+  // 외주(공사) 업체명과 항목명 포커싱 제거 변수
+  const setClearWorkOutsourcingNameFocusedId = useFocusStore(
+    (s) => s.setWorkOutsourcingNameFocusedId,
+  )
+  const setClearWorkerItemNameFocusedId = useFocusStore((s) => s.setWorkerItemNameFocusedId)
+
+  // 유류 데이터 조회에서 업체명이랑 차량번호 포커싱 제거
+
+  const setClearFuelOutsourcingNameFocusedId = useFocusStore(
+    (s) => s.setFuelOutsourcingNameFocusedId,
+  )
+  const setClearFuelCarNumberFocusedId = useFocusStore((s) => s.setFuelCarNumberFocusedId)
+
+  // 업체명 다 가져오기
 
   const { showSnackbar } = useSnackbarStore()
 
@@ -186,18 +225,18 @@ export default function DailyReportRegistrationView() {
 
   const { OilTypeMethodOptions } = useFuelAggregation()
 
-  const [selectedCompanyIds, setSelectedCompanyIds] = useState<Record<number, number>>({})
+  // const [selectedCompanyIds, setSelectedCompanyIds] = useState<Record<number, number>>({})
 
   // 직영/용역에서 사용하는 외주 계약명 이름 id
 
-  const [selectedOutSourcingContractIds, setSelectedOutSourcingContractIds] = useState<
-    Record<number, number>
-  >({})
+  // const [selectedOutSourcingContractIds, setSelectedOutSourcingContractIds] = useState<
+  //   Record<number, number>
+  // >({})
 
-  const [selectId, setSelectId] = useState(0)
+  // const [selectId, setSelectId] = useState(0)
 
   // 직영 계약직에서 사용하는 해당 변수
-  const [selectContractIds, setSelectContractIds] = useState<{ [rowId: number]: number }>({})
+  // const [selectContractIds, setSelectContractIds] = useState<{ [rowId: number]: number }>({})
 
   // 옵션에 따른 상태값
 
@@ -209,21 +248,21 @@ export default function DailyReportRegistrationView() {
 
   // 직영/용역에서  용역의 이름을 가져올 변수명
 
-  const [outSourcingByDirectContract, setOutSourcingByDirectContract] = useState<
-    Record<number, any[]>
-  >({})
+  // const [outSourcingByDirectContract, setOutSourcingByDirectContract] = useState<
+  //   Record<number, any[]>
+  // >({})
 
-  // 직영/용역에서 외주의 계약명 가져오는 변수
+  // // 직영/용역에서 외주의 계약명 가져오는 변수
 
-  const [directContarctNameOptionsByCompany, setDirectContarctNameOptionsByCompany] = useState<
-    Record<number, any[]>
-  >({})
+  // const [directContarctNameOptionsByCompany, setDirectContarctNameOptionsByCompany] = useState<
+  //   Record<number, any[]>
+  // >({})
 
-  // 직영/용역에서 외주의 이름 가져오는 변수
+  // // 직영/용역에서 외주의 이름 가져오는 변수
 
-  const [directContarctPersonNameByCompany, setDirectContarctPersonNameByCompany] = useState<
-    Record<any, any[]>
-  >({})
+  // const [directContarctPersonNameByCompany, setDirectContarctPersonNameByCompany] = useState<
+  //   Record<any, any[]>
+  // >({})
 
   const [modifyFuelNumber, setModifyFuelNumber] = useState(0)
 
@@ -368,6 +407,7 @@ export default function DailyReportRegistrationView() {
       id: item.id,
       grade: item.labor.grade,
       laborId: item.labor?.id ?? 0,
+      laborName: item.labor?.name ?? 0,
       name: item.labor?.name ?? '',
       type: item.labor?.type ?? '',
       workContent: item.workContent,
@@ -393,6 +433,99 @@ export default function DailyReportRegistrationView() {
 
   const checkedIds = form.checkedManagerIds
   const isAllChecked = employees.length > 0 && checkedIds.length === employees.length
+
+  //직원의 이름 키워드 검색
+
+  // 유저 선택 시 처리
+  const handleSelectEmployeeName = (id: number, selectedCompany: any) => {
+    if (!selectedCompany) {
+      updateItemField('Employees', id, 'laborId', 0)
+      updateItemField('Employees', id, 'laborName', '')
+      updateItemField('Employees', id, 'grade', '')
+      return
+    }
+
+    updateItemField('Employees', id, 'laborId', selectedCompany.id)
+    updateItemField('Employees', id, 'laborName', selectedCompany.name)
+    updateItemField('Employees', id, 'grade', selectedCompany.grade)
+  }
+
+  function DailyEmployeeNameRow({ row }: { row: any }) {
+    const focusedRowId = useFocusStore((s) => s.focusedRowId)
+    const setFocusedRowId = useFocusStore((s) => s.setFocusedRowId)
+
+    const [localKeyword, setLocalKeyword] = React.useState(row.laborName ?? '')
+
+    const isFocused = focusedRowId === row.id
+
+    // 입력값이 외부에서 바뀌면 로컬 상태도 업데이트
+    React.useEffect(() => {
+      setLocalKeyword(row.laborName ?? '')
+    }, [row.laborName])
+
+    // debounce 적용 (백엔드 호출용)
+    const debouncedKeyword = useDebouncedValue(localKeyword, 300)
+
+    const {
+      data: EmployeesNameData,
+      fetchNextPage: EmployeesNameFetchNextPage,
+      hasNextPage: EmployeesNameHasNextPage,
+      isFetching: EmployeesNameIsFetching,
+      isLoading: EmployeesNameIsLoading,
+    } = useInfiniteQuery({
+      queryKey: ['employeeInfo', debouncedKeyword],
+      queryFn: ({ pageParam = 0 }) =>
+        GetEmployeeInfoService({
+          pageParam,
+          keyword: debouncedKeyword,
+        }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+      },
+      enabled: isFocused,
+    })
+
+    const employeesNameList = Array.from(
+      new Map(
+        EmployeesNameData?.pages.flatMap((page: any) => page.data.content).map((u) => [u.name, u]),
+      )?.values() ?? [],
+    )
+
+    // onBlur 딜레이용 ref
+    const blurTimeout = React.useRef<NodeJS.Timeout | null>(null)
+
+    return (
+      <InfiniteScrollSelect
+        keyword={localKeyword}
+        placeholder="이름을 입력해주세요."
+        debouncedKeyword={debouncedKeyword}
+        items={employeesNameList}
+        hasNextPage={EmployeesNameHasNextPage ?? false}
+        fetchNextPage={EmployeesNameFetchNextPage}
+        isLoading={EmployeesNameIsLoading || EmployeesNameIsFetching}
+        // onChangeKeyword={(newKeyword) =>
+        //   updateItemField('Employees', row.id, 'laborName', newKeyword)
+        // }
+        onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
+        renderItem={(item, isHighlighted) => (
+          <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+            {item.name}
+          </div>
+        )}
+        onSelect={(selectedCompany) => handleSelectEmployeeName(row.id ?? 0, selectedCompany)}
+        shouldShowList={isFocused} // 포커스 기반 리스트 표시
+        onFocus={() => {
+          if (blurTimeout.current) clearTimeout(blurTimeout.current)
+          setFocusedRowId(row.id)
+        }}
+        onBlur={() => {
+          blurTimeout.current = setTimeout(() => setFocusedRowId(null), 200) // 200ms 딜레이
+        }}
+      />
+    )
+  }
 
   // 직영 계약직
 
@@ -440,6 +573,7 @@ export default function DailyReportRegistrationView() {
       checkId: item.id,
       outsourcingCompanyId: item.outsourcingCompany?.id ?? null,
       laborId: item.labor?.id ?? 0,
+      laborName: item.labor?.name ?? 0,
       position: item.position || item.labor.workType,
       workContent: item.workContent,
       previousPrice: item.labor.previousDailyWage,
@@ -471,6 +605,109 @@ export default function DailyReportRegistrationView() {
   const ContractCheckedIds = form.checkeddirectContractsIds
   const isContractAllChecked =
     contractData.length > 0 && ContractCheckedIds.length === contractData.length
+
+  // 직영에서 이름 선택 시 해당 직종과 이전단가 보내주기
+  const handleSelectDirectContractName = (id: number, selectedCompany: any) => {
+    if (!selectedCompany) {
+      updateItemField('directContracts', id, 'laborId', 0)
+      updateItemField('directContracts', id, 'laborName', '')
+      updateItemField('directContracts', id, 'position', '')
+      updateItemField('directContracts', id, 'previousPrice', 0)
+      return
+    }
+
+    // 필드 업데이트
+    updateItemField('directContracts', id, 'laborId', selectedCompany.id)
+    updateItemField('directContracts', id, 'laborName', selectedCompany.name)
+    updateItemField('directContracts', id, 'position', selectedCompany.workType ?? '')
+    updateItemField('directContracts', id, 'previousPrice', selectedCompany.previousDailyWage ?? 0)
+
+    // 퇴직금 안내
+    if (selectedCompany.isSeverancePayEligible) {
+      showSnackbar('해당 직원 근속일이 6개월에 도달했습니다. 퇴직금 발생에 주의하세요.', 'error')
+    }
+  }
+
+  function DailyDirectContractNameRow({ row }: { row: any }) {
+    const focusedRowId = useFocusStore((s) => s.focusedRowId)
+    const setFocusedRowId = useFocusStore((s) => s.setFocusedRowId)
+
+    const [localKeyword, setLocalKeyword] = React.useState(row.laborName ?? '')
+
+    const isFocused = focusedRowId === row.checkId
+
+    // 입력값이 외부에서 바뀌면 로컬 상태도 업데이트
+    React.useEffect(() => {
+      setLocalKeyword(row.laborName ?? '')
+    }, [row.laborName])
+
+    // debounce 적용 (백엔드 호출용)
+    const debouncedKeyword = useDebouncedValue(localKeyword, 300)
+
+    const {
+      data: directControlNameInfo,
+      fetchNextPage: directControlNameFetchNextPage,
+      hasNextPage: directControlNamehasNextPage,
+      isFetching: directControlNameFetching,
+      isLoading: directControlNameLoading,
+    } = useInfiniteQuery({
+      queryKey: ['directControlNameInfo', debouncedKeyword],
+      queryFn: ({ pageParam = 0 }) =>
+        GetContractNameInfoService({
+          pageParam,
+          keyword: debouncedKeyword,
+        }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+      },
+      enabled: isFocused,
+    })
+
+    const directControlNameList = Array.from(
+      new Map(
+        directControlNameInfo?.pages
+          .flatMap((page: any) => page.data.content)
+          .map((u) => [u.name, u]),
+      )?.values() ?? [],
+    )
+
+    // onBlur 딜레이용 ref
+    const blurTimeout = React.useRef<NodeJS.Timeout | null>(null)
+
+    return (
+      <InfiniteScrollSelect
+        keyword={localKeyword}
+        placeholder="이름을 입력해주세요."
+        debouncedKeyword={debouncedKeyword}
+        items={directControlNameList}
+        hasNextPage={directControlNamehasNextPage ?? false}
+        fetchNextPage={directControlNameFetchNextPage}
+        isLoading={directControlNameLoading || directControlNameFetching}
+        // onChangeKeyword={(newKeyword) =>
+        //   updateItemField('Employees', row.id, 'laborName', newKeyword)
+        // }
+        onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
+        renderItem={(item, isHighlighted) => (
+          <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+            {item.name}
+          </div>
+        )}
+        onSelect={(selectedCompany) =>
+          handleSelectDirectContractName(row.checkId ?? 0, selectedCompany)
+        }
+        shouldShowList={isFocused} // 포커스 기반 리스트 표시
+        onFocus={() => {
+          if (blurTimeout.current) clearTimeout(blurTimeout.current)
+          setFocusedRowId(row.checkId)
+        }}
+        onBlur={() => {
+          blurTimeout.current = setTimeout(() => setFocusedRowId(null), 200) // 200ms 딜레이
+        }}
+      />
+    )
+  }
 
   // 직영/용역에서 용역 데이터 가져오기
 
@@ -517,7 +754,9 @@ export default function DailyReportRegistrationView() {
       id: item.id,
       checkId: item.id,
       outsourcingCompanyId: item.outsourcingCompany?.id ?? null,
+      outsourcingCompanyName: item.outsourcingCompany?.name ?? null,
       laborId: item.labor?.id ?? 0,
+      laborName: item.labor?.name ?? 0,
       workContent: item.workContent,
       previousPrice: item.labor.previousDailyWage,
       unitPrice: item.unitPrice,
@@ -554,6 +793,221 @@ export default function DailyReportRegistrationView() {
   const directContractAllCheckedIds =
     directContractByData.length > 0 &&
     directContractCheckedIds.length === directContractByData.length
+
+  // 직영/용역에서 용역의 외주명 업체명 키워드 검색
+
+  const handleSelectServiceName = (id: number, selectedCompany: any) => {
+    if (!selectedCompany) {
+      updateItemField('outsourcingByDirectContract', id, 'outsourcingCompanyId', 0)
+      updateItemField('outsourcingByDirectContract', id, 'outsourcingCompanyName', '')
+
+      updateItemField('outsourcingByDirectContract', id, 'laborId', 0)
+      updateItemField('outsourcingByDirectContract', id, 'laborName', '')
+      updateItemField('outsourcingByDirectContract', id, 'position', '')
+      updateItemField('outsourcingByDirectContract', id, 'previousPrice', 0)
+      return
+    }
+
+    updateItemField('outsourcingByDirectContract', id, 'outsourcingCompanyId', selectedCompany.id)
+    updateItemField(
+      'outsourcingByDirectContract',
+      id,
+      'outsourcingCompanyName',
+      selectedCompany.name,
+    )
+    updateItemField('outsourcingByDirectContract', id, 'laborId', 0)
+    updateItemField('outsourcingByDirectContract', id, 'laborName', '')
+    updateItemField('outsourcingByDirectContract', id, 'position', '')
+    updateItemField('outsourcingByDirectContract', id, 'previousPrice', 0)
+  }
+
+  function DailyServiceNameRow({ row }: { row: any }) {
+    const serviceCompanyFocusedId = useFocusStore((s) => s.serviceCompanyFocusedId)
+    const setServiceCompanyFocusedId = useFocusStore((s) => s.setServiceCompanyFocusedId)
+
+    const [localKeyword, setLocalKeyword] = React.useState(row.outsourcingCompanyName ?? '')
+
+    const isFocused = serviceCompanyFocusedId === row.checkId
+
+    // 입력값이 외부에서 바뀌면 로컬 상태도 업데이트
+    React.useEffect(() => {
+      setLocalKeyword(row.outsourcingCompanyName ?? '')
+    }, [row.outsourcingCompanyName])
+
+    // debounce 적용 (백엔드 호출용)
+    const debouncedKeyword = useDebouncedValue(localKeyword, 300)
+
+    const {
+      data: ServiceOutSourcingNameData,
+      fetchNextPage: ServiceOutSourcingNameFetchNextPage,
+      hasNextPage: ServiceOutSourcingNameHasNextPage,
+      isFetching: ServiceOutSourcingNameIsFetching,
+      isLoading: ServiceOutSourcingNameIsLoading,
+    } = useInfiniteQuery({
+      queryKey: ['outsourcingInfo', debouncedKeyword],
+      queryFn: ({ pageParam = 0 }) =>
+        GetCompanyNameInfoService({
+          pageParam,
+          keyword: debouncedKeyword,
+        }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+      },
+      enabled: isFocused,
+    })
+
+    const serviceOutSourcingNameList = Array.from(
+      new Map(
+        ServiceOutSourcingNameData?.pages
+          .flatMap((page: any) => page.data.content)
+          .map((u) => [u.name, u]),
+      )?.values() ?? [],
+    )
+
+    // onBlur 딜레이용 ref
+    const blurTimeout = React.useRef<NodeJS.Timeout | null>(null)
+
+    return (
+      <InfiniteScrollSelect
+        keyword={localKeyword}
+        placeholder="업체명을 입력해주세요."
+        debouncedKeyword={debouncedKeyword}
+        items={serviceOutSourcingNameList}
+        hasNextPage={ServiceOutSourcingNameHasNextPage ?? false}
+        fetchNextPage={ServiceOutSourcingNameFetchNextPage}
+        isLoading={ServiceOutSourcingNameIsLoading || ServiceOutSourcingNameIsFetching}
+        // onChangeKeyword={(newKeyword) =>
+        //   updateItemField('Employees', row.id, 'laborName', newKeyword)
+        // }
+        onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
+        renderItem={(item, isHighlighted) => (
+          <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+            {item.name}
+          </div>
+        )}
+        onSelect={(selectedCompany) => handleSelectServiceName(row.checkId ?? 0, selectedCompany)}
+        shouldShowList={isFocused} // ← 업체명만 리스트 표시
+        onFocus={() => {
+          if (blurTimeout.current) clearTimeout(blurTimeout.current)
+          setServiceCompanyFocusedId(row.checkId)
+        }}
+        onBlur={() => {
+          blurTimeout.current = setTimeout(() => setServiceCompanyFocusedId(null), 200) // 200ms 딜레이
+        }}
+      />
+    )
+  }
+
+  // 용역에서 이름 불러오는 키워드 검색 로직
+
+  const handleSelectServicePerson = (id: number, selectedCompany: any) => {
+    console.log('selectedCompany: 용역에서 데이터 조회합니다. ', selectedCompany)
+
+    if (!selectedCompany) {
+      updateItemField('outsourcingByDirectContract', id, 'laborId', 0)
+      updateItemField('outsourcingByDirectContract', id, 'laborName', '')
+      updateItemField('outsourcingByDirectContract', id, 'position', '')
+      updateItemField('outsourcingByDirectContract', id, 'previousPrice', 0)
+      return
+    }
+
+    // 필드 업데이트
+    updateItemField('outsourcingByDirectContract', id, 'laborId', selectedCompany.id)
+    updateItemField('outsourcingByDirectContract', id, 'laborName', selectedCompany.name)
+    updateItemField('outsourcingByDirectContract', id, 'position', selectedCompany.workType ?? '')
+    updateItemField(
+      'outsourcingByDirectContract',
+      id,
+      'previousPrice',
+      selectedCompany.previousDailyWage ?? 0,
+    )
+
+    // 퇴직금 안내
+    if (selectedCompany.isSeverancePayEligible) {
+      showSnackbar('해당 직원 근속일이 6개월에 도달했습니다. 퇴직금 발생에 주의하세요.', 'error')
+    }
+  }
+
+  function DailyServicePersonNameRow({ row }: { row: any }) {
+    const personNameFocusedId = useFocusStore((s) => s.personNameFocusedId)
+    const setPersonNameFocusedId = useFocusStore((s) => s.setPersonNameFocusedId)
+
+    const [localKeyword, setLocalKeyword] = React.useState(row.laborName ?? '')
+
+    const isFocused = personNameFocusedId === row.checkId
+
+    // 입력값이 외부에서 바뀌면 로컬 상태도 업데이트
+    React.useEffect(() => {
+      setLocalKeyword(row.laborName ?? '')
+    }, [row.laborName])
+
+    const debouncedKeyword = useDebouncedValue(localKeyword, 300)
+    const outsourcingCompanyId = row.outsourcingCompanyId ?? 0 // row에서 업체 ID 가져오기
+
+    const {
+      data: servicePersonNameInfo,
+      fetchNextPage: servicePersonNameFetchNextPage,
+      hasNextPage: servicePersonNamehasNextPage,
+      isFetching: servicePersonNameFetching,
+      isLoading: servicePersonNameLoading,
+    } = useInfiniteQuery({
+      queryKey: ['servicePersonNameInfo', , debouncedKeyword],
+      queryFn: ({ pageParam = 0 }) =>
+        GetContractNameInfoByOutsourcing({
+          pageParam,
+          keyword: debouncedKeyword,
+          outsourcingCompanyId,
+        }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+      },
+      enabled: isFocused,
+    })
+
+    const servicePersonNameList = Array.from(
+      new Map(
+        servicePersonNameInfo?.pages
+          .flatMap((page: any) => page.data.content)
+          .map((u) => [u.name, u]),
+      )?.values() ?? [],
+    )
+    // onBlur 딜레이용 ref
+    const blurTimeout = React.useRef<NodeJS.Timeout | null>(null)
+
+    return (
+      <InfiniteScrollSelect
+        keyword={localKeyword}
+        placeholder="이름을 입력해주세요."
+        debouncedKeyword={debouncedKeyword}
+        items={servicePersonNameList}
+        hasNextPage={servicePersonNamehasNextPage ?? false}
+        fetchNextPage={servicePersonNameFetchNextPage}
+        isLoading={servicePersonNameLoading || servicePersonNameFetching}
+        // onChangeKeyword={(newKeyword) =>
+        //   updateItemField('Employees', row.id, 'laborName', newKeyword)
+        // }
+        onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
+        renderItem={(item, isHighlighted) => (
+          <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400 ' : ''}>
+            {item.name}
+          </div>
+        )}
+        onSelect={(selectedCompany) => handleSelectServicePerson(row.checkId ?? 0, selectedCompany)}
+        shouldShowList={isFocused} // 포커스 기반 리스트 표시
+        onFocus={() => {
+          if (blurTimeout.current) clearTimeout(blurTimeout.current)
+          setPersonNameFocusedId(row.checkId)
+        }}
+        onBlur={() => {
+          blurTimeout.current = setTimeout(() => setPersonNameFocusedId(null), 200) // 200ms 딜레이
+        }}
+      />
+    )
+  }
 
   // 직영/용역 계약직에서 외주 데이터 불러오는 탭 추가
 
@@ -601,6 +1055,10 @@ export default function DailyReportRegistrationView() {
       outsourcingCompanyId: item.outsourcingCompany?.id ?? null,
       outsourcingCompanyContractId: item.outsourcingCompanyContract.id ?? null,
       laborId: item.labor?.id ?? 0,
+
+      outsourcingCompanyName: item.outsourcingCompany?.name ?? null,
+      outsourcingCompanyContractName: item.outsourcingCompanyContract.contractName ?? null,
+      laborName: item.labor?.name ?? 0,
       workQuantity: item.workQuantity,
       memo: item.memo,
 
@@ -630,6 +1088,342 @@ export default function DailyReportRegistrationView() {
   const isDirectContractOutsourcingsAllChecked =
     directContractOutsourcings.length > 0 &&
     directContractOutsourcingCheckedIds.length === directContractOutsourcings.length
+
+  // 직영/용역에서 외주 쪽 업체명 키워드 검색
+
+  const handleSelectOutsourcingName = (id: number, selectedCompany: any) => {
+    if (!selectedCompany) {
+      updateItemField('directContractOutsourcings', id, 'outsourcingCompanyId', 0)
+      updateItemField('directContractOutsourcings', id, 'outsourcingCompanyName', '')
+
+      updateItemField('directContractOutsourcings', id, 'laborId', 0)
+      updateItemField('directContractOutsourcings', id, 'laborName', '')
+      return
+    }
+
+    updateItemField('directContractOutsourcings', id, 'outsourcingCompanyId', selectedCompany.id)
+    updateItemField(
+      'directContractOutsourcings',
+      id,
+      'outsourcingCompanyName',
+      selectedCompany.name,
+    )
+    updateItemField('directContractOutsourcings', id, 'outsourcingCompanyContractId', 0)
+    updateItemField('directContractOutsourcings', id, 'outsourcingCompanyContractName', '')
+
+    updateItemField('directContractOutsourcings', id, 'laborId', 0)
+    updateItemField('directContractOutsourcings', id, 'laborName', '')
+  }
+
+  function DailyOutsourcingNameRow({ row }: { row: any }) {
+    const serviceCompanyFocusedId = useFocusStore((s) => s.serviceOutsourcingCompanyFocusedId)
+    const setServiceCompanyFocusedId = useFocusStore((s) => s.setServiceOutsourcingCompanyFocusedId)
+
+    const [localKeyword, setLocalKeyword] = React.useState(row.outsourcingCompanyName ?? '')
+
+    const isFocused = serviceCompanyFocusedId === row.id
+
+    // 입력값이 외부에서 바뀌면 로컬 상태도 업데이트
+    React.useEffect(() => {
+      setLocalKeyword(row.outsourcingCompanyName ?? '')
+    }, [row.outsourcingCompanyName])
+
+    // debounce 적용 (백엔드 호출용)
+    const debouncedKeyword = useDebouncedValue(localKeyword, 300)
+
+    const {
+      data: DirectOutSourcingNameData,
+      fetchNextPage: DirectOutSourcingNameFetchNextPage,
+      hasNextPage: DirectOutSourcingNameHasNextPage,
+      isFetching: DirectOutSourcingNameIsFetching,
+      isLoading: DirectOutSourcingNameIsLoading,
+    } = useInfiniteQuery({
+      queryKey: ['outsourcingInfo', debouncedKeyword],
+      queryFn: ({ pageParam = 0 }) =>
+        GetCompanyNameInfoService({
+          pageParam,
+          keyword: debouncedKeyword,
+        }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+      },
+      enabled: isFocused,
+    })
+
+    const serviceOutSourcingNameList = Array.from(
+      new Map(
+        DirectOutSourcingNameData?.pages
+          .flatMap((page: any) => page.data.content)
+          .map((u) => [u.name, u]),
+      )?.values() ?? [],
+    )
+
+    // onBlur 딜레이용 ref
+    const blurTimeout = React.useRef<NodeJS.Timeout | null>(null)
+
+    return (
+      <InfiniteScrollSelect
+        keyword={localKeyword}
+        placeholder="업체명을 입력해주세요."
+        debouncedKeyword={debouncedKeyword}
+        items={serviceOutSourcingNameList}
+        hasNextPage={DirectOutSourcingNameHasNextPage ?? false}
+        fetchNextPage={DirectOutSourcingNameFetchNextPage}
+        isLoading={DirectOutSourcingNameIsLoading || DirectOutSourcingNameIsFetching}
+        // onChangeKeyword={(newKeyword) =>
+        //   updateItemField('Employees', row.id, 'laborName', newKeyword)
+        // }
+        onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
+        renderItem={(item, isHighlighted) => (
+          <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+            {item.name}
+          </div>
+        )}
+        onSelect={(selectedCompany) => handleSelectOutsourcingName(row.id ?? 0, selectedCompany)}
+        shouldShowList={isFocused} // ← 업체명만 리스트 표시
+        onFocus={() => {
+          if (blurTimeout.current) clearTimeout(blurTimeout.current)
+          setServiceCompanyFocusedId(row.id)
+
+          setClearServiceCompanyFocusedId(null)
+          setClearPersonNameFocusedId(null)
+          setClearServiceOutsourcingContractFocusedId(null)
+          setClearServiceOutsourcingContractPersonNameFocusedId(null)
+          setClearFocusedRowId(null)
+        }}
+        onBlur={() => {
+          blurTimeout.current = setTimeout(() => setServiceCompanyFocusedId(null), 200) // 200ms 딜레이
+        }}
+      />
+    )
+  }
+
+  // 직영/용역에서 외주 쪽 계약명 키워드 검색
+
+  const handleSelectOutsourcingContractName = (id: number, selectedCompany: any) => {
+    if (!selectedCompany) {
+      updateItemField('directContractOutsourcings', id, 'laborId', 0)
+      updateItemField('directContractOutsourcings', id, 'laborName', '')
+      return
+    }
+
+    updateItemField(
+      'directContractOutsourcings',
+      id,
+      'outsourcingCompanyContractId',
+      selectedCompany.id,
+    )
+    updateItemField(
+      'directContractOutsourcings',
+      id,
+      'outsourcingCompanyContractName',
+      selectedCompany.contractName,
+    )
+
+    updateItemField('directContractOutsourcings', id, 'laborId', 0)
+    updateItemField('directContractOutsourcings', id, 'laborName', '')
+  }
+
+  function DailyOutsourcingContractNameRow({ row }: { row: any }) {
+    const serviceContractFocusedId = useFocusStore((s) => s.serviceOutsourcingContractFocusedId)
+    const setServiceContractFocusedId = useFocusStore(
+      (s) => s.setServiceOutsourcingContractFocusedId,
+    )
+
+    const [localKeyword, setLocalKeyword] = React.useState(row.outsourcingCompanyContractName ?? '')
+
+    const isFocused = serviceContractFocusedId === row.id
+
+    // 입력값이 외부에서 바뀌면 로컬 상태도 업데이트
+    React.useEffect(() => {
+      setLocalKeyword(row.outsourcingCompanyContractName ?? '')
+    }, [row.outsourcingCompanyContractName])
+
+    // debounce 적용 (백엔드 호출용)
+    const debouncedKeyword = useDebouncedValue(localKeyword, 300)
+
+    const outsourcingCompanyId = row.outsourcingCompanyId ?? 0 // row에서 업체 ID 가져오기
+
+    const {
+      data: directContractNameInfo,
+      fetchNextPage: directContractNameFetchNextPage,
+      hasNextPage: directContractNamehasNextPage,
+      isFetching: directContractNameFetching,
+      isLoading: directContractNameLoading,
+    } = useInfiniteQuery({
+      queryKey: ['directContractNameInfo', debouncedKeyword],
+      queryFn: ({ pageParam = 0 }) =>
+        GetDirectContractNameInfoService({
+          pageParam,
+          outsourcingCompanyId,
+          keyword: debouncedKeyword,
+        }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+      },
+      enabled: isFocused,
+    })
+
+    const serviceOutSourcingNameList = Array.from(
+      new Map(
+        directContractNameInfo?.pages
+          .flatMap((page: any) => page.data.content)
+          .map((u) => [u.name, u]),
+      )?.values() ?? [],
+    )
+
+    // onBlur 딜레이용 ref
+    const blurTimeout = React.useRef<NodeJS.Timeout | null>(null)
+
+    return (
+      <InfiniteScrollSelect
+        keyword={localKeyword}
+        placeholder="계약명을 입력해주세요."
+        debouncedKeyword={debouncedKeyword}
+        items={serviceOutSourcingNameList}
+        hasNextPage={directContractNamehasNextPage ?? false}
+        fetchNextPage={directContractNameFetchNextPage}
+        isLoading={directContractNameLoading || directContractNameFetching}
+        onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
+        renderItem={(item, isHighlighted) => (
+          <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+            {item.contractName}
+          </div>
+        )}
+        onSelect={(selectedCompany) =>
+          handleSelectOutsourcingContractName(row.id ?? 0, selectedCompany)
+        }
+        shouldShowList={isFocused} // ← 업체명만 리스트 표시
+        onFocus={() => {
+          if (blurTimeout.current) clearTimeout(blurTimeout.current)
+          setServiceContractFocusedId(row.id)
+
+          setClearServiceCompanyFocusedId(null)
+          setClearPersonNameFocusedId(null)
+          setClearServiceOutsourcingCompanyFocusedId(null)
+          setClearServiceOutsourcingContractPersonNameFocusedId(null)
+          setClearFocusedRowId(null)
+        }}
+        onBlur={() => {
+          blurTimeout.current = setTimeout(() => setServiceContractFocusedId(null), 200) // 200ms 딜레이
+        }}
+      />
+    )
+  }
+
+  // 직영/용역에서 외주쪽 이름명 키워드 검색
+
+  const handleSelectOutsourcingContractPersonName = (id: number, selectedCompany: any) => {
+    if (!selectedCompany) {
+      updateItemField('directContractOutsourcings', id, 'laborId', 0)
+      updateItemField('directContractOutsourcings', id, 'laborName', '')
+      return
+    }
+
+    updateItemField('directContractOutsourcings', id, 'laborId', selectedCompany.id)
+    updateItemField('directContractOutsourcings', id, 'laborName', selectedCompany.name)
+  }
+
+  function DailyOutsourcingContractPersonNameRow({ row }: { row: any }) {
+    console.log('rowrow', row)
+    const focusedContractNameRowId = useFocusStore(
+      (s) => s.serviceOutsourcingContractPersonNameFocusedId,
+    )
+    const setFocusedContractNameRowId = useFocusStore(
+      (s) => s.setServiceOutsourcingContractPersonNameFocusedId,
+    )
+
+    const [localKeyword, setLocalKeyword] = React.useState(row.laborName ?? '')
+
+    const isFocused = focusedContractNameRowId === row.id
+
+    // 입력값이 외부에서 바뀌면 로컬 상태도 업데이트
+    React.useEffect(() => {
+      setLocalKeyword(row.laborName ?? '')
+    }, [row.laborName])
+
+    // debounce 적용 (백엔드 호출용)
+    const debouncedKeyword = useDebouncedValue(localKeyword, 300)
+
+    const outsourcingCompanyId = row.outsourcingCompanyId
+    const outsourcingCompanyContractId = row.outsourcingCompanyContractId
+
+    console.log('계약명에 딸린 이름 ', outsourcingCompanyId, outsourcingCompanyContractId)
+
+    const {
+      data: ContractPersonNamesData,
+      fetchNextPage: ContractPersonNamesFetchNextPage,
+      hasNextPage: ContractPersonNamesHasNextPage,
+      isFetching: ContractPersonNamesIsFetching,
+      isLoading: ContractPersonNamesIsLoading,
+    } = useInfiniteQuery({
+      queryKey: ['OutsourcingContractInfo', debouncedKeyword],
+      queryFn: ({ pageParam = 0 }) =>
+        GetOutSourcingNameInfoByLabor({
+          pageParam,
+          outsourcingCompanyId,
+          outsourcingCompanyContractId,
+        }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+      },
+      enabled: isFocused,
+    })
+
+    const employeesNameList = Array.from(
+      new Map(
+        ContractPersonNamesData?.pages
+          .flatMap((page: any) => page.data.content)
+          .map((u) => [u.name, u]),
+      )?.values() ?? [],
+    )
+
+    // onBlur 딜레이용 ref
+    const blurTimeout = React.useRef<NodeJS.Timeout | null>(null)
+
+    return (
+      <InfiniteScrollSelect
+        keyword={localKeyword}
+        placeholder="이름을 입력해주세요."
+        debouncedKeyword={debouncedKeyword}
+        items={employeesNameList}
+        hasNextPage={ContractPersonNamesHasNextPage ?? false}
+        fetchNextPage={ContractPersonNamesFetchNextPage}
+        isLoading={ContractPersonNamesIsLoading || ContractPersonNamesIsFetching}
+        // onChangeKeyword={(newKeyword) =>
+        //   updateItemField('Employees', row.id, 'laborName', newKeyword)
+        // }
+        onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
+        renderItem={(item, isHighlighted) => (
+          <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+            {item.name}
+          </div>
+        )}
+        onSelect={(selectedCompany) =>
+          handleSelectOutsourcingContractPersonName(row.id ?? 0, selectedCompany)
+        }
+        shouldShowList={isFocused} // 포커스 기반 리스트 표시
+        onFocus={() => {
+          if (blurTimeout.current) clearTimeout(blurTimeout.current)
+          setFocusedContractNameRowId(row.id)
+          setClearServiceCompanyFocusedId(null)
+          setClearPersonNameFocusedId(null)
+          setClearServiceOutsourcingCompanyFocusedId(null)
+          setClearServiceOutsourcingContractFocusedId(null)
+          setClearFocusedRowId(null)
+        }}
+        onBlur={() => {
+          blurTimeout.current = setTimeout(() => setFocusedContractNameRowId(null), 200) // 200ms 딜레이
+        }}
+      />
+    )
+  }
 
   // 외주(공사) 조회
 
@@ -676,6 +1470,11 @@ export default function DailyReportRegistrationView() {
       outsourcingCompanyId: item.outsourcingCompany?.id ?? 0,
       outsourcingCompanyContractConstructionGroupId:
         item.outsourcingCompanyContractConstructionGroup.id ?? 0,
+
+      outsourcingCompanyName: item.outsourcingCompany?.name ?? 0,
+      outsourcingCompanyContractConstructionGroupName:
+        item.outsourcingCompanyContractConstructionGroup.itemName ?? 0,
+
       items: item.items.map((it: any) => ({
         id: it.id,
         specification: it.outsourcingCompanyContractConstruction.specification ?? '',
@@ -713,6 +1512,229 @@ export default function DailyReportRegistrationView() {
   const checkedOutsourcingIds = form.checkedOutsourcingIds
   const isOutsourcingAllChecked =
     resultOutsourcing.length > 0 && checkedOutsourcingIds.length === resultOutsourcing.length
+
+  // 외주(공사)에서 업체명 키워드 검색
+  const handleSelectWorkOutsourcingName = (id: number, selectedCompany: any) => {
+    console.log('selectedCompany 외주의 업체명', selectedCompany)
+    if (!selectedCompany) {
+      updateItemField('outsourcings', id, 'outsourcingCompanyId', 0)
+      updateItemField('outsourcings', id, 'outsourcingCompanyName', '')
+
+      return
+    }
+
+    updateItemField('outsourcings', id, 'outsourcingCompanyId', selectedCompany.id)
+    updateItemField('outsourcings', id, 'outsourcingCompanyName', selectedCompany.name)
+  }
+
+  function DailyWorkOutsourcingNameRow({ row }: { row: any }) {
+    const workOutsourcingNameFocusedId = useFocusStore((s) => s.workOutsourcingNameFocusedId)
+    const setWorkOutsourcingNameFocusedId = useFocusStore((s) => s.setWorkOutsourcingNameFocusedId)
+
+    const [localKeyword, setLocalKeyword] = React.useState(row.outsourcingCompanyName ?? '')
+
+    const isFocused = workOutsourcingNameFocusedId === row.id
+
+    // 입력값이 외부에서 바뀌면 로컬 상태도 업데이트
+    React.useEffect(() => {
+      setLocalKeyword(row.outsourcingCompanyName ?? '')
+    }, [row.outsourcingCompanyName])
+
+    // debounce 적용 (백엔드 호출용)
+    const debouncedKeyword = useDebouncedValue(localKeyword, 300)
+
+    const {
+      data: WorkerOutSourcingNameData,
+      fetchNextPage: WorkerOutSourcingNameFetchNextPage,
+      hasNextPage: WorkerOutSourcingNameHasNextPage,
+      isFetching: WorkerOutSourcingNameIsFetching,
+      isLoading: WorkerOutSourcingNameIsLoading,
+    } = useInfiniteQuery({
+      queryKey: ['workerInfo', debouncedKeyword],
+      queryFn: ({ pageParam = 0 }) =>
+        GetCompanyNameInfoService({
+          pageParam,
+          keyword: debouncedKeyword,
+        }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+      },
+      enabled: isFocused,
+    })
+
+    const workerOutSourcingNameList = Array.from(
+      new Map(
+        WorkerOutSourcingNameData?.pages
+          .flatMap((page: any) => page.data.content)
+          .map((u) => [u.name, u]),
+      )?.values() ?? [],
+    )
+
+    // onBlur 딜레이용 ref
+    const blurTimeout = React.useRef<NodeJS.Timeout | null>(null)
+
+    return (
+      <InfiniteScrollSelect
+        keyword={localKeyword}
+        placeholder="업체명을 입력해주세요."
+        debouncedKeyword={debouncedKeyword}
+        items={workerOutSourcingNameList}
+        hasNextPage={WorkerOutSourcingNameHasNextPage ?? false}
+        fetchNextPage={WorkerOutSourcingNameFetchNextPage}
+        isLoading={WorkerOutSourcingNameIsLoading || WorkerOutSourcingNameIsFetching}
+        onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
+        renderItem={(item, isHighlighted) => (
+          <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+            {item.name}
+          </div>
+        )}
+        onSelect={(selectedCompany) =>
+          handleSelectWorkOutsourcingName(row.id ?? 0, selectedCompany)
+        }
+        shouldShowList={isFocused}
+        onFocus={() => {
+          if (blurTimeout.current) clearTimeout(blurTimeout.current)
+          setWorkOutsourcingNameFocusedId(row.id)
+          setClearWorkerItemNameFocusedId(null)
+        }}
+        onBlur={() => {
+          blurTimeout.current = setTimeout(() => setWorkOutsourcingNameFocusedId(null), 200) // 200ms 딜레이
+        }}
+      />
+    )
+  }
+
+  // 외주(공사)에서 항목명 검색
+  // selectedCompany = {
+  //   id: 36,
+  //   itemName: "CIP공사",
+  //   items: [
+  //     { id: 98, item: "...", specification: "...", unit: "...", deleted: false },
+  //     ...
+  //   ]
+  // }
+
+  const handleSelectWorkerItemName = (id: number, selectedCompany: any) => {
+    console.log('해당 그룹 데이터 확인', selectedCompany)
+    if (!selectedCompany) {
+      updateItemField('outsourcings', id, 'outsourcingCompanyContractConstructionGroupId', 0)
+      updateItemField('outsourcings', id, 'outsourcingCompanyContractConstructionGroupName', '')
+      updateItemField('outsourcings', id, 'items', []) // 서브 아이템 초기화
+      return
+    }
+
+    // 그룹 정보 설정
+    updateItemField(
+      'outsourcings',
+      id,
+      'outsourcingCompanyContractConstructionGroupId',
+      selectedCompany.outsourcingCompanyContractConstructionGroupId,
+    )
+    updateItemField(
+      'outsourcings',
+      id,
+      'outsourcingCompanyContractConstructionGroupName',
+      selectedCompany.itemName,
+    )
+
+    // 🔥 백엔드에서 받은 items → 우리 폼 구조에 맞게 변환하여 세팅
+    const mappedItems = (selectedCompany.items ?? []).map((item: any) => ({
+      id: item.id, // 내부 관리용
+      outsourcingCompanyContractConstructionName: item.item,
+      outsourcingCompanyContractConstructionId: item.id,
+      specification: item.specification,
+      unit: item.unit,
+      quantity: item.quantity ?? 0,
+      memo: '',
+      fileUrl: '',
+    }))
+
+    updateItemField('outsourcings', id, 'items', mappedItems)
+  }
+
+  function DailyWorkerItemNameRow({ row }: { row: any }) {
+    const workerItemNameFocusedId = useFocusStore((s) => s.workerItemNameFocusedId)
+    const setWorkerItemNameFocusedId = useFocusStore((s) => s.setWorkerItemNameFocusedId)
+
+    const [localKeyword, setLocalKeyword] = React.useState(
+      row.outsourcingCompanyContractConstructionGroupName ?? '',
+    )
+
+    const isFocused = workerItemNameFocusedId === row.id
+
+    // 입력값이 외부에서 바뀌면 로컬 상태도 업데이트
+    React.useEffect(() => {
+      setLocalKeyword(row.outsourcingCompanyContractConstructionGroupName ?? '')
+    }, [row.outsourcingCompanyContractConstructionGroupName])
+
+    // debounce 적용 (백엔드 호출용)
+    const debouncedKeyword = useDebouncedValue(localKeyword, 300)
+    const outsourcingCompanyId = row.outsourcingCompanyId ?? 0 // row에서 업체 ID 가져오기
+
+    const {
+      data: workerGroupNameList,
+      fetchNextPage: workerGroupNameFetchNextPage,
+      hasNextPage: workerGroupNameHasNextPage,
+      isFetching: workerGroupNameIsFetching,
+      isLoading: workerGroupNameLoading,
+    } = useInfiniteQuery({
+      queryKey: ['ContractGroupInfo', debouncedKeyword],
+      queryFn: ({ pageParam = 0 }) =>
+        GetContractGroup({
+          pageParam,
+          id: outsourcingCompanyId,
+          siteId: Number(siteIdList),
+          keyword: debouncedKeyword,
+        }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+      },
+      enabled: isFocused,
+    })
+
+    const workerNameList = Array.from(
+      new Map(
+        workerGroupNameList?.pages
+          .flatMap((page: any) => page.data.content)
+          .map((u) => [u.name, u]),
+      )?.values() ?? [],
+    )
+
+    // onBlur 딜레이용 ref
+    const blurTimeout = React.useRef<NodeJS.Timeout | null>(null)
+
+    return (
+      <InfiniteScrollSelect
+        keyword={localKeyword}
+        placeholder="항목명을 입력해주세요."
+        debouncedKeyword={debouncedKeyword}
+        items={workerNameList}
+        hasNextPage={workerGroupNameHasNextPage ?? false}
+        fetchNextPage={workerGroupNameFetchNextPage}
+        isLoading={workerGroupNameLoading || workerGroupNameIsFetching}
+        onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
+        renderItem={(item, isHighlighted) => (
+          <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+            {item.itemName}
+          </div>
+        )}
+        onSelect={(selectedCompany) => handleSelectWorkerItemName(row.id ?? 0, selectedCompany)}
+        shouldShowList={isFocused}
+        onFocus={() => {
+          if (blurTimeout.current) clearTimeout(blurTimeout.current)
+          setWorkerItemNameFocusedId(row.id)
+          setClearWorkOutsourcingNameFocusedId(null)
+        }}
+        onBlur={() => {
+          blurTimeout.current = setTimeout(() => setWorkerItemNameFocusedId(null), 200) // 200ms 딜레이
+        }}
+      />
+    )
+  }
 
   //   장비
   const {
@@ -754,8 +1776,12 @@ export default function DailyReportRegistrationView() {
     const fetched = allEquipmentContents.map((item: any) => ({
       id: item.id,
       outsourcingCompanyId: item.outsourcingCompany?.id ?? 0,
+      outsourcingCompanyName: item.outsourcingCompany?.name ?? 0,
       outsourcingCompanyContractDriverId: item.outsourcingCompanyContractDriver?.id ?? 0,
+      outsourcingCompanyContractDriverName: item.outsourcingCompanyContractDriver?.name ?? 0,
       outsourcingCompanyContractEquipmentId: item.outsourcingCompanyContractEquipment?.id ?? 0,
+      outsourcingCompanyContractEquipmentName:
+        item.outsourcingCompanyContractEquipment?.vehicleNumber ?? 0,
       taskDescription: item.outsourcingCompanyContractEquipment?.taskDescription ?? '',
       specificationName: item.outsourcingCompanyContractEquipment?.specification ?? '',
       type: item.outsourcingCompanyContractEquipment?.category ?? '',
@@ -769,6 +1795,7 @@ export default function DailyReportRegistrationView() {
         (contractSubEquipment: any) => ({
           id: contractSubEquipment.id ?? 0,
           outsourcingCompanyContractSubEquipmentId: contractSubEquipment.subEquipment.id ?? 0,
+          outsourcingCompanyContractSubEquipmentName: contractSubEquipment.subEquipment.type ?? 0,
           type: contractSubEquipment.subEquipment.type ?? '',
           typeCode: contractSubEquipment.subEquipment.typeCode ?? '',
           description: contractSubEquipment.subEquipment.description ?? '',
@@ -804,7 +1831,8 @@ export default function DailyReportRegistrationView() {
       }))
       subEquipmentsByRow[item.outsourcingCompanyContractEquipmentId] = subEquipments
     })
-    setTestArrayByRow(subEquipmentsByRow)
+
+    // setTestArrayByRow(subEquipmentsByRow)
 
     setIsEditMode(true)
     setField('outsourcingEquipments', fetched)
@@ -815,6 +1843,365 @@ export default function DailyReportRegistrationView() {
   const checkedEquipmentIds = form.checkedEquipmentIds
   const isEquipmentAllChecked =
     equipmentData.length > 0 && checkedEquipmentIds.length === equipmentData.length
+
+  // 장비에서 업체명 키워드 검색
+  // 장비 - 업체명 선택
+  const handleSelectEquipMentOutsourcingName = (id: number, selectedCompany: any) => {
+    console.log('selectedCompany 장비의 업체명', selectedCompany)
+    if (!selectedCompany) {
+      updateItemField('equipment', id, 'outsourcingCompanyId', 0)
+      updateItemField('equipment', id, 'outsourcingCompanyName', '')
+
+      updateItemField('equipment', id, 'outsourcingCompanyContractEquipmentId', 0)
+      updateItemField('equipment', id, 'outsourcingCompanyContractEquipmentName', '')
+      updateItemField('equipment', id, 'specificationName', '')
+      updateItemField('equipment', id, 'workContent', '')
+      updateItemField('equipment', id, 'unitPrice', 0)
+      updateItemField('equipment', id, 'subEquipments', [])
+
+      updateItemField('equipment', id, 'outsourcingCompanyContractDriverId', 0)
+      updateItemField('equipment', id, 'outsourcingCompanyContractDriverName', '')
+
+      return
+    }
+
+    updateItemField('equipment', id, 'outsourcingCompanyId', selectedCompany.id)
+    updateItemField('equipment', id, 'outsourcingCompanyName', selectedCompany.name)
+
+    updateItemField('equipment', id, 'outsourcingCompanyContractEquipmentId', 0)
+    updateItemField('equipment', id, 'outsourcingCompanyContractEquipmentName', '')
+    updateItemField('equipment', id, 'specificationName', '')
+    updateItemField('equipment', id, 'workContent', '')
+    updateItemField('equipment', id, 'unitPrice', 0)
+    updateItemField('equipment', id, 'subEquipments', [])
+
+    updateItemField('equipment', id, 'outsourcingCompanyContractDriverId', 0)
+    updateItemField('equipment', id, 'outsourcingCompanyContractDriverName', '')
+  }
+
+  function DailyEquipMentOutsourcingNameRow({ row }: { row: any }) {
+    const equipmentOutsourcingNameFocusedId = useFocusStore(
+      (s) => s.equipmentOutsourcingNameFocusedId,
+    )
+    const setEquipmentOutsourcingNameFocusedId = useFocusStore(
+      (s) => s.setEquipmentOutsourcingNameFocusedId,
+    )
+
+    const [localKeyword, setLocalKeyword] = React.useState(row.outsourcingCompanyName ?? '')
+
+    const isFocused = equipmentOutsourcingNameFocusedId === row.id
+
+    // 입력값이 외부에서 바뀌면 로컬 상태도 업데이트
+    React.useEffect(() => {
+      setLocalKeyword(row.outsourcingCompanyName ?? '')
+    }, [row.outsourcingCompanyName])
+
+    // debounce 적용 (백엔드 호출용)
+    const debouncedKeyword = useDebouncedValue(localKeyword, 300)
+
+    const {
+      data: EquipmentOutSourcingNameData,
+      fetchNextPage: EquipmentOutSourcingNameFetchNextPage,
+      hasNextPage: EquipmentOutSourcingNameHasNextPage,
+      isFetching: EquipmentOutSourcingNameIsFetching,
+      isLoading: EquipmentOutSourcingNameIsLoading,
+    } = useInfiniteQuery({
+      queryKey: ['equipmentInfo', debouncedKeyword],
+      queryFn: ({ pageParam = 0 }) =>
+        GetCompanyNameInfoService({
+          pageParam,
+          keyword: debouncedKeyword,
+        }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+      },
+      enabled: isFocused,
+    })
+
+    const equipmentOutSourcingNameList = Array.from(
+      new Map(
+        EquipmentOutSourcingNameData?.pages
+          .flatMap((page: any) => page.data.content)
+          .map((u) => [u.name, u]),
+      )?.values() ?? [],
+    )
+
+    // onBlur 딜레이용 ref
+    const blurTimeout = React.useRef<NodeJS.Timeout | null>(null)
+
+    return (
+      <InfiniteScrollSelect
+        keyword={localKeyword}
+        placeholder="업체명을 입력해주세요."
+        debouncedKeyword={debouncedKeyword}
+        items={equipmentOutSourcingNameList}
+        hasNextPage={EquipmentOutSourcingNameHasNextPage ?? false}
+        fetchNextPage={EquipmentOutSourcingNameFetchNextPage}
+        isLoading={EquipmentOutSourcingNameIsLoading || EquipmentOutSourcingNameIsFetching}
+        onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
+        renderItem={(item, isHighlighted) => (
+          <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+            {item.name}
+          </div>
+        )}
+        onSelect={(selectedCompany) =>
+          handleSelectEquipMentOutsourcingName(row.id ?? 0, selectedCompany)
+        }
+        shouldShowList={isFocused}
+        onFocus={() => {
+          if (blurTimeout.current) clearTimeout(blurTimeout.current)
+          setEquipmentOutsourcingNameFocusedId(row.id)
+
+          setClearEquipmentDriverNameFocusedId(null)
+          setClearEquipmentCarNumberFocusedId(null)
+        }}
+        onBlur={() => {
+          blurTimeout.current = setTimeout(() => setEquipmentOutsourcingNameFocusedId(null), 200) // 200ms 딜레이
+        }}
+      />
+    )
+  }
+
+  // 장비에서  기사명
+
+  const handleSelectEquipMentDriverName = (id: number, selectedCompany: any) => {
+    if (!selectedCompany) {
+      updateItemField('equipment', id, 'outsourcingCompanyContractDriverId', 0)
+      updateItemField('equipment', id, 'outsourcingCompanyContractDriverName', '')
+
+      return
+    }
+
+    updateItemField('equipment', id, 'outsourcingCompanyContractDriverId', selectedCompany.id)
+    updateItemField('equipment', id, 'outsourcingCompanyContractDriverName', selectedCompany.name)
+  }
+
+  function DailyEquipMentDriverNameRow({ row }: { row: any }) {
+    const equipmentDriverNameFocusedId = useFocusStore((s) => s.equipmentDriverNameFocusedId)
+    const setEquipmentDriverNameFocusedId = useFocusStore((s) => s.setEquipmentDriverNameFocusedId)
+
+    const [localKeyword, setLocalKeyword] = React.useState(
+      row.outsourcingCompanyContractDriverName ?? '',
+    )
+
+    const isFocused = equipmentDriverNameFocusedId === row.id
+
+    // 입력값이 외부에서 바뀌면 로컬 상태도 업데이트
+    React.useEffect(() => {
+      setLocalKeyword(row.outsourcingCompanyContractDriverName ?? '')
+    }, [row.outsourcingCompanyContractDriverName])
+
+    // debounce 적용 (백엔드 호출용)
+    const debouncedKeyword = useDebouncedValue(localKeyword, 300)
+    const outsourcingCompanyId = row.outsourcingCompanyId ?? 0 // row에서 업체 ID 가져오기
+
+    const {
+      data: equipmentDriverName,
+      fetchNextPage: equipmentDriverNameFetchNextPage,
+      hasNextPage: equipmentDriverNameHasNextPage,
+      isFetching: equipmentDriverNameIsFetching,
+      isLoading: equipmentDriverNameLoading,
+    } = useInfiniteQuery({
+      queryKey: ['equipmentDriverInfo', debouncedKeyword],
+
+      queryFn: ({ pageParam }) =>
+        FuelDriverNameScroll({
+          pageParam,
+          keyword: debouncedKeyword,
+          // 업체명
+          id: outsourcingCompanyId,
+          siteIdList: Number(siteIdList),
+        }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+      },
+      enabled: isFocused,
+    })
+
+    const equipmentDriverNameList = Array.from(
+      new Map(
+        equipmentDriverName?.pages
+          .flatMap((page: any) => page.data.content)
+          .map((u) => [u.name, u]),
+      )?.values() ?? [],
+    )
+
+    // onBlur 딜레이용 ref
+    const blurTimeout = React.useRef<NodeJS.Timeout | null>(null)
+
+    return (
+      <InfiniteScrollSelect
+        keyword={localKeyword}
+        placeholder="기사명을 입력해주세요."
+        debouncedKeyword={debouncedKeyword}
+        items={equipmentDriverNameList}
+        hasNextPage={equipmentDriverNameHasNextPage ?? false}
+        fetchNextPage={equipmentDriverNameFetchNextPage}
+        isLoading={equipmentDriverNameLoading || equipmentDriverNameIsFetching}
+        onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
+        renderItem={(item, isHighlighted) => (
+          <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+            {item.name}
+          </div>
+        )}
+        onSelect={(selectedCompany) =>
+          handleSelectEquipMentDriverName(row.id ?? 0, selectedCompany)
+        }
+        shouldShowList={isFocused}
+        onFocus={() => {
+          if (blurTimeout.current) clearTimeout(blurTimeout.current)
+          setEquipmentDriverNameFocusedId(row.id)
+
+          setClearEquipmentOutsourcingNameFocusedId(null)
+          setClearEquipmentCarNumberFocusedId(null)
+        }}
+        onBlur={() => {
+          blurTimeout.current = setTimeout(() => setEquipmentDriverNameFocusedId(null), 200) // 200ms 딜레이
+        }}
+      />
+    )
+  }
+
+  // 장비에서 차량번호  키워드 검색
+
+  const handleSelectEquipMentCarNumber = (id: number, selectedCompany: any) => {
+    console.log('현재 해당 데이터 서브장비 있나여?', selectedCompany)
+    if (!selectedCompany) {
+      // 차량번호 전체 초기화
+      updateItemField('equipment', id, 'outsourcingCompanyContractEquipmentId', 0)
+      updateItemField('equipment', id, 'outsourcingCompanyContractEquipmentName', '')
+      updateItemField('equipment', id, 'specificationName', '')
+      updateItemField('equipment', id, 'workContent', '')
+      updateItemField('equipment', id, 'unitPrice', 0)
+      updateItemField('equipment', id, 'subEquipments', [])
+      return
+    }
+
+    // 기본 장비 세팅
+    updateItemField('equipment', id, 'outsourcingCompanyContractEquipmentId', selectedCompany.id)
+    updateItemField(
+      'equipment',
+      id,
+      'outsourcingCompanyContractEquipmentName',
+      selectedCompany.vehicleNumber,
+    )
+
+    updateItemField('equipment', id, 'specificationName', selectedCompany.specification || '')
+    updateItemField('equipment', id, 'unitPrice', selectedCompany.unitPrice || 0)
+    updateItemField('equipment', id, 'workContent', selectedCompany.taskDescription || '')
+
+    const subEquipments = selectedCompany.subEquipments ?? []
+
+    console.log('서브장비 데이터 보기 ', subEquipments)
+
+    if (subEquipments.length > 0) {
+      const formattedSubEquipments = subEquipments.map((sub: any) => ({
+        id: sub.id,
+        outsourcingCompanyContractSubEquipmentId: sub.id,
+        outsourcingCompanyContractSubEquipmentName: sub.type,
+        type: sub.type || sub.typeCode || '-',
+        workContent: sub.workContent || sub.taskDescription || '',
+        description: sub.description || '',
+        unitPrice: sub.unitPrice || 0,
+        workHours: sub.workHours || 0,
+        memo: sub.memo || '',
+      }))
+
+      updateItemField('equipment', id, 'subEquipments', formattedSubEquipments)
+    } else {
+      updateItemField('equipment', id, 'subEquipments', [])
+    }
+  }
+
+  function DailyEquipMentCarNumberRow({ row }: { row: any }) {
+    const equipmentCarNumberFocusedId = useFocusStore((s) => s.equipmentCarNumberFocusedId)
+    const setEquipmentCarNumberFocusedId = useFocusStore((s) => s.setEquipmentCarNumberFocusedId)
+
+    const [localKeyword, setLocalKeyword] = React.useState(
+      row.outsourcingCompanyContractEquipmentName ?? '',
+    )
+
+    const isFocused = equipmentCarNumberFocusedId === row.id
+
+    // 입력값이 외부에서 바뀌면 로컬 상태도 업데이트
+    React.useEffect(() => {
+      setLocalKeyword(row.outsourcingCompanyContractEquipmentName ?? '')
+    }, [row.outsourcingCompanyContractEquipmentName])
+
+    // debounce 적용 (백엔드 호출용)
+    const debouncedKeyword = useDebouncedValue(localKeyword, 300)
+    const outsourcingCompanyId = row.outsourcingCompanyId ?? 0 // row에서 업체 ID 가져오기
+
+    const {
+      data: equipmentCarNumber,
+      fetchNextPage: equipmentCarNumberFetchNextPage,
+      hasNextPage: equipmentCarNumberHasNextPage,
+      isFetching: equipmentCarNumberIsFetching,
+      isLoading: equipmentCarNumberLoading,
+    } = useInfiniteQuery({
+      queryKey: ['equipmentCarNumberInfo', debouncedKeyword],
+      queryFn: ({ pageParam }) =>
+        FuelEquipmentNameScroll({
+          pageParam,
+          keyword: debouncedKeyword,
+          // 업체명
+          id: outsourcingCompanyId,
+          siteIdList: Number(siteIdList),
+        }),
+
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+      },
+      enabled: isFocused,
+    })
+
+    const equipmentCarNumberList = Array.from(
+      new Map(
+        equipmentCarNumber?.pages
+          .flatMap((page: any) => page.data.content)
+          .map((u) => [u.vehicleNumber, u]),
+      )?.values() ?? [],
+    )
+
+    // onBlur 딜레이용 ref
+    const blurTimeout = React.useRef<NodeJS.Timeout | null>(null)
+
+    return (
+      <InfiniteScrollSelect
+        keyword={localKeyword}
+        placeholder="차량번호를 입력해주세요."
+        debouncedKeyword={debouncedKeyword}
+        items={equipmentCarNumberList}
+        hasNextPage={equipmentCarNumberHasNextPage ?? false}
+        fetchNextPage={equipmentCarNumberFetchNextPage}
+        isLoading={equipmentCarNumberLoading || equipmentCarNumberIsFetching}
+        onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
+        renderItem={(item, isHighlighted) => (
+          <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+            {item.vehicleNumber}
+          </div>
+        )}
+        onSelect={(selectedCompany) => handleSelectEquipMentCarNumber(row.id ?? 0, selectedCompany)}
+        shouldShowList={isFocused}
+        onFocus={() => {
+          if (blurTimeout.current) clearTimeout(blurTimeout.current)
+          setEquipmentCarNumberFocusedId(row.id)
+
+          setClearEquipmentOutsourcingNameFocusedId(null)
+          setClearEquipmentDriverNameFocusedId(null)
+        }}
+        onBlur={() => {
+          blurTimeout.current = setTimeout(() => setEquipmentCarNumberFocusedId(null), 200) // 200ms 딜레이
+        }}
+      />
+    )
+  }
 
   // 유류 데이터
 
@@ -859,9 +2246,14 @@ export default function DailyReportRegistrationView() {
     const fetched = allFuels.map((item: any) => ({
       id: item.fuelInfoId,
       outsourcingCompanyId: item.outsourcingCompany?.id ?? 0,
+      outsourcingCompanyName: item.outsourcingCompany?.name ?? '',
+
       deleted: item.outsourcingCompany.deleted,
       driverId: item.outsourcingCompanyDriver?.id ?? 0,
       equipmentId: item.outsourcingCompanyEquipment?.id ?? '',
+
+      equipmentName: item.outsourcingCompanyEquipment?.vehicleNumber ?? '',
+
       specificationName: item.outsourcingCompanyEquipment.specification ?? '',
       fuelType: item.fuelTypeCode ?? '',
       categoryType: item.categoryTypeCode,
@@ -898,6 +2290,205 @@ export default function DailyReportRegistrationView() {
     setIsEditMode(true)
     setField('fuelInfos', fetched)
     setModifyFuelNumber(allFuels[0]?.fuelAggregationId)
+  }
+
+  // 유류 데이터에서 업체명 키워드 검색
+
+  // 외주(공사)에서 업체명 키워드 검색
+  const handleSelectFuelOutsourcingName = (id: number, selectedCompany: any) => {
+    if (!selectedCompany) {
+      updateItemField('fuel', id, 'outsourcingCompanyId', 0)
+      updateItemField('fuel', id, 'outsourcingCompanyName', '')
+
+      return
+    }
+
+    updateItemField('fuel', id, 'outsourcingCompanyId', selectedCompany.id)
+    updateItemField('fuel', id, 'outsourcingCompanyName', selectedCompany.name)
+  }
+
+  function DailyFuelOutsourcingNameRow({ row }: { row: any }) {
+    const fuelOutsourcingNameFocusedId = useFocusStore((s) => s.fuelOutsourcingNameFocusedId)
+    const setFuelOutsourcingNameFocusedId = useFocusStore((s) => s.setFuelOutsourcingNameFocusedId)
+
+    const [localKeyword, setLocalKeyword] = React.useState(row.outsourcingCompanyName ?? '')
+
+    const isFocused = fuelOutsourcingNameFocusedId === row.id
+
+    // 입력값이 외부에서 바뀌면 로컬 상태도 업데이트
+    React.useEffect(() => {
+      setLocalKeyword(row.outsourcingCompanyName ?? '')
+    }, [row.outsourcingCompanyName])
+
+    // debounce 적용 (백엔드 호출용)
+    const debouncedKeyword = useDebouncedValue(localKeyword, 300)
+
+    const {
+      data: FuelOutSourcingNameData,
+      fetchNextPage: FuelOutSourcingNameFetchNextPage,
+      hasNextPage: FuelOutSourcingNameHasNextPage,
+      isFetching: FuelOutSourcingNameIsFetching,
+      isLoading: FuelOutSourcingNameIsLoading,
+    } = useInfiniteQuery({
+      queryKey: ['fuelInfo', debouncedKeyword],
+      queryFn: ({ pageParam = 0 }) =>
+        GetCompanyNameInfoService({
+          pageParam,
+          keyword: debouncedKeyword,
+        }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+      },
+      enabled: isFocused,
+    })
+
+    const fuelOutSourcingNameList = Array.from(
+      new Map(
+        FuelOutSourcingNameData?.pages
+          .flatMap((page: any) => page.data.content)
+          .map((u) => [u.name, u]),
+      )?.values() ?? [],
+    )
+
+    // onBlur 딜레이용 ref
+    const blurTimeout = React.useRef<NodeJS.Timeout | null>(null)
+
+    return (
+      <InfiniteScrollSelect
+        keyword={localKeyword}
+        placeholder="업체명을 입력해주세요."
+        debouncedKeyword={debouncedKeyword}
+        items={fuelOutSourcingNameList}
+        hasNextPage={FuelOutSourcingNameHasNextPage ?? false}
+        fetchNextPage={FuelOutSourcingNameFetchNextPage}
+        isLoading={FuelOutSourcingNameIsLoading || FuelOutSourcingNameIsFetching}
+        onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
+        renderItem={(item, isHighlighted) => (
+          <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+            {item.name}
+          </div>
+        )}
+        onSelect={(selectedCompany) =>
+          handleSelectFuelOutsourcingName(row.id ?? 0, selectedCompany)
+        }
+        shouldShowList={isFocused}
+        onFocus={() => {
+          if (blurTimeout.current) clearTimeout(blurTimeout.current)
+          setFuelOutsourcingNameFocusedId(row.id)
+          setClearFuelCarNumberFocusedId(null)
+        }}
+        onBlur={() => {
+          blurTimeout.current = setTimeout(() => setFuelOutsourcingNameFocusedId(null), 200) // 200ms 딜레이
+        }}
+      />
+    )
+  }
+
+  // 유류에서 차량번호  키워드 검색
+
+  const handleSelectFuelCarNumber = (id: number, selectedCompany: any) => {
+    console.log('현재 해당 데이터 서브장비 있나여?', selectedCompany)
+    if (!selectedCompany) {
+      // 차량번호 전체 초기화
+      updateItemField('fuel', id, 'equipmentId', 0)
+      updateItemField('fuel', id, 'equipmentName', '')
+      updateItemField('fuel', id, 'specificationName', '')
+
+      return
+    }
+
+    // 기본 장비 세팅
+    updateItemField('fuel', id, 'equipmentId', selectedCompany.id)
+    updateItemField('fuel', id, 'equipmentName', selectedCompany.vehicleNumber)
+
+    updateItemField('fuel', id, 'specificationName', selectedCompany.specification || '')
+  }
+
+  function DailyFuelCarNumberRow({ row }: { row: any }) {
+    const fuelCarNumberFocusedId = useFocusStore((s) => s.fuelCarNumberFocusedId)
+    const setFuelCarNumberFocusedId = useFocusStore((s) => s.setFuelCarNumberFocusedId)
+
+    const [localKeyword, setLocalKeyword] = React.useState(row.equipmentName ?? '')
+
+    const isFocused = fuelCarNumberFocusedId === row.id
+
+    // 입력값이 외부에서 바뀌면 로컬 상태도 업데이트
+    React.useEffect(() => {
+      setLocalKeyword(row.equipmentName ?? '')
+    }, [row.equipmentName])
+
+    // debounce 적용 (백엔드 호출용)
+    const debouncedKeyword = useDebouncedValue(localKeyword, 300)
+    const outsourcingCompanyId = row.outsourcingCompanyId ?? 0 // row에서 업체 ID 가져오기
+    const categoryType = row.categoryType
+    console.log('row 확인 구분 값 ', row)
+
+    const {
+      data: fuelCarNumber,
+      fetchNextPage: fuelCarNumberFetchNextPage,
+      hasNextPage: fuelCarNumberHasNextPage,
+      isFetching: fuelCarNumberIsFetching,
+      isLoading: fuelCarNumberLoading,
+    } = useInfiniteQuery({
+      queryKey: ['fuelCarNumberInfo', debouncedKeyword],
+      queryFn: ({ pageParam }) =>
+        FuelEquipmentNameScroll({
+          pageParam,
+          keyword: debouncedKeyword,
+          types: categoryType,
+          // 업체명
+          id: outsourcingCompanyId,
+          siteIdList: Number(siteIdList),
+        }),
+
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+      },
+      enabled: isFocused,
+    })
+
+    const fuelCarNumberList = Array.from(
+      new Map(
+        fuelCarNumber?.pages
+          .flatMap((page: any) => page.data.content)
+          .map((u) => [u.vehicleNumber, u]),
+      )?.values() ?? [],
+    )
+
+    // onBlur 딜레이용 ref
+    const blurTimeout = React.useRef<NodeJS.Timeout | null>(null)
+
+    return (
+      <InfiniteScrollSelect
+        keyword={localKeyword}
+        placeholder="차량번호를 입력해주세요."
+        debouncedKeyword={debouncedKeyword}
+        items={fuelCarNumberList}
+        hasNextPage={fuelCarNumberHasNextPage ?? false}
+        fetchNextPage={fuelCarNumberFetchNextPage}
+        isLoading={fuelCarNumberLoading || fuelCarNumberIsFetching}
+        onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
+        renderItem={(item, isHighlighted) => (
+          <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+            {item.vehicleNumber}
+          </div>
+        )}
+        onSelect={(selectedCompany) => handleSelectFuelCarNumber(row.id ?? 0, selectedCompany)}
+        shouldShowList={isFocused}
+        onFocus={() => {
+          if (blurTimeout.current) clearTimeout(blurTimeout.current)
+          setFuelCarNumberFocusedId(row.id)
+          setClearFuelOutsourcingNameFocusedId(null)
+        }}
+        onBlur={() => {
+          blurTimeout.current = setTimeout(() => setFuelCarNumberFocusedId(null), 200) // 200ms 딜레이
+        }}
+      />
+    )
   }
 
   // 공사일보의 작업 내용 조회
@@ -1483,50 +3074,6 @@ export default function DailyReportRegistrationView() {
   const checkedFuelIds = form.checkedFuelsIds
   const isFuelAllChecked = fuelData.length > 0 && checkedFuelIds.length === fuelData.length
 
-  const [updatedOutCompanyOptions, setUpdatedOutCompanyOptions] = useState(withEquipmentInfoOptions)
-
-  useEffect(() => {
-    if (isEditMode && fuelData && withEquipmentInfoOptions?.length > 0) {
-      const newOptions = [...withEquipmentInfoOptions]
-
-      fuelData.forEach((fuel: any) => {
-        const companyId = Number(fuel.outsourcingCompanyId)
-        const companyName = fuel.outsourcingCompanyName
-        const isDeleted = fuel.deleted
-        const displayName = companyName + (isDeleted ? ' (삭제됨)' : '')
-
-        const existingIndex = newOptions.findIndex((opt) => Number(opt.id) === Number(companyId))
-
-        if (existingIndex !== -1) {
-          // 이미 있으면 이름 업데이트
-          // newOptions[existingIndex] = {
-          //   ...newOptions[existingIndex],
-          //   name: displayName,
-          //   deleted: isDeleted,
-          // }
-        } else {
-          // 없으면 새로 추가
-          newOptions.push({
-            id: companyId,
-            name: displayName,
-            deleted: isDeleted,
-          })
-        }
-      })
-
-      const deletedCompanies = newOptions.filter((c) => c.deleted)
-      const normalCompanies = newOptions.filter((c) => !c.deleted && c.id !== 0)
-
-      setUpdatedOutCompanyOptions([
-        { id: 0, name: '선택', deleted: false },
-        ...deletedCompanies,
-        ...normalCompanies,
-      ])
-    } else if (!isEditMode) {
-      setUpdatedOutCompanyOptions(withEquipmentInfoOptions)
-    }
-  }, [fuelData, isEditMode, withEquipmentInfoOptions])
-
   // 첨부팡리
   const {
     fetchNextPage: fileFetchNextPage,
@@ -2070,72 +3617,71 @@ export default function DailyReportRegistrationView() {
   // "계정 관리" 메뉴에 대한 권한
   const { hasApproval } = useMenuPermission(roleId, '출역일보', enabled)
 
-  const [carNumberOptionsByCompany, setCarNumberOptionsByCompany] = useState<Record<any, any[]>>({})
+  // const [carNumberOptionsByCompany, setCarNumberOptionsByCompany] = useState<Record<any, any[]>>({})
 
-  const [driverOptionsByCompany, setDriverOptionsByCompany] = useState<Record<number, any[]>>({})
+  // const [driverOptionsByCompany, setDriverOptionsByCompany] = useState<Record<number, any[]>>({})
 
   // 외주(공사)의 항목명 가져온느 변수 값
-
-  const [itemNameByOutSourcing, setItemNameByOutSourcing] = useState<Record<any, any[]>>({})
 
   // 직영/계약직에서  이름 불러오기
 
   // 계약직만 데이터 조회
 
-  const {
-    data: contractInfo,
-    fetchNextPage: contractNameFetchNextPage,
-    hasNextPage: contractNamehasNextPage,
-    isFetching: contractNameFetching,
-    isLoading: contractNameLoading,
-  } = useInfiniteQuery({
-    queryKey: ['contractInfo', selectedCompanyIds[selectId]],
-    queryFn: ({ pageParam = 0 }) =>
-      GetContractNameInfoService({
-        pageParam,
-        // outsourcingCompanyId: selectedCompanyIds[selectId] || 0,
-        size: 100,
-      }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
-      const { sliceInfo } = lastPage.data
-      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
-    },
-    enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
-  })
+  // const {
+  //   data: contractInfo,
+  //   fetchNextPage: contractNameFetchNextPage,
+  //   hasNextPage: contractNamehasNextPage,
+  //   isFetching: contractNameFetching,
+  //   isLoading: contractNameLoading,
+  // } = useInfiniteQuery({
+  //   queryKey: ['contractInfo', selectedCompanyIds[selectId]],
+  //   queryFn: ({ pageParam = 0 }) =>
+  //     GetContractNameInfoService({
+  //       pageParam,
+  //       // outsourcingCompanyId: selectedCompanyIds[selectId] || 0,
+  //       size: 100,
+  //     }),
+  //   initialPageParam: 0,
+  //   getNextPageParam: (lastPage) => {
+  //     const { sliceInfo } = lastPage.data
+  //     return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+  //   },
+  //   enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
+  // })
+  // // 직영/용역에 이름 키워드 검색
 
-  // 직영/용역에서 직영 데이터 조회
-  useEffect(() => {
-    if (!contractInfo) return
+  // // 직영/용역에서 직영 데이터 조회
+  // useEffect(() => {
+  //   if (!contractInfo) return
 
-    const options = contractInfo.pages
-      .flatMap((page) => page.data.content)
-      .map((user) => ({
-        id: user.id,
-        name: user.name,
-        type: user.type,
-        previousDailyWage: user.previousDailyWage || user.dailyWage,
-        dailyWage: user.dailyWage,
-        isSeverancePayEligible: user.isSeverancePayEligible,
-        workType: user.workType,
-      }))
+  //   const options = contractInfo.pages
+  //     .flatMap((page) => page.data.content)
+  //     .map((user) => ({
+  //       id: user.id,
+  //       name: user.name,
+  //       type: user.type,
+  //       previousDailyWage: user.previousDailyWage || user.dailyWage,
+  //       dailyWage: user.dailyWage,
+  //       isSeverancePayEligible: user.isSeverancePayEligible,
+  //       workType: user.workType,
+  //     }))
 
-    setContarctNameOptionsByCompany((prev) => ({
-      ...prev,
-      [selectedCompanyIds[selectId]]: [
-        {
-          id: 0,
-          name: '선택',
-          type: '',
-          previousDailyWage: '',
-          dailyWage: '',
-          isSeverancePayEligible: false,
-          workType: '',
-        },
-        ...options,
-      ],
-    }))
-  }, [contractInfo, selectedCompanyIds, selectId])
+  //   setContarctNameOptionsByCompany((prev) => ({
+  //     ...prev,
+  //     [selectedCompanyIds[selectId]]: [
+  //       {
+  //         id: 0,
+  //         name: '선택',
+  //         type: '',
+  //         previousDailyWage: '',
+  //         dailyWage: '',
+  //         isSeverancePayEligible: false,
+  //         workType: '',
+  //       },
+  //       ...options,
+  //     ],
+  //   }))
+  // }, [contractInfo, selectedCompanyIds, selectId])
 
   // 상세페이지 데이터 (예: props나 query에서 가져온 값)
   const ContractOutsourcings = contractData
@@ -2214,529 +3760,327 @@ export default function DailyReportRegistrationView() {
 
   //직영/용역에서 용역에 필요한 이름 검색 하기 위함 ..
 
-  const {
-    data: NameByOutsourcingInfo,
-    fetchNextPage: NameByOutsourcingFetchNextPage,
-    hasNextPage: NameByOutsourcinghasNextPage,
-    isFetching: NameByOutsourcingFetching,
-    isLoading: NameByOutsourcingLoading,
-  } = useInfiniteQuery({
-    queryKey: ['NameByOutsourcingInfo', selectedCompanyIds[selectId]],
-    queryFn: ({ pageParam = 0 }) =>
-      GetContractNameInfoByOutsourcing({
-        pageParam,
-        outsourcingCompanyId: selectedCompanyIds[selectId] || 0,
-        size: 100,
-      }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
-      const { sliceInfo } = lastPage.data
-      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
-    },
-    enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
-  })
+  // const {
+  //   data: NameByOutsourcingInfo,
+  //   fetchNextPage: NameByOutsourcingFetchNextPage,
+  //   hasNextPage: NameByOutsourcinghasNextPage,
+  //   isFetching: NameByOutsourcingFetching,
+  //   isLoading: NameByOutsourcingLoading,
+  // } = useInfiniteQuery({
+  //   queryKey: ['NameByOutsourcingInfo', selectedCompanyIds[selectId]],
+  //   queryFn: ({ pageParam = 0 }) =>
+  //     GetContractNameInfoByOutsourcing({
+  //       pageParam,
+  //       outsourcingCompanyId: selectedCompanyIds[selectId] || 0,
+  //       size: 100,
+  //     }),
+  //   initialPageParam: 0,
+  //   getNextPageParam: (lastPage) => {
+  //     const { sliceInfo } = lastPage.data
+  //     return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+  //   },
+  //   enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
+  // })
 
-  useEffect(() => {
-    if (!NameByOutsourcingInfo) return
+  // useEffect(() => {
+  //   if (!NameByOutsourcingInfo) return
 
-    const options = NameByOutsourcingInfo.pages
-      .flatMap((page) => page.data.content)
-      .map((user) => ({
-        id: user.id,
-        name: user.name,
-        type: user.type,
-        previousDailyWage: user.previousDailyWage || user.dailyWage,
-        dailyWage: user.dailyWage,
-        isSeverancePayEligible: user.isSeverancePayEligible,
-      }))
+  //   const options = NameByOutsourcingInfo.pages
+  //     .flatMap((page) => page.data.content)
+  //     .map((user) => ({
+  //       id: user.id,
+  //       name: user.name,
+  //       type: user.type,
+  //       previousDailyWage: user.previousDailyWage || user.dailyWage,
+  //       dailyWage: user.dailyWage,
+  //       isSeverancePayEligible: user.isSeverancePayEligible,
+  //     }))
 
-    setOutSourcingByDirectContract((prev) => ({
-      ...prev,
-      [selectedCompanyIds[selectId]]: [
-        {
-          id: 0,
-          name: '선택',
-          type: '',
-          previousDailyWage: '',
-          dailyWage: '',
-          isSeverancePayEligible: false,
-        },
-        ...options,
-      ],
-    }))
-  }, [NameByOutsourcingInfo, selectedCompanyIds, selectId])
+  //   setOutSourcingByDirectContract((prev) => ({
+  //     ...prev,
+  //     [selectedCompanyIds[selectId]]: [
+  //       {
+  //         id: 0,
+  //         name: '선택',
+  //         type: '',
+  //         previousDailyWage: '',
+  //         dailyWage: '',
+  //         isSeverancePayEligible: false,
+  //       },
+  //       ...options,
+  //     ],
+  //   }))
+  // }, [NameByOutsourcingInfo, selectedCompanyIds, selectId])
 
   // 상세페이지 데이터 (예: props나 query에서 가져온 값)
-  const OutsourcingInfoBydaily = directContractByData
 
   // 1. 상세페이지 들어올 때 각 업체별 worker 데이터 API 호출 (직영 용역 데이터 불러옴 언제? 셀렉트 박스 선택 시 )
-  useEffect(() => {
-    if (!OutsourcingInfoBydaily.length) return
+  // useEffect(() => {
+  //   if (!OutsourcingInfoBydaily.length) return
 
-    OutsourcingInfoBydaily.forEach(async (row) => {
-      const companyId = row.outsourcingCompanyId
-      const worker = row.laborId
+  //   OutsourcingInfoBydaily.forEach(async (row) => {
+  //     const companyId = row.outsourcingCompanyId
+  //     const worker = row.laborId
 
-      if (ContarctNameOptionsByCompany[companyId]) {
-        return
-      }
+  //     if (ContarctNameOptionsByCompany[companyId]) {
+  //       return
+  //     }
 
-      if (companyId === null) {
-        return
-      }
+  //     if (companyId === null) {
+  //       return
+  //     }
 
-      try {
-        const res = await GetContractNameInfoByOutsourcing({
-          pageParam: 0,
-          outsourcingCompanyId: companyId,
-          size: 200,
-        })
+  //     try {
+  //       const res = await GetContractNameInfoByOutsourcing({
+  //         pageParam: 0,
+  //         outsourcingCompanyId: companyId,
+  //         size: 200,
+  //       })
 
-        const options = res.data.content.map((user: any) => ({
-          id: user.id,
-          name: user.name,
-          type: user.type,
-          previousDailyWage: user.previousDailyWage || user.dailyWage,
-          dailyWage: user.dailyWage,
-          isSeverancePayEligible: user.isSeverancePayEligible,
-        }))
+  //       const options = res.data.content.map((user: any) => ({
+  //         id: user.id,
+  //         name: user.name,
+  //         type: user.type,
+  //         previousDailyWage: user.previousDailyWage || user.dailyWage,
+  //         dailyWage: user.dailyWage,
+  //         isSeverancePayEligible: user.isSeverancePayEligible,
+  //       }))
 
-        setOutSourcingByDirectContract((prev) => {
-          const exists = options.some((opt: any) => opt.id === worker)
+  //       setOutSourcingByDirectContract((prev) => {
+  //         const exists = options.some((opt: any) => opt.id === worker)
 
-          return {
-            ...prev,
-            [companyId]: [
-              {
-                id: 0,
-                name: '선택',
-                type: '',
-                previousDailyWage: '',
-                dailyWage: '',
-                isSeverancePayEligible: false,
-              },
-              ...options,
-              // 만약 선택된 worker가 목록에 없으면 추가
-              ...(worker && !exists
-                ? [
-                    {
-                      id: worker,
-                      name: '',
-                      type: '',
-                      previousDailyWage: '',
-                      dailyWage: '',
-                      isSeverancePayEligible: false,
-                    },
-                  ]
-                : []),
-            ],
-          }
-        })
-      } catch (err) {
-        console.error('업체별 인력 조회 실패', err)
-      }
-    })
-  }, [OutsourcingInfoBydaily])
+  //         return {
+  //           ...prev,
+  //           [companyId]: [
+  //             {
+  //               id: 0,
+  //               name: '선택',
+  //               type: '',
+  //               previousDailyWage: '',
+  //               dailyWage: '',
+  //               isSeverancePayEligible: false,
+  //             },
+  //             ...options,
+  //             // 만약 선택된 worker가 목록에 없으면 추가
+  //             ...(worker && !exists
+  //               ? [
+  //                   {
+  //                     id: worker,
+  //                     name: '',
+  //                     type: '',
+  //                     previousDailyWage: '',
+  //                     dailyWage: '',
+  //                     isSeverancePayEligible: false,
+  //                   },
+  //                 ]
+  //               : []),
+  //           ],
+  //         }
+  //       })
+  //     } catch (err) {
+  //       console.error('업체별 인력 조회 실패', err)
+  //     }
+  //   })
+  // }, [OutsourcingInfoBydaily])
 
   // 직영/용역에서 외주 데이터 조회 시 계약한 데이터 가져오기
 
-  const {
-    data: directContractNameInfo,
-    fetchNextPage: directContractNameFetchNextPage,
-    hasNextPage: directContractNamehasNextPage,
-    isFetching: directContractNameFetching,
-    isLoading: directContractNameLoading,
-  } = useInfiniteQuery({
-    queryKey: ['directContractNameInfo', selectedCompanyIds[selectId]],
-    queryFn: ({ pageParam = 0 }) =>
-      GetDirectContractNameInfoService({
-        pageParam,
-        outsourcingCompanyId: selectedCompanyIds[selectId] || 0,
-        size: 100,
-      }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
-      const { sliceInfo } = lastPage.data
-      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
-    },
-    enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
-  })
+  // const {
+  //   data: directContractNameInfo,
+  //   fetchNextPage: directContractNameFetchNextPage,
+  //   hasNextPage: directContractNamehasNextPage,
+  //   isFetching: directContractNameFetching,
+  //   isLoading: directContractNameLoading,
+  // } = useInfiniteQuery({
+  //   queryKey: ['directContractNameInfo', selectedCompanyIds[selectId]],
+  //   queryFn: ({ pageParam = 0 }) =>
+  //     GetDirectContractNameInfoService({
+  //       pageParam,
+  //       outsourcingCompanyId: selectedCompanyIds[selectId] || 0,
+  //       size: 100,
+  //     }),
+  //   initialPageParam: 0,
+  //   getNextPageParam: (lastPage) => {
+  //     const { sliceInfo } = lastPage.data
+  //     return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+  //   },
+  //   enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
+  // })
 
-  useEffect(() => {
-    if (!directContractNameInfo) return
+  // useEffect(() => {
+  //   if (!directContractNameInfo) return
 
-    const options = directContractNameInfo.pages
-      .flatMap((page) => page.data.content)
-      .map((user) => ({
-        id: user.id,
-        name: user.contractName,
-      }))
+  //   const options = directContractNameInfo.pages
+  //     .flatMap((page) => page.data.content)
+  //     .map((user) => ({
+  //       id: user.id,
+  //       name: user.contractName,
+  //     }))
 
-    setDirectContarctNameOptionsByCompany((prev) => ({
-      ...prev,
-      [selectedCompanyIds[selectId]]: [
-        {
-          id: 0,
-          name: '선택',
-        },
-        ...options,
-      ],
-    }))
-  }, [directContractNameInfo, selectedCompanyIds, selectId])
+  //   setDirectContarctNameOptionsByCompany((prev) => ({
+  //     ...prev,
+  //     [selectedCompanyIds[selectId]]: [
+  //       {
+  //         id: 0,
+  //         name: '선택',
+  //       },
+  //       ...options,
+  //     ],
+  //   }))
+  // }, [directContractNameInfo, selectedCompanyIds, selectId])
 
   // 직영에서 상세 데이터 가져올 시 상세 useEffect 넣어줘야 함 (외주의 상세 데이터 조회 계약명)
 
-  const directContractOutsourcingsDetail = directContractOutsourcings
+  // const directContractOutsourcingsDetail = directContractOutsourcings
 
-  const { data: outDatacontractInfo } = useInfiniteQuery({
-    queryKey: [
-      'OutsourcingContractInfo',
-      selectedCompanyIds[selectId],
-      selectedOutSourcingContractIds[selectId],
-    ],
-    queryFn: ({ pageParam = 0 }) =>
-      GetOutSourcingNameInfoByLabor({
-        pageParam,
-        outsourcingCompanyId: selectedCompanyIds[selectId] || 0,
-        outsourcingCompanyContractId: selectedOutSourcingContractIds[selectId],
-        size: 100,
-      }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
-      const { sliceInfo } = lastPage.data
-      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
-    },
-    enabled: !!selectedCompanyIds[selectId] && !!selectedOutSourcingContractIds[selectId], // testId가 있을 때만 호출
-  })
+  // const { data: outDatacontractInfo } = useInfiniteQuery({
+  //   queryKey: [
+  //     'OutsourcingContractInfo',
+  //     selectedCompanyIds[selectId],
+  //     selectedOutSourcingContractIds[selectId],
+  //   ],
+  //   queryFn: ({ pageParam = 0 }) =>
+  //     GetOutSourcingNameInfoByLabor({
+  //       pageParam,
+  //       outsourcingCompanyId: selectedCompanyIds[selectId] || 0,
+  //       outsourcingCompanyContractId: selectedOutSourcingContractIds[selectId],
+  //       size: 100,
+  //     }),
+  //   initialPageParam: 0,
+  //   getNextPageParam: (lastPage) => {
+  //     const { sliceInfo } = lastPage.data
+  //     return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+  //   },
+  //   enabled: !!selectedCompanyIds[selectId] && !!selectedOutSourcingContractIds[selectId], // testId가 있을 때만 호출
+  // })
 
-  // 직영/용역에서 직영 데이터 조회
-  useEffect(() => {
-    if (!outDatacontractInfo) return
+  // // 직영/용역에서 직영 데이터 조회
+  // useEffect(() => {
+  //   if (!outDatacontractInfo) return
 
-    const options = outDatacontractInfo.pages
-      .flatMap((page) => page.data.content)
-      .map((user) => ({
-        id: user.id,
-        name: user.name,
-      }))
+  //   const options = outDatacontractInfo.pages
+  //     .flatMap((page) => page.data.content)
+  //     .map((user) => ({
+  //       id: user.id,
+  //       name: user.name,
+  //     }))
 
-    setDirectContarctPersonNameByCompany((prev) => ({
-      ...prev,
-      [selectedOutSourcingContractIds[selectId]]: [
-        {
-          id: 0,
-          name: '선택',
-        },
-        ...options,
-      ],
-    }))
-  }, [outDatacontractInfo, selectedOutSourcingContractIds, selectId])
-
-  useEffect(() => {
-    if (!directContractOutsourcingsDetail.length) return
-
-    const configList = [
-      {
-        key: 'direct',
-        api: GetDirectContractNameInfoService,
-        setState: setDirectContarctNameOptionsByCompany,
-        optionsByCompany: ContarctNameOptionsByCompany,
-        extract: (row: any) => ({
-          companyId: row.outsourcingCompanyId,
-          selectedId: row.outsourcingCompanyContractId,
-        }),
-        mapData: (item: any) => ({
-          id: item.id,
-          name: item.contractName,
-        }),
-      },
-      {
-        key: 'normal',
-        api: GetContractNameInfoService,
-        setState: setContarctNameOptionsByCompany,
-        optionsByCompany: ContarctNameOptionsByCompany,
-        extract: (row: any) => ({
-          companyId: row.outsourcingCompanyId,
-          selectedId: row.laborId,
-        }),
-        mapData: (item: any) => ({
-          id: item.id,
-          name: item.name,
-        }),
-      },
-    ]
-
-    // 계약명 조회
-    const fetchData = async () => {
-      for (const config of configList) {
-        const { api, setState, optionsByCompany, extract, mapData } = config
-
-        for (const row of directContractOutsourcingsDetail) {
-          const { companyId, selectedId } = extract(row)
-          if (!companyId || optionsByCompany[companyId]) continue
-
-          try {
-            const res = await api({
-              pageParam: 0,
-              outsourcingCompanyId: companyId,
-              size: 200,
-            })
-
-            const options = res.data.content.map(mapData)
-            const exists = options.some((opt: any) => opt.id === selectedId)
-
-            setState((prev: any) => ({
-              ...prev,
-              [companyId]: [
-                { id: 0, name: '선택' },
-                ...options,
-                ...(selectedId && !exists ? [{ id: selectedId, name: '' }] : []),
-              ],
-            }))
-          } catch (err) {
-            console.error('업체별 계약명 조회 실패:', err)
-          }
-        }
-      }
-
-      // 인력 정보 조회
-      for (const row of directContractOutsourcingsDetail) {
-        const companyId = row.outsourcingCompanyId
-        const contractId = row.outsourcingCompanyContractId
-        if (!companyId || !contractId) continue
-
-        const key = `${companyId}_${contractId}` // ✅ 고유 키로 관리
-
-        try {
-          const res = await GetOutSourcingNameInfoByLabor({
-            pageParam: 0,
-            outsourcingCompanyId: companyId,
-            outsourcingCompanyContractId: contractId,
-            size: 200,
-          })
-
-          console.log('해당 옵션 데이터 res', res)
-
-          const options = res.data.content.map((user: any) => ({
-            id: user.id,
-            name: user.name,
-          }))
-
-          setDirectContarctPersonNameByCompany((prev: any) => ({
-            ...prev,
-            [key]: [{ id: 0, name: '선택' }, ...options],
-          }))
-        } catch (err) {
-          console.error('업체별 인력 조회 실패:', err)
-        }
-      }
-    }
-
-    fetchData()
-  }, [directContractOutsourcingsDetail])
+  //   setDirectContarctPersonNameByCompany((prev) => ({
+  //     ...prev,
+  //     [selectedOutSourcingContractIds[selectId]]: [
+  //       {
+  //         id: 0,
+  //         name: '선택',
+  //       },
+  //       ...options,
+  //     ],
+  //   }))
+  // }, [outDatacontractInfo, selectedOutSourcingContractIds, selectId])
 
   // 공사의 이름을 불러오는 코드
 
   // const [outSourcingSubItems, setOutSourcingSubItems] = useState<Record<number, any[]>>({})
 
-  const {
-    data: contractGroupList,
-    fetchNextPage: contractGroupFetchNextPage,
-    hasNextPage: contractGroupHasNextPage,
-    isFetching: contractGroupIsFetching,
-    isLoading: contractGroupLoading,
-  } = useInfiniteQuery({
-    queryKey: ['ContractGroupInfo', selectedCompanyIds[selectId], siteIdList],
-    queryFn: ({ pageParam = 0 }) =>
-      GetContractGroup({
-        pageParam,
-        id: selectedCompanyIds[selectId] ?? 0,
-        siteId: Number(siteIdList),
-        size: 10,
-      }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
-      const { sliceInfo } = lastPage.data
-      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
-    },
-    enabled: !!selectedCompanyIds[selectId],
-  })
-
-  useEffect(() => {
-    if (!contractGroupList) return
-
-    const options = contractGroupList.pages
-      .flatMap((page) => page.data?.content ?? [])
-      .filter((group) => !group.deleted)
-      .map((group) => ({
-        id: group.outsourcingCompanyContractConstructionGroupId,
-        name: group.itemName,
-        items:
-          group.items
-            ?.filter((item: any) => !item.deleted)
-            .map((item: any) => ({
-              id: item.id,
-              item: item.item,
-              specification: item.specification,
-              unit: item.unit,
-              quantity: item.quantity ?? 0,
-            })) ?? [],
-      }))
-
-    setItemNameByOutSourcing((prev) => ({
-      ...prev,
-      [selectedCompanyIds[selectId]]: [{ id: 0, name: '선택' }, ...options],
-    }))
-  }, [contractGroupList, selectedCompanyIds, selectId])
-
   // 외주(공사) 에서 항목명을 상세페이지에서 받아온 다음 화면에 세팅 해주는 코드
 
-  useEffect(() => {
-    if (!resultOutsourcing.length) return
+  // useEffect(() => {
+  //   if (!resultOutsourcing.length) return
 
-    resultOutsourcing.forEach(async (row) => {
-      const companyId = row.outsourcingCompanyId
+  //   resultOutsourcing.forEach(async (row) => {
+  //     const companyId = row.outsourcingCompanyId
 
-      try {
-        const res = await GetContractGroup({
-          pageParam: 0,
-          id: companyId,
-          siteId: Number(siteIdList),
-          size: 200,
-        })
+  //     try {
+  //       const res = await GetContractGroup({
+  //         pageParam: 0,
+  //         id: companyId,
+  //         siteId: Number(siteIdList),
+  //         size: 200,
+  //       })
 
-        console.log('@@24 res ', res)
+  //       console.log('@@24 res ', res)
 
-        const options = res.data.content.map((user: any) => ({
-          id: user.outsourcingCompanyContractConstructionGroupId,
-          name: user.itemName,
-          items:
-            user.items
-              ?.filter((item: any) => !item.deleted)
-              .map((item: any) => ({
-                id: item.id,
-                item: item.item,
-                specification: item.specification,
-                unit: item.unit,
-                quantity: item.quantity ?? 0,
-              })) ?? [],
-        }))
+  //       const options = res.data.content.map((user: any) => ({
+  //         id: user.outsourcingCompanyContractConstructionGroupId,
+  //         name: user.itemName,
+  //         items:
+  //           user.items
+  //             ?.filter((item: any) => !item.deleted)
+  //             .map((item: any) => ({
+  //               id: item.id,
+  //               item: item.item,
+  //               specification: item.specification,
+  //               unit: item.unit,
+  //               quantity: item.quantity ?? 0,
+  //             })) ?? [],
+  //       }))
 
-        setItemNameByOutSourcing((prev) => {
-          return {
-            ...prev,
-            [companyId]: [
-              {
-                id: 0,
-                name: '선택',
-              },
-              ...options,
-            ],
-          }
-        })
-      } catch (err) {
-        console.error('업체별 인력 조회 실패', err)
-      }
-    })
-  }, [resultOutsourcing])
-
-  const {
-    data: fuelDriver,
-    fetchNextPage: fuelDriverFetchNextPage,
-    hasNextPage: fuelDriverHasNextPage,
-    isFetching: fuelDriverIsFetching,
-    isLoading: fuelDriverLoading,
-  } = useInfiniteQuery({
-    queryKey: ['FuelDriverInfo', selectedCompanyIds[selectId], siteIdList],
-
-    queryFn: ({ pageParam }) =>
-      FuelDriverNameScroll({
-        pageParam,
-        id: selectedCompanyIds[selectId] ?? 0,
-        siteIdList: Number(siteIdList),
-        size: 10,
-      }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
-      const { sliceInfo } = lastPage.data
-      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
-    },
-    enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
-  })
-
-  useEffect(() => {
-    if (!fuelDriver) return
-
-    const options = fuelDriver.pages
-      .flatMap((page) => page.data.content)
-      .map((user) => ({
-        id: user.id,
-        name: user.name,
-      }))
-
-    setDriverOptionsByCompany((prev) => ({
-      ...prev,
-      [selectedCompanyIds[selectId]]: [{ id: 0, name: '선택' }, ...options],
-    }))
-  }, [fuelDriver, selectedCompanyIds, selectId])
-
+  //       setItemNameByOutSourcing((prev) => {
+  //         return {
+  //           ...prev,
+  //           [companyId]: [
+  //             {
+  //               id: 0,
+  //               name: '선택',
+  //             },
+  //             ...options,
+  //           ],
+  //         }
+  //       })
+  //     } catch (err) {
+  //       console.error('업체별 인력 조회 실패', err)
+  //     }
+  //   })
+  // }, [resultOutsourcing])
   // 기사
-  const [selectedDriverIds, setSelectedDriverIds] = useState<{ [rowId: number]: number }>({})
-  //차량번호 & 규격 무한 스크롤
-  const [selectedCarNumberIds, setSelectedCarNumberIds] = useState<{ [rowId: number]: number }>({})
 
   // 옵션에 따른 상태값
 
-  const {
-    data: fuelEquipment,
-    fetchNextPage: fuelEquipmentFetchNextPage,
-    hasNextPage: fuelEquipmentHasNextPage,
-    isFetching: fuelEquipmentIsFetching,
-    isLoading: fuelEquipmentLoading,
-  } = useInfiniteQuery({
-    queryKey: ['FuelEquipmentInfo', selectedCompanyIds[selectId], siteIdList],
-    queryFn: ({ pageParam }) =>
-      FuelEquipmentNameScroll({
-        pageParam,
-        id: selectedCompanyIds[selectId] ?? 0,
-        siteIdList: Number(siteIdList),
-        size: 10,
-      }),
+  // const {
+  //   data: fuelEquipment,
+  //   fetchNextPage: fuelEquipmentFetchNextPage,
+  //   hasNextPage: fuelEquipmentHasNextPage,
+  //   isFetching: fuelEquipmentIsFetching,
+  //   isLoading: fuelEquipmentLoading,
+  // } = useInfiniteQuery({
+  //   queryKey: ['FuelEquipmentInfo', selectedCompanyIds[selectId], siteIdList],
+  //   queryFn: ({ pageParam }) =>
+  //     FuelEquipmentNameScroll({
+  //       pageParam,
+  //       id: selectedCompanyIds[selectId] ?? 0,
+  //       siteIdList: Number(siteIdList),
+  //       size: 10,
+  //     }),
 
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
-      const { sliceInfo } = lastPage.data
-      return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
-    },
-    enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
-  })
+  //   initialPageParam: 0,
+  //   getNextPageParam: (lastPage) => {
+  //     const { sliceInfo } = lastPage.data
+  //     return sliceInfo.hasNext ? sliceInfo.page + 1 : undefined
+  //   },
+  //   enabled: !!selectedCompanyIds[selectId], // testId가 있을 때만 호출
+  // })
 
-  useEffect(() => {
-    if (!fuelEquipment) return
+  // useEffect(() => {
+  //   if (!fuelEquipment) return
 
-    const options = fuelEquipment.pages
-      .flatMap((page) => page.data.content)
-      .map((user) => ({
-        id: user.id,
-        specification: user.specification,
-        vehicleNumber: user.vehicleNumber,
-        category: user.category,
-        unitPrice: user.unitPrice,
-        taskDescription: user.taskDescription,
-      }))
+  //   const options = fuelEquipment.pages
+  //     .flatMap((page) => page.data.content)
+  //     .map((user) => ({
+  //       id: user.id,
+  //       specification: user.specification,
+  //       vehicleNumber: user.vehicleNumber,
+  //       category: user.category,
+  //       unitPrice: user.unitPrice,
+  //       taskDescription: user.taskDescription,
+  //     }))
 
-    setCarNumberOptionsByCompany((prev) => ({
-      ...prev,
-      [selectedCompanyIds[selectId]]: [
-        { id: 0, specification: '', vehicleNumber: '선택', category: '' },
-        ...options,
-      ],
-    }))
-  }, [fuelEquipment, selectedCompanyIds, selectId])
-
-  const outsourcingfuel = fuelData
-
-  const equipmentDataResult = equipmentData
+  //   setCarNumberOptionsByCompany((prev) => ({
+  //     ...prev,
+  //     [selectedCompanyIds[selectId]]: [
+  //       { id: 0, specification: '', vehicleNumber: '선택', category: '' },
+  //       ...options,
+  //     ],
+  //   }))
+  // }, [fuelEquipment, selectedCompanyIds, selectId])
 
   interface EquipmentTypeOption {
     id: number
@@ -2749,117 +4093,7 @@ export default function DailyReportRegistrationView() {
   //   { id: 0, name: '선택', taskDescription: '', unitPrice: 0 },
   // ])
 
-  const [testArrayByRow, setTestArrayByRow] = useState<Record<number, EquipmentTypeOption[]>>({})
-
-  useEffect(() => {
-    if (!equipmentDataResult.length) return
-
-    const fetchData = async () => {
-      for (const row of equipmentDataResult) {
-        const companyId = row.outsourcingCompanyId
-        const driverData = row.outsourcingCompanyContractDriverId
-        const carNumberId = row.outsourcingCompanyContractEquipmentId
-
-        try {
-          // 기사 + 차량 병렬 요청
-          const [driverRes, carNumberRes] = await Promise.all([
-            FuelDriverNameScroll({
-              pageParam: 0,
-              id: companyId,
-              siteIdList: Number(siteIdList),
-              size: 200,
-            }),
-            FuelEquipmentNameScroll({
-              pageParam: 0,
-              id: companyId,
-              siteIdList: Number(siteIdList),
-              size: 200,
-            }),
-          ])
-
-          // ✅ 기사 옵션
-          const driverOptions = (driverRes?.data?.content ?? []).map((user: any) => ({
-            id: user.id,
-            name: user.name,
-            deleted: user.deleted ?? false,
-          }))
-
-          setDriverOptionsByCompany((prev) => {
-            const exists = driverOptions.some((opt: any) => opt.id === driverData)
-            return {
-              ...prev,
-              [companyId]: [
-                { id: 0, name: '선택', deleted: false },
-                ...driverOptions,
-                ...(driverData && !exists ? [{ id: driverData, name: '', deleted: false }] : []),
-              ],
-            }
-          })
-
-          const carOptions = (carNumberRes?.data?.content ?? []).map((user: any) => ({
-            id: user.id,
-            specification: user.specification,
-            vehicleNumber: user.vehicleNumber,
-            category: user.category,
-            unitPrice: user.unitPrice,
-            taskDescription: user.taskDescription,
-            subEquipments:
-              user.subEquipments?.map((item: any) => ({
-                id: item.id,
-                type: item.type,
-                description: item.description,
-                typeCode: item.typeCode,
-                workContent: item.taskDescription ?? '',
-                unitPrice: item.unitPrice ?? 0,
-              })) ?? [],
-          }))
-
-          setCarNumberOptionsByCompany((prev) => ({
-            ...prev,
-            [companyId]: [
-              {
-                id: 0,
-                specification: '',
-                vehicleNumber: '선택',
-                category: '',
-                unitPrice: '',
-                taskDescription: '',
-                subEquipments: [],
-              },
-              ...carOptions,
-            ],
-          }))
-
-          // ✅ subEquipments 세팅
-          carOptions.forEach((car: any) => {
-            if (car.subEquipments?.length) {
-              setTestArrayByRow((prev) => ({
-                ...prev,
-                [car.id]: [
-                  { id: 0, name: '선택' },
-                  ...car.subEquipments.map((sub: any) => ({
-                    id: sub.id,
-                    name: sub.type || sub.typeCode || '-',
-                    taskDescription: sub.workContent,
-                    unitPrice: sub.unitPrice,
-                    description: sub.description,
-                  })),
-                ],
-              }))
-            }
-          })
-
-          // ✅ 각 행의 선택값 초기화
-          setSelectedDriverIds((prev) => ({ ...prev, [row.id]: driverData || 0 }))
-          setSelectedCarNumberIds((prev) => ({ ...prev, [row.id]: carNumberId || 0 }))
-        } catch (err) {
-          console.error('업체별 차량/기사 조회 실패', err)
-        }
-      }
-    }
-
-    fetchData()
-  }, [equipmentDataResult])
+  // const [testArrayByRow, setTestArrayByRow] = useState<Record<number, EquipmentTypeOption[]>>({})
 
   // 유류의 업체명 삭제 됨 표시
 
@@ -2867,7 +4101,7 @@ export default function DailyReportRegistrationView() {
 
   const [isOutsourcingFocused, setIsOutsourcingFocused] = useState(false)
 
-  // 유저 선택 시 처리
+  //유류에서 키워드 검색 이름
   const handleSelectOutsourcing = (selectedUser: any) => {
     setField('outsourcingCompanyName', selectedUser.name)
     setField('outsourcingCompanyId', selectedUser.id)
@@ -3089,8 +4323,8 @@ export default function DailyReportRegistrationView() {
 
   const validateFuel = () => {
     for (const f of fuelData) {
-      if (!f.outsourcingCompanyId || f.outsourcingCompanyId === 0) {
-        return showSnackbar('유류의 업체명을 선택해주세요.', 'warning')
+      if (!form.outsourcingCompanyId || form.outsourcingCompanyId === 0) {
+        return showSnackbar('유류의 업체명을 입력해주세요.', 'warning')
       }
 
       if (!f.equipmentId || f.equipmentId === 0) {
@@ -3349,123 +4583,123 @@ export default function DailyReportRegistrationView() {
 
   const [, setSubEquipmentByRow] = useState<Record<number, subEquipmentTypeOption[]>>({})
 
-  useEffect(() => {
-    if (!outsourcingfuel.length) return
+  // useEffect(() => {
+  //   if (!outsourcingfuel.length) return
 
-    const fetchData = async () => {
-      for (const row of outsourcingfuel) {
-        const companyId = row.outsourcingCompanyId
-        const driverData = row.driverId
-        const carNumberId = row.equipmentId
-        const categoryType = row.categoryType
+  //   const fetchData = async () => {
+  //     for (const row of outsourcingfuel) {
+  //       const companyId = row.outsourcingCompanyId
+  //       const driverData = row.driverId
+  //       const carNumberId = row.equipmentId
+  //       const categoryType = row.categoryType
 
-        const keyRow = `${companyId}_${categoryType}_${row.id}`
+  //       const keyRow = `${companyId}_${categoryType}_${row.id}`
 
-        const hasDriverData = driverOptionsByCompany[companyId]
-        const hasCarData = carNumberOptionsByCompany[keyRow]?.some(
-          (opt) => opt.categoryType === categoryType,
-        )
+  //       const hasDriverData = driverOptionsByCompany[companyId]
+  //       const hasCarData = carNumberOptionsByCompany[keyRow]?.some(
+  //         (opt) => opt.categoryType === categoryType,
+  //       )
 
-        if (hasDriverData && hasCarData) continue
+  //       if (hasDriverData && hasCarData) continue
 
-        try {
-          // 기사 + 차량 병렬 요청
-          const [driverRes, carNumberRes] = await Promise.all([
-            FuelDriverNameScroll({
-              pageParam: 0,
-              id: companyId,
-              siteIdList: Number(siteIdList),
-              size: 200,
-            }),
-            FuelEquipmentNameScroll({
-              pageParam: 0,
-              id: companyId,
-              siteIdList: Number(siteIdList),
-              size: 200,
-              types: categoryType,
-            }),
-          ])
+  //       try {
+  //         // 기사 + 차량 병렬 요청
+  //         const [driverRes, carNumberRes] = await Promise.all([
+  //           FuelDriverNameScroll({
+  //             pageParam: 0,
+  //             id: companyId,
+  //             siteIdList: Number(siteIdList),
+  //             size: 200,
+  //           }),
+  //           FuelEquipmentNameScroll({
+  //             pageParam: 0,
+  //             id: companyId,
+  //             siteIdList: Number(siteIdList),
+  //             size: 200,
+  //             types: categoryType,
+  //           }),
+  //         ])
 
-          const driverOptions = (driverRes?.data?.content ?? []).map((user: any) => ({
-            id: user.id,
-            name: user.name,
-            deleted: user.deleted ?? false,
-          }))
+  //         const driverOptions = (driverRes?.data?.content ?? []).map((user: any) => ({
+  //           id: user.id,
+  //           name: user.name,
+  //           deleted: user.deleted ?? false,
+  //         }))
 
-          setDriverOptionsByCompany((prev) => {
-            const exists = driverOptions.some((opt: any) => opt.id === driverData)
-            return {
-              ...prev,
-              [companyId]: [
-                { id: 0, name: '선택', deleted: false },
-                ...driverOptions,
-                ...(driverData && !exists ? [{ id: driverData, name: '', deleted: false }] : []),
-              ],
-            }
-          })
+  //         setDriverOptionsByCompany((prev) => {
+  //           const exists = driverOptions.some((opt: any) => opt.id === driverData)
+  //           return {
+  //             ...prev,
+  //             [companyId]: [
+  //               { id: 0, name: '선택', deleted: false },
+  //               ...driverOptions,
+  //               ...(driverData && !exists ? [{ id: driverData, name: '', deleted: false }] : []),
+  //             ],
+  //           }
+  //         })
 
-          const carOptions = (carNumberRes?.data?.content ?? []).map((user: any) => ({
-            id: user.id,
-            specification: user.specification,
-            vehicleNumber: user.vehicleNumber,
-            category: user.category,
-            unitPrice: user.unitPrice,
-            taskDescription: user.taskDescription,
-            subEquipments:
-              user.subEquipments?.map((item: any) => ({
-                id: item.id,
-                checkId: item.id,
-                type: item.type,
-                typeCode: item.typeCode,
-                workContent: item.taskDescription ?? '',
-                unitPrice: item.unitPrice ?? 0,
-              })) ?? [],
-          }))
+  //         const carOptions = (carNumberRes?.data?.content ?? []).map((user: any) => ({
+  //           id: user.id,
+  //           specification: user.specification,
+  //           vehicleNumber: user.vehicleNumber,
+  //           category: user.category,
+  //           unitPrice: user.unitPrice,
+  //           taskDescription: user.taskDescription,
+  //           subEquipments:
+  //             user.subEquipments?.map((item: any) => ({
+  //               id: item.id,
+  //               checkId: item.id,
+  //               type: item.type,
+  //               typeCode: item.typeCode,
+  //               workContent: item.taskDescription ?? '',
+  //               unitPrice: item.unitPrice ?? 0,
+  //             })) ?? [],
+  //         }))
 
-          setCarNumberOptionsByCompany((prev) => ({
-            ...prev,
-            [keyRow]: [
-              {
-                id: 0,
-                checkId: 0,
-                specification: '',
-                vehicleNumber: '선택',
-                category: '',
-                unitPrice: '',
-                taskDescription: '',
-                subEquipments: [],
-              },
-              ...carOptions,
-            ],
-          }))
+  //         setCarNumberOptionsByCompany((prev) => ({
+  //           ...prev,
+  //           [keyRow]: [
+  //             {
+  //               id: 0,
+  //               checkId: 0,
+  //               specification: '',
+  //               vehicleNumber: '선택',
+  //               category: '',
+  //               unitPrice: '',
+  //               taskDescription: '',
+  //               subEquipments: [],
+  //             },
+  //             ...carOptions,
+  //           ],
+  //         }))
 
-          carOptions.forEach((car: any) => {
-            if (car.subEquipments?.length) {
-              setSubEquipmentByRow((prev) => ({
-                ...prev,
-                [car.id]: [
-                  { id: 0, name: '선택' },
-                  ...car.subEquipments.map((sub: any) => ({
-                    id: sub.id,
-                    checkId: sub.id,
-                    name: sub.type || sub.typeCode || '-',
-                    taskDescription: sub.workContent,
-                    unitPrice: sub.unitPrice,
-                  })),
-                ],
-              }))
-            }
-          })
+  //         carOptions.forEach((car: any) => {
+  //           if (car.subEquipments?.length) {
+  //             setSubEquipmentByRow((prev) => ({
+  //               ...prev,
+  //               [car.id]: [
+  //                 { id: 0, name: '선택' },
+  //                 ...car.subEquipments.map((sub: any) => ({
+  //                   id: sub.id,
+  //                   checkId: sub.id,
+  //                   name: sub.type || sub.typeCode || '-',
+  //                   taskDescription: sub.workContent,
+  //                   unitPrice: sub.unitPrice,
+  //                 })),
+  //               ],
+  //             }))
+  //           }
+  //         })
 
-          setSelectedCarNumberIds((prev) => ({ ...prev, [row.id]: carNumberId || 0 }))
-        } catch (err) {
-          console.error('업체별 차량/기사 조회 실패', err)
-        }
-      }
-    }
+  //         setSelectedCarNumberIds((prev) => ({ ...prev, [row.id]: carNumberId || 0 }))
+  //       } catch (err) {
+  //         console.error('업체별 차량/기사 조회 실패', err)
+  //       }
+  //     }
+  //   }
 
-    fetchData()
-  }, [outsourcingfuel])
+  //   fetchData()
+  // }, [outsourcingfuel])
 
   const cellStyle = {
     border: '1px solid #9CA3AF',
@@ -3642,6 +4876,11 @@ export default function DailyReportRegistrationView() {
             </div>
             <TableContainer
               component={Paper}
+              sx={{
+                height: '300px',
+                overflowX: 'auto', // 가로 스크롤 허용
+                overflowY: 'auto',
+              }}
               onScroll={(e) => {
                 const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
                 if (scrollHeight - scrollTop <= clientHeight * 1.2) {
@@ -3715,7 +4954,7 @@ export default function DailyReportRegistrationView() {
                           />
                         </TableCell>
                         <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <CommonSelect
+                          {/* <CommonSelect
                             value={m.laborId || 0}
                             onChange={(value) => {
                               const selectedEmployee = employeeInfoOptions.find(
@@ -3736,7 +4975,9 @@ export default function DailyReportRegistrationView() {
                               if (employeehasNextPage && !employeeFetching) employeeFetchNextPage()
                             }}
                             loading={employeeLoading}
-                          />
+                          /> */}
+
+                          <DailyEmployeeNameRow key={m.id} row={m} />
                         </TableCell>
 
                         <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -3755,6 +4996,7 @@ export default function DailyReportRegistrationView() {
                             placeholder="텍스트 입력"
                             size="small"
                             value={m.workContent ?? 0}
+                            onFocus={() => setClearFocusedRowId(null)}
                             onChange={(e) =>
                               updateItemField('Employees', m.id, 'workContent', e.target.value)
                             }
@@ -3770,6 +5012,7 @@ export default function DailyReportRegistrationView() {
                             placeholder="숫자를 입력해주세요."
                             inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
                             value={m.workQuantity ?? ''}
+                            onFocus={() => setClearFocusedRowId(null)}
                             onChange={(e) => {
                               const value = e.target.value
                               const numericValue = value === '' ? null : parseFloat(value)
@@ -3849,6 +5092,7 @@ export default function DailyReportRegistrationView() {
                             size="small"
                             placeholder="500자 이하 텍스트 입력"
                             value={m.memo ?? ''}
+                            onFocus={() => setClearFocusedRowId(null)}
                             onChange={(e) =>
                               updateItemField('Employees', m.id, 'memo', e.target.value)
                             }
@@ -4067,6 +5311,11 @@ export default function DailyReportRegistrationView() {
 
             <TableContainer
               component={Paper}
+              sx={{
+                height: '300px',
+                overflowX: 'auto', // 가로 스크롤 허용
+                overflowY: 'auto',
+              }}
               onScroll={(e) => {
                 const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
                 if (scrollHeight - scrollTop <= clientHeight * 1.2) {
@@ -4230,53 +5479,50 @@ export default function DailyReportRegistrationView() {
                               placeholder="이름 입력"
                             />
                           ) : (
-                            <CommonSelect
-                              value={m.laborId || 0}
-                              onChange={(value) => {
-                                const selectedContractName = (
-                                  ContarctNameOptionsByCompany[m.outsourcingCompanyId] ?? []
-                                ).find((opt) => opt.id === value)
+                            // <CommonSelect
+                            //   value={m.laborId || 0}
+                            //   onChange={(value) => {
+                            //     const selectedContractName = (
+                            //       ContarctNameOptionsByCompany[m.outsourcingCompanyId] ?? []
+                            //     ).find((opt) => opt.id === value)
 
-                                console.log(
-                                  'selectedContractNameselecte24dContractName',
-                                  selectedContractName,
-                                )
-                                if (!selectedContractName) return
+                            //     if (!selectedContractName) return
 
-                                if (selectedContractName?.isSeverancePayEligible) {
-                                  showSnackbar(
-                                    '해당 직원 근속일이 6개월에 도달했습니다. 퇴직금 발생에 주의하세요.',
-                                    'error',
-                                  )
-                                }
+                            //     if (selectedContractName?.isSeverancePayEligible) {
+                            //       showSnackbar(
+                            //         '해당 직원 근속일이 6개월에 도달했습니다. 퇴직금 발생에 주의하세요.',
+                            //         'error',
+                            //       )
+                            //     }
 
-                                updateItemField('directContracts', m.checkId, 'laborId', value)
+                            //     updateItemField('directContracts', m.checkId, 'laborId', value)
 
-                                updateItemField(
-                                  'directContracts',
-                                  m.checkId,
-                                  'position',
-                                  selectedContractName.workType,
-                                )
+                            //     updateItemField(
+                            //       'directContracts',
+                            //       m.checkId,
+                            //       'position',
+                            //       selectedContractName.workType,
+                            //     )
 
-                                updateItemField(
-                                  'directContracts',
-                                  m.checkId,
-                                  'previousPrice',
-                                  selectedContractName?.previousDailyWage ?? 0, // 선택된 항목의 previousDailyWage 자동 입력
-                                )
-                              }}
-                              options={
-                                ContarctNameOptionsByCompany[m.outsourcingCompanyId] ?? [
-                                  { id: 0, name: '선택' },
-                                ]
-                              }
-                              onScrollToBottom={() => {
-                                if (contractNamehasNextPage && !contractNameFetching)
-                                  contractNameFetchNextPage()
-                              }}
-                              loading={contractNameLoading}
-                            />
+                            //     updateItemField(
+                            //       'directContracts',
+                            //       m.checkId,
+                            //       'previousPrice',
+                            //       selectedContractName?.previousDailyWage ?? 0, // 선택된 항목의 previousDailyWage 자동 입력
+                            //     )
+                            //   }}
+                            //   options={
+                            //     ContarctNameOptionsByCompany[m.outsourcingCompanyId] ?? [
+                            //       { id: 0, name: '선택' },
+                            //     ]
+                            //   }
+                            //   onScrollToBottom={() => {
+                            //     if (contractNamehasNextPage && !contractNameFetching)
+                            //       contractNameFetchNextPage()
+                            //   }}
+                            //   loading={contractNameLoading}
+                            // />
+                            <DailyDirectContractNameRow key={m.checkId} row={m} />
                           )}
                         </TableCell>
 
@@ -4307,6 +5553,12 @@ export default function DailyReportRegistrationView() {
                             size="small"
                             placeholder="텍스트 입력 "
                             value={m.workContent ?? ''}
+                            onFocus={() => {
+                              setClearServiceCompanyFocusedId(null)
+                              setClearPersonNameFocusedId(null)
+                              setClearServiceOutsourcingCompanyFocusedId(null)
+                              setClearFocusedRowId(null)
+                            }}
                             onChange={(e) =>
                               updateItemField(
                                 'directContracts',
@@ -4379,6 +5631,12 @@ export default function DailyReportRegistrationView() {
                                 ? ''
                                 : formatNumber(m.unitPrice)
                             }
+                            onFocus={() => {
+                              setClearServiceCompanyFocusedId(null)
+                              setClearPersonNameFocusedId(null)
+                              setClearServiceOutsourcingCompanyFocusedId(null)
+                              setClearFocusedRowId(null)
+                            }}
                             onChange={(e) => {
                               const numericValue =
                                 e.target.value === '' ? null : unformatNumber(e.target.value)
@@ -4424,6 +5682,12 @@ export default function DailyReportRegistrationView() {
                             placeholder="숫자를 입력해주세요."
                             inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
                             value={m.workQuantity ?? ''}
+                            onFocus={() => {
+                              setClearServiceCompanyFocusedId(null)
+                              setClearPersonNameFocusedId(null)
+                              setClearServiceOutsourcingCompanyFocusedId(null)
+                              setClearFocusedRowId(null)
+                            }}
                             onChange={(e) => {
                               const value = e.target.value
                               const numericValue = value === '' ? null : parseFloat(value)
@@ -4507,6 +5771,12 @@ export default function DailyReportRegistrationView() {
                             size="small"
                             placeholder="500자 이하 텍스트 입력"
                             value={m.memo}
+                            onFocus={() => {
+                              setClearServiceCompanyFocusedId(null)
+                              setClearPersonNameFocusedId(null)
+                              setClearServiceOutsourcingCompanyFocusedId(null)
+                              setClearFocusedRowId(null)
+                            }}
                             onChange={(e) =>
                               updateItemField('directContracts', m.checkId, 'memo', e.target.value)
                             }
@@ -4583,6 +5853,11 @@ export default function DailyReportRegistrationView() {
 
             <TableContainer
               component={Paper}
+              sx={{
+                height: '300px',
+                overflowX: 'auto', // 가로 스크롤 허용
+                overflowY: 'auto',
+              }}
               onScroll={(e) => {
                 const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
                 if (scrollHeight - scrollTop <= clientHeight * 1.2) {
@@ -4670,95 +5945,98 @@ export default function DailyReportRegistrationView() {
                         </TableCell>
                         <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                           {m.isTemporary ? (
-                            <CommonSelect
-                              fullWidth
-                              value={selectedCompanyIds[m.checkId] || m.outsourcingCompanyId || 0}
-                              onChange={async (value) => {
-                                const selectedCompany = companyOptions.find(
-                                  (opt) => opt.id === value,
-                                )
-                                if (!selectedCompany) return
+                            // <CommonSelect
+                            //   fullWidth
+                            //   value={selectedCompanyIds[m.checkId] || m.outsourcingCompanyId || 0}
+                            //   onChange={async (value) => {
+                            //     const selectedCompany = companyOptions.find(
+                            //       (opt) => opt.id === value,
+                            //     )
+                            //     if (!selectedCompany) return
 
-                                // 해당 row만 업데이트
-                                setSelectedCompanyIds((prev) => ({
-                                  ...prev,
-                                  [m.checkId]: selectedCompany.id,
-                                }))
+                            //     // 해당 row만 업데이트
+                            //     setSelectedCompanyIds((prev) => ({
+                            //       ...prev,
+                            //       [m.checkId]: selectedCompany.id,
+                            //     }))
 
-                                setSelectId(m.checkId)
+                            //     setSelectId(m.checkId)
 
-                                updateItemField(
-                                  'outsourcingByDirectContract',
-                                  m.checkId,
-                                  'outsourcingCompanyId',
-                                  selectedCompany.id,
-                                )
+                            //     updateItemField(
+                            //       'outsourcingByDirectContract',
+                            //       m.checkId,
+                            //       'outsourcingCompanyId',
+                            //       selectedCompany.id,
+                            //     )
 
-                                updateItemField(
-                                  'outsourcingByDirectContract',
-                                  m.checkId,
-                                  'outsourcingCompanyName',
-                                  selectedCompany.name,
-                                )
+                            //     updateItemField(
+                            //       'outsourcingByDirectContract',
+                            //       m.checkId,
+                            //       'outsourcingCompanyName',
+                            //       selectedCompany.name,
+                            //     )
 
-                                // 해당 row 워커만 초기화
-                                setSelectContractIds((prev) => ({
-                                  ...prev,
-                                  [m.checkId]: 0,
-                                }))
-                              }}
-                              options={companyOptions}
-                              onScrollToBottom={() => {
-                                if (comPanyNamehasNextPage && !comPanyNameFetching)
-                                  comPanyNameFetchNextPage()
-                              }}
-                              loading={comPanyNameLoading}
-                            />
+                            //     // 해당 row 워커만 초기화
+                            //     setSelectContractIds((prev) => ({
+                            //       ...prev,
+                            //       [m.checkId]: 0,
+                            //     }))
+                            //   }}
+                            //   options={companyOptions}
+                            //   onScrollToBottom={() => {
+                            //     if (comPanyNamehasNextPage && !comPanyNameFetching)
+                            //       comPanyNameFetchNextPage()
+                            //   }}
+                            //   loading={comPanyNameLoading}
+                            // />
+
+                            <DailyServiceNameRow key={m.checkId} row={m} />
                           ) : (
-                            <CommonSelect
-                              fullWidth
-                              value={selectedCompanyIds[m.checkId] || m.outsourcingCompanyId || 0}
-                              onChange={async (value) => {
-                                const selectedCompany = companyOptions.find(
-                                  (opt) => opt.id === value,
-                                )
-                                if (!selectedCompany) return
+                            // <CommonSelect
+                            //   fullWidth
+                            //   value={selectedCompanyIds[m.checkId] || m.outsourcingCompanyId || 0}
+                            //   onChange={async (value) => {
+                            //     const selectedCompany = companyOptions.find(
+                            //       (opt) => opt.id === value,
+                            //     )
+                            //     if (!selectedCompany) return
 
-                                // 해당 row만 업데이트
-                                setSelectedCompanyIds((prev) => ({
-                                  ...prev,
-                                  [m.checkId]: selectedCompany.id,
-                                }))
+                            //     // 해당 row만 업데이트
+                            //     setSelectedCompanyIds((prev) => ({
+                            //       ...prev,
+                            //       [m.checkId]: selectedCompany.id,
+                            //     }))
 
-                                setSelectId(m.checkId)
+                            //     setSelectId(m.checkId)
 
-                                updateItemField(
-                                  'outsourcingByDirectContract',
-                                  m.checkId,
-                                  'outsourcingCompanyId',
-                                  selectedCompany.id,
-                                )
+                            //     updateItemField(
+                            //       'outsourcingByDirectContract',
+                            //       m.checkId,
+                            //       'outsourcingCompanyId',
+                            //       selectedCompany.id,
+                            //     )
 
-                                updateItemField(
-                                  'outsourcingByDirectContract',
-                                  m.checkId,
-                                  'outsourcingCompanyName',
-                                  selectedCompany.name,
-                                )
+                            //     updateItemField(
+                            //       'outsourcingByDirectContract',
+                            //       m.checkId,
+                            //       'outsourcingCompanyName',
+                            //       selectedCompany.name,
+                            //     )
 
-                                // 해당 row 워커만 초기화
-                                setSelectContractIds((prev) => ({
-                                  ...prev,
-                                  [m.checkId]: 0,
-                                }))
-                              }}
-                              options={companyOptions}
-                              onScrollToBottom={() => {
-                                if (comPanyNamehasNextPage && !comPanyNameFetching)
-                                  comPanyNameFetchNextPage()
-                              }}
-                              loading={comPanyNameLoading}
-                            />
+                            //     // 해당 row 워커만 초기화
+                            //     setSelectContractIds((prev) => ({
+                            //       ...prev,
+                            //       [m.checkId]: 0,
+                            //     }))
+                            //   }}
+                            //   options={companyOptions}
+                            //   onScrollToBottom={() => {
+                            //     if (comPanyNamehasNextPage && !comPanyNameFetching)
+                            //       comPanyNameFetchNextPage()
+                            //   }}
+                            //   loading={comPanyNameLoading}
+                            // />
+                            <DailyServiceNameRow key={m.checkId} row={m} />
                           )}
                         </TableCell>
 
@@ -4779,54 +6057,55 @@ export default function DailyReportRegistrationView() {
                               placeholder="이름 입력"
                             />
                           ) : (
-                            <CommonSelect
-                              value={selectContractIds[m.id] || m.laborId || 0}
-                              onChange={(value) => {
-                                const selectedContractName = (
-                                  outSourcingByDirectContract[m.outsourcingCompanyId] ?? []
-                                ).find((opt) => opt.id === value)
+                            // <CommonSelect
+                            //   value={selectContractIds[m.id] || m.laborId || 0}
+                            //   onChange={(value) => {
+                            //     const selectedContractName = (
+                            //       outSourcingByDirectContract[m.outsourcingCompanyId] ?? []
+                            //     ).find((opt) => opt.id === value)
 
-                                if (!selectedContractName) return
+                            //     if (!selectedContractName) return
 
-                                if (selectedContractName?.isSeverancePayEligible) {
-                                  showSnackbar(
-                                    '해당 직원 근속일이 6개월에 도달했습니다. 퇴직금 발생에 주의하세요.',
-                                    'error',
-                                  )
-                                }
+                            //     if (selectedContractName?.isSeverancePayEligible) {
+                            //       showSnackbar(
+                            //         '해당 직원 근속일이 6개월에 도달했습니다. 퇴직금 발생에 주의하세요.',
+                            //         'error',
+                            //       )
+                            //     }
 
-                                updateItemField(
-                                  'outsourcingByDirectContract',
-                                  m.checkId,
-                                  'position',
-                                  selectedContractName.type,
-                                )
+                            //     updateItemField(
+                            //       'outsourcingByDirectContract',
+                            //       m.checkId,
+                            //       'position',
+                            //       selectedContractName.type,
+                            //     )
 
-                                updateItemField(
-                                  'outsourcingByDirectContract',
-                                  m.checkId,
-                                  'laborId',
-                                  value,
-                                )
+                            //     updateItemField(
+                            //       'outsourcingByDirectContract',
+                            //       m.checkId,
+                            //       'laborId',
+                            //       value,
+                            //     )
 
-                                updateItemField(
-                                  'outsourcingByDirectContract',
-                                  m.checkId,
-                                  'previousPrice',
-                                  selectedContractName?.previousDailyWage ?? 0, // 선택된 항목의 previousDailyWage 자동 입력
-                                )
-                              }}
-                              options={
-                                outSourcingByDirectContract[m.outsourcingCompanyId] ?? [
-                                  { id: 0, name: '선택' },
-                                ]
-                              }
-                              onScrollToBottom={() => {
-                                if (NameByOutsourcinghasNextPage && !NameByOutsourcingFetching)
-                                  NameByOutsourcingFetchNextPage()
-                              }}
-                              loading={NameByOutsourcingLoading}
-                            />
+                            //     updateItemField(
+                            //       'outsourcingByDirectContract',
+                            //       m.checkId,
+                            //       'previousPrice',
+                            //       selectedContractName?.previousDailyWage ?? 0, // 선택된 항목의 previousDailyWage 자동 입력
+                            //     )
+                            //   }}
+                            //   options={
+                            //     outSourcingByDirectContract[m.outsourcingCompanyId] ?? [
+                            //       { id: 0, name: '선택' },
+                            //     ]
+                            //   }
+                            //   onScrollToBottom={() => {
+                            //     if (NameByOutsourcinghasNextPage && !NameByOutsourcingFetching)
+                            //       NameByOutsourcingFetchNextPage()
+                            //   }}
+                            //   loading={NameByOutsourcingLoading}
+                            // />
+                            <DailyServicePersonNameRow key={m.checkId} row={m} />
                           )}
                         </TableCell>
 
@@ -4857,6 +6136,12 @@ export default function DailyReportRegistrationView() {
                             size="small"
                             placeholder="텍스트 입력 "
                             value={m.workContent}
+                            onFocus={() => {
+                              setClearServiceCompanyFocusedId(null)
+                              setClearPersonNameFocusedId(null)
+                              setClearServiceOutsourcingCompanyFocusedId(null)
+                              setClearFocusedRowId(null)
+                            }}
                             onChange={(e) =>
                               updateItemField(
                                 'outsourcingByDirectContract',
@@ -4929,6 +6214,12 @@ export default function DailyReportRegistrationView() {
                                 ? ''
                                 : formatNumber(m.unitPrice)
                             }
+                            onFocus={() => {
+                              setClearServiceCompanyFocusedId(null)
+                              setClearPersonNameFocusedId(null)
+                              setClearServiceOutsourcingCompanyFocusedId(null)
+                              setClearFocusedRowId(null)
+                            }}
                             onChange={(e) => {
                               const numericValue =
                                 e.target.value === '' ? null : unformatNumber(e.target.value)
@@ -4974,6 +6265,12 @@ export default function DailyReportRegistrationView() {
                             placeholder="숫자를 입력해주세요."
                             inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
                             value={m.workQuantity ?? ''}
+                            onFocus={() => {
+                              setClearServiceCompanyFocusedId(null)
+                              setClearPersonNameFocusedId(null)
+                              setClearServiceOutsourcingCompanyFocusedId(null)
+                              setClearFocusedRowId(null)
+                            }}
                             onChange={(e) => {
                               const value = e.target.value
                               const numericValue = value === '' ? null : parseFloat(value)
@@ -5062,6 +6359,12 @@ export default function DailyReportRegistrationView() {
                             size="small"
                             placeholder="500자 이하 텍스트 입력"
                             value={m.memo}
+                            onFocus={() => {
+                              setClearServiceCompanyFocusedId(null)
+                              setClearPersonNameFocusedId(null)
+                              setClearServiceOutsourcingCompanyFocusedId(null)
+                              setClearFocusedRowId(null)
+                            }}
                             onChange={(e) =>
                               updateItemField(
                                 'outsourcingByDirectContract',
@@ -5135,6 +6438,11 @@ export default function DailyReportRegistrationView() {
             </div>
             <TableContainer
               component={Paper}
+              sx={{
+                height: '300px',
+                overflowX: 'auto', // 가로 스크롤 허용
+                overflowY: 'auto',
+              }}
               onScroll={(e) => {
                 const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
                 if (scrollHeight - scrollTop <= clientHeight * 1.2) {
@@ -5210,7 +6518,7 @@ export default function DailyReportRegistrationView() {
                         </TableCell>
 
                         <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <CommonSelect
+                          {/* <CommonSelect
                             fullWidth
                             // selectedCompanyIds[m.id] ||
                             value={m.outsourcingCompanyId || 0}
@@ -5241,13 +6549,15 @@ export default function DailyReportRegistrationView() {
                                 withEquipmentFetchNextPage()
                             }}
                             loading={withEquipmentLoading}
-                          />
+                          /> */}
+
+                          <DailyOutsourcingNameRow key={m.id} row={m} />
                         </TableCell>
 
                         {/* 계약명 */}
 
                         <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <CommonSelect
+                          {/* <CommonSelect
                             fullWidth
                             value={m.outsourcingCompanyContractId || 0}
                             onChange={async (value) => {
@@ -5281,11 +6591,13 @@ export default function DailyReportRegistrationView() {
                                 directContractNameFetchNextPage()
                             }}
                             loading={directContractNameLoading}
-                          />
+                          /> */}
+
+                          <DailyOutsourcingContractNameRow key={m.id} row={m} />
                         </TableCell>
 
                         <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <CommonSelect
+                          {/* <CommonSelect
                             value={m.laborId || 0}
                             onChange={(value) => {
                               const key = `${m.outsourcingCompanyId}_${m.outsourcingCompanyContractId}` // ✅ 키 변경
@@ -5307,7 +6619,9 @@ export default function DailyReportRegistrationView() {
                                 contractNameFetchNextPage()
                             }}
                             loading={contractNameLoading}
-                          />
+                          /> */}
+
+                          <DailyOutsourcingContractPersonNameRow key={m.id} row={m} />
                         </TableCell>
 
                         <TableCell
@@ -5319,6 +6633,14 @@ export default function DailyReportRegistrationView() {
                             type="number" // type을 number로 변경
                             placeholder="숫자를 입력해주세요."
                             inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
+                            onFocus={() => {
+                              setClearServiceCompanyFocusedId(null)
+                              setClearPersonNameFocusedId(null)
+                              setClearServiceOutsourcingCompanyFocusedId(null)
+                              setClearServiceOutsourcingContractFocusedId(null)
+                              setClearServiceOutsourcingContractPersonNameFocusedId(null)
+                              setClearFocusedRowId(null)
+                            }}
                             value={m.workQuantity ?? ''}
                             onChange={(e) => {
                               const value = e.target.value
@@ -5631,6 +6953,11 @@ export default function DailyReportRegistrationView() {
             </div>
             <TableContainer
               component={Paper}
+              sx={{
+                height: '300px',
+                overflowX: 'auto', // 가로 스크롤 허용
+                overflowY: 'auto',
+              }}
               onScroll={(e) => {
                 const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
                 if (scrollHeight - scrollTop <= clientHeight * 1.2) {
@@ -5702,7 +7029,7 @@ export default function DailyReportRegistrationView() {
                         </TableCell>
 
                         <TableCell align="center" sx={cellStyle}>
-                          <CommonSelect
+                          {/* <CommonSelect
                             fullWidth
                             value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
                             onChange={async (value) => {
@@ -5739,11 +7066,13 @@ export default function DailyReportRegistrationView() {
                                 withEquipmentFetchNextPage()
                             }}
                             loading={withEquipmentLoading}
-                          />
+                          /> */}
+
+                          <DailyWorkOutsourcingNameRow key={m.id} row={m} />
                         </TableCell>
 
                         <TableCell align="center" sx={cellStyle}>
-                          <CommonSelect
+                          {/* <CommonSelect
                             fullWidth
                             value={m.outsourcingCompanyContractConstructionGroupId || 0}
                             onChange={async (value) => {
@@ -5792,7 +7121,6 @@ export default function DailyReportRegistrationView() {
                             options={(() => {
                               const allOptions = itemNameByOutSourcing[m.outsourcingCompanyId] ?? []
 
-                              // ✅ 동일한 업체에서 이미 선택된 항목 ID들
                               const selectedGroupIds = form.outsourcingConstructions
                                 .filter(
                                   (o) =>
@@ -5802,7 +7130,6 @@ export default function DailyReportRegistrationView() {
                                 )
                                 .map((o) => o.outsourcingCompanyContractConstructionGroupId)
 
-                              // ✅ 이미 선택된 항목은 options에서 제거
                               const filteredOptions = allOptions.filter(
                                 (opt) => !selectedGroupIds.includes(opt.id),
                               )
@@ -5816,12 +7143,14 @@ export default function DailyReportRegistrationView() {
                                 contractGroupFetchNextPage()
                             }}
                             loading={contractGroupLoading}
-                          />
+                          /> */}
+
+                          <DailyWorkerItemNameRow key={m.id} row={m} />
                         </TableCell>
 
                         <TableCell align="center" sx={cellStyle}>
                           {m.items && m.items.length > 0 ? (
-                            <div className="flex flex-col my-[-8px]">
+                            <div className="flex flex-col ">
                               {m.items.map((item, index) => (
                                 <div
                                   key={`${m.id}-${item.id}-${index} + 1`}
@@ -5837,7 +7166,7 @@ export default function DailyReportRegistrationView() {
                               ))}
                             </div>
                           ) : (
-                            <div className="my-[-8px]">
+                            <div>
                               <CommonInput
                                 className="text-2xl "
                                 value={'-'}
@@ -5850,7 +7179,7 @@ export default function DailyReportRegistrationView() {
 
                         <TableCell align="center" sx={cellStyle}>
                           {m.items && m.items.length > 0 ? (
-                            <div className="flex flex-col my-[-8px]">
+                            <div className="flex flex-col">
                               {m.items.map((item, index) => (
                                 <div
                                   key={`${m.id}-${item.id}-${index} + 2`}
@@ -5866,7 +7195,7 @@ export default function DailyReportRegistrationView() {
                               ))}
                             </div>
                           ) : (
-                            <div className="my-[-8px]">
+                            <div>
                               <CommonInput
                                 className="text-2xl "
                                 value={'-'}
@@ -5879,7 +7208,7 @@ export default function DailyReportRegistrationView() {
 
                         <TableCell align="center" sx={cellStyle}>
                           {m.items && m.items.length > 0 ? (
-                            <div className="flex flex-col my-[-8px]">
+                            <div className="flex flex-col">
                               {m.items.map((item, index) => (
                                 <div
                                   key={`${m.id}-${item.id}-${index} +  3`}
@@ -5895,7 +7224,7 @@ export default function DailyReportRegistrationView() {
                               ))}
                             </div>
                           ) : (
-                            <div className="my-[-8px]">
+                            <div>
                               <CommonInput
                                 className="text-2xl "
                                 value={'-'}
@@ -5908,7 +7237,7 @@ export default function DailyReportRegistrationView() {
 
                         <TableCell align="center" sx={cellStyle}>
                           {m.items && m.items.length > 0 ? (
-                            <div className="flex flex-col my-[-8px]">
+                            <div className="flex flex-col ">
                               {m.items.map((item, index) => (
                                 <div
                                   key={`${m.id}-${item.id}-${index} + 4`}
@@ -5916,6 +7245,10 @@ export default function DailyReportRegistrationView() {
                                 >
                                   <CommonInput
                                     className="text-2xl "
+                                    onFocus={() => {
+                                      setClearWorkOutsourcingNameFocusedId(null)
+                                      setClearWorkerItemNameFocusedId(null)
+                                    }}
                                     value={item.quantity ?? 0}
                                     onChange={(value: number) => {
                                       const numericValue = Number(value)
@@ -5932,7 +7265,7 @@ export default function DailyReportRegistrationView() {
                               ))}
                             </div>
                           ) : (
-                            <div className="my-[-8px]">
+                            <div>
                               <CommonInput
                                 className="text-2xl "
                                 value={'-'}
@@ -5945,7 +7278,7 @@ export default function DailyReportRegistrationView() {
 
                         <TableCell align="center" sx={cellStyle}>
                           {m.items && m.items.length > 0 ? (
-                            <div className="flex flex-col my-[-8px]">
+                            <div className="flex flex-col ">
                               {m.items.map((item, index) => (
                                 <div
                                   key={item.id ?? index}
@@ -6001,7 +7334,7 @@ export default function DailyReportRegistrationView() {
                               ))}
                             </div>
                           ) : (
-                            <div className="my-[-8px]">
+                            <div>
                               <CommonInput
                                 className="text-2xl "
                                 value={'-'}
@@ -6014,7 +7347,7 @@ export default function DailyReportRegistrationView() {
 
                         <TableCell align="center" sx={cellStyle}>
                           {m.items && m.items.length > 0 ? (
-                            <div className="flex flex-col my-[-8px]">
+                            <div className="flex flex-col">
                               {m.items.map((item, index) => (
                                 <div
                                   key={`${m.id}-${item.id}-${index} + 4`}
@@ -6038,7 +7371,7 @@ export default function DailyReportRegistrationView() {
                               ))}
                             </div>
                           ) : (
-                            <div className="my-[-8px]">
+                            <div>
                               <CommonInput
                                 className="text-2xl "
                                 value={'-'}
@@ -6239,6 +7572,11 @@ export default function DailyReportRegistrationView() {
 
             <TableContainer
               component={Paper}
+              sx={{
+                minHeight: '300px',
+                overflowX: 'auto',
+                overflowY: 'auto',
+              }}
               onScroll={(e) => {
                 const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
                 if (scrollHeight - scrollTop <= clientHeight * 1.2) {
@@ -6321,7 +7659,7 @@ export default function DailyReportRegistrationView() {
                         </TableCell>
 
                         <TableCell align="center" sx={cellStyle}>
-                          <CommonSelect
+                          {/* <CommonSelect
                             fullWidth
                             value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
                             onChange={async (value) => {
@@ -6364,44 +7702,17 @@ export default function DailyReportRegistrationView() {
                                 withEquipmentFetchNextPage()
                             }}
                             loading={withEquipmentLoading}
-                          />
+                          /> */}
+
+                          <DailyEquipMentOutsourcingNameRow key={m.id} row={m} />
                         </TableCell>
 
                         <TableCell align="center" sx={cellStyle}>
-                          <CommonSelect
-                            fullWidth
-                            value={
-                              selectedDriverIds[m.id] || m.outsourcingCompanyContractDriverId || 0
-                            }
-                            onChange={async (value) => {
-                              const selectedDriver = (
-                                driverOptionsByCompany[m.outsourcingCompanyId] ?? []
-                              ).find((opt) => opt.id === value)
-
-                              if (!selectedDriver) return
-
-                              updateItemField(
-                                'equipment',
-                                m.id,
-                                'outsourcingCompanyContractDriverId',
-                                selectedDriver.id,
-                              )
-                            }}
-                            options={
-                              driverOptionsByCompany[m.outsourcingCompanyId] ?? [
-                                { id: 0, name: '선택', category: '' },
-                              ]
-                            }
-                            onScrollToBottom={() => {
-                              if (fuelDriverHasNextPage && !fuelDriverIsFetching)
-                                fuelDriverFetchNextPage()
-                            }}
-                            loading={fuelDriverLoading}
-                          />
+                          <DailyEquipMentDriverNameRow key={m.id} row={m} />
                         </TableCell>
 
                         <TableCell align="center" sx={cellStyle}>
-                          <CommonSelect
+                          {/* <CommonSelect
                             fullWidth
                             value={
                               selectedCarNumberIds[m.id] ||
@@ -6473,7 +7784,6 @@ export default function DailyReportRegistrationView() {
                                   }),
                                 )
 
-                                // ✅ 차량 ID 기준으로 서브장비 옵션 저장
                                 setTestArrayByRow((prev) => ({
                                   ...prev,
                                   [selectedCarNumber.id]: [
@@ -6497,7 +7807,9 @@ export default function DailyReportRegistrationView() {
                                 fuelEquipmentFetchNextPage()
                             }}
                             loading={fuelEquipmentLoading}
-                          />
+                          /> */}
+
+                          <DailyEquipMentCarNumberRow key={m.id} row={m} />
                         </TableCell>
 
                         {/* 규격 (서브장비 부분) */}
@@ -6523,7 +7835,14 @@ export default function DailyReportRegistrationView() {
                                   className="flex items-center justify-between gap-2 w-full"
                                   style={{ minHeight: '40px' }}
                                 >
-                                  <CommonSelect
+                                  <CommonInput
+                                    className="flex-1 text-2xl"
+                                    value={item.outsourcingCompanyContractSubEquipmentName || 0}
+                                    onChange={() => {}}
+                                    disabled
+                                  />
+
+                                  {/* <CommonSelect
                                     className="flex-1 text-2xl"
                                     value={item.outsourcingCompanyContractSubEquipmentId || 0}
                                     onChange={(value) => {
@@ -6536,13 +7855,12 @@ export default function DailyReportRegistrationView() {
                                       )
                                     }}
                                     disabled
-                                    // ✅ 차량ID 기준으로 서브장비 옵션 불러오기
                                     options={
                                       testArrayByRow[m.outsourcingCompanyContractEquipmentId] ?? [
                                         { id: 0, name: '선택', taskDescription: '', unitPrice: 0 },
                                       ]
                                     }
-                                  />
+                                  /> */}
 
                                   <CommonInput
                                     className="flex-1 text-2xl"
@@ -6573,6 +7891,11 @@ export default function DailyReportRegistrationView() {
                             size="small"
                             placeholder="작업 내용 입력"
                             value={m.workContent}
+                            onFocus={() => {
+                              setClearEquipmentOutsourcingNameFocusedId(null)
+                              setClearEquipmentDriverNameFocusedId(null)
+                              setClearEquipmentCarNumberFocusedId(null)
+                            }}
                             onChange={(e) =>
                               updateItemField('equipment', m.id, 'workContent', e.target.value)
                             }
@@ -6586,6 +7909,11 @@ export default function DailyReportRegistrationView() {
                                   size="small"
                                   placeholder="작업 내용 입력"
                                   value={detail.workContent}
+                                  onFocus={() => {
+                                    setClearEquipmentOutsourcingNameFocusedId(null)
+                                    setClearEquipmentDriverNameFocusedId(null)
+                                    setClearEquipmentCarNumberFocusedId(null)
+                                  }}
                                   onChange={(e) =>
                                     updateContractDetailField(
                                       'equipment',
@@ -6661,6 +7989,11 @@ export default function DailyReportRegistrationView() {
                             placeholder="숫자를 입력해주세요."
                             inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
                             value={m.workHours ?? ''}
+                            onFocus={() => {
+                              setClearEquipmentOutsourcingNameFocusedId(null)
+                              setClearEquipmentDriverNameFocusedId(null)
+                              setClearEquipmentCarNumberFocusedId(null)
+                            }}
                             onChange={(e) => {
                               const value = e.target.value
                               const numericValue = value === '' ? null : parseFloat(value)
@@ -6701,6 +8034,11 @@ export default function DailyReportRegistrationView() {
                                   placeholder="숫자를 입력해주세요."
                                   inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
                                   value={detail.workHours ?? ''}
+                                  onFocus={() => {
+                                    setClearEquipmentOutsourcingNameFocusedId(null)
+                                    setClearEquipmentDriverNameFocusedId(null)
+                                    setClearEquipmentCarNumberFocusedId(null)
+                                  }}
                                   onChange={(e) => {
                                     const value = e.target.value
                                     const numericValue = value === '' ? null : parseFloat(value)
@@ -6793,6 +8131,11 @@ export default function DailyReportRegistrationView() {
                           <TextField
                             size="small"
                             placeholder="500자 이하 텍스트 입력"
+                            onFocus={() => {
+                              setClearEquipmentOutsourcingNameFocusedId(null)
+                              setClearEquipmentDriverNameFocusedId(null)
+                              setClearEquipmentCarNumberFocusedId(null)
+                            }}
                             value={m.memo}
                             onChange={(e) =>
                               updateItemField('equipment', m.id, 'memo', e.target.value)
@@ -6804,6 +8147,11 @@ export default function DailyReportRegistrationView() {
                                 <TextField
                                   size="small"
                                   placeholder="500자 이하 텍스트 입력"
+                                  onFocus={() => {
+                                    setClearEquipmentOutsourcingNameFocusedId(null)
+                                    setClearEquipmentDriverNameFocusedId(null)
+                                    setClearEquipmentCarNumberFocusedId(null)
+                                  }}
                                   value={detail.memo}
                                   onChange={(e) =>
                                     updateContractDetailField(
@@ -7042,13 +8390,20 @@ export default function DailyReportRegistrationView() {
               </div>
               <div className="flex">
                 <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-                  유류업체명
+                  유류업체명 <span className="text-red-500 ml-1">*</span>
                 </label>
                 <div className="border border-gray-400  w-full">
                   <InfiniteScrollSelect
                     placeholder="유류 업체명을 입력하세요"
                     keyword={form.outsourcingCompanyName ?? ''}
-                    onChangeKeyword={(newKeyword) => setField('outsourcingCompanyName', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                    onChangeKeyword={(newKeyword) => {
+                      setField('outsourcingCompanyName', newKeyword)
+
+                      if (newKeyword.trim() === '') {
+                        setField('outsourcingCompanyName', '')
+                        setField('outsourcingCompanyId', 0)
+                      }
+                    }} // ★필드명과 값 둘 다 넘겨야 함
                     items={outsourcingList}
                     hasNextPage={OutsourcingNameHasNextPage ?? false}
                     fetchNextPage={OutsourcingeNameFetchNextPage}
@@ -7100,6 +8455,11 @@ export default function DailyReportRegistrationView() {
 
             <TableContainer
               component={Paper}
+              sx={{
+                minHeight: '300px',
+                overflowX: 'auto',
+                overflowY: 'auto',
+              }}
               onScroll={(e) => {
                 const { scrollTop, clientHeight, scrollHeight } = e.currentTarget
                 if (scrollHeight - scrollTop <= clientHeight * 1.2) {
@@ -7184,7 +8544,7 @@ export default function DailyReportRegistrationView() {
                           align="center"
                           sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
                         >
-                          <CommonSelect
+                          {/* <CommonSelect
                             fullWidth
                             // value={m.outsourcingCompanyId || 0}
                             value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
@@ -7239,7 +8599,9 @@ export default function DailyReportRegistrationView() {
                                 withEquipmentFetchNextPage()
                             }}
                             loading={withEquipmentLoading}
-                          />
+                          /> */}
+
+                          <DailyFuelOutsourcingNameRow key={m.id} row={m} />
                         </TableCell>
 
                         <TableCell
@@ -7257,6 +8619,8 @@ export default function DailyReportRegistrationView() {
                                 onChange={() => {
                                   setFuelRadioBtn(m.id, 'CONSTRUCTION')
                                   updateItemField('fuel', m.id, 'equipmentId', '')
+                                  updateItemField('fuel', m.id, 'equipmentName', '')
+
                                   updateItemField('fuel', m.id, 'specificationName', '')
                                 }}
                                 value="CONSTRUCTION"
@@ -7272,6 +8636,7 @@ export default function DailyReportRegistrationView() {
                                   setFuelRadioBtn(m.id, 'EQUIPMENT')
 
                                   updateItemField('fuel', m.id, 'equipmentId', '')
+                                  updateItemField('fuel', m.id, 'equipmentName', '')
                                   updateItemField('fuel', m.id, 'specificationName', '')
                                 }}
                                 value="EQUIPMENT"
@@ -7286,7 +8651,7 @@ export default function DailyReportRegistrationView() {
                           align="center"
                           sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
                         >
-                          <CommonSelect
+                          {/* <CommonSelect
                             fullWidth
                             value={selectedCarNumberIds[m.id] ?? m.equipmentId ?? 0}
                             onChange={async (value) => {
@@ -7332,12 +8697,14 @@ export default function DailyReportRegistrationView() {
                                   !otherSelectedIds.includes(opt.id),
                               )
                             })()}
-                            onScrollToBottom={() => {
-                              if (fuelEquipmentHasNextPage && !fuelEquipmentIsFetching)
-                                fuelEquipmentFetchNextPage()
-                            }}
-                            loading={fuelEquipmentLoading}
-                          />
+                            // onScrollToBottom={() => {
+                            //   if (fuelEquipmentHasNextPage && !fuelEquipmentIsFetching)
+                            //     fuelEquipmentFetchNextPage()
+                            // }}
+                            // loading={fuelEquipmentLoading}
+                          /> */}
+
+                          <DailyFuelCarNumberRow key={m.id} row={m} />
                         </TableCell>
 
                         {/* 규격 */}
@@ -7387,10 +8754,7 @@ export default function DailyReportRegistrationView() {
                           )} */}
                         </TableCell>
 
-                        <TableCell
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
-                        >
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                           <CommonSelect
                             fullWidth={true}
                             value={m.fuelType || 'BASE'}
@@ -7417,13 +8781,14 @@ export default function DailyReportRegistrationView() {
                             ))} */}
                         </TableCell>
 
-                        <TableCell
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
-                        >
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                           <TextField
                             size="small"
                             placeholder="숫자만"
+                            onFocus={() => {
+                              setClearFuelOutsourcingNameFocusedId(null)
+                              setClearFuelCarNumberFocusedId(null)
+                            }}
                             value={formatNumber(m.fuelAmount)}
                             onChange={(e) => {
                               const numericValue = unformatNumber(e.target.value)
@@ -7464,14 +8829,15 @@ export default function DailyReportRegistrationView() {
                             ))} */}
                         </TableCell>
 
-                        <TableCell
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
-                        >
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                           <TextField
                             size="small"
                             placeholder="숫자만"
                             value={formatNumber(m.amount)}
+                            onFocus={() => {
+                              setClearFuelOutsourcingNameFocusedId(null)
+                              setClearFuelCarNumberFocusedId(null)
+                            }}
                             onChange={(e) => {
                               const numericValue = unformatNumber(e.target.value)
                               updateItemField('fuel', m.id, 'amount', numericValue)
@@ -7506,10 +8872,7 @@ export default function DailyReportRegistrationView() {
                             ))} */}
                         </TableCell>
 
-                        <TableCell
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
-                        >
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                           <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
                             <CommonFileInput
                               acceptedExtensions={[
@@ -7551,13 +8914,14 @@ export default function DailyReportRegistrationView() {
                           </div>
                         </TableCell>
 
-                        <TableCell
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
-                        >
+                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                           <TextField
                             size="small"
                             placeholder="500자 이하 텍스트 입력"
+                            onFocus={() => {
+                              setClearFuelOutsourcingNameFocusedId(null)
+                              setClearFuelCarNumberFocusedId(null)
+                            }}
                             value={m.memo}
                             onChange={(e) => updateItemField('fuel', m.id, 'memo', e.target.value)}
                           />

@@ -6,13 +6,15 @@ type CommonInputProps<T> = {
   value: T
   error?: boolean
   helperText?: string
-  onChange: (vale: T) => void
+  onChange: (value: T) => void
   type?: string
   fullWidth?: boolean
   required?: boolean
   placeholder?: string
   className: string
   disabled?: boolean
+
+  onFocus?: () => void
 }
 
 export default function CommonInput<T>({
@@ -26,6 +28,7 @@ export default function CommonInput<T>({
   required = false,
   className,
   disabled,
+  onFocus, // <-- 추가
 }: CommonInputProps<T>) {
   return (
     <TextField
@@ -41,6 +44,7 @@ export default function CommonInput<T>({
           onChange(e.target.value as T)
         }
       }}
+      onFocus={onFocus} // 🔥 여기에 연결
       type={type}
       className={className}
       fullWidth={fullWidth}
