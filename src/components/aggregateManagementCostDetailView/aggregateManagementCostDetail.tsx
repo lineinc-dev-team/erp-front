@@ -284,16 +284,12 @@ export default function AggregateManagementCostDetailView() {
 
               return r.meals.map((meal: any, idx: any) => {
                 const unitPrices = Object.values(meal.days).map((d: any) => d.unitPrice)
-                const eachAmounts = Object.values(meal.days).map((d: any) => d.amount)
 
                 const unitPriceSum = unitPrices.reduce((a, b) => a + b, 0)
                 const unitPriceCount = unitPrices.filter((v) => v > 0).length
                 const avgUnitPrice = unitPriceCount ? unitPriceSum / unitPriceCount : 0
 
-                const amountSum = eachAmounts.reduce((a, b) => a + b, 0)
-                const amountCount = eachAmounts.filter((v) => v > 0).length
-
-                const avgAmount = amountCount ? amountSum / amountCount : 0
+                const avgAmount = totalMeals * avgUnitPrice
 
                 return (
                   <TableRow key={`${r.no}-${meal.type}`}>
@@ -375,15 +371,24 @@ export default function AggregateManagementCostDetailView() {
                 return sum + avg
               }, 0)
 
-              const totalAmountByMeal = rows.reduce((sum: number, r: any) => {
-                const meal = r.meals.find((m: any) => m.type === mealType)
-                const prices = Object.values(meal?.days || {}).map((d: any) => d.amount)
-                const filtered = prices.filter((v) => v > 0)
-                const avg = filtered.length
-                  ? filtered.reduce((a, b) => a + b, 0) / filtered.length
-                  : 0
-                return sum + avg
-              }, 0)
+              const mealTypes = ['조식', '중식', '석식']
+
+              const totalAmountsByMealArray = mealTypes.map((mealType) =>
+                rows.reduce((sum: number, r: any) => {
+                  const meal = r.meals.find((m: any) => m.type === mealType)
+                  if (!meal) return sum
+
+                  const mealTotal = Object.values(meal.days).reduce((acc: number, day: any) => {
+                    const count = day.count || 0
+                    const unitPrice = day.unitPrice || 0
+                    return acc + count * unitPrice
+                  }, 0)
+
+                  return sum + mealTotal
+                }, 0),
+              )
+              // 2️⃣ 모든 식사 합계
+              const finalGrandTotal = totalAmountsByMealArray.reduce((acc, val) => acc + val, 0)
 
               return (
                 <TableRow key={mealType} sx={{ backgroundColor: '#e5e7eb', fontWeight: 'bold' }}>
@@ -407,7 +412,7 @@ export default function AggregateManagementCostDetailView() {
                         {totalUnitPriceByMeal.toLocaleString()}
                       </TableCell>
                       <TableCell rowSpan={3} sx={cellStyle}>
-                        {totalAmountByMeal.toLocaleString()}
+                        {finalGrandTotal.toLocaleString()}
                       </TableCell>
                     </>
                   )}
