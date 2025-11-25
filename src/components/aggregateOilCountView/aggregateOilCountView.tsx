@@ -338,7 +338,7 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
   const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
 
   // "계정 관리" 메뉴에 대한 권한
-  const { hasExcelDownload } = useMenuPermission(roleId, '집계(유류집계)', enabled)
+  const { hasExcelDownload } = useMenuPermission(roleId, '집계 관리', enabled)
 
   return (
     <div>

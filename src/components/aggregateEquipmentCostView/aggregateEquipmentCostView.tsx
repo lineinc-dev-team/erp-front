@@ -176,7 +176,7 @@ export default function AggregateEquipmentCostView() {
   const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
 
   // "계정 관리" 메뉴에 대한 권한
-  const { hasExcelDownload } = useMenuPermission(roleId, '집계(장비비)', enabled)
+  const { hasExcelDownload } = useMenuPermission(roleId, '집계 관리', enabled)
 
   return (
     <div>

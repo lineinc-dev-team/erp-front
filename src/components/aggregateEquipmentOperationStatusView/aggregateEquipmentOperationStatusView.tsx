@@ -132,20 +132,20 @@ export default function AggregateEquipmentOperationStatusView() {
         0,
       )
       const unitPriceDaysCount = unitPriceDays.length
-      let displayUnitPrice = unitPriceDaysCount > 0 ? totalUnitPrice / unitPriceDaysCount : 0
+      const displayUnitPrice = unitPriceDaysCount > 0 ? totalUnitPrice / unitPriceDaysCount : 0
 
       // 유류대 단가 계산
-      if (eq.type === '유류대') {
-        const fuelTotal = totalHours
-        const equipmentTotalHours = r.allEquipments.reduce((acc: number, equipment: any) => {
-          if (equipment.type === '유류대') return acc
-          return (
-            acc +
-            Object.values(equipment.days).reduce((a: number, cur: any) => a + (cur.amount || 0), 0)
-          )
-        }, 0)
-        displayUnitPrice = equipmentTotalHours > 0 ? fuelTotal / equipmentTotalHours : 0
-      }
+      // if (eq.type === '유류대') {
+      //   const fuelTotal = totalHours
+      //   const equipmentTotalHours = r.allEquipments.reduce((acc: number, equipment: any) => {
+      //     if (equipment.type === '유류대') return acc
+      //     return (
+      //       acc +
+      //       Object.values(equipment.days).reduce((a: number, cur: any) => a + (cur.amount || 0), 0)
+      //     )
+      //   }, 0)
+      //   displayUnitPrice = equipmentTotalHours > 0 ? fuelTotal / equipmentTotalHours : 0
+      // }
 
       const subtotal = totalHours * displayUnitPrice
 
@@ -206,8 +206,7 @@ export default function AggregateEquipmentOperationStatusView() {
         totalHours * displayUnitPrice,
       )
 
-      const subtotal =
-        eq.type === '유류대' ? totalHours * displayUnitPrice : totalHours * averageUnitPrice
+      const subtotal = totalHours * averageUnitPrice
 
       total += subtotal
     })
@@ -374,7 +373,7 @@ export default function AggregateEquipmentOperationStatusView() {
   const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
 
   // "계정 관리" 메뉴에 대한 권한
-  const { hasExcelDownload } = useMenuPermission(roleId, '집계(장비가동현황)', enabled)
+  const { hasExcelDownload } = useMenuPermission(roleId, '집계 관리', enabled)
 
   return (
     <div>
@@ -503,6 +502,8 @@ export default function AggregateEquipmentOperationStatusView() {
                       ? totalHours * displayUnitPrice
                       : totalHours * averageUnitPrice
 
+                  console.log('displaySubtotal', displaySubtotal)
+
                   return (
                     <TableRow key={`${r.no}-${idx}`}>
                       {idx === 0 && (
@@ -548,8 +549,9 @@ export default function AggregateEquipmentOperationStatusView() {
                         {(totalHours === 0
                           ? 0
                           : eq.type === '유류대'
-                          ? displayUnitPrice
-                          : averageUnitPrice
+                          ? 0
+                          : // displayUnitPrice
+                            averageUnitPrice
                         ).toLocaleString(
                           undefined, // 로케일 기본값
                           { minimumFractionDigits: 0, maximumFractionDigits: 2 }, // 소수점 2자리, 반올림
@@ -559,11 +561,12 @@ export default function AggregateEquipmentOperationStatusView() {
                       {/* 소계 */}
                       <TableCell align="right" sx={cellStyle}>
                         {eq.type === '유류대'
-                          ? displaySubtotal.toLocaleString(
-                              undefined, // 로케일 기본값
-                              { minimumFractionDigits: 0, maximumFractionDigits: 2 }, // 소수점 2자리, 반올림
-                            )
-                          : subtotal.toLocaleString(
+                          ? 0
+                          : // displaySubtotal.toLocaleString(
+                            //     undefined, // 로케일 기본값
+                            //     { minimumFractionDigits: 0, maximumFractionDigits: 2 }, // 소수점 2자리, 반올림
+                            //   )
+                            subtotal.toLocaleString(
                               undefined, // 로케일 기본값
                               { minimumFractionDigits: 0, maximumFractionDigits: 2 }, // 소수점 2자리, 반올림
                             )}

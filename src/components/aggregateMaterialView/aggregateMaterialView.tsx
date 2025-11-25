@@ -171,7 +171,7 @@ export default function AggregateMaterialView() {
   const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
 
   // "계정 관리" 메뉴에 대한 권한
-  const { hasExcelDownload } = useMenuPermission(roleId, '집계(재료비)', enabled)
+  const { hasExcelDownload } = useMenuPermission(roleId, '집계 관리', enabled)
 
   return (
     <div>

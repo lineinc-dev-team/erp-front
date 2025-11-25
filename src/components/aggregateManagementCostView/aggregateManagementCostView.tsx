@@ -51,7 +51,7 @@ export default function AggregateManagementCostView() {
   const TAB_CONFIG = [
     { label: '집계', value: 'AGGREGATE' },
     ...MealFeeCompanyList?.map((company: any) => ({
-      label: `식당-${company.name}`,
+      label: `${company.name}`,
       value: company.id,
     })),
   ]
@@ -222,7 +222,7 @@ export default function AggregateManagementCostView() {
   const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
 
   // "계정 관리" 메뉴에 대한 권한
-  const { hasExcelDownload } = useMenuPermission(roleId, '집계(관리비)', enabled)
+  const { hasExcelDownload } = useMenuPermission(roleId, '집계 관리', enabled)
 
   return (
     <div>

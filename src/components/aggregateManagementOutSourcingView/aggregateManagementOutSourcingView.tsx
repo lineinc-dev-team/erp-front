@@ -49,7 +49,7 @@ export default function AggregateManagementOutSourcingView() {
   const TAB_CONFIG = [
     { label: '집계', value: 'AGGREGATE' },
     ...ConstructionList?.map((company: any) => ({
-      label: `외주-${company?.outsourcingCompanyContract.contractName}`,
+      label: `${company?.outsourcingCompanyContract.contractName}`,
       value: company?.outsourcingCompanyContract.id,
     })),
   ]
@@ -227,7 +227,7 @@ export default function AggregateManagementOutSourcingView() {
   const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
 
   // "계정 관리" 메뉴에 대한 권한
-  const { hasExcelDownload } = useMenuPermission(roleId, '집계(관리비 상세)', enabled)
+  const { hasExcelDownload } = useMenuPermission(roleId, '집계 관리', enabled)
 
   return (
     <div>
