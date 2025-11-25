@@ -85,7 +85,7 @@ const ClickableCursor = (props: any) => {
 
 export default function ChartPage() {
   const router = useRouter()
-  const { DashBoardListQuery, DashboarDaysQuery } = useDashBoard()
+  const { DashBoardListQuery } = useDashBoard()
   const { search } = useFinalDashboardSearchStore()
 
   const chartData = DashBoardListQuery?.data?.data.map((item: any) => ({
@@ -131,10 +131,16 @@ export default function ChartPage() {
         </Typography>
 
         <Typography variant="h6" color="textSecondary">
-          집계 기준일 :
+          {/* 데이터 기준일 :
           {DashboarDaysQuery?.data?.data?.lastExecutionTime
             ? new Date(DashboarDaysQuery.data.data.lastExecutionTime).toLocaleDateString()
-            : ''}
+            : ''} */}
+          데이터 기준일 :{' '}
+          {(() => {
+            const today = new Date()
+            today.setDate(today.getDate() - 1)
+            return today.toLocaleDateString()
+          })()}
         </Typography>
       </div>
 

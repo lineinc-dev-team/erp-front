@@ -30,7 +30,7 @@ const formatMonth = (ym: string) => {
 export default function DashBoardDetailView({ isHeadOffice }: { isHeadOffice: boolean }) {
   const { search } = useFinalDashboardSearchStore()
 
-  const { DashboarDaysQuery, NoHeadOfficeDashBoardListQuery } = useDashBoard()
+  const { NoHeadOfficeDashBoardListQuery } = useDashBoard()
 
   const params = useSearchParams()
   const siteName = params.get('siteName')
@@ -140,10 +140,12 @@ export default function DashBoardDetailView({ isHeadOffice }: { isHeadOffice: bo
         </Typography>
 
         <Typography variant="h6" color="textSecondary">
-          집계 기준일 :{' '}
-          {DashboarDaysQuery?.data?.data?.lastExecutionTime
-            ? new Date(DashboarDaysQuery.data.data.lastExecutionTime).toLocaleDateString()
-            : ''}
+          데이터 기준일 :{' '}
+          {(() => {
+            const today = new Date()
+            today.setDate(today.getDate() - 1)
+            return today.toLocaleDateString()
+          })()}
         </Typography>
       </div>
 
