@@ -35,6 +35,7 @@ import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { HistoryItem } from '@/types/ordering'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
+import { useLaborInfo } from '@/hooks/useLabor'
 // import { useEffect } from 'react'
 // import { AttachedFile, DetailItem } from '@/types/managementSteel'
 
@@ -75,6 +76,8 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     useOutsourcingNameListInfiniteScroll,
   } = useOutSourcingContract()
 
+  const { useOutsourcingContractNameListInfiniteScroll } = useLaborInfo()
+
   const {
     createMaterialMutation,
     useMaterialHistoryDataQuery,
@@ -109,6 +112,66 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
   const fileCheckIds = form.checkedAttachedFileIds
   const isFilesAllChecked = attachedFiles.length > 0 && fileCheckIds.length === attachedFiles.length
 
+  const [isOutsourcingFocusedBySnack, setIsOutsourcingFocusedBySnack] = useState(false)
+
+  // 유저 선택 시 처리
+  const handleSelectDeduction = (selectedUser: any) => {
+    setField('deductionCompanyName', selectedUser.name)
+    setField('deductionCompanyId', selectedUser.id)
+  }
+
+  const debouncedOutsourcingKeywordBySnack = useDebouncedValue(form.deductionCompanyName, 300)
+
+  const {
+    data: OutsourcingNameDataBySnack,
+    fetchNextPage: OutsourcingNameDataBySnackFetchNextPage,
+    hasNextPage: OutsourcingNameDataBySnackHasNextPage,
+    isFetching: OutsourcingNameDataBySnackIsFetching,
+    isLoading: OutsourcingNameDataBySnackIsLoading,
+  } = useOutsourcingNameListInfiniteScroll(debouncedOutsourcingKeywordBySnack)
+
+  const OutsourcingRawListBySnack =
+    OutsourcingNameDataBySnack?.pages.flatMap((page) => page.data.content) ?? []
+
+  const outsourcingListBySnackData = Array.from(
+    new Map(OutsourcingRawListBySnack.map((user) => [user.name, user])).values(),
+  )
+
+  const [isdeductionCompanyFocused, setIsdeductionCompanyFocused] = useState(false)
+
+  // 유저 선택 시 처리
+  const handleSelectOutsourcingContract = (selectedUser: any) => {
+    setField('deductionCompanyContractName', selectedUser.contractName)
+    setField('deductionCompanyContractId', selectedUser.id ?? 0)
+  }
+
+  const debounceddeductionCompanyKeyWord = useDebouncedValue(form.deductionCompanyContractName, 300)
+
+  const {
+    data: OutsourcingContractNameData,
+    fetchNextPage: OutsourcingContractNameFetchNextPage,
+    hasNextPage: OutsourcingContractNameHasNextPage,
+    isFetching: OutsourcingContractNameIsFetching,
+    isLoading: OutsourcingContractNameIsLoading,
+  } = useOutsourcingContractNameListInfiniteScroll(
+    debounceddeductionCompanyKeyWord,
+    form.deductionCompanyId,
+  )
+
+  const OutsourcingContractRawList =
+    OutsourcingContractNameData?.pages.flatMap((page) => page.data.content) ?? []
+  // const deductionCompanyList = Array.from(
+  //   new Map(OutsourcingContractRawList.map((user) => [user.contractName, user])).values(),
+  // )
+
+  const deductionCompanyList = Array.from(
+    new Map(
+      OutsourcingContractRawList.filter(
+        (user) => user.contractName && user.contractName.trim() !== '',
+      ).map((user) => [user.contractName, user]),
+    ).values(),
+  )
+
   // 상세페이지 로직
 
   const params = useParams()
@@ -137,6 +200,8 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     supplyPrice: '공급가',
     usage: '사용용도',
     originalFileName: '파일 추가',
+    deductionCompanyName: '업체명',
+    deductionCompanyContractName: '업체계약명',
   }
 
   const {
@@ -294,6 +359,17 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
       setField('inputType', client.inputTypeCode)
       setField('inputTypeDescription', client.inputTypeDescription)
       setField('memo', client.memo ?? '')
+
+      setField('deductionCompanyId', client.deductionCompany?.id)
+      setField('deductionCompanyName', client.deductionCompany?.name)
+
+      setField('deductionCompanyContractId', client.deductionCompanyContract?.id)
+      setField('deductionCompanyContractName', client.deductionCompanyContract?.contractName)
+
+      const hasDeductionInfo =
+        !!client.deductionCompany?.id || !!client.deductionCompanyContract?.id
+
+      setField('isDeductible', hasDeductionInfo)
     } else {
       reset()
     }
@@ -658,6 +734,99 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                 onFocus={() => setIsOutsourcingFocused(true)}
                 onBlur={() => setIsOutsourcingFocused(false)}
               />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+              공제여부
+            </label>
+
+            <div className="border border-gray-400 px-2 w-full flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <Checkbox
+                  checked={form.isDeductible ?? false}
+                  onChange={(e) => {
+                    const checked = e.target.checked
+                    setField('isDeductible', checked)
+
+                    // ✅ 체크 해제하면 관련 필드 전체 초기화
+                    if (!checked) {
+                      setField('deductionCompanyName', '')
+                      setField('deductionCompanyId', 0)
+                      setField('deductionCompanyContractName', '')
+                      setField('deductionCompanyContractId', 0)
+                    }
+                  }}
+                  size="small"
+                />
+                <span className="text-[16px] font-medium  whitespace-nowrap">공제</span>
+              </div>
+
+              {/* ✅ 업체명 입력 (체크되어야만 활성화됨) */}
+              <InfiniteScrollSelect
+                placeholder="업체명을 입력하세요"
+                keyword={form.deductionCompanyName ?? ''}
+                onChangeKeyword={(newKeyword) => {
+                  setField('deductionCompanyName', newKeyword)
+
+                  if (newKeyword.trim() === '') {
+                    setField('deductionCompanyContractName', '')
+                    setField('deductionCompanyContractId', 0)
+                    setField('deductionCompanyId', 0)
+                  }
+                }}
+                items={outsourcingListBySnackData}
+                hasNextPage={OutsourcingNameDataBySnackHasNextPage ?? false}
+                fetchNextPage={OutsourcingNameDataBySnackFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                onSelect={handleSelectDeduction}
+                isLoading={
+                  OutsourcingNameDataBySnackIsLoading || OutsourcingNameDataBySnackIsFetching
+                }
+                debouncedKeyword={debouncedOutsourcingKeywordBySnack}
+                shouldShowList={isOutsourcingFocusedBySnack}
+                onFocus={() => setIsOutsourcingFocusedBySnack(true)}
+                onBlur={() => setIsOutsourcingFocusedBySnack(false)}
+                disabled={!form.isDeductible} // ✅ 체크 안되면 비활성화
+              />
+
+              {/* ✅ 업체계약 입력 (체크되어야만 활성화됨) */}
+              <div className="flex items-center w-full">
+                <label className="w-20 text-[16px] flex items-center justify-center font-bold text-center">
+                  업체계약
+                </label>
+                <div className="py-2 w-full flex justify-center items-center">
+                  <InfiniteScrollSelect
+                    placeholder="업체계약을 입력하세요"
+                    keyword={form.deductionCompanyContractName ?? ''}
+                    onChangeKeyword={(newKeyword) =>
+                      setField('deductionCompanyContractName', newKeyword)
+                    }
+                    items={deductionCompanyList}
+                    hasNextPage={OutsourcingContractNameHasNextPage ?? false}
+                    fetchNextPage={OutsourcingContractNameFetchNextPage}
+                    renderItem={(item, isHighlighted) => (
+                      <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+                        {item.contractName}
+                      </div>
+                    )}
+                    onSelect={handleSelectOutsourcingContract}
+                    isLoading={
+                      OutsourcingContractNameIsLoading || OutsourcingContractNameIsFetching
+                    }
+                    debouncedKeyword={debounceddeductionCompanyKeyWord}
+                    shouldShowList={isdeductionCompanyFocused}
+                    onFocus={() => setIsdeductionCompanyFocused(true)}
+                    onBlur={() => setIsdeductionCompanyFocused(false)}
+                    disabled={!form.isDeductible} // ✅ 체크 안되면 비활성화
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

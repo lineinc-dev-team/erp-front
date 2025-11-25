@@ -103,6 +103,11 @@ export type ManagementMaterialFormState = {
   siteProcessName: string
   outsourcingCompanyId: number
   outsourcingCompanyName: string
+  isDeductible: boolean
+  deductionCompanyId: number
+  deductionCompanyName: string
+  deductionCompanyContractId: number
+  deductionCompanyContractName: string
   inputType: string
   inputTypeDescription: string
   deliveryDate: Date | null

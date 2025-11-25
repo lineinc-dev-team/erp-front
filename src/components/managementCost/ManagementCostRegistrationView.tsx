@@ -383,11 +383,6 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     isLoading: OutsourcingNameDataBySnackIsLoading,
   } = useOutsourcingNameListInfiniteScroll(debouncedOutsourcingKeywordBySnack)
 
-  // const OutsourcingRawList = OutsourcingNameData?.pages.flatMap((page) => page.data.content) ?? []
-  // const outsourcingList = Array.from(
-  //   new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
-  // )
-
   const OutsourcingRawListBySnack =
     OutsourcingNameDataBySnack?.pages.flatMap((page) => page.data.content) ?? []
 
@@ -420,11 +415,14 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
   const OutsourcingContractRawList =
     OutsourcingContractNameData?.pages.flatMap((page) => page.data.content) ?? []
-  const deductionCompanyList = Array.from(
-    new Map(OutsourcingContractRawList.map((user) => [user.contractName, user])).values(),
-  )
 
-  // 상세페이지 로직
+  const deductionCompanyList = Array.from(
+    new Map(
+      OutsourcingContractRawList.filter(
+        (user) => user.contractName && user.contractName.trim() !== '',
+      ).map((user) => [user.contractName, user]),
+    ).values(),
+  )
 
   const params = useParams()
   const costDetailId = Number(params?.id)
@@ -737,7 +735,6 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
       setField('deductionCompanyContractId', client.deductionCompanyContract?.id)
       setField('deductionCompanyContractName', client.deductionCompanyContract?.contractName)
-      // ✅ 둘 중 하나라도 값이 있으면 공제 체크 true
       const hasDeductionInfo =
         !!client.deductionCompany?.id || !!client.deductionCompanyContract?.id
 
