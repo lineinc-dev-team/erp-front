@@ -226,7 +226,7 @@ export const fuelExcelFieldMap = {
   공정명: 'processName',
   일자: 'date',
   업체명: 'outsourcingCompanyName',
-  기사명: 'driverName',
+  유류업체명: 'fuelCompany',
   차량번호: 'vehicleNumber',
   규격: 'specification',
   유종: 'fuelType',

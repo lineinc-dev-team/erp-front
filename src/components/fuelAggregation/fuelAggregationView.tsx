@@ -22,7 +22,7 @@ import { formatNumber, getTodayDateString } from '@/utils/formatters'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import CommonSelectByName from '../common/CommonSelectByName'
 import { useFuelAggregation } from '@/hooks/useFuelAggregation'
-import { FuelDataList, fuelStatuses } from '@/types/fuelAggregation'
+import { fuelStatuses } from '@/types/fuelAggregation'
 import { useFuelSearchStore } from '@/stores/fuelAggregationStore'
 import { FuelExcelDownload } from '@/services/fuelAggregation/fuelAggregationService'
 import { myInfoProps } from '@/types/user'
@@ -71,7 +71,7 @@ export default function FuelAggregationView() {
   const pageCount = Number(search.pageCount) || 10
   const totalPages = Math.ceil(totalList / pageCount)
 
-  const updateFuelList = FuelDataList.flatMap((fuel: FuelDataList, fuelIndex: number) => {
+  const updateFuelList = FuelDataList.flatMap((fuel: any, fuelIndex: number) => {
     const fuelInfo = fuel.fuelInfo
 
     return [
@@ -84,6 +84,7 @@ export default function FuelAggregationView() {
         date: getTodayDateString(fuel.date),
 
         outsourcingCompany: fuelInfo?.outsourcingCompany?.name ?? '-',
+        fuelCompany: fuel.outsourcingCompany.name,
         createdAt: `${getTodayDateString(fuel.createdAt)} / ${getTodayDateString(fuel.updatedAt)}`,
         memo: fuelInfo?.memo ?? '-',
 
