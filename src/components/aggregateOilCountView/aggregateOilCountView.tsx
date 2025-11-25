@@ -99,6 +99,18 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
 
       const total = Object.values(dayValues).reduce((acc, cur) => acc + (cur as number), 0)
 
+      //       const total = Object.entries(dayValues).reduce((acc, [day, amount]) => {
+      //   const dayNum = Number(day)
+      //   const price =
+      //     fuelType === 'DIESEL'
+      //       ? Number(String(getFuelPrice(dayNum, 'dieselPrice')).replaceAll(',', '').trim()) || 0
+      //       : fuelType === 'GASOLINE'
+      //       ? Number(String(getFuelPrice(dayNum, 'gasolinePrice')).replaceAll(',', '').trim()) || 0
+      //       : Number(String(getFuelPrice(dayNum, 'ureaPrice')).replaceAll(',', '').trim()) || 0
+
+      //   return acc + amount * price
+      // }, 0)
+
       rows.push({
         fuelType,
         no: index + 1,
@@ -163,7 +175,6 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
       formattedData.push(subtotalRow)
     })
 
-    // 2️⃣ 직영 계
     const directRow: any = {
       NO: '직영 계',
       유류종류: '직영 계',
@@ -666,21 +677,39 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
                           <TableCell align="right" sx={cellStyle}>
                             {(() => {
                               const dieselTotal = dateColumns.reduce((acc, d) => {
-                                const raw = getFuelPrice(d, 'dieselPrice')
-                                const price = Number(String(raw).replaceAll(',', '').trim()) || 0
-                                return acc + price
+                                const qty = rows
+                                  .filter((r) => r.fuelType === 'DIESEL')
+                                  .reduce((a, r) => a + (r.days[d] || 0), 0)
+
+                                const rawPrice = getFuelPrice(d, 'dieselPrice')
+                                const price =
+                                  Number(String(rawPrice).replaceAll(',', '').trim()) || 0
+
+                                return acc + qty * price
                               }, 0)
 
                               const gasolineTotal = dateColumns.reduce((acc, d) => {
-                                const raw = getFuelPrice(d, 'gasolinePrice')
-                                const price = Number(String(raw).replaceAll(',', '').trim()) || 0
-                                return acc + price
+                                const qty = rows
+                                  .filter((r) => r.fuelType === 'GASOLINE')
+                                  .reduce((a, r) => a + (r.days[d] || 0), 0)
+
+                                const rawPrice = getFuelPrice(d, 'gasolinePrice')
+                                const price =
+                                  Number(String(rawPrice).replaceAll(',', '').trim()) || 0
+
+                                return acc + qty * price
                               }, 0)
 
                               const ureaTotal = dateColumns.reduce((acc, d) => {
-                                const raw = getFuelPrice(d, 'ureaPrice')
-                                const price = Number(String(raw).replaceAll(',', '').trim()) || 0
-                                return acc + price
+                                const qty = fuelRows
+                                  .filter((r) => r.fuelType === 'UREA')
+                                  .reduce((a, r) => a + (r.days[d] || 0), 0)
+
+                                const rawPrice = getFuelPrice(d, 'ureaPrice')
+                                const price =
+                                  Number(String(rawPrice).replaceAll(',', '').trim()) || 0
+
+                                return acc + qty * price
                               }, 0)
 
                               const grandTotal = dieselTotal + gasolineTotal + ureaTotal
