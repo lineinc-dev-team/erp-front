@@ -24,9 +24,14 @@ export default function PageLayout({ entity, children }: PageLayoutProps) {
     }
   }
 
+  // 👉 대쉬보드 수정인 경우 제목 숨기기
+  const hideTitle = entity === '대쉬보드' && id
+
   return (
     <div className="m-8">
-      <h1 className={`text-2xl mb-3 `}>{title}</h1>
+      <h1 className="text-2xl mb-3" style={{ display: hideTitle ? 'none' : 'block' }}>
+        {title}
+      </h1>
       {children}
     </div>
   )

@@ -9,6 +9,9 @@ if (!apiBaseUrl) {
 export const API = {
   BASE_URL: apiBaseUrl,
   SITES: `${apiBaseUrl}/sites`,
+
+  DASHBOARD: `${apiBaseUrl}/dashboard`,
+
   SITEMANAGEMENT: `${apiBaseUrl}/site-management-costs`,
   AGGREGATE: `${apiBaseUrl}/aggregation`,
   PROCESS: `${apiBaseUrl}/site-process`,
