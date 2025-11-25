@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Table,
   TableBody,
@@ -14,6 +14,8 @@ import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import useFinalAggregationView from '@/hooks/useFinalAggregation'
 import { useFinalAggregationSearchStore } from '@/stores/finalAggregationStore'
+import { useMenuPermission } from '../common/MenuPermissionView'
+import { myInfoProps } from '@/types/user'
 
 export default function AggregateLaborCostView() {
   const search = useFinalAggregationSearchStore((state) => state.search)
@@ -283,11 +285,35 @@ export default function AggregateLaborCostView() {
   const sumOutsourcing = calculateSum(rowsOutsourcing)
   const sumTotal = calculateSum(allRows)
 
+  const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
+
+  useEffect(() => {
+    const headerData = sessionStorage.getItem('myInfo')
+    if (headerData) {
+      setMyInfo(JSON.parse(headerData))
+    }
+  }, [])
+
+  const roleId = Number(myInfo?.roles?.[0]?.id)
+
+  const rolePermissionStatus = myInfo?.roles?.[0]?.deleted
+
+  const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
+
+  // "계정 관리" 메뉴에 대한 권한
+  const { hasExcelDownload } = useMenuPermission(roleId, '집계(노무비)', enabled)
+
   return (
     <div>
       <Paper sx={{ p: 2 }}>
         <div className="flex justify-end">
-          <Button variant="contained" color="success" onClick={handleExcelDownload} sx={{ mb: 2 }}>
+          <Button
+            variant="contained"
+            color="success"
+            disabled={!hasExcelDownload}
+            onClick={handleExcelDownload}
+            sx={{ mb: 2 }}
+          >
             엑셀 다운로드
           </Button>
         </div>

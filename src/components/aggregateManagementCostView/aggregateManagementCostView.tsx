@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Table,
   TableBody,
@@ -15,6 +15,8 @@ import { saveAs } from 'file-saver'
 import useFinalAggregationView from '@/hooks/useFinalAggregation'
 import { useFinalAggregationSearchStore } from '@/stores/finalAggregationStore'
 import AggregateManagementCostDetailView from '../aggregateManagementCostDetailView/aggregateManagementCostDetail'
+import { myInfoProps } from '@/types/user'
+import { useMenuPermission } from '../common/MenuPermissionView'
 
 export default function AggregateManagementCostView() {
   const search = useFinalAggregationSearchStore((state) => state.search)
@@ -202,6 +204,26 @@ export default function AggregateManagementCostView() {
     backgroundColor: '#f3f4f6',
   }
 
+  // 권한에 따른 버튼 활성화
+
+  const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
+
+  useEffect(() => {
+    const headerData = sessionStorage.getItem('myInfo')
+    if (headerData) {
+      setMyInfo(JSON.parse(headerData))
+    }
+  }, [])
+
+  const roleId = Number(myInfo?.roles?.[0]?.id)
+
+  const rolePermissionStatus = myInfo?.roles?.[0]?.deleted
+
+  const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
+
+  // "계정 관리" 메뉴에 대한 권한
+  const { hasExcelDownload } = useMenuPermission(roleId, '집계(관리비)', enabled)
+
   return (
     <div>
       <Paper sx={{ p: 2 }}>
@@ -235,6 +257,7 @@ export default function AggregateManagementCostView() {
             <Button
               variant="contained"
               color="success"
+              disabled={!hasExcelDownload}
               onClick={handleExcelDownload}
               sx={{ mb: 2 }}
             >
