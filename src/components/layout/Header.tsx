@@ -12,6 +12,7 @@ import {
   ListItemIcon,
   Collapse,
 } from '@mui/material'
+import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard'
 import CloseIcon from '@mui/icons-material/Close'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import {
@@ -68,21 +69,21 @@ const menuNameToBasePath: Record<string, string> = {
 }
 
 const menuNameToIcon: Record<string, React.ReactNode> = {
-  '집계 관리': <ManageAccounts />, // 권한 설정 → 계정 관리 아이콘
-  '권한 관리': <ManageAccounts />, // 권한 설정 → 계정 관리 아이콘
-  '발주처 관리': <Business />, // 회사/거래처 → 건물 아이콘
-  '현장 관리': <Apartment />, // 현장/프로젝트 → 아파트 아이콘
-  '관리비 관리': <Assignment />, // 비용/리포트 → 과제/문서 아이콘
-  '자재 관리': <Inventory />, // 자재 관리도 재고 아이콘
-  '유류집계 관리': <LocalGasStation />, // 유류 → 주유소 아이콘
-  '강재수불부 관리': <ReceiptLong />, // 수불부(장부 개념) → 장부/리포트 아이콘
-  '외주업체 관리': <Groups />, // 협력사/외주업체 → 그룹 아이콘
-  '외주업체 계약 관리': <Description />, // 계약 문서 → 문서 아이콘
-  '노무 관리': <AccessTimeIcon />, // 근무/노무 → 출퇴근 기록 아이콘
-  '노무명세서 관리': <WorkHistory />, // 근무/노무 → 출퇴근 기록 아이콘
-  '계정 관리': <AccountCircle />, // 사용자 계정 → 프로필 아이콘
-  '현장/본사 관리비 관리': <Assignment />, // 사용자 계정 → 프로필 아이콘
-
+  대쉬보드: <SpaceDashboardIcon />,
+  '집계 관리': <ManageAccounts />,
+  '권한 관리': <ManageAccounts />,
+  '발주처 관리': <Business />,
+  '현장 관리': <Apartment />,
+  '관리비 관리': <Assignment />,
+  '자재 관리': <Inventory />,
+  '유류집계 관리': <LocalGasStation />,
+  '강재수불부 관리': <ReceiptLong />,
+  '외주업체 관리': <Groups />,
+  '외주업체 계약 관리': <Description />,
+  '노무 관리': <AccessTimeIcon />,
+  '노무명세서 관리': <WorkHistory />,
+  '계정 관리': <AccountCircle />,
+  '현장/본사 관리비 관리': <Assignment />,
   출역일보: <Today />,
 }
 
@@ -197,6 +198,23 @@ export default function Header() {
 
   // (3) data가 있으면 변환해서 메뉴 생성
   const menuItemsFromApi = data ? convertApiMenusToMenuItems(data.data) : []
+
+  const dashboardMenu: MenuItem[] = [
+    {
+      title: '대쉬보드',
+      icon: menuNameToIcon['대쉬보드'],
+      path: '/dashboard',
+
+      children: [
+        {
+          label: ' - 이동',
+          path: '/dashboard',
+        },
+      ],
+    },
+  ]
+
+  const menuItemsWithDashboard = [...dashboardMenu, ...menuItemsFromApi]
 
   const handleToggleSection = (key: string) => {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
@@ -366,9 +384,12 @@ export default function Header() {
 
       <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
         <List sx={{ width: 260 }}>
-          {!isLoading && !isError && menuItemsFromApi.length > 0 && renderMenu(menuItemsFromApi)}
+          {!isLoading &&
+            !isError &&
+            menuItemsWithDashboard.length > 0 &&
+            renderMenu(menuItemsWithDashboard)}
 
-          {!isLoading && !isError && menuItemsFromApi.length === 0 && (
+          {!isLoading && !isError && menuItemsWithDashboard.length === 0 && (
             <div className="text-xl px-4 py-2 text-green-700">설정된 권한이 없습니다.</div>
           )}
 
