@@ -613,6 +613,7 @@ export default function DailyReportRegistrationView() {
       updateItemField('directContracts', id, 'laborName', '')
       updateItemField('directContracts', id, 'position', '')
       updateItemField('directContracts', id, 'previousPrice', 0)
+      updateItemField('directContracts', id, 'unitPrice', 0)
       return
     }
 
@@ -621,6 +622,7 @@ export default function DailyReportRegistrationView() {
     updateItemField('directContracts', id, 'laborName', selectedCompany.name)
     updateItemField('directContracts', id, 'position', selectedCompany.workType ?? '')
     updateItemField('directContracts', id, 'previousPrice', selectedCompany.previousDailyWage ?? 0)
+    updateItemField('directContracts', id, 'unitPrice', selectedCompany.previousDailyWage ?? 0)
 
     // 퇴직금 안내
     if (selectedCompany.isSeverancePayEligible) {
@@ -900,16 +902,13 @@ export default function DailyReportRegistrationView() {
     )
   }
 
-  // 용역에서 이름 불러오는 키워드 검색 로직
-
   const handleSelectServicePerson = (id: number, selectedCompany: any) => {
-    console.log('selectedCompany: 용역에서 데이터 조회합니다. ', selectedCompany)
-
     if (!selectedCompany) {
       updateItemField('outsourcingByDirectContract', id, 'laborId', 0)
       updateItemField('outsourcingByDirectContract', id, 'laborName', '')
       updateItemField('outsourcingByDirectContract', id, 'position', '')
       updateItemField('outsourcingByDirectContract', id, 'previousPrice', 0)
+      updateItemField('outsourcingByDirectContract', id, 'unitPrice', 0)
       return
     }
 
@@ -921,6 +920,12 @@ export default function DailyReportRegistrationView() {
       'outsourcingByDirectContract',
       id,
       'previousPrice',
+      selectedCompany.previousDailyWage ?? 0,
+    )
+    updateItemField(
+      'outsourcingByDirectContract',
+      id,
+      'unitPrice',
       selectedCompany.previousDailyWage ?? 0,
     )
 
