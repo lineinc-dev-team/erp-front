@@ -15,7 +15,6 @@ import {
 import Grid from '@mui/material/Unstable_Grid2' // Grid2 사용
 import { useQuery } from '@tanstack/react-query'
 import { DashBoardDetailInfoService } from '@/services/dashBoard/dashBoardService'
-import { useSearchParams } from 'next/navigation'
 import useDashBoard from '@/hooks/useDashBoard'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 import { useFinalDashboardSearchStore } from '@/stores/dashboardStore'
@@ -31,16 +30,6 @@ export default function DashBoardDetailView({ isHeadOffice }: { isHeadOffice: bo
   const { search } = useFinalDashboardSearchStore()
 
   const { NoHeadOfficeDashBoardListQuery } = useDashBoard()
-
-  const params = useSearchParams()
-  const siteName = params.get('siteName')
-
-  useEffect(() => {
-    if (siteName) {
-      search.setField('siteName', siteName)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [siteName])
 
   const [isSiteFocused, setIsSiteFocused] = useState(false)
 
