@@ -183,7 +183,6 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
     fuelsForPrice.forEach((ft) => {
       const fuelRows = rows.filter((r) => r.fuelType === ft)
 
-      // ✅ 수량
       const qtyRow: any = {
         NO: '',
         유류종류: '',
@@ -496,10 +495,17 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
                             <TableCell align="right" sx={cellStyle}>
                               {(() => {
                                 const total = dateColumns.reduce((acc, d) => {
-                                  const raw = getFuelPrice(d, 'dieselPrice')
-                                  const price = Number(String(raw).replaceAll(',', '').trim()) || 0
-                                  return acc + price
+                                  const qty = rows
+                                    .filter((r) => r.fuelType === 'DIESEL')
+                                    .reduce((a, r) => a + (r.days[d] || 0), 0)
+
+                                  const rawPrice = getFuelPrice(d, 'dieselPrice')
+                                  const price =
+                                    Number(String(rawPrice).replaceAll(',', '').trim()) || 0
+
+                                  return acc + qty * price
                                 }, 0)
+
                                 return total.toLocaleString()
                               })()}
                             </TableCell>
@@ -543,10 +549,17 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
                             <TableCell align="right" sx={cellStyle}>
                               {(() => {
                                 const total = dateColumns.reduce((acc, d) => {
-                                  const raw = getFuelPrice(d, 'gasolinePrice')
-                                  const price = Number(String(raw).replaceAll(',', '').trim()) || 0
-                                  return acc + price
+                                  const qty = rows
+                                    .filter((r) => r.fuelType === 'GASOLINE')
+                                    .reduce((a, r) => a + (r.days[d] || 0), 0)
+
+                                  const rawPrice = getFuelPrice(d, 'gasolinePrice')
+                                  const price =
+                                    Number(String(rawPrice).replaceAll(',', '').trim()) || 0
+
+                                  return acc + qty * price
                                 }, 0)
+
                                 return total.toLocaleString()
                               })()}
                             </TableCell>
@@ -590,10 +603,17 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
                             <TableCell align="right" sx={cellStyle}>
                               {(() => {
                                 const total = dateColumns.reduce((acc, d) => {
-                                  const raw = getFuelPrice(d, 'ureaPrice')
-                                  const price = Number(String(raw).replaceAll(',', '').trim()) || 0
-                                  return acc + price
+                                  const qty = fuelRows
+                                    .filter((r) => r.fuelType === 'UREA')
+                                    .reduce((a, r) => a + (r.days[d] || 0), 0)
+
+                                  const rawPrice = getFuelPrice(d, 'ureaPrice')
+                                  const price =
+                                    Number(String(rawPrice).replaceAll(',', '').trim()) || 0
+
+                                  return acc + qty * price
                                 }, 0)
+
                                 return total.toLocaleString()
                               })()}
                             </TableCell>
