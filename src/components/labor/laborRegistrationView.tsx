@@ -34,7 +34,11 @@ import { useLaborFormStore } from '@/stores/laborStore'
 import CommonButton from '../common/Button'
 import { useLaborInfo } from '@/hooks/useLabor'
 import AmountInput from '../common/AmountInput'
-import { LaborDetailService, LaborHistoreyService } from '@/services/labor/laborRegistrationService'
+import {
+  CheckReSidentNumberService,
+  LaborDetailService,
+  LaborHistoreyService,
+} from '@/services/labor/laborRegistrationService'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { AttachedFile, LaborFormState } from '@/types/labor'
 import { idTypeValueToName } from '@/stores/outsourcingCompanyStore'
@@ -80,6 +84,12 @@ export default function LaborRegistrationView({ isEditMode = false }) {
   const filesToCheck = attachedFiles.filter(
     (f) => f.type !== 'ID_CARD' && f.type !== 'BANKBOOK' && f.type !== 'LABOR_CONTRACT',
   )
+
+  // 이 사람이 중복 체크를 했는지 여부
+
+  const [isDuplicateChecked, setIsDuplicateChecked] = useState(false)
+  const lastCheckedNumber = useRef<string | null>(null) // 체크한 번호 저장
+
   const isFilesAllChecked = filesToCheck.length > 0 && fileCheckIds.length === filesToCheck.length
 
   const params = useParams()
@@ -197,6 +207,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       setField('gradeId', client?.grade?.id ?? null)
 
       setField('residentNumber', client.residentNumber)
+      setField('residentNumberIsCheck', false)
 
       setField('typeDescription', client.typeDescription)
       setField('address', client.address)
@@ -222,7 +233,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       if (client.typeCode === 'DIRECT_CONTRACT') {
         setField('accountHolder', client.name)
       } else {
-        setField('accountHolder', client?.outsourcingCompany?.accountHolder ?? '')
+        setField('accountHolder', client?.accountHolder ?? '')
       }
 
       setField('hireDate', new Date(client.hireDate))
@@ -262,7 +273,6 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
   // 유저 선택 시 처리
   const handleSelectOutsourcing = (selectedUser: any) => {
-    console.log('소속업체명24', selectedUser)
     setField('outsourcingCompanyName', selectedUser.name)
     setField('outsourcingCompanyId', selectedUser.id)
     // 은행 이름 키워드 검색으로 바꿀꺼임
@@ -438,6 +448,12 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading],
   )
 
+  useEffect(() => {
+    if (form.residentNumber !== lastCheckedNumber.current) {
+      setIsDuplicateChecked(false)
+    }
+  }, [form.residentNumber])
+
   function validateClientForm(form: LaborFormState) {
     if (!form.type?.trim()) return '구분을 선택하세요.'
     if (
@@ -454,10 +470,17 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       return '소속업체를 선택하세요.'
     }
 
+    if (form.type === 'OUTSOURCING_CONTRACT' && (form.outsourcingCompanyContractId ?? 0) <= 0) {
+      return '업체계약을 선택하세요.'
+    }
+
     if (!form.name?.trim()) return '이름을 입력하세요.'
 
     if (!form.residentNumber?.trim()) return '주민등록번호를 입력하세요.'
 
+    if (form.residentNumberIsCheck && !isDuplicateChecked) {
+      return '주민등록번호 중복확인을 해주세요.'
+    }
     if (!form.address?.trim()) return '주소를 입력하세요.'
     // if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
 
@@ -775,11 +798,42 @@ export default function LaborRegistrationView({ isEditMode = false }) {
             <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
               주민등록번호 <span className="text-red-500 ml-1">*</span>
             </label>
-            <div className="border border-gray-400 flex items-center px-2 w-full">
+            <div className="border border-gray-400 gap-2 flex items-center px-2 w-full">
               <CommonResidentNumberInput
                 value={form.residentNumber ?? ''}
-                onChange={(val) => setField('residentNumber', val)}
+                onChange={(val) => {
+                  setField('residentNumber', val)
+                  setField('residentNumberIsCheck', true)
+                }}
                 className="flex-1"
+              />
+              <CommonButton
+                label="중복확인"
+                variant="secondary"
+                className="bg-gray-400 text-white px-3 rounded"
+                onClick={async () => {
+                  if (!form.residentNumber?.trim()) {
+                    showSnackbar('주민등록번호를 입력해주세요.', 'success')
+                    return
+                  }
+
+                  try {
+                    const result = await CheckReSidentNumberService(form.residentNumber)
+
+                    lastCheckedNumber.current = form.residentNumber
+
+                    if (result.data.isDuplicate) {
+                      setIsDuplicateChecked(false)
+                      showSnackbar('이미 등록된 주민등록번호입니다.', 'warning')
+                    } else {
+                      setIsDuplicateChecked(true)
+                      showSnackbar('사용 가능한 주민등록번호입니다.', 'success')
+                    }
+                  } catch (err: any) {
+                    console.error(err)
+                    alert(err.message || '서버 오류가 발생했습니다.')
+                  }
+                }}
               />
             </div>
           </div>

@@ -201,3 +201,32 @@ export async function LaborHistoreyService(laborId: number) {
   const data = await resData.json()
   return data
 }
+
+// 주민번호 중복 체크
+
+export async function CheckReSidentNumberService(residentNumber: string) {
+  const res = await fetch(
+    `${API.LABOR}/check-resident-number-duplicate?residentNumber=${encodeURIComponent(
+      residentNumber,
+    )}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    },
+  )
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return
+    }
+    const errorText = await res.text()
+    throw new Error(`서버 에러: ${res.status} - ${errorText}`)
+  }
+
+  return await res.json()
+}

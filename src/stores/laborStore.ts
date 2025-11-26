@@ -42,6 +42,7 @@ export const useLaborSearchStore = create<{ search: LaborSearchState }>((set) =>
     typeDescription: '',
     name: '',
     residentNumber: '',
+
     outsourcingCompanyId: -1,
     outsourcingCompanyName: '',
     phoneNumber: '',
@@ -96,6 +97,7 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
     gradeId: 0,
     name: '',
     residentNumber: '',
+    residentNumberIsCheck: false,
     address: '',
     detailAddress: '',
     isModalOpen: false,
@@ -155,6 +157,7 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
         outsourcingCompanyContractName: '',
         name: '',
         residentNumber: '',
+        residentNumberIsCheck: false,
         gradeId: 0,
         address: '',
         detailAddress: '',

@@ -85,6 +85,7 @@ export type LaborFormState = {
   outsourcingCompanyContractName: string
   name: string
   residentNumber: string
+  residentNumberIsCheck?: boolean
   address: string
   detailAddress: string
   isModalOpen: boolean
