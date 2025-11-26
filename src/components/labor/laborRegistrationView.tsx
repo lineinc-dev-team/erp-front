@@ -1099,9 +1099,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                     <Checkbox
                       checked={fileCheckIds.includes(m.id)}
                       disabled={
-                        m.type === 'ID_CARD' ||
-                        m.type === 'BANKBOOK' ||
-                        m.type === 'SIGNATURE_IMAGE'
+                        m.type === 'ID_CARD' || m.type === 'BANKBOOK' || m.type === 'LABOR_CONTRACT'
                       }
                       onChange={(e) => toggleCheckItem('attachedFile', m.id, e.target.checked)}
                     />
