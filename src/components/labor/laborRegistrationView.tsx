@@ -78,7 +78,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
   const fileCheckIds = form.checkedAttachedFileIds
 
   const filesToCheck = attachedFiles.filter(
-    (f) => f.type !== 'ID_CARD' && f.type !== 'BANKBOOK' && f.type !== 'SIGNATURE_IMAGE',
+    (f) => f.type !== 'ID_CARD' && f.type !== 'BANKBOOK' && f.type !== 'LABOR_CONTRACT',
   )
   const isFilesAllChecked = filesToCheck.length > 0 && fileCheckIds.length === filesToCheck.length
 
@@ -180,7 +180,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
           const order = {
             ID_CARD: 1,
             BANKBOOK: 2,
-            SIGNATURE_IMAGE: 3,
+            LABOR_CONTRACT: 3,
             DEFAULT: 4,
           }
 
@@ -495,6 +495,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       // 필수 첨부파일 체크
       const idCard = attachedFiles.find((f) => f.type === 'ID_CARD')
       const bankbook = attachedFiles.find((f) => f.type === 'BANKBOOK')
+      const laborContract = attachedFiles.find((f) => f.type === 'LABOR_CONTRACT')
 
       if (!idCard || idCard.files.length === 0) {
         return '신분증 사본 파일을 첨부해주세요.'
@@ -502,6 +503,10 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
       if (!bankbook || bankbook.files.length === 0) {
         return '통장 사본 파일을 첨부해주세요.'
+      }
+
+      if (!laborContract || laborContract.files.length === 0) {
+        return '근로계약서를 첨부해주세요.'
       }
     }
 
@@ -1114,9 +1119,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                         updateItemField('attachedFile', m.id, 'name', e.target.value)
                       }
                       disabled={
-                        m.type === 'ID_CARD' ||
-                        m.type === 'BANKBOOK' ||
-                        m.type === 'SIGNATURE_IMAGE'
+                        m.type === 'ID_CARD' || m.type === 'BANKBOOK' || m.type === 'LABOR_CONTRACT'
                       }
                     />
                   </TableCell>
