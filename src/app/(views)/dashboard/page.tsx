@@ -1,5 +1,3 @@
-'use client'
-
 import DashBoardDetailView from '@/components/dashboard/DashBoardDetailView'
 import DashboardView from '@/components/dashboard/DashboardView'
 import { myInfoProps } from '@/types/user'
