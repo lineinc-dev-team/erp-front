@@ -1413,12 +1413,12 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                 </label>
               ))}
 
-              <CommonInput
+              {/* <CommonInput
                 placeholder="텍스트 입력, ','구분"
                 value={form.defaultDeductionsDescription}
                 onChange={(value) => setField('defaultDeductionsDescription', value)}
                 className="flex-1 text-sm"
-              />
+              /> */}
             </div>
           </div>
 

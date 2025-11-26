@@ -262,8 +262,15 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
   // 유저 선택 시 처리
   const handleSelectOutsourcing = (selectedUser: any) => {
+    console.log('소속업체명24', selectedUser)
     setField('outsourcingCompanyName', selectedUser.name)
     setField('outsourcingCompanyId', selectedUser.id)
+    // 은행 이름 키워드 검색으로 바꿀꺼임
+
+    if (form.type === 'OUTSOURCING_CONTRACT' || form.type === 'OUTSOURCING') {
+      setField('accountNumber', selectedUser.accountNumber)
+      setField('accountHolder', selectedUser.accountHolder)
+    }
   }
 
   const debouncedOutsourcingKeyword = useDebouncedValue(form.outsourcingCompanyName, 300)
@@ -690,6 +697,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                     setField('outsourcingCompanyContractName', '')
                     setField('outsourcingCompanyContractId', null)
                     setField('outsourcingCompanyId', 0)
+                    setField('accountNumber', '')
+                    setField('accountHolder', '')
                   }
                 }}
                 items={outsourcingList}
@@ -962,6 +971,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                 onChange={(value) => setField('accountNumber', value)}
                 className=" flex-1"
                 placeholder="'-' 을 포함한 숫자 입력"
+                disabled={form.type === 'OUTSOURCING_CONTRACT' || form.type === 'OUTSOURCING'}
               />
 
               <CommonInput
@@ -969,7 +979,11 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                 onChange={(value) => setField('accountHolder', value)}
                 className=" flex-1"
                 placeholder="예금주"
-                disabled={form.type === 'DIRECT_CONTRACT'}
+                disabled={
+                  form.type === 'DIRECT_CONTRACT' ||
+                  form.type === 'OUTSOURCING_CONTRACT' ||
+                  form.type === 'OUTSOURCING'
+                }
               />
             </div>
           </div>
