@@ -2574,14 +2574,18 @@ export default function DailyReportRegistrationView() {
         reportDate: lastCheckedDateStr,
       })
 
-      console.log('2455', res)
-
       if (res?.data?.content && res.data.content.length > 0) {
-        const allWorkerProcess = res.data.content
-        const fetched = allWorkerProcess.map((item: any) => ({
+        const prevDayItems = res.data.content.filter((item: any) => item.isToday === false)
+
+        if (prevDayItems.length === 0) {
+          // 전일 데이터가 없으면 그냥 다음 단계로 넘어감
+          continue
+        }
+
+        const fetched = prevDayItems.map((item: any) => ({
           id: item.id,
           workName: item.workName,
-          isToday: true,
+          isToday: false, // 전일 데이터이므로 false로 유지
           workDetails: item.workDetails.map((detail: any) => ({
             id: detail.id,
             content: detail.content,
@@ -2875,15 +2879,84 @@ export default function DailyReportRegistrationView() {
       })
 
       if (res?.data?.content && res.data.content.length > 0) {
-        // 🔹 데이터 존재 시 변환
-        const allInputStatus = res.data.content
-        const fetched = allInputStatus.map((item: any) => ({
+        const personnelList = res.data.content.filter((item: any) => item.typeCode === 'PERSONNEL')
+
+        // PERSONNEL 데이터가 없다면 패스
+        if (personnelList.length === 0) {
+          continue
+        }
+
+        // 🔹 변환
+        const fetched = personnelList.map((item: any) => ({
           id: item.id,
           category: item.category,
           previousDayCount: item.previousDayCount,
           todayCount: item.todayCount,
           cumulativeCount: item.cumulativeCount,
-          type: item.typeCode, // PERSONNEL / EQUIPMENT
+          type: item.typeCode, // PERSONNEL 고정
+        }))
+
+        setIsEditMode(true)
+        setField('inputStatuses', fetched)
+
+        if (attempts === 0) {
+          alert('전일 투입현황 내용이 복사되었습니다.')
+        } else {
+          alert(
+            `${formatDisplayDate(targetDate)} 입력정보가 없어 ${formatDisplayDate(
+              lastCheckedDateStr,
+            )} 데이터를 조회했습니다.`,
+          )
+        }
+
+        found = true
+        break
+      }
+
+      attempts++
+    }
+
+    if (!found) {
+      alert('최근 1개월 이내 투입현황 데이터가 없습니다.')
+    }
+  }
+
+  const handleEquipMentProcessCopy = async (targetDate: string) => {
+    if (!targetDate) return
+
+    let found = false
+    let attempts = 0
+    const maxAttempts = 30 // 최대 1개월
+    const previousDate = new Date(targetDate)
+    let lastCheckedDateStr = ''
+
+    while (!found && attempts < maxAttempts) {
+      previousDate.setDate(previousDate.getDate() - 1)
+      lastCheckedDateStr = formatDateString(previousDate)
+
+      const res = await GetInputStatusService({
+        pageParam: 0,
+        siteId: form.siteId,
+        siteProcessId: form.siteProcessId,
+        reportDate: lastCheckedDateStr,
+      })
+
+      if (res?.data?.content && res.data.content.length > 0) {
+        const personnelList = res.data.content.filter((item: any) => item.typeCode === 'EQUIPMENT')
+
+        // PERSONNEL 데이터가 없다면 패스
+        if (personnelList.length === 0) {
+          continue
+        }
+
+        // 🔹 변환
+        const fetched = personnelList.map((item: any) => ({
+          id: item.id,
+          category: item.category,
+          previousDayCount: item.previousDayCount,
+          todayCount: item.todayCount,
+          cumulativeCount: item.cumulativeCount,
+          type: item.typeCode, // PERSONNEL 고정
         }))
 
         setIsEditMode(true)
@@ -3011,9 +3084,89 @@ export default function DailyReportRegistrationView() {
       })
 
       if (res?.data?.content && res.data.content.length > 0) {
+        const personnelList = res.data.content.filter(
+          (item: any) => item.typeCode === 'COMPANY_SUPPLIED',
+        )
+
+        // PERSONNEL 데이터가 없다면 패스
+        if (personnelList.length === 0) {
+          continue
+        }
+
         //  데이터 존재 시 변환
-        const allMaterialStatus = res.data.content
-        const fetched = allMaterialStatus.map((item: any) => ({
+        const fetched = personnelList.map((item: any) => ({
+          id: item.id,
+          materialName: item.materialName,
+          unit: item.unit,
+          plannedAmount: item.plannedAmount,
+          previousDayAmount: item.previousDayAmount,
+          todayAmount: item.todayAmount,
+          cumulativeAmount: item.cumulativeAmount,
+          remainingAmount: item.remainingAmount,
+          type: item.typeCode, // COMPANY_SUPPLIED / CLIENT_SUPPLIED
+        }))
+
+        setIsEditMode(true)
+        setField('materialStatuses', fetched)
+
+        // 🔹 알림 메시지 처리
+        if (attempts === 0) {
+          alert('전일 자재현황 내용이 복사되었습니다.')
+        } else {
+          alert(
+            `${formatDisplayDate(targetDate)} 입력정보가 없어 ${formatDisplayDate(
+              lastCheckedDateStr,
+            )} 데이터를 조회했습니다.`,
+          )
+        }
+
+        found = true
+        break
+      }
+
+      attempts++
+    }
+
+    // 🔹 1개월 이내에도 데이터 없을 경우
+    if (!found) {
+      alert('최근 1개월 이내 자재현황 데이터가 없습니다.')
+    }
+  }
+
+  // 전일 자재현황 복사
+  const handlePaymentMaterialProcessCopy = async (targetDate: string) => {
+    if (!targetDate) return
+
+    let found = false
+    let attempts = 0
+    const maxAttempts = 30 // 최대 1개월
+    const previousDate = new Date(targetDate)
+    let lastCheckedDateStr = ''
+
+    while (!found && attempts < maxAttempts) {
+      previousDate.setDate(previousDate.getDate() - 1)
+      lastCheckedDateStr = formatDateString(previousDate)
+
+      //  전일(혹은 과거) 자재현황 조회
+      const res = await GetMaterialStatusService({
+        pageParam: 0,
+        siteId: form.siteId,
+        siteProcessId: form.siteProcessId,
+        reportDate: lastCheckedDateStr,
+      })
+
+      if (res?.data?.content && res.data.content.length > 0) {
+        const personnelList = res.data.content.filter(
+          (item: any) => item.typeCode === 'CLIENT_SUPPLIED',
+        )
+
+        // PERSONNEL 데이터가 없다면 패스
+        if (personnelList.length === 0) {
+          continue
+        }
+
+        //  데이터 존재 시 변환
+        const fetched = personnelList.map((item: any) => ({
           id: item.id,
           materialName: item.materialName,
           unit: item.unit,
@@ -9948,7 +10101,7 @@ export default function DailyReportRegistrationView() {
                       className="px-"
                       variant="secondary"
                       onClick={() =>
-                        handleInputProcessCopy(getTodayDateString(form.reportDate) ?? '')
+                        handleEquipMentProcessCopy(getTodayDateString(form.reportDate) ?? '')
                       }
                       disabled={
                         isHeadOfficeInfo
@@ -10330,7 +10483,7 @@ export default function DailyReportRegistrationView() {
                       className="px-"
                       variant="secondary"
                       onClick={() =>
-                        handleMaterialProcessCopy(getTodayDateString(form.reportDate) ?? '')
+                        handlePaymentMaterialProcessCopy(getTodayDateString(form.reportDate) ?? '')
                       }
                       disabled={
                         isHeadOfficeInfo
