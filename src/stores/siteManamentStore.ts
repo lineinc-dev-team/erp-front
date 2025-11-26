@@ -302,7 +302,7 @@ export const useSiteManamentFormStore = create<SiteManamentStore>((set, get) => 
       headquartersManagementCost: form.headquartersManagementCost || 0,
       headquartersManagementCostMemo: form.headquartersManagementCostMemo || '',
 
-      changeHistories: form.changeHistories ?? [],
+      changeHistories: form.editedHistories ?? undefined,
     }
   },
 }))

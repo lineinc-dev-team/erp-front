@@ -66,6 +66,14 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
     enabled: isEditMode && !!laborSummaryId, // 수정 모드일 때만 fetch
   })
 
+  const {
+    data: laborContractHistoryList,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useSiteManagementHistoryDataQuery(laborSummaryId, isEditMode)
+
   useEffect(() => {
     if (data && isEditMode) {
       const client = data.data
@@ -206,18 +214,7 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
     // 본사 관리비
     headquartersManagementCost: '본사 관리비',
     headquartersManagementCostMemo: '본사 관리비 비고',
-
-    // 수정 이력 관련
-    changeHistories: '수정 이력',
   }
-
-  const {
-    data: laborContractHistoryList,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-  } = useSiteManagementHistoryDataQuery(laborSummaryId, isEditMode)
 
   const historyList = useSiteManamentFormStore((state) => state.form.changeHistories)
 
@@ -1163,7 +1160,6 @@ export default function SiteManagementRegistrationView({ isEditMode = true }) {
                       inputProps={{
                         style: { textAlign: 'right' },
                       }}
-                      disabled
                     />
                   </TableCell>
                 </TableRow>
