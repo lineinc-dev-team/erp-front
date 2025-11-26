@@ -2585,7 +2585,7 @@ export default function DailyReportRegistrationView() {
         const fetched = prevDayItems.map((item: any) => ({
           id: item.id,
           workName: item.workName,
-          isToday: false, // 전일 데이터이므로 false로 유지
+          isToday: true, // 전일 데이터이므로 false로 유지
           workDetails: item.workDetails.map((detail: any) => ({
             id: detail.id,
             content: detail.content,
@@ -5060,6 +5060,7 @@ export default function DailyReportRegistrationView() {
                       />
                     </TableCell>
                     {[
+                      'No',
                       '이름',
                       '직급(직책)',
                       '작업내용',
@@ -5079,7 +5080,10 @@ export default function DailyReportRegistrationView() {
                           whiteSpace: 'nowrap',
                         }}
                       >
-                        {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
+                        {label === 'No' ||
+                        label === '비고' ||
+                        label === '등록/수정일' ||
+                        label === '첨부파일' ? (
                           label
                         ) : (
                           <div className="flex items-center justify-center">
@@ -5099,7 +5103,7 @@ export default function DailyReportRegistrationView() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    employees.map((m) => (
+                    employees.map((m, index) => (
                       <TableRow key={m.id}>
                         <TableCell
                           padding="checkbox"
@@ -5110,6 +5114,9 @@ export default function DailyReportRegistrationView() {
                             checked={checkedIds.includes(m.id)}
                             onChange={(e) => toggleCheckItem('Employees', m.id, e.target.checked)}
                           />
+                        </TableCell>
+                        <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                          {employees.length - index}
                         </TableCell>
                         <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                           {/* <CommonSelect
@@ -5495,6 +5502,7 @@ export default function DailyReportRegistrationView() {
                       />
                     </TableCell>
                     {[
+                      'No',
                       '이름',
                       '직종',
                       '작업내용',
@@ -5516,7 +5524,10 @@ export default function DailyReportRegistrationView() {
                           whiteSpace: 'nowrap',
                         }}
                       >
-                        {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
+                        {label === '비고' ||
+                        label === 'No' ||
+                        label === '등록/수정일' ||
+                        label === '첨부파일' ? (
                           label
                         ) : (
                           <div className="flex items-center justify-center">
@@ -5550,6 +5561,10 @@ export default function DailyReportRegistrationView() {
                             }
                           />
                         </TableCell>
+                        <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                          {contractData.length - idx}
+                        </TableCell>
+
                         {/* <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                           {m.isTemporary ? (
                             <TextField
@@ -6041,6 +6056,7 @@ export default function DailyReportRegistrationView() {
                       />
                     </TableCell>
                     {[
+                      'No',
                       '업체명',
                       '이름',
                       '직종',
@@ -6063,7 +6079,10 @@ export default function DailyReportRegistrationView() {
                           whiteSpace: 'nowrap',
                         }}
                       >
-                        {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
+                        {label === '비고' ||
+                        label === 'No' ||
+                        label === '등록/수정일' ||
+                        label === '첨부파일' ? (
                           label
                         ) : (
                           <div className="flex items-center justify-center">
@@ -6100,6 +6119,9 @@ export default function DailyReportRegistrationView() {
                               )
                             }
                           />
+                        </TableCell>
+                        <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                          {directContractByData.length - idx}
                         </TableCell>
                         <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
                           {m.isTemporary ? (
@@ -6626,30 +6648,40 @@ export default function DailyReportRegistrationView() {
                         sx={{ color: 'black' }}
                       />
                     </TableCell>
-                    {['업체명', '계약명', '이름', '공수', '첨부파일', '비고', '등록/수정일'].map(
-                      (label) => (
-                        <TableCell
-                          key={label}
-                          align="center"
-                          sx={{
-                            backgroundColor: '#D1D5DB',
-                            border: '1px solid  #9CA3AF',
-                            color: 'black',
-                            fontWeight: 'bold',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
-                            label
-                          ) : (
-                            <div className="flex items-center justify-center">
-                              <span>{label}</span>
-                              <span className="text-red-500 ml-1">*</span>
-                            </div>
-                          )}
-                        </TableCell>
-                      ),
-                    )}
+                    {[
+                      'No',
+                      '업체명',
+                      '계약명',
+                      '이름',
+                      '공수',
+                      '첨부파일',
+                      '비고',
+                      '등록/수정일',
+                    ].map((label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {label === '비고' ||
+                        label === 'No' ||
+                        label === '등록/수정일' ||
+                        label === '첨부파일' ? (
+                          label
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    ))}
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -6660,7 +6692,7 @@ export default function DailyReportRegistrationView() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    directContractOutsourcings.map((m) => (
+                    directContractOutsourcings.map((m, index) => (
                       <TableRow key={m.id}>
                         <TableCell
                           padding="checkbox"
@@ -6673,6 +6705,10 @@ export default function DailyReportRegistrationView() {
                               toggleCheckItem('directContractOutsourcings', m.id, e.target.checked)
                             }
                           />
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                          {directContractOutsourcings.length - index}
                         </TableCell>
 
                         <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -7136,30 +7172,41 @@ export default function DailyReportRegistrationView() {
                         sx={{ color: 'black' }}
                       />
                     </TableCell>
-                    {['업체명', '항목명', '항목', '규격', '단위', '수량', '첨부파일', '비고'].map(
-                      (label) => (
-                        <TableCell
-                          key={label}
-                          align="center"
-                          sx={{
-                            backgroundColor: '#D1D5DB',
-                            border: '1px solid  #9CA3AF',
-                            color: 'black',
-                            fontWeight: 'bold',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {label === '비고' || label === '등록/수정일' || label === '첨부파일' ? (
-                            label
-                          ) : (
-                            <div className="flex items-center justify-center">
-                              <span>{label}</span>
-                              <span className="text-red-500 ml-1">*</span>
-                            </div>
-                          )}
-                        </TableCell>
-                      ),
-                    )}
+                    {[
+                      'No',
+                      '업체명',
+                      '항목명',
+                      '항목',
+                      '규격',
+                      '단위',
+                      '수량',
+                      '첨부파일',
+                      '비고',
+                    ].map((label) => (
+                      <TableCell
+                        key={label}
+                        align="center"
+                        sx={{
+                          backgroundColor: '#D1D5DB',
+                          border: '1px solid  #9CA3AF',
+                          color: 'black',
+                          fontWeight: 'bold',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {label === '비고' ||
+                        label === 'No' ||
+                        label === '등록/수정일' ||
+                        label === '첨부파일' ? (
+                          label
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span>{label}</span>
+                            <span className="text-red-500 ml-1">*</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    ))}
                   </TableRow>
                 </TableHead>
 
@@ -7171,7 +7218,7 @@ export default function DailyReportRegistrationView() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    resultOutsourcing.map((m) => (
+                    resultOutsourcing.map((m, index) => (
                       <TableRow key={m.id}>
                         <TableCell
                           padding="checkbox"
@@ -7184,6 +7231,10 @@ export default function DailyReportRegistrationView() {
                               toggleCheckItem('outsourcings', m.id, e.target.checked)
                             }
                           />
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                          {resultOutsourcing.length - index}
                         </TableCell>
 
                         <TableCell align="center" sx={cellStyle}>
@@ -7756,6 +7807,7 @@ export default function DailyReportRegistrationView() {
                       />
                     </TableCell>
                     {[
+                      'No',
                       '업체명',
                       '기사명',
                       '차량번호',
@@ -7780,6 +7832,7 @@ export default function DailyReportRegistrationView() {
                         }}
                       >
                         {label === '비고' ||
+                        label === 'No' ||
                         label === '등록/수정일' ||
                         label === '첨부파일' ||
                         label === '작업내용' ? (
@@ -7803,7 +7856,7 @@ export default function DailyReportRegistrationView() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    equipmentData.map((m) => (
+                    equipmentData.map((m, index) => (
                       <TableRow key={m.id}>
                         <TableCell
                           padding="checkbox"
@@ -7814,6 +7867,9 @@ export default function DailyReportRegistrationView() {
                             checked={checkedEquipmentIds.includes(m.id)}
                             onChange={(e) => toggleCheckItem('equipment', m.id, e.target.checked)}
                           />
+                        </TableCell>
+                        <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                          {equipmentData.length - index}
                         </TableCell>
 
                         <TableCell align="center" sx={cellStyle}>
@@ -8639,6 +8695,7 @@ export default function DailyReportRegistrationView() {
                       />
                     </TableCell>
                     {[
+                      'No',
                       '업체명',
                       '구분',
                       '차량번호',
@@ -8662,6 +8719,7 @@ export default function DailyReportRegistrationView() {
                         }}
                       >
                         {label === '비고' ||
+                        label === 'No' ||
                         label === '등록/수정일' ||
                         label === '첨부파일' ||
                         label === '금액' ? (
@@ -8685,7 +8743,7 @@ export default function DailyReportRegistrationView() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    fuelData.map((m) => (
+                    fuelData.map((m, index) => (
                       <TableRow key={m.id}>
                         <TableCell
                           padding="checkbox"
@@ -8696,6 +8754,10 @@ export default function DailyReportRegistrationView() {
                             checked={checkedFuelIds.includes(m.id)}
                             onChange={(e) => toggleCheckItem('fuel', m.id, e.target.checked)}
                           />
+                        </TableCell>
+
+                        <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                          {fuelData.length - index}
                         </TableCell>
 
                         <TableCell
@@ -9379,7 +9441,7 @@ export default function DailyReportRegistrationView() {
                             sx={{ color: 'black' }}
                           />
                         </TableCell>
-                        {['작업명', '내용', '인원 및 장비', '-'].map((label) => (
+                        {['No', '작업명', '내용', '인원 및 장비', '-'].map((label) => (
                           <TableCell
                             key={label}
                             align="center"
@@ -9389,7 +9451,14 @@ export default function DailyReportRegistrationView() {
                               fontWeight: 'bold',
                             }}
                           >
-                            {label}
+                            {label === 'No' || label === '-' ? (
+                              label
+                            ) : (
+                              <div className="flex items-center justify-center">
+                                <span>{label}</span>
+                                <span className="text-red-500 ml-1">*</span>
+                              </div>
+                            )}
                           </TableCell>
                         ))}
                       </TableRow>
@@ -9403,7 +9472,7 @@ export default function DailyReportRegistrationView() {
                           </TableCell>
                         </TableRow>
                       ) : (
-                        todayWorks.map((m) => (
+                        todayWorks.map((m, index) => (
                           <TableRow key={m.id}>
                             <TableCell
                               padding="checkbox"
@@ -9414,6 +9483,9 @@ export default function DailyReportRegistrationView() {
                                 checked={checkedTodayWorkIds.includes(m.id)}
                                 onChange={(e) => toggleCheckItem('worker', m.id, e.target.checked)}
                               />
+                            </TableCell>
+                            <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                              {todayWorks.length - index}
                             </TableCell>
                             <TableCell
                               align="center"
@@ -9572,7 +9644,7 @@ export default function DailyReportRegistrationView() {
                             sx={{ color: 'black' }}
                           />
                         </TableCell>
-                        {['작업명', '내용', '인원 및 장비', '-'].map((label) => (
+                        {['No', '작업명', '내용', '인원 및 장비', '-'].map((label) => (
                           <TableCell
                             key={label}
                             align="center"
@@ -9584,7 +9656,10 @@ export default function DailyReportRegistrationView() {
                               whiteSpace: 'nowrap',
                             }}
                           >
-                            {label === '내용' || label === '인원 및 장비' || label === '-' ? (
+                            {label === 'No' ||
+                            label === '내용' ||
+                            label === '인원 및 장비' ||
+                            label === '-' ? (
                               label
                             ) : (
                               <div className="flex items-center justify-center">
@@ -9609,7 +9684,7 @@ export default function DailyReportRegistrationView() {
                           </TableCell>
                         </TableRow>
                       ) : (
-                        tomorrowWorks.map((m) => (
+                        tomorrowWorks.map((m, index) => (
                           <TableRow key={m.id}>
                             <TableCell
                               padding="checkbox"
@@ -9620,6 +9695,10 @@ export default function DailyReportRegistrationView() {
                                 checked={checkedTomorrowWorkIds.includes(m.id)}
                                 onChange={(e) => toggleCheckItem('worker', m.id, e.target.checked)}
                               />
+                            </TableCell>
+
+                            <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                              {tomorrowWorks.length - index}
                             </TableCell>
 
                             <TableCell
@@ -9780,19 +9859,21 @@ export default function DailyReportRegistrationView() {
                           sx={{ color: 'black' }}
                         />
                       </TableCell>
-                      {['공정', '단위', '계약', '전일', '금일', '누계', '공정율'].map((label) => (
-                        <TableCell
-                          key={label}
-                          align="center"
-                          sx={{
-                            backgroundColor: '#D1D5DB',
-                            border: '1px solid #9CA3AF',
-                            fontWeight: 'bold',
-                          }}
-                        >
-                          {label}
-                        </TableCell>
-                      ))}
+                      {['No', '공정', '단위', '계약', '전일', '금일', '누계', '공정율'].map(
+                        (label) => (
+                          <TableCell
+                            key={label}
+                            align="center"
+                            sx={{
+                              backgroundColor: '#D1D5DB',
+                              border: '1px solid #9CA3AF',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            {label}
+                          </TableCell>
+                        ),
+                      )}
                     </TableRow>
                   </TableHead>
 
@@ -9804,7 +9885,7 @@ export default function DailyReportRegistrationView() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      mainProcessesList.map((m) => (
+                      mainProcessesList.map((m, index) => (
                         <TableRow key={m.id}>
                           <TableCell padding="checkbox" align="center">
                             <Checkbox
@@ -9813,6 +9894,10 @@ export default function DailyReportRegistrationView() {
                                 toggleCheckItem('mainProcesses', m.id, e.target.checked)
                               }
                             />
+                          </TableCell>
+
+                          <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                            {mainProcessesList.length - index}
                           </TableCell>
 
                           <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -9992,7 +10077,7 @@ export default function DailyReportRegistrationView() {
                             sx={{ color: 'black' }}
                           />
                         </TableCell>
-                        {['구분', '전일', '금일', '누계'].map((label) => (
+                        {['No', '구분', '전일', '금일', '누계'].map((label) => (
                           <TableCell
                             key={label}
                             align="center"
@@ -10016,7 +10101,7 @@ export default function DailyReportRegistrationView() {
                           </TableCell>
                         </TableRow>
                       ) : (
-                        personnelList.map((m) => (
+                        personnelList.map((m, index) => (
                           <TableRow key={m.id}>
                             <TableCell padding="checkbox" align="center">
                               <Checkbox
@@ -10025,6 +10110,10 @@ export default function DailyReportRegistrationView() {
                                   toggleCheckItem('inputStatuses', m.id, e.target.checked)
                                 }
                               />
+                            </TableCell>
+
+                            <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                              {personnelList.length - index}
                             </TableCell>
 
                             <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -10158,7 +10247,7 @@ export default function DailyReportRegistrationView() {
                             sx={{ color: 'black' }}
                           />
                         </TableCell>
-                        {['구분', '전일', '금일', '누계'].map((label) => (
+                        {['No', '구분', '전일', '금일', '누계'].map((label) => (
                           <TableCell
                             key={label}
                             align="center"
@@ -10182,7 +10271,7 @@ export default function DailyReportRegistrationView() {
                           </TableCell>
                         </TableRow>
                       ) : (
-                        equipmentList.map((m) => (
+                        equipmentList.map((m, index) => (
                           <TableRow key={m.id}>
                             <TableCell padding="checkbox" align="center">
                               <Checkbox
@@ -10191,6 +10280,10 @@ export default function DailyReportRegistrationView() {
                                   toggleCheckItem('inputStatuses', m.id, e.target.checked)
                                 }
                               />
+                            </TableCell>
+
+                            <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                              {equipmentList.length - index}
                             </TableCell>
 
                             <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -10329,19 +10422,21 @@ export default function DailyReportRegistrationView() {
                             sx={{ color: 'black' }}
                           />
                         </TableCell>
-                        {['품명', '단위', '계획', '전일', '금일', '누계', '잔여'].map((label) => (
-                          <TableCell
-                            key={label}
-                            align="center"
-                            sx={{
-                              backgroundColor: '#D1D5DB',
-                              border: '1px solid #9CA3AF',
-                              fontWeight: 'bold',
-                            }}
-                          >
-                            {label}
-                          </TableCell>
-                        ))}
+                        {['No', '품명', '단위', '계획', '전일', '금일', '누계', '잔여'].map(
+                          (label) => (
+                            <TableCell
+                              key={label}
+                              align="center"
+                              sx={{
+                                backgroundColor: '#D1D5DB',
+                                border: '1px solid #9CA3AF',
+                                fontWeight: 'bold',
+                              }}
+                            >
+                              {label}
+                            </TableCell>
+                          ),
+                        )}
                       </TableRow>
                     </TableHead>
 
@@ -10353,7 +10448,7 @@ export default function DailyReportRegistrationView() {
                           </TableCell>
                         </TableRow>
                       ) : (
-                        urgentMaterialList.map((m) => (
+                        urgentMaterialList.map((m, index) => (
                           <TableRow key={m.id}>
                             <TableCell padding="checkbox" align="center">
                               <Checkbox
@@ -10362,6 +10457,10 @@ export default function DailyReportRegistrationView() {
                                   toggleCheckItem('materialStatuses', m.id, e.target.checked)
                                 }
                               />
+                            </TableCell>
+
+                            <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                              {urgentMaterialList.length - index}
                             </TableCell>
 
                             <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
@@ -10541,19 +10640,21 @@ export default function DailyReportRegistrationView() {
                             sx={{ color: 'black' }}
                           />
                         </TableCell>
-                        {['품명', '단위', '계획', '전일', '금일', '누계', '잔여'].map((label) => (
-                          <TableCell
-                            key={label}
-                            align="center"
-                            sx={{
-                              backgroundColor: '#D1D5DB',
-                              border: '1px solid #9CA3AF',
-                              fontWeight: 'bold',
-                            }}
-                          >
-                            {label}
-                          </TableCell>
-                        ))}
+                        {['No', '품명', '단위', '계획', '전일', '금일', '누계', '잔여'].map(
+                          (label) => (
+                            <TableCell
+                              key={label}
+                              align="center"
+                              sx={{
+                                backgroundColor: '#D1D5DB',
+                                border: '1px solid #9CA3AF',
+                                fontWeight: 'bold',
+                              }}
+                            >
+                              {label}
+                            </TableCell>
+                          ),
+                        )}
                       </TableRow>
                     </TableHead>
 
@@ -10565,7 +10666,7 @@ export default function DailyReportRegistrationView() {
                           </TableCell>
                         </TableRow>
                       ) : (
-                        PaymentMaterialList.map((m) => (
+                        PaymentMaterialList.map((m, index) => (
                           <TableRow key={m.id}>
                             <TableCell padding="checkbox" align="center">
                               <Checkbox
@@ -10574,6 +10675,10 @@ export default function DailyReportRegistrationView() {
                                   toggleCheckItem('materialStatuses', m.id, e.target.checked)
                                 }
                               />
+                            </TableCell>
+
+                            <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                              {PaymentMaterialList.length - index}
                             </TableCell>
 
                             <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
