@@ -1,5 +1,3 @@
-'use client'
-
 import DashBoardDetailView from '@/components/dashboard/DashBoardDetailView'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
