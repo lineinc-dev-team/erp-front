@@ -5178,6 +5178,9 @@ export default function DailyReportRegistrationView() {
                             inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
                             value={m.workQuantity ?? ''}
                             onFocus={() => setClearFocusedRowId(null)}
+                            onWheel={(e) => {
+                              ;(e.target as HTMLInputElement).blur()
+                            }}
                             onChange={(e) => {
                               const value = e.target.value
                               const numericValue = value === '' ? null : parseFloat(value)
@@ -5855,6 +5858,9 @@ export default function DailyReportRegistrationView() {
                             placeholder="숫자를 입력해주세요."
                             inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
                             value={m.workQuantity ?? ''}
+                            onWheel={(e) => {
+                              ;(e.target as HTMLInputElement).blur()
+                            }}
                             onFocus={() => {
                               setClearServiceCompanyFocusedId(null)
                               setClearPersonNameFocusedId(null)
@@ -6445,6 +6451,9 @@ export default function DailyReportRegistrationView() {
                             placeholder="숫자를 입력해주세요."
                             inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
                             value={m.workQuantity ?? ''}
+                            onWheel={(e) => {
+                              ;(e.target as HTMLInputElement).blur()
+                            }}
                             onFocus={() => {
                               setClearServiceCompanyFocusedId(null)
                               setClearPersonNameFocusedId(null)
@@ -6836,6 +6845,9 @@ export default function DailyReportRegistrationView() {
                               setClearFocusedRowId(null)
                             }}
                             value={m.workQuantity ?? ''}
+                            onWheel={(e) => {
+                              ;(e.target as HTMLInputElement).blur()
+                            }}
                             onChange={(e) => {
                               const value = e.target.value
                               const numericValue = value === '' ? null : parseFloat(value)
