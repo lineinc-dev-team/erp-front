@@ -2250,6 +2250,8 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                               const numericValue = unformatNumber(e.target.value)
 
                               updateContractDetailField(m.id, item.id, 'unitPrice', numericValue)
+                              const newPrice = numericValue * Number(item.contractQuantity || 0)
+                              updateContractDetailField(m.id, item.id, 'contractPrice', newPrice)
                             }}
                             inputProps={{
                               inputMode: 'numeric',
@@ -2282,6 +2284,10 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                                 'contractQuantity',
                                 numericValue,
                               )
+
+                              // 금액 자동 재계산
+                              const newPrice = (item.unitPrice || 0) * numericValue
+                              updateContractDetailField(m.id, item.id, 'contractPrice', newPrice)
                             }}
                             inputProps={{
                               inputMode: 'numeric',
@@ -2325,7 +2331,6 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                         </div>
                       ))}
                     </TableCell>
-
                     {/* 외주계약금액 수량 */}
                     <TableCell
                       align="center"
@@ -2336,21 +2341,29 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                           <TextField
                             size="small"
                             placeholder="숫자만"
-                            value={formatNumber(item.outsourcingContractQuantity)}
+                            value={formatNumber(Number(item.outsourcingContractQuantity) || 0)}
                             onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
+                              const quantity = Number(unformatNumber(e.target.value) || 0)
+                              const unitPrice = Number(item.outsourcingContractUnitPrice || 0)
+                              const price = quantity * unitPrice
 
                               updateContractDetailField(
                                 m.id,
                                 item.id,
                                 'outsourcingContractQuantity',
-                                numericValue,
+                                quantity,
+                              )
+                              updateContractDetailField(
+                                m.id,
+                                item.id,
+                                'outsourcingContractPrice',
+                                price,
                               )
                             }}
                             inputProps={{
                               inputMode: 'numeric',
                               pattern: '[0-9]*',
-                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                              style: { textAlign: 'right' },
                             }}
                             fullWidth
                           />
@@ -2358,8 +2371,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       ))}
                     </TableCell>
 
-                    {/* 외주계약금액에 단가  */}
-
+                    {/* 외주계약금액 단가 */}
                     <TableCell
                       align="center"
                       sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top' }}
@@ -2369,21 +2381,29 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                           <TextField
                             size="small"
                             placeholder="숫자만"
-                            value={formatNumber(item.outsourcingContractUnitPrice)}
+                            value={formatNumber(Number(item.outsourcingContractUnitPrice) || 0)}
                             onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
+                              const unitPrice = Number(unformatNumber(e.target.value) || 0)
+                              const quantity = Number(item.outsourcingContractQuantity || 0)
+                              const price = quantity * unitPrice
 
                               updateContractDetailField(
                                 m.id,
                                 item.id,
                                 'outsourcingContractUnitPrice',
-                                numericValue,
+                                unitPrice,
+                              )
+                              updateContractDetailField(
+                                m.id,
+                                item.id,
+                                'outsourcingContractPrice',
+                                price,
                               )
                             }}
                             inputProps={{
                               inputMode: 'numeric',
                               pattern: '[0-9]*',
-                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                              style: { textAlign: 'right' },
                             }}
                             fullWidth
                           />
@@ -2391,7 +2411,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       ))}
                     </TableCell>
 
-                    {/* 외주계약금액 금액 */}
+                    {/* 외주계약금액 금액 - 자동 계산된 값 표시 */}
                     <TableCell
                       align="center"
                       sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top' }}
@@ -2401,20 +2421,22 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                           <TextField
                             size="small"
                             placeholder="숫자만"
-                            value={formatNumber(item.outsourcingContractPrice)}
+                            value={formatNumber(Number(item.outsourcingContractPrice) || 0)}
                             onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
+                              // 금액을 직접 변경할 수도 있게 해두고 싶다면 여기에 처리
+                              // 아니라면 readOnly로 막는 게 더 자연스러움
+                              const price = Number(unformatNumber(e.target.value) || 0)
                               updateContractDetailField(
                                 m.id,
                                 item.id,
                                 'outsourcingContractPrice',
-                                numericValue,
+                                price,
                               )
                             }}
                             inputProps={{
                               inputMode: 'numeric',
                               pattern: '[0-9]*',
-                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                              style: { textAlign: 'right' },
                             }}
                             fullWidth
                           />
