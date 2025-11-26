@@ -2,6 +2,7 @@
 
 import DashBoardDetailView from '@/components/dashboard/DashBoardDetailView'
 import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 export default function Page() {
   const params = useSearchParams()
   const siteName = params.get('siteName')
@@ -10,12 +11,14 @@ export default function Page() {
 
   return (
     <div>
-      <DashBoardDetailView
-        siteName={siteName}
-        siteId={siteId}
-        siteProcessId={siteProcessId}
-        isHeadOffice={true}
-      />
+      <Suspense fallback={<div>로딩…</div>}>
+        <DashBoardDetailView
+          siteName={siteName}
+          siteId={siteId}
+          siteProcessId={siteProcessId}
+          isHeadOffice={true}
+        />
+      </Suspense>
     </div>
   )
 }

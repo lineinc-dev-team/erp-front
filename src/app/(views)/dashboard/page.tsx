@@ -3,7 +3,7 @@
 import DashBoardDetailView from '@/components/dashboard/DashBoardDetailView'
 import DashboardView from '@/components/dashboard/DashboardView'
 import { myInfoProps } from '@/types/user'
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 export default function Page() {
@@ -26,12 +26,14 @@ export default function Page() {
   if (!isHeadOffice) {
     return (
       <>
-        <DashBoardDetailView
-          siteName={siteName}
-          siteId={siteId}
-          siteProcessId={siteProcessId}
-          isHeadOffice={false}
-        />
+        <Suspense fallback={<div>로딩…</div>}>
+          <DashBoardDetailView
+            siteName={siteName}
+            siteId={siteId}
+            siteProcessId={siteProcessId}
+            isHeadOffice={false}
+          />
+        </Suspense>
       </>
     )
   }
