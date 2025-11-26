@@ -19,6 +19,7 @@ import useDashBoard from '@/hooks/useDashBoard'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 import { useFinalDashboardSearchStore } from '@/stores/dashboardStore'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
+import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 const formatMonth = (ym: string) => {
@@ -26,18 +27,13 @@ const formatMonth = (ym: string) => {
   return `${year}년 ${Number(month)}월`
 }
 
-export default function DashBoardDetailView({
-  isHeadOffice,
-  siteName,
-  siteId,
-  siteProcessId,
-}: {
-  isHeadOffice: boolean
-  siteName: string | null
-  siteId: number | string | null
-  siteProcessId: number | string | null
-}) {
+export default function DashBoardDetailView({ isHeadOffice }: { isHeadOffice: boolean }) {
   const { search } = useFinalDashboardSearchStore()
+
+  const params = useSearchParams()
+  const siteName = params.get('siteName')
+  const siteId = params.get('siteId')
+  const siteProcessId = params.get('siteProcessId')
 
   useEffect(() => {
     if (siteName) {
