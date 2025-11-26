@@ -19,6 +19,7 @@ import useDashBoard from '@/hooks/useDashBoard'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 import { useFinalDashboardSearchStore } from '@/stores/dashboardStore'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
+import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 const formatMonth = (ym: string) => {
@@ -28,6 +29,18 @@ const formatMonth = (ym: string) => {
 
 export default function DashBoardDetailView({ isHeadOffice }: { isHeadOffice: boolean }) {
   const { search } = useFinalDashboardSearchStore()
+
+  const params = useSearchParams()
+  const siteName = params.get('siteName')
+  const siteId = params.get('siteId')
+  const siteProcessId = params.get('siteProcessId')
+
+  useEffect(() => {
+    if (siteName) {
+      search.setField('siteName', siteName)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [siteName])
 
   const { NoHeadOfficeDashBoardListQuery } = useDashBoard()
 
@@ -58,15 +71,19 @@ export default function DashBoardDetailView({ isHeadOffice }: { isHeadOffice: bo
     }
   }, [isHeadOffice, siteList, search])
 
+  const effectiveSiteId = search.siteId && search.siteId !== 0 ? search.siteId : siteId
+
+  const effectiveSiteProcessId =
+    search.siteProcessId && search.siteProcessId !== 0 ? search.siteProcessId : siteProcessId
+
   const DashBoardDetailListQuery = useQuery({
-    queryKey: ['dashBoardDetailInfo', search.siteId, search.siteProcessId],
-    queryFn: () => {
-      return DashBoardDetailInfoService({
-        siteId: search.siteId,
-        siteProcessId: search.siteProcessId,
-      })
-    },
-    enabled: Boolean(search.siteId && search.siteProcessId),
+    queryKey: ['dashBoardDetailInfo', effectiveSiteId, effectiveSiteProcessId],
+    queryFn: () =>
+      DashBoardDetailInfoService({
+        siteId: effectiveSiteId,
+        siteProcessId: effectiveSiteProcessId,
+      }),
+    enabled: Boolean(effectiveSiteId && effectiveSiteProcessId),
   })
 
   const apiData = DashBoardDetailListQuery.data?.data ?? []
