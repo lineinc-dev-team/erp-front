@@ -59,6 +59,10 @@ interface FocusState {
   // 유류에서 차량번호 키워드 검색
   fuelCarNumberFocusedId: number | null
   setFuelCarNumberFocusedId: (id: number | null) => void
+
+  // 자재 관리에서 품명 키워드 검색 시 포커스 관리
+  materialItemFocusedId: number | null
+  setMaterialItemFocusedId: (id: number | null) => void
 }
 
 export const useFocusStore = create<FocusState>((set) => ({
@@ -112,4 +116,8 @@ export const useFocusStore = create<FocusState>((set) => ({
   // 유류 차량번호
   fuelCarNumberFocusedId: null,
   setFuelCarNumberFocusedId: (id) => set({ fuelCarNumberFocusedId: id }),
+
+  // 자재에서 품명
+  materialItemFocusedId: null,
+  setMaterialItemFocusedId: (id) => set({ materialItemFocusedId: id }),
 }))

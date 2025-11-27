@@ -42,8 +42,15 @@ type VatInputProps = {
   value?: number
   onChange?: (vat: number) => void
   enableManual?: boolean //  상세화면에서만 true로 전달
+  onFocus?: () => void
 }
-export function VatInput({ supplyPrice, value, onChange, enableManual = false }: VatInputProps) {
+export function VatInput({
+  supplyPrice,
+  value,
+  onChange,
+  onFocus,
+  enableManual = false,
+}: VatInputProps) {
   const [autoCalc, setAutoCalc] = useState(true)
 
   const vat = autoCalc ? Math.floor(supplyPrice * 0.1) : value ?? 0
@@ -55,6 +62,7 @@ export function VatInput({ supplyPrice, value, onChange, enableManual = false }:
           control={
             <Checkbox
               checked={autoCalc}
+              onFocus={onFocus}
               onChange={(e) => {
                 const checked = e.target.checked
                 setAutoCalc(checked)

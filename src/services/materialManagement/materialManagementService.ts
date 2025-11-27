@@ -148,9 +148,14 @@ export async function MaterialExcelDownload({
 // 추가 내용 ==> 품명
 
 // 자재관리 투입구분 목록 조회
-export async function MaterialSearchTypeService({ pageParam = 0, size = 40, keyword = '' }) {
+export async function MaterialSearchTypeService({
+  pageParam = 0,
+  size = 40,
+  sort = 'name, asc',
+  keyword = '',
+}) {
   const resData = await fetch(
-    `${API.MATERIAL}/detail-names/search?page=${pageParam}&size=${size}&keyword=${keyword}`,
+    `${API.MATERIAL}/detail-names/search?page=${pageParam}&size=${size}&sort=${sort}&keyword=${keyword}`,
     {
       method: 'GET',
       headers: {

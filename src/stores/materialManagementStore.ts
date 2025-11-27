@@ -321,6 +321,9 @@ export const useManagementMaterialFormStore = create<MaterialFormStore>((set, ge
     return {
       ...form,
       details: form.details,
+      deductionCompanyContractId:
+        form.deductionCompanyContractId === 0 ? null : form.deductionCompanyContractId,
+      deductionCompanyId: form.deductionCompanyId === 0 ? null : form.deductionCompanyId,
       deliveryDate:
         deliveryDateStr !== form.initialDeliveryDateAt
           ? deliveryDateStr

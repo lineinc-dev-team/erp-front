@@ -25,17 +25,17 @@ import { useManagementMaterialFormStore } from '@/stores/materialManagementStore
 import { MaterialDetailService } from '@/services/materialManagement/materialManagementRegistrationService'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { AttachedFile, DetailItem, ManagementMaterialFormState } from '@/types/materialManagement'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import { SupplyPriceInput, TotalInput, VatInput } from '@/utils/supplyVatTotalInput'
-import CommonSelectByName from '../common/CommonSelectByName'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { HistoryItem } from '@/types/ordering'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 import { useLaborInfo } from '@/hooks/useLabor'
+import { useFocusStore } from '@/stores/focusStore'
 // import { useEffect } from 'react'
 // import { AttachedFile, DetailItem } from '@/types/managementSteel'
 
@@ -78,6 +78,8 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
 
   const { useOutsourcingContractNameListInfiniteScroll } = useLaborInfo()
 
+  const setClearMaterialItemFocusedId = useFocusStore((s) => s.setMaterialItemFocusedId)
+
   const {
     createMaterialMutation,
     useMaterialHistoryDataQuery,
@@ -85,13 +87,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     MaterialModifyMutation,
     InputTypeMethodOptions,
 
-    productOptions,
-    setProductSearch,
-    productNameFetchNextPage,
-    productNamehasNextPage,
-    productNameFetching,
-    productNameLoading,
-
+    useMaterialListInfiniteScroll,
     MaterialDeleteMutation,
   } = useManagementMaterial()
 
@@ -417,6 +413,88 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
   )
 
+  // 상세 품목에서 품명 키워드 검색 로직
+
+  const handleSelectMaterial = (id: number, selectedCompany: any) => {
+    if (!selectedCompany) {
+      // updateItemField('MaterialItem', id, 'outsourcingCompanyId', 0)
+      updateItemField('MaterialItem', id, 'name', '')
+      return
+    }
+
+    console.log('품명을 키워드 검색으로 검색했을 때의 값', selectedCompany)
+
+    // updateItemField('MaterialItem', id, 'outsourcingCompanyId', selectedCompany.id)
+    updateItemField('MaterialItem', id, 'name', selectedCompany.name)
+  }
+
+  function MaterialItemRow({ row }: { row: any }) {
+    const materialItemFocusedId = useFocusStore((s) => s.materialItemFocusedId)
+    const setMaterialItemFocusedId = useFocusStore((s) => s.setMaterialItemFocusedId)
+
+    const [localKeyword, setLocalKeyword] = React.useState(row.name ?? '')
+
+    React.useEffect(() => {
+      if (localKeyword !== row.name) {
+        setLocalKeyword(row.name ?? '')
+      }
+    }, [row.name])
+
+    const isFocused = materialItemFocusedId === row.id
+
+    // 입력값이 외부에서 바뀌면 로컬 상태도 업데이트
+    React.useEffect(() => {
+      setLocalKeyword(row.name ?? '')
+    }, [row.name])
+
+    // debounce 적용 (백엔드 호출용)
+    const debouncedKeyword = useDebouncedValue(localKeyword, 300)
+
+    const {
+      data: MaterialItemData,
+      fetchNextPage: MaterialItemFetchNextPage,
+      hasNextPage: MaterialItemHasNextPage,
+      isFetching: MaterialItemIsFetching,
+      isLoading: MaterialItemIsLoading,
+    } = useMaterialListInfiniteScroll(debouncedKeyword)
+
+    const materialItemList = Array.from(
+      new Map(
+        MaterialItemData?.pages.flatMap((page) => page.data.content).map((u) => [u.name, u]),
+      )?.values() ?? [],
+    )
+
+    // onBlur 딜레이용 ref
+    const blurTimeout = React.useRef<NodeJS.Timeout | null>(null)
+
+    return (
+      <InfiniteScrollSelect
+        keyword={localKeyword}
+        placeholder="품명을 입력해주세요."
+        debouncedKeyword={debouncedKeyword}
+        items={materialItemList}
+        hasNextPage={MaterialItemHasNextPage ?? false}
+        fetchNextPage={MaterialItemFetchNextPage}
+        isLoading={MaterialItemIsLoading || MaterialItemIsFetching}
+        onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
+        renderItem={(item, isHighlighted) => (
+          <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+            {item.name}
+          </div>
+        )}
+        onSelect={(selectedCompany) => handleSelectMaterial(row.id ?? 0, selectedCompany)}
+        shouldShowList={isFocused} // 포커스 기반 리스트 표시
+        onFocus={() => {
+          if (blurTimeout.current) clearTimeout(blurTimeout.current)
+          setMaterialItemFocusedId(row.id)
+        }}
+        onBlur={() => {
+          blurTimeout.current = setTimeout(() => setMaterialItemFocusedId(null), 200) // 200ms 딜레이
+        }}
+      />
+    )
+  }
+
   const formatChangeDetail = (getChanges: string) => {
     try {
       const parsed = JSON.parse(getChanges)
@@ -635,7 +713,10 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                 isLoading={SiteNameIsLoading || SiteNameIsFetching}
                 debouncedKeyword={debouncedSiteKeyword}
                 shouldShowList={isSiteFocused}
-                onFocus={() => setIsSiteFocused(true)}
+                onFocus={() => {
+                  setIsSiteFocused(true)
+                  setClearMaterialItemFocusedId(null)
+                }}
                 onBlur={() => setIsSiteFocused(false)}
               />
             </div>
@@ -731,7 +812,10 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                 isLoading={OutsourcingNameIsLoading || OutsourcingNameIsFetching}
                 debouncedKeyword={debouncedOutsourcingKeyword}
                 shouldShowList={isOutsourcingFocused}
-                onFocus={() => setIsOutsourcingFocused(true)}
+                onFocus={() => {
+                  setIsOutsourcingFocused(true)
+                  setClearMaterialItemFocusedId(null)
+                }}
                 onBlur={() => setIsOutsourcingFocused(false)}
               />
             </div>
@@ -790,7 +874,11 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                 }
                 debouncedKeyword={debouncedOutsourcingKeywordBySnack}
                 shouldShowList={isOutsourcingFocusedBySnack}
-                onFocus={() => setIsOutsourcingFocusedBySnack(true)}
+                onFocus={() => {
+                  setIsOutsourcingFocusedBySnack(true)
+
+                  setClearMaterialItemFocusedId(null)
+                }}
                 onBlur={() => setIsOutsourcingFocusedBySnack(false)}
                 disabled={!form.isDeductible} // ✅ 체크 안되면 비활성화
               />
@@ -821,9 +909,12 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                     }
                     debouncedKeyword={debounceddeductionCompanyKeyWord}
                     shouldShowList={isdeductionCompanyFocused}
-                    onFocus={() => setIsdeductionCompanyFocused(true)}
+                    onFocus={() => {
+                      setIsdeductionCompanyFocused(true)
+                      setClearMaterialItemFocusedId(null)
+                    }}
                     onBlur={() => setIsdeductionCompanyFocused(false)}
-                    disabled={!form.isDeductible} // ✅ 체크 안되면 비활성화
+                    disabled={!form.isDeductible}
                   />
                 </div>
               </div>
@@ -837,6 +928,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
                 value={form.memo}
+                onFocus={() => setClearMaterialItemFocusedId(null)}
                 placeholder="500자 이하 텍스트 입력"
                 onChange={(value) => setField('memo', value)}
                 className="flex-1"
@@ -864,7 +956,14 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
             />
           </div>
         </div>
-        <TableContainer component={Paper}>
+        <TableContainer
+          component={Paper}
+          sx={{
+            height: '300px',
+            overflowX: 'auto', // 가로 스크롤 허용
+            overflowY: 'auto',
+          }}
+        >
           <Table size="small">
             <TableHead>
               <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
@@ -918,7 +1017,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                   </TableCell>
 
                   <TableCell sx={{ display: 'flex', gap: '4px', width: '320px' }}>
-                    <CommonSelectByName
+                    {/* <CommonSelectByName
                       value={m.inputType === 'manual' ? '직접입력' : m.name || '선택'}
                       onChange={async (value) => {
                         if (value === '직접입력') {
@@ -939,19 +1038,9 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                       }}
                       onInputChange={(value) => setProductSearch(value)}
                       loading={productNameLoading}
-                    />
+                    /> */}
 
-                    <TextField
-                      size="small"
-                      placeholder="텍스트 입력"
-                      value={m.inputType === 'manual' ? m.name : ''} // manual 모드일 때만 값 표시
-                      onChange={(e) =>
-                        updateItemField('MaterialItem', m.id, 'name', e.target.value)
-                      }
-                      variant="outlined"
-                      sx={textFieldStyle}
-                      disabled={m.inputType !== 'manual'} // manual 모드일 때만 활성화
-                    />
+                    <MaterialItemRow key={m.id} row={m} />
                   </TableCell>
 
                   {/* 규격 */}
@@ -960,6 +1049,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                       size="small"
                       placeholder="텍스트 입력"
                       value={m.standard}
+                      onFocus={() => setClearMaterialItemFocusedId(null)}
                       onChange={(e) =>
                         updateItemField('MaterialItem', m.id, 'standard', e.target.value)
                       }
@@ -974,6 +1064,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                       size="small"
                       placeholder="텍스트 입력"
                       value={m.usage}
+                      onFocus={() => setClearMaterialItemFocusedId(null)}
                       onChange={(e) =>
                         updateItemField('MaterialItem', m.id, 'usage', e.target.value)
                       }
@@ -987,6 +1078,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                     <TextField
                       size="small"
                       placeholder="수량"
+                      onFocus={() => setClearMaterialItemFocusedId(null)}
                       value={m.quantity || ''}
                       onChange={(e) => {
                         const quantity = e.target.value === '' ? '' : Number(e.target.value)
@@ -1013,6 +1105,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                       size="small"
                       inputMode="numeric"
                       placeholder="숫자 입력"
+                      onFocus={() => setClearMaterialItemFocusedId(null)}
                       value={formatNumber(m.unitPrice) || ''}
                       onChange={(e) => {
                         const unitPrice =
@@ -1056,7 +1149,10 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
 
                   {/* 부가세 */}
                   <TableCell align="right" sx={{ border: '1px solid #9CA3AF' }}>
-                    <VatInput supplyPrice={m.supplyPrice} />
+                    <VatInput
+                      supplyPrice={m.supplyPrice}
+                      onFocus={() => setClearMaterialItemFocusedId(null)}
+                    />
                   </TableCell>
 
                   {/* 합계 */}
@@ -1071,6 +1167,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                       size="small"
                       placeholder="500자 이하 텍스트 입력"
                       value={m.memo}
+                      onFocus={() => setClearMaterialItemFocusedId(null)}
                       onChange={(e) =>
                         updateItemField('MaterialItem', m.id, 'memo', e.target.value)
                       }
