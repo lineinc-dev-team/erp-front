@@ -268,7 +268,7 @@ export default function LaborView() {
   // "계정 관리" 메뉴에 대한 권한
   const { hasDelete, hasCreate, hasModify, hasExcelDownload } = useMenuPermission(
     roleId,
-    '노무 관리',
+    '근로자 관리',
     enabled,
   )
 

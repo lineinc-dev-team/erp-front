@@ -10,6 +10,7 @@ export function useMenuPermission(roleId: number, menuName: string, enabled: boo
 
   const permissions = useMemo(() => {
     const menu = MenuListData?.data?.find((m: Menu) => m.name === menuName)
+
     return menu?.permissions ?? []
   }, [MenuListData, menuName])
 
