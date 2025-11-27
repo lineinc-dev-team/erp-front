@@ -135,6 +135,7 @@ export default function SitesView() {
         },
       }
     }
+
     if (col.field === 'name') {
       return {
         ...col,
@@ -164,6 +165,16 @@ export default function SitesView() {
             </div>
           )
         },
+      }
+    }
+
+    if (col.field === 'processName') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 220,
+        maxWidth: 220,
       }
     }
 
