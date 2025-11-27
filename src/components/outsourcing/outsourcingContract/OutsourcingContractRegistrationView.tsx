@@ -941,7 +941,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     )
       return '계약 종료일은 시작일 이후여야 합니다.'
 
-    if (form.category !== 'SERVICE' && !form.contractAmount) {
+    if (form.type !== 'SERVICE' && !form.contractAmount) {
       return '계약금액을 입력해주세요.'
     }
 
