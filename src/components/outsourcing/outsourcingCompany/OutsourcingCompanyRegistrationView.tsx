@@ -245,6 +245,8 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
         setField('type', 'FUEL')
       } else if (client.type === '관리') {
         setField('type', 'MANAGEMENT')
+      } else if (client.type === '식당') {
+        setField('type', 'MEAL_FEE')
       } else if (client.type === '기타') {
         setField('type', 'ETC')
       }
