@@ -114,6 +114,10 @@ export default function ChartPage() {
     )
   }
 
+  const maxValue = Math.max(...chartData.map((d: any) => d.total)) // 스택 전체 합 기준
+  const step = Math.ceil(maxValue / 8) // 원하는 줄 개수 기준 자동 조정
+  const ticks = Array.from({ length: 9 }, (_, i) => step * i) // 0 ~ maxValue 부드럽게 분할
+
   return (
     <Paper
       sx={{
@@ -162,7 +166,7 @@ export default function ChartPage() {
 
             <XAxis dataKey="name" tick={<CustomXAxisTick />} interval={0} height={80} />
 
-            <YAxis hide />
+            <YAxis hide ticks={ticks} domain={[0, ticks[ticks.length - 1]]} />
 
             <Tooltip
               formatter={(v: any) => v.toLocaleString() + '원'}
