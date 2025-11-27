@@ -182,11 +182,13 @@ export const FuelColumnList: GridColDef[] = [
   { field: 'site', headerName: '현장명', width: 130 },
   { field: 'process', headerName: '공정명', width: 130 },
   { field: 'date', headerName: '일자', width: 130 },
-  { field: 'outsourcingCompany', headerName: '업체명', width: 130 },
   { field: 'fuelCompany', headerName: '유류업체명', width: 130 },
-  { field: 'vehicleNumber', headerName: '차량번호', width: 180 },
+  { field: 'outsourcingCompany', headerName: '업체명', width: 130 },
+
   { field: 'specification', headerName: '규격', width: 100 },
   { field: 'fuelType', headerName: '유종', width: 120 },
+
+  { field: 'vehicleNumber', headerName: '차량번호', width: 180 },
   { field: 'fuelAmount', headerName: '주유량', width: 120 },
   { field: 'amount', headerName: '금액', width: 120 },
   { field: 'createdAt', headerName: '등록/수정일', width: 100 },

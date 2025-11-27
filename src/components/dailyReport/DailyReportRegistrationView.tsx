@@ -4482,7 +4482,7 @@ export default function DailyReportRegistrationView() {
   const validateFuel = () => {
     for (const f of fuelData) {
       if (!form.outsourcingCompanyId || form.outsourcingCompanyId === 0) {
-        return showSnackbar('유류의 업체명을 입력해주세요.', 'warning')
+        return showSnackbar('유류업체명을 입력해주세요.', 'warning')
       }
 
       if (!f.equipmentId || f.equipmentId === 0) {

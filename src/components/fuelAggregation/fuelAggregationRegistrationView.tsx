@@ -426,6 +426,10 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
     if (!form.siteProcessId) return '공정명을 선택하세요.'
     if (form.weather === 'BASE') return '날씨를 선택하세요.'
 
+    if (!form.outsourcingCompanyId || form.outsourcingCompanyId === 0) {
+      return '유류업체명을 입력해주세요.'
+    }
+
     // 담당자 유효성 체크
     if (fuelInfo.length > 0) {
       for (const item of fuelInfo) {
@@ -1005,7 +1009,14 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                 <InfiniteScrollSelect
                   placeholder="유류 업체명을 입력하세요"
                   keyword={form.outsourcingCompanyName ?? ''}
-                  onChangeKeyword={(newKeyword) => setField('outsourcingCompanyName', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                  onChangeKeyword={(newKeyword) => {
+                    setField('outsourcingCompanyName', newKeyword)
+
+                    if (newKeyword.trim() === '') {
+                      setField('outsourcingCompanyName', '')
+                      setField('outsourcingCompanyId', 0)
+                    }
+                  }} // ★필드명과 값 둘 다 넘겨야 함
                   items={outsourcingList}
                   hasNextPage={OutsourcingNameHasNextPage ?? false}
                   fetchNextPage={OutsourcingeNameFetchNextPage}
@@ -1414,6 +1425,11 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
 
                         calculateFuelAmount()
                       }}
+                      inputProps={{
+                        inputMode: 'numeric',
+                        pattern: '[0-9]*',
+                        style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                      }}
                     />
 
                     {/* {m.subEquipments &&
@@ -1448,6 +1464,11 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                         updateItemField('FuelInfo', m.checkId, 'amount', formatted)
                       }}
                       disabled
+                      inputProps={{
+                        inputMode: 'numeric',
+                        pattern: '[0-9]*',
+                        style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                      }}
                     />
 
                     {/* {m.subEquipments &&
@@ -1548,7 +1569,7 @@ export default function FuelAggregationRegistrationView({ isEditMode = false }) 
                       ))} */}
                   </TableCell>
                   {isEditMode && (
-                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF', width: '260px' }}>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF', width: '240px' }}>
                       <CommonInput
                         placeholder="자동 입력"
                         value={m.modifyDate ?? ''}
