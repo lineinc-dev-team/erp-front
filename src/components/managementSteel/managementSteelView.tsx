@@ -53,28 +53,28 @@ export default function ManagementSteel() {
       id: steel.id, // 고유 ID
       siteName: steel.site.name,
       siteProcessName: steel.siteProcess.name,
-      incomingOwnMaterial: `${formatNumber(steel.incomingOwnMaterialTotalWeight)} / ${formatNumber(
+      incomingOwnMaterial: `${formatNumber(steel.incomingOwnMaterialTotalWeight)}T / ${formatNumber(
         steel.incomingOwnMaterialAmount,
       )}`,
-      incomingPurchase: `${formatNumber(steel.incomingPurchaseTotalWeight)} / ${formatNumber(
+      incomingPurchase: `${formatNumber(steel.incomingPurchaseTotalWeight)}T / ${formatNumber(
         steel.incomingPurchaseAmount,
       )}`,
-      incomingRental: `${formatNumber(steel.incomingRentalTotalWeight)} / ${formatNumber(
+      incomingRental: `${formatNumber(steel.incomingRentalTotalWeight)}T / ${formatNumber(
         steel.incomingRentalAmount,
       )}`,
-      outgoingOwnMaterial: `${formatNumber(steel.outgoingOwnMaterialTotalWeight)} / ${formatNumber(
+      outgoingOwnMaterial: `${formatNumber(steel.outgoingOwnMaterialTotalWeight)}T / ${formatNumber(
         steel.outgoingOwnMaterialAmount,
       )}`,
-      outgoingPurchase: `${formatNumber(steel.outgoingPurchaseTotalWeight)} / ${formatNumber(
+      outgoingPurchase: `${formatNumber(steel.outgoingPurchaseTotalWeight)}T / ${formatNumber(
         steel.outgoingPurchaseAmount,
       )}`,
-      outgoingRental: `${formatNumber(steel.outgoingRentalTotalWeight)} / ${formatNumber(
+      outgoingRental: `${formatNumber(steel.outgoingRentalTotalWeight)}T / ${formatNumber(
         steel.outgoingRentalAmount,
       )}`,
-      onSiteStock: formatNumber(steel.onSiteStockTotalWeight),
-      scrap: `${formatNumber(steel.scrapTotalWeight)} / ${formatNumber(steel.scrapAmount)}`,
+      onSiteStock: `${formatNumber(steel.onSiteStockTotalWeight)}T`,
+      scrap: `${formatNumber(steel.scrapTotalWeight)}T / ${formatNumber(steel.scrapAmount)}`,
       totalInvestmentAmount: formatNumber(steel.totalInvestmentAmount),
-      onSiteRemainingWeight: formatNumber(steel.onSiteRemainingWeight),
+      onSiteRemainingWeight: `${formatNumber(steel.onSiteRemainingWeight)}T`,
       createdAt: getTodayDateString(steel.createdAt),
     }
   })
@@ -116,12 +116,122 @@ export default function ManagementSteel() {
         },
       }
     }
+
+    if (col.field === 'createdAt') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 100,
+        maxWidth: 100,
+      }
+    }
+
+    if (col.field === 'incomingOwnMaterial') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        // 가장 최소 넓이
+        minWidth: 80,
+      }
+    }
+
+    if (col.field === 'incomingPurchase') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        // 가장 최소 넓이
+        minWidth: 130,
+      }
+    }
+
+    if (col.field === 'incomingRental') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        // 가장 최소 넓이
+        minWidth: 130,
+      }
+    }
+
+    if (col.field === 'outgoingOwnMaterial') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        // 가장 최소 넓이
+        minWidth: 130,
+      }
+    }
+
+    if (col.field === 'outgoingPurchase') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        // 가장 최소 넓이
+        minWidth: 130,
+      }
+    }
+
+    if (col.field === 'outgoingRental') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        // 가장 최소 넓이
+        minWidth: 130,
+      }
+    }
+
+    if (col.field === 'onSiteStock') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        // 가장 최소 넓이
+        minWidth: 40,
+      }
+    }
+
+    if (col.field === 'scrap') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 40,
+      }
+    }
+
+    if (col.field === 'totalInvestmentAmount') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 120,
+      }
+    }
+
+    if (col.field === 'onSiteRemainingWeight') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 120,
+      }
+    }
+
     if (col.field === 'no') {
       return {
         ...col,
         headerAlign: 'center',
         align: 'center',
         flex: 0.5,
+        minWidth: 40,
+        maxWidth: 40,
         renderCell: (params: GridRenderCellParams) => {
           const sortedRowIds = params.api.getSortedRowIds?.() ?? []
           const indexInCurrentPage = sortedRowIds.indexOf(params.id)
@@ -199,6 +309,13 @@ export default function ManagementSteel() {
     enabled,
   )
 
+  const handleEnterKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      search.setField('currentPage', 1) // 페이지 초기화
+      search.handleSearch()
+    }
+  }
+
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
@@ -207,7 +324,10 @@ export default function ManagementSteel() {
             <label className="w-[144px] text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명
             </label>
-            <div className="border border-gray-400 w-full flex items-center">
+            <div
+              className="border border-gray-400 w-full flex items-center"
+              onKeyDown={handleEnterKey}
+            >
               <InfiniteScrollSelect
                 placeholder="현장명을 입력하세요"
                 keyword={search.siteName}

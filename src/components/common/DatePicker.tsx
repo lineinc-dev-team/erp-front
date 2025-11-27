@@ -52,13 +52,13 @@ export default function CommonDatePicker({
             sx: {
               width: '8rem',
               '@media (min-width:1455px)': {
-                width: '8.8rem',
+                width: '8rem',
                 '& .MuiPickersInputBase-sectionsContainer': {
                   fontSize: '0.75rem',
                 },
               },
               '@media (min-width:1900px)': {
-                width: '12rem',
+                width: '9rem',
                 '& .MuiPickersInputBase-sectionsContainer': {
                   fontSize: '0.9rem',
                 },

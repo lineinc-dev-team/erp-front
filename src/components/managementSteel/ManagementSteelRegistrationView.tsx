@@ -70,6 +70,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     getAmountAmount,
     getvatTotal,
     getRealTotal,
+    setSaved,
 
     //관리비 등록하기
   } = useManagementSteelFormStore()
@@ -135,14 +136,14 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
   }
 
   const TAB_CONFIG = [
-    { label: '집계', value: undefined },
+    { label: '집계', value: '' },
     { label: '입고', value: 'INCOMING' },
     { label: '출고', value: 'OUTGOING' },
     { label: '사장', value: 'ON_SITE_STOCK' },
     { label: '고철', value: 'SCRAP' },
   ]
 
-  const [activeTab, setActiveTab] = useState<string | undefined>('INCOMING')
+  const [activeTab, setActiveTab] = useState<string | undefined>('')
 
   const getTabLabel = (value: string | undefined) => {
     return TAB_CONFIG.find((tab) => tab.value === value)?.label ?? ''
@@ -151,27 +152,34 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
   const handleTabClick = (value: string | undefined) => {
     if (activeTab === value) return
 
-    let message = ''
-
     if (activeTab === value) return // 같은 탭 클릭 시 무시
+
+    let message = ''
 
     if (!isSaved) {
       // 저장되지 않은 변경사항이 있는 상태
-      if (isEditMode) {
-        message = '수정한 내용이 저장되지 않았습니다. 이동하시겠습니까?'
-      } else {
+      if (!isEditMode) {
         message = `현재 "${getTabLabel(
           activeTab,
         )}" 탭의 데이터가 등록되지 않았습니다. 이동하시면 입력한 내용이 사라집니다. 계속하시겠습니까?`
       }
-    } else if (isSaved) {
+    } else {
       // 저장 완료된 상태
       message = `현재 "${getTabLabel(
         activeTab,
       )}" 탭의 데이터는 저장되었습니다. 이동하시면 화면에 입력된 내용은 초기화됩니다. 계속하시겠습니까?`
     }
 
-    if (message && !window.confirm(message)) return
+    if (message) {
+      const confirmResult = window.confirm(message)
+      if (!confirmResult) return
+
+      // ⬇️ 확인 누르면 저장 상태 초기화
+      if (isSaved) setSaved(false)
+    }
+
+    // ⬇️ 최종적으로 탭 이동
+    setActiveTab(value)
 
     resetDetailData()
     setActiveTab(value)
@@ -183,8 +191,8 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
 
   // 등록/상세 초기 설정
   useEffect(() => {
-    setActiveTab('INCOMING')
-    setField('type', 'INCOMING')
+    setActiveTab('')
+    setField('type', '')
   }, [])
 
   const historyList = useManagementSteelFormStore((state) => state.form.changeHistories)
@@ -903,12 +911,13 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
           <TableContainer
             component={Paper}
             sx={{
-              height: '400px',
+              height: '700px',
               overflowX: 'auto', // 가로 스크롤 허용
               overflowY: 'auto',
             }}
           >
             <Table
+              stickyHeader
               size="small"
               sx={{
                 borderCollapse: 'collapse',
@@ -917,7 +926,18 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
               }}
             >
               <TableHead>
-                <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
+                <TableRow
+                  sx={{
+                    backgroundColor: '#D1D5DB',
+                    '& th': {
+                      position: 'sticky',
+                      top: 0,
+                      zIndex: 3, // 헤더 겹침 방지
+                      backgroundColor: '#D1D5DB', // sticky라 배경 필수
+                      whiteSpace: 'nowrap',
+                    },
+                  }}
+                >
                   <TableCell
                     rowSpan={2}
                     padding="checkbox"
@@ -933,7 +953,12 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                   {(activeTab === 'INCOMING' && (
                     <TableCell
                       align="center"
-                      sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
+                      sx={{
+                        border: '1px solid #9CA3AF',
+
+                        fontWeight: 'bold',
+                        width: 120,
+                      }}
                     >
                       입고일 <span className="text-red-500 ml-1">*</span>
                     </TableCell>
@@ -958,7 +983,15 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
 
                   <TableCell
                     align="center"
-                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
+                    sx={{
+                      border: '1px solid #9CA3AF',
+                      position: 'sticky',
+                      left: 0,
+                      zIndex: 100, // ✔ camelCase!
+                      background: 'white',
+                      fontWeight: 'bold',
+                      width: 120,
+                    }}
                   >
                     품명 <span className="text-red-500 ml-1">*</span>
                   </TableCell>
@@ -1096,7 +1129,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           width: {
                             xs: 80, // 모바일
                             sm: 100, // 태블릿
-                            md: 140, // 데스크탑
+                            md: 100, // 데스크탑
                           },
                         }}
                       >
@@ -1132,7 +1165,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         width: {
                           xs: 80, // 모바일 (smaller)
                           sm: 120, // 태블릿
-                          md: 160, // 데스크탑
+                          md: 120, // 데스크탑
                         },
                       }}
                     >
@@ -1150,7 +1183,17 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       />
                     </TableCell>
                     {/* 규격 */}
-                    <TableCell align="center" sx={{ border: '1px solid #9CA3AF', width: '200px' }}>
+                    <TableCell
+                      align="center"
+                      sx={{
+                        border: '1px solid #9CA3AF',
+                        width: {
+                          xs: 80, // 모바일 (smaller)
+                          sm: 120, // 태블릿
+                          md: 140, // 데스크탑
+                        },
+                      }}
+                    >
                       {activeTab === 'SCRAP' ? (
                         '-'
                       ) : (
@@ -1241,7 +1284,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         width: {
                           xs: 80, // 모바일 (smaller)
                           sm: 100, // 태블릿
-                          md: 200, // 데스크탑
+                          md: 120, // 데스크탑
                         },
                       }}
                     >
@@ -1483,7 +1526,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         width: {
                           xs: 80, // 모바일 (smaller)
                           sm: 200, // 태블릿
-                          md: 400, // 데스크탑
+                          md: 200, // 데스크탑
                         },
                       }}
                     >
@@ -1574,7 +1617,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           width: {
                             xs: 100, // 모바일 (smaller)
                             sm: 160, // 태블릿
-                            md: 400, // 데스크탑
+                            md: 320, // 데스크탑
                           },
                         }}
                       >
@@ -1591,7 +1634,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         width: {
                           xs: 80, // 모바일 (smaller)
                           sm: 400, // 태블릿
-                          md: 260, // 데스크탑
+                          md: 150, // 데스크탑
                         },
                       }}
                     >
