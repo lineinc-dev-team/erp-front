@@ -5,7 +5,7 @@ import CommonInput from '../common/Input'
 import CommonSelect from '../common/Select'
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { LaborArrayStatusOptions, LaborColumnList, PageCount } from '@/config/erp.confing'
-import { Pagination, Tooltip } from '@mui/material'
+import { Pagination } from '@mui/material'
 import { useAccountStore } from '@/stores/accountManagementStore'
 import { useRouter } from 'next/navigation'
 import ExcelModal from '../common/ExcelModal'
@@ -77,24 +77,141 @@ export default function LaborView() {
 
   // 그리도 라우팅 로직!
   const enhancedColumns = LaborColumnList.map((col): GridColDef => {
-    if (col.field === 'memo') {
+    // if (col.field === 'memo') {
+    //   return {
+    //     ...col,
+    //     headerAlign: 'center',
+    //     align: 'center',
+    //     flex: 2,
+    //     renderCell: (params: GridRenderCellParams) => {
+    //       const text = params.value as string
+    //       if (!text) return <span style={{ fontSize: 12 }}>-</span>
+
+    //       return (
+    //         <Tooltip title={text} arrow>
+    //           <span style={{ fontSize: 12 }}>
+    //             {text.length > 10 ? `${text.slice(0, 10)}...` : text}
+    //           </span>
+    //         </Tooltip>
+    //       )
+    //     },
+    //   }
+    // }
+
+    if (col.field === 'hasFile') {
       return {
         ...col,
         headerAlign: 'center',
         align: 'center',
-        flex: 2,
-        renderCell: (params: GridRenderCellParams) => {
-          const text = params.value as string
-          if (!text) return <span style={{ fontSize: 12 }}>-</span>
+        minWidth: 80,
+        maxWidth: 80,
+      }
+    }
 
-          return (
-            <Tooltip title={text} arrow>
-              <span style={{ fontSize: 12 }}>
-                {text.length > 10 ? `${text.slice(0, 10)}...` : text}
-              </span>
-            </Tooltip>
-          )
-        },
+    if (col.field === 'hasLaborContract') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 100,
+        maxWidth: 100,
+      }
+    }
+
+    if (col.field === 'hasIdCard') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 90,
+        maxWidth: 90,
+      }
+    }
+
+    if (col.field === 'hasBankbook') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 80,
+        maxWidth: 80,
+      }
+    }
+
+    if (col.field === 'tenureMonths') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 80,
+        maxWidth: 80,
+      }
+    }
+
+    if (col.field === 'dailyWage') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 80,
+      }
+    }
+
+    if (col.field === 'workType') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 120,
+      }
+    }
+
+    if (col.field === 'mainWork') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 80,
+        maxWidth: 80,
+      }
+    }
+
+    if (col.field === 'phoneNumber') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 80,
+      }
+    }
+
+    if (col.field === 'isSeverancePayEligible') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 90,
+        maxWidth: 90,
+      }
+    }
+
+    if (col.field === 'residentNumber') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 130,
+        maxWidth: 130,
+      }
+    }
+
+    if (col.field === 'name') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+        maxWidth: 70,
       }
     }
 
@@ -104,7 +221,8 @@ export default function LaborView() {
         sortable: false,
         headerAlign: 'center',
         align: 'center',
-        flex: 2,
+        minWidth: 110,
+        maxWidth: 110,
         renderCell: (params: GridRenderCellParams) => {
           const item = params.row as LaborDataList
 
@@ -141,7 +259,8 @@ export default function LaborView() {
         ...col,
         headerAlign: 'center',
         align: 'center',
-        flex: 1,
+        minWidth: 90,
+        maxWidth: 90,
         cellClassName: 'no-hover-bg', // 커스텀 클래스 지정
         renderCell: (params: GridRenderCellParams) => {
           const clientId = params.row.id
@@ -172,6 +291,8 @@ export default function LaborView() {
         headerAlign: 'center',
         align: 'center',
         flex: 0.5,
+        minWidth: 40,
+        maxWidth: 40,
         renderCell: (params: GridRenderCellParams) => {
           const sortedRowIds = params.api.getSortedRowIds?.() ?? []
           const indexInCurrentPage = sortedRowIds.indexOf(params.id)
@@ -540,6 +661,10 @@ export default function LaborView() {
               lineHeight: '2.8rem',
               paddingTop: '12px',
               paddingBottom: '12px',
+            },
+            '& .MuiDataGrid-cell[data-field="dailyWage"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
             },
             '& .severance-row': {
               backgroundColor: 'red',
