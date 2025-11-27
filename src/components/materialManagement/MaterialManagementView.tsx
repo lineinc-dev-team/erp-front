@@ -37,12 +37,8 @@ export default function MaterialManagementView() {
   const {
     MaterialListQuery,
     // MaterialDeleteMutation,
-    productOptions,
-    setProductSearch,
-    productNameFetchNextPage,
-    productNamehasNextPage,
-    productNameFetching,
-    productNameLoading,
+
+    useMaterialListInfiniteScroll,
   } = useManagementMaterial()
 
   const {
@@ -149,7 +145,8 @@ export default function MaterialManagementView() {
         ...col,
         headerAlign: 'center',
         align: 'center',
-        flex: 2,
+        minWidth: 80,
+        maxWidth: 80,
         renderCell: (params: GridRenderCellParams) => {
           const text = params.value as string
           if (!text) return <span style={{ fontSize: 12 }}>-</span>
@@ -164,12 +161,73 @@ export default function MaterialManagementView() {
         },
       }
     }
+
+    if (col.field === 'hasFile') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+        maxWidth: 70,
+      }
+    }
+
+    if (col.field === 'quantity') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+        maxWidth: 70,
+      }
+    }
+
+    if (col.field === 'inputType') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 90,
+      }
+    }
+
+    if (col.field === 'site') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 340,
+        maxWidth: 340,
+      }
+    }
+
+    if (col.field === 'process') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 180,
+        maxWidth: 180,
+      }
+    }
+
+    if (col.field === 'deliveryDate') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 100,
+        maxWidth: 100,
+      }
+    }
+
     if (col.field === 'name') {
       return {
         ...col,
         headerAlign: 'center',
         align: 'center',
         flex: 1,
+        minWidth: 150,
 
         renderCell: (params: GridRenderCellParams) => {
           const materialId = params.row.backendId
@@ -283,6 +341,30 @@ export default function MaterialManagementView() {
   const outsourcingList = Array.from(
     new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
   )
+  // 품명 키워드 검색
+
+  const [isMaterialFocused, setIsMaterialFocused] = useState(false)
+
+  // 유저 선택 시 처리
+  const handleSelectMaterial = (selectedUser: any) => {
+    console.log('품명의 키워드 ', selectedUser)
+    search.setField('materialName', selectedUser.name)
+  }
+
+  const debouncedMaterialKeyword = useDebouncedValue(search.materialName, 300)
+
+  const {
+    data: MaterialNameData,
+    fetchNextPage: MaterialNameFetchNextPage,
+    hasNextPage: MaterialNameHasNextPage,
+    isFetching: MaterialNameIsFetching,
+    isLoading: MaterialNameIsLoading,
+  } = useMaterialListInfiniteScroll(debouncedMaterialKeyword)
+
+  const MaterialRawList = MaterialNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const materialList = Array.from(
+    new Map(MaterialRawList.map((user) => [user.name, user])).values(),
+  )
 
   // 권한에 따른 버튼 활성화
 
@@ -304,6 +386,13 @@ export default function MaterialManagementView() {
   // "계정 관리" 메뉴에 대한 권한
   const { hasCreate, hasModify, hasExcelDownload } = useMenuPermission(roleId, '자재 관리', enabled)
 
+  const handleEnterKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      search.setField('currentPage', 1) // 페이지 초기화
+      search.handleSearch()
+    }
+  }
+
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
@@ -312,7 +401,10 @@ export default function MaterialManagementView() {
             <label className="w-[144px] text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명
             </label>
-            <div className="border border-gray-400 w-full flex items-center">
+            <div
+              className="border border-gray-400 w-full flex items-center"
+              onKeyDown={handleEnterKey}
+            >
               <InfiniteScrollSelect
                 placeholder="현장명을 입력하세요"
                 keyword={search.siteName}
@@ -407,7 +499,7 @@ export default function MaterialManagementView() {
             <label className="w-[144px] text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               품명
             </label>
-            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
+            {/* <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
               <CommonSelectByName
                 value={search.materialName || '선택'}
                 onChange={async (value) => {
@@ -421,6 +513,32 @@ export default function MaterialManagementView() {
                 }}
                 onInputChange={(value) => setProductSearch(value)}
                 loading={productNameLoading}
+              />
+            </div> */}
+
+            <div
+              className="border border-gray-400  w-full flex items-center"
+              onKeyDown={handleEnterKey}
+            >
+              <InfiniteScrollSelect
+                placeholder="품명을 입력하세요"
+                keyword={search.materialName}
+                onChangeKeyword={(newKeyword) => search.setField('materialName', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                items={materialList}
+                hasNextPage={MaterialNameHasNextPage ?? false}
+                fetchNextPage={MaterialNameFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                onSelect={handleSelectMaterial}
+                // shouldShowList={true}
+                isLoading={MaterialNameIsLoading || MaterialNameIsFetching}
+                debouncedKeyword={debouncedMaterialKeyword}
+                shouldShowList={isMaterialFocused}
+                onFocus={() => setIsMaterialFocused(true)}
+                onBlur={() => setIsMaterialFocused(false)}
               />
             </div>
           </div>
@@ -447,7 +565,10 @@ export default function MaterialManagementView() {
               />
             </div> */}
 
-            <div className="border border-gray-400  w-full flex items-center">
+            <div
+              className="border border-gray-400  w-full flex items-center"
+              onKeyDown={handleEnterKey}
+            >
               <InfiniteScrollSelect
                 placeholder="업체명을 입력하세요"
                 keyword={search.outsourcingCompanyName}
@@ -596,6 +717,35 @@ export default function MaterialManagementView() {
           hideFooterPagination
           // pageSize={pageSize}
           rowHeight={60}
+          sx={{
+            '& .MuiDataGrid-cell': {
+              display: 'flex',
+            },
+            // contractAmount 컬럼만 오른쪽 정렬
+            '& .MuiDataGrid-cell[data-field="total"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+            '& .MuiDataGrid-cell[data-field="vat"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+
+            '& .MuiDataGrid-cell[data-field="supplyPrice"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+
+            '& .MuiDataGrid-cell[data-field="unitPrice"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+
+            '& .MuiDataGrid-cell[data-field="quantity"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+          }}
           onRowSelectionModelChange={(newSelection) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setSelectedIds(newSelection as any) // 타입 보장된다면 사용 가능

@@ -216,6 +216,19 @@ export function useManagementMaterial() {
     return [defaultOption, ...uniqueItems]
   }, [productNameInfo])
 
+  const useMaterialListInfiniteScroll = (keyword: string) => {
+    return useInfiniteQuery({
+      queryKey: ['ProductKeywordInfo', keyword],
+      queryFn: ({ pageParam }) => MaterialSearchTypeService({ pageParam, keyword }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        const nextPage = sliceInfo.page + 1
+        return sliceInfo.hasNext ? nextPage : undefined
+      },
+    })
+  }
+
   return {
     createMaterialMutation,
     MaterialModifyMutation,
@@ -234,5 +247,7 @@ export function useManagementMaterial() {
     productNamehasNextPage,
     productNameFetching,
     productNameLoading,
+
+    useMaterialListInfiniteScroll,
   }
 }

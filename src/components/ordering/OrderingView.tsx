@@ -214,8 +214,8 @@ export default function OrderingView() {
         headerAlign: 'center',
         align: 'center',
         // 헤더에 딱 맞게 화면에서 보이게
-        minWidth: 60,
-        maxWidth: 60,
+        minWidth: 80,
+        maxWidth: 80,
         renderCell: (params: GridRenderCellParams) => {
           const text = params.value as string
           if (!text) return <span style={{ fontSize: 12 }}>-</span>
