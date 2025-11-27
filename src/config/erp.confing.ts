@@ -221,21 +221,21 @@ export const PermissionDataList: GridColDef[] = [
 ]
 
 export const clientCompanyList: GridColDef[] = [
-  { field: 'id', headerName: 'No', width: 20 },
-  { field: 'businessNumber', headerName: '사업자등록번호', width: 400 },
-  { field: 'name', headerName: '발주처명', width: 130 },
-  { field: 'ceoName', headerName: '대표자명', width: 130 },
-  { field: 'email', headerName: '이메일', width: 130 },
-  { field: 'address', headerName: '본사 주소', width: 180 },
-  { field: 'landlineNumber', headerName: '전화번호', width: 100 },
-  { field: 'contactName', headerName: '담당자명', width: 100 },
-  { field: 'contactPositionAndDepartment', headerName: '부서/직급', width: 120 },
-  { field: 'contactInfo', headerName: '담당자 연락처/이메일', width: 100 },
-  { field: 'headquarter', headerName: '본사담당자명', width: 100 },
-  { field: 'isActive', headerName: '사용여부', width: 100 },
-  { field: 'createdAt', headerName: '등록일/수정일', width: 100 },
-  { field: 'hasFile', headerName: '첨부파일 유무', width: 100 },
-  { field: 'memo', headerName: '비고', width: 100 },
+  { field: 'no', headerName: 'No', width: 20 },
+  { field: 'businessNumber', headerName: '사업자등록번호', width: 20 },
+  { field: 'name', headerName: '발주처명', width: 20 },
+  { field: 'ceoName', headerName: '대표자명', width: 20 },
+  { field: 'email', headerName: '이메일', width: 20 },
+  { field: 'address', headerName: '본사 주소', width: 20 },
+  { field: 'landlineNumber', headerName: '전화번호', width: 20 },
+  { field: 'contactName', headerName: '담당자명', width: 20 },
+  { field: 'contactPositionAndDepartment', headerName: '부서/직급', width: 20 },
+  { field: 'contactInfo', headerName: '담당자 연락처/이메일', width: 20 },
+  { field: 'headquarter', headerName: '본사담당자명', width: 20 },
+  { field: 'isActive', headerName: '사용여부', width: 20 },
+  { field: 'createdAt', headerName: '등록일/수정일', width: 20 },
+  { field: 'hasFile', headerName: '첨부파일 유무', width: 20 },
+  { field: 'memo', headerName: '비고', width: 20 },
 ]
 
 export const LaborColumnList: GridColDef[] = [

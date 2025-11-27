@@ -85,7 +85,20 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
     homepageUrl: '',
     homepageLoginId: '',
     homepagePassword: '',
-    headManagers: [],
+    headManagers: [
+      {
+        id: Date.now(),
+        name: '',
+        position: '',
+        department: '',
+        managerAreaNumber: '지역번호',
+        landlineNumber: '',
+        phoneNumber: '',
+        email: '',
+        memo: '',
+        isMain: false, //대표 담당자
+      },
+    ],
     checkedManagerIds: [],
     attachedFiles: [
       // {
@@ -122,7 +135,20 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
         homepageUrl: '',
         homepageLoginId: '',
         homepagePassword: '',
-        headManagers: [],
+        headManagers: [
+          {
+            id: Date.now(),
+            name: '',
+            position: '',
+            department: '',
+            managerAreaNumber: '지역번호',
+            landlineNumber: '',
+            phoneNumber: '',
+            email: '',
+            memo: '',
+            isMain: false, //대표 담당자
+          },
+        ],
         checkedManagerIds: [],
         attachedFiles: [
           // {
@@ -311,10 +337,13 @@ export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) =>
       ceoName: form.ceoName,
       address: form.address,
       detailAddress: form.detailAddress,
-      landlineNumber: `${form.areaNumber}-${form.landlineNumber}`,
-      phoneNumber: form.phoneNumber,
+      landlineNumber:
+        `${form.areaNumber}-${form.landlineNumber}` === '지역번호-'
+          ? null
+          : `${form.areaNumber}-${form.landlineNumber}`,
+      phoneNumber: form.phoneNumber === '' ? null : form.phoneNumber,
       email: form.email,
-      paymentMethod: form.paymentMethod,
+      paymentMethod: form.paymentMethod === '' ? null : form.paymentMethod,
       paymentPeriod: form.paymentPeriod,
       memo: form.memo,
       isActive: form.isActive === '1' ? true : false,

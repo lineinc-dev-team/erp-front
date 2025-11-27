@@ -194,21 +194,22 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
       if (client.isActive === false) {
         setField('isActive', '미사용')
       }
-
       if (client.landlineNumber) {
         const parts = client.landlineNumber.split('-')
+
         if (parts.length >= 2) {
           const area = parts[0] // 지역번호
           const number = parts.slice(1).join('-') // 나머지 번호
           setField('areaNumber', area)
           setField('landlineNumber', number)
         } else {
-          // fallback (예외 처리)
+          // fallback (형식이 이상할 때)
           setField('landlineNumber', client.landlineNumber)
         }
       } else {
+        // null, '', undefined 처리
+        setField('areaNumber', '지역번호')
         setField('landlineNumber', '')
-        setField('areaNumber', '')
       }
 
       // 각 필드에 set
@@ -362,20 +363,20 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
     if (!form.address?.trim()) return '본사 주소를 입력하세요.'
     // if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
     if (!form.ceoName?.trim()) return '대표자명을 입력하세요.'
-    if (!form.landlineNumber?.trim()) return '전화번호를 입력하세요.'
-    if (!form.email?.trim()) return '이메일을 입력하세요.'
+    // if (!form.landlineNumber?.trim()) return '전화번호를 입력하세요.'
+    // if (!form.email?.trim()) return '이메일을 입력하세요.'
 
     // 필요시 추가 검증
-    if (!/^\d{3,4}-\d{4}$/.test(form.landlineNumber)) {
-      return '전화번호를 02-123-4567 형식으로 입력하세요.'
-    }
+    // if (!/^\d{3,4}-\d{4}$/.test(form.landlineNumber)) {
+    //   return '전화번호를 02-123-4567 형식으로 입력하세요.'
+    // }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      return '유효한 이메일을 입력하세요.'
-    }
+    // if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    //   return '유효한 이메일을 입력하세요.'
+    // }
 
-    if (!form.paymentMethod) return '결제 방식을 선택하세요.'
-    if (!form.paymentPeriod?.trim()) return '결제 정보를 입력하세요.'
+    // if (!form.paymentMethod) return '결제 방식을 선택하세요.'
+    // if (!form.paymentPeriod?.trim()) return '결제 정보를 입력하세요.'
     if (form.isActive === '0') return '사용 여부를 선택하세요.'
     if (form.memo.length > 500) {
       return '비고는 500자 이하로 입력해주세요.'
@@ -527,7 +528,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              전화번호 <span className="text-red-500 ml-1">*</span>
+              전화번호
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
@@ -567,7 +568,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              이메일(대표) <span className="text-red-500 ml-1">*</span>
+              이메일(대표)
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -580,7 +581,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
           </div>
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              결제정보 <span className="text-red-500 ml-1">*</span>
+              결제정보
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect

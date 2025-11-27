@@ -6,6 +6,7 @@ type CommonButtonProps = {
   fullWidth?: boolean
   type?: 'button' | 'submit' | 'reset'
   className?: string
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
 }
 
 export default function CommonButton({

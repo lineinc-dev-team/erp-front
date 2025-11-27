@@ -15,6 +15,7 @@ type CommonInputProps<T> = {
   disabled?: boolean
 
   onFocus?: () => void
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
 }
 
 export default function CommonInput<T>({
@@ -29,6 +30,7 @@ export default function CommonInput<T>({
   className,
   disabled,
   onFocus, // <-- 추가
+  onKeyDown,
 }: CommonInputProps<T>) {
   return (
     <TextField
@@ -45,6 +47,7 @@ export default function CommonInput<T>({
         }
       }}
       onFocus={onFocus} // 🔥 여기에 연결
+      onKeyDown={onKeyDown}
       type={type}
       className={className}
       fullWidth={fullWidth}

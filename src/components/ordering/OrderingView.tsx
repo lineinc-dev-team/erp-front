@@ -49,6 +49,8 @@ export default function OrderingView() {
 
     return {
       ...user,
+      businessNumber: user.businessNumber || '-',
+      email: user.email || '-',
       contactName: mainContact?.name || '-',
       headquarter: user.user?.username || '-',
       isActive: user.isActive === true ? 'Y' : 'N',
@@ -63,13 +65,94 @@ export default function OrderingView() {
 
   // 그리도 라우팅 로직!
   const enhancedColumns = clientCompanyList.map((col): GridColDef => {
+    if (col.field === 'businessNumber') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 120,
+        maxWidth: 120,
+      }
+    }
+
+    if (col.field === 'ceoName') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+        maxWidth: 70,
+      }
+    }
+
+    if (col.field === 'email') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 120,
+        maxWidth: 120,
+      }
+    }
+
+    if (col.field === 'landlineNumber') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 120,
+        maxWidth: 120,
+      }
+    }
+
+    if (col.field === 'contactName') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 80,
+        maxWidth: 80,
+      }
+    }
+
+    if (col.field === 'headquarter') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 100,
+        maxWidth: 100,
+      }
+    }
+
+    if (col.field === 'isActive') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+        maxWidth: 70,
+      }
+    }
+
+    if (col.field === 'hasFile') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 100,
+        maxWidth: 100,
+      }
+    }
+
     if (col.field === 'address') {
       return {
         ...col,
         sortable: false,
         headerAlign: 'center',
         align: 'center',
-        flex: 2,
+        minWidth: 440,
+        maxWidth: 440,
         renderCell: (params: GridRenderCellParams) => {
           const item = params.row as ClientCompany
 
@@ -93,7 +176,10 @@ export default function OrderingView() {
         sortable: false,
         headerAlign: 'center',
         align: 'center',
-        flex: 2,
+        // 헤더에 딱 맞게 화면에서 보이게
+        minWidth: 100,
+        maxWidth: 100,
+        flex: 0.4,
         renderCell: (params: GridRenderCellParams) => {
           const item = params.row as ClientCompany
 
@@ -127,7 +213,9 @@ export default function OrderingView() {
         ...col,
         headerAlign: 'center',
         align: 'center',
-        flex: 2,
+        // 헤더에 딱 맞게 화면에서 보이게
+        minWidth: 60,
+        maxWidth: 60,
         renderCell: (params: GridRenderCellParams) => {
           const text = params.value as string
           if (!text) return <span style={{ fontSize: 12 }}>-</span>
@@ -149,7 +237,8 @@ export default function OrderingView() {
         sortable: false,
         headerAlign: 'center',
         align: 'center',
-        flex: 2,
+        minWidth: 150,
+        maxWidth: 150,
         renderCell: (params: GridRenderCellParams) => {
           const item = params.row as ClientCompany
 
@@ -184,7 +273,8 @@ export default function OrderingView() {
         sortable: false,
         headerAlign: 'center',
         align: 'center',
-        flex: 2,
+        minWidth: 100,
+        maxWidth: 100,
         renderCell: (params: GridRenderCellParams) => {
           const item = params.row as ClientCompany
 
@@ -205,8 +295,9 @@ export default function OrderingView() {
         ...col,
         headerAlign: 'center',
         align: 'center',
-        flex: 1,
-
+        flex: 0.4,
+        minWidth: 100,
+        maxWidth: 100,
         renderCell: (params: GridRenderCellParams) => {
           const clientId = params.row.id
 
@@ -237,7 +328,8 @@ export default function OrderingView() {
         ...col,
         headerAlign: 'center',
         align: 'center',
-        flex: 0.5,
+        minWidth: 40,
+        maxWidth: 40,
         renderCell: (params: GridRenderCellParams) => {
           const sortedRowIds = params.api.getSortedRowIds?.() ?? []
           const indexInCurrentPage = sortedRowIds.indexOf(params.id)
@@ -305,6 +397,12 @@ export default function OrderingView() {
     '발주처 관리',
     enabled,
   )
+  const handleEnterKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      search.setField('currentPage', 1) // 페이지 초기화
+      search.handleSearch()
+    }
+  }
 
   return (
     <>
@@ -318,6 +416,7 @@ export default function OrderingView() {
               <CommonInput
                 value={search.name}
                 onChange={(value) => search.setField('name', value)}
+                onKeyDown={handleEnterKey}
                 className=" flex-1"
               />
             </div>
@@ -331,6 +430,7 @@ export default function OrderingView() {
               <CommonInput
                 value={search.businessNumber}
                 onChange={(value) => search.setField('businessNumber', value)}
+                onKeyDown={handleEnterKey}
                 className="flex-1"
               />
             </div>
@@ -344,6 +444,7 @@ export default function OrderingView() {
               <CommonInput
                 value={search.ceoName}
                 onChange={(value) => search.setField('ceoName', value)}
+                onKeyDown={handleEnterKey}
                 className="flex-1"
               />
             </div>
@@ -360,6 +461,7 @@ export default function OrderingView() {
                   const resultAreaNumber = value
                   search.setField('landlineNumber', resultAreaNumber)
                 }}
+                onKeyDown={handleEnterKey}
                 className="flex-1"
               />
             </div>
@@ -372,6 +474,7 @@ export default function OrderingView() {
               <CommonInput
                 value={search.contactName}
                 onChange={(value) => search.setField('contactName', value)}
+                onKeyDown={handleEnterKey}
                 className="flex-1"
               />
             </div>
@@ -385,6 +488,7 @@ export default function OrderingView() {
               <CommonInput
                 value={search.email}
                 onChange={(value) => search.setField('email', value)}
+                onKeyDown={handleEnterKey}
                 className=" flex-1"
               />
             </div>
@@ -435,6 +539,7 @@ export default function OrderingView() {
               <CommonInput
                 value={search.userName}
                 onChange={(value) => search.setField('userName', value)}
+                onKeyDown={handleEnterKey}
                 className=" flex-1"
               />
             </div>
@@ -462,20 +567,19 @@ export default function OrderingView() {
             className="mt-3 px-20"
           />
 
-          {/* <CommonButton
-            label="검색"
-            variant="secondary"
-            onClick={search.handleSearch}
-            className="mt-3 px-20"
-          /> */}
-
           <CommonButton
             label="검색"
             variant="secondary"
             onClick={() => {
-              search.setField('currentPage', 1) // 페이지 초기화
+              search.setField('currentPage', 1)
               search.handleSearch()
             }}
+            // onKeyDown={(e) => {
+            //   if (e.key === 'Enter') {
+            //     search.setField('currentPage', 1)
+            //     search.handleSearch()
+            //   }
+            // }}
             className="mt-3 px-20"
           />
         </div>

@@ -189,7 +189,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     outsourcingCompanyName: '자재업체명',
     inputTypeName: '투입 구분',
     inputTypeDescription: '투입 구분 설명',
-    deliveryDateFormat: '납품일자',
+    deliveryDateFormat: '요청일자',
     memo: '비고',
     name: '품명',
     vat: '부가세',
@@ -509,7 +509,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     if (form.inputType === 'DIRECT_INPUT' && !form.inputTypeDescription?.trim()) {
       return '투입구분 설명을 입력해주세요.'
     }
-    if (!form.deliveryDate) return '납품일자를 선택해주세요.'
+    if (!form.deliveryDate) return '요청일자를 선택해주세요.'
     if (!form.outsourcingCompanyId) return '자재업체를 선택해주세요.'
 
     if (form.memo.length > 500) {
@@ -699,7 +699,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              납품일자 <span className="text-red-500 ml-1">*</span>
+              요청일자 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonDatePicker
