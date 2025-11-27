@@ -119,7 +119,8 @@ export default function SitesView() {
         sortable: false,
         headerAlign: 'center',
         align: 'center',
-        flex: 2,
+        minWidth: 120,
+        maxWidth: 120,
         renderCell: (params: GridRenderCellParams) => {
           const item = params.row as SiteListProps
 
@@ -165,12 +166,14 @@ export default function SitesView() {
         },
       }
     }
+
     if (col.field === 'no') {
       return {
         ...col,
         headerAlign: 'center',
         align: 'center',
-        flex: 0.5,
+        minWidth: 40,
+        maxWidth: 40,
         renderCell: (params: GridRenderCellParams) => {
           const sortedRowIds = params.api.getSortedRowIds?.() ?? []
           const indexInCurrentPage = sortedRowIds.indexOf(params.id)
@@ -185,7 +188,8 @@ export default function SitesView() {
         ...col,
         headerAlign: 'center',
         align: 'center',
-        flex: 2,
+        minWidth: 80,
+        maxWidth: 80,
         renderCell: (params: GridRenderCellParams) => {
           const text = params.value as string
           if (!text) return <span style={{ fontSize: 12 }}>-</span>
@@ -198,6 +202,79 @@ export default function SitesView() {
             </Tooltip>
           )
         },
+      }
+    }
+
+    if (col.field === 'hasFile') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+        maxWidth: 70,
+      }
+    }
+    if (col.field === 'contractAmount') {
+      return {
+        ...col,
+        headerAlign: 'right', // 헤더 텍스트 오른쪽 정렬
+        align: 'right', // 셀 내용 오른쪽 정렬
+        minWidth: 150,
+        maxWidth: 150,
+        renderCell: (params: GridRenderCellParams) => {
+          const value = params.value as number
+          return <span>{value?.toLocaleString() || '-'}</span> // 1,000 단위 콤마 표시
+        },
+      }
+    }
+
+    if (col.field === 'createdAt') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+        maxWidth: 70,
+      }
+    }
+
+    if (col.field === 'createdBy') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+        maxWidth: 70,
+      }
+    }
+
+    if (col.field === 'processStatuses') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+        maxWidth: 70,
+      }
+    }
+
+    if (col.field === 'managerName') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+        maxWidth: 70,
+      }
+    }
+
+    if (col.field === 'clientCompanyName') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 100,
+        maxWidth: 100,
       }
     }
 
@@ -307,6 +384,13 @@ export default function SitesView() {
     enabled,
   )
 
+  const handleEnterKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      search.setField('currentPage', 1) // 페이지 초기화
+      search.handleSearch()
+    }
+  }
+
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
@@ -315,7 +399,10 @@ export default function SitesView() {
             <label className="w-[144px] text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명
             </label>
-            <div className="border border-gray-400 w-full flex items-center">
+            <div
+              className="border border-gray-400 w-full flex items-center"
+              onKeyDown={handleEnterKey}
+            >
               <InfiniteScrollSelect
                 placeholder="현장명을 입력하세요"
                 keyword={search.name}
@@ -413,7 +500,10 @@ export default function SitesView() {
             <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300 font-bold text-center">
               지역(시/군/구)
             </label>
-            <div className="border border-gray-400 gap-6 px-2 w-full flex justify-center items-center">
+            <div
+              className="border border-gray-400 gap-6 px-2 w-full flex justify-center items-center"
+              onKeyDown={handleEnterKey}
+            >
               {/* 시/도 선택 */}
               <CommonSelect
                 className="text-2xl w-full"
@@ -512,7 +602,10 @@ export default function SitesView() {
             <label className="w-[143px] text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               발주처
             </label>
-            <div className="border border-gray-400  w-full flex items-center">
+            <div
+              className="border border-gray-400  w-full flex items-center"
+              onKeyDown={handleEnterKey}
+            >
               <InfiniteScrollSelect
                 placeholder="발주처명을 입력하세요"
                 keyword={search.clientCompanyName}
@@ -543,6 +636,7 @@ export default function SitesView() {
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonInput
                 value={search.managerName}
+                onKeyDown={handleEnterKey}
                 onChange={(value) => search.setField('managerName', value)}
                 className=" flex-1"
               />
@@ -630,6 +724,7 @@ export default function SitesView() {
             <div className="border border-gray-400 px-2 w-full flex gap-3 items-center ">
               <CommonInput
                 value={search.createdBy}
+                onKeyDown={handleEnterKey}
                 onChange={(value) => search.setField('createdBy', value)}
                 className=" flex-1"
               />
@@ -764,12 +859,16 @@ export default function SitesView() {
           sx={{
             '& .MuiDataGrid-cell': {
               display: 'flex',
-              justifyContent: 'center', // 가로 가운데 정렬
-              alignItems: 'center', // 세로 가운데 정렬
-              whiteSpace: 'normal', // 줄바꿈 허용
-              lineHeight: '2.8rem', // 줄 간격
-              paddingTop: '12px', // 위 여백
-              paddingBottom: '12px', // 아래 여백
+              alignItems: 'center',
+              whiteSpace: 'normal',
+              lineHeight: '2.8rem',
+              paddingTop: '12px',
+              paddingBottom: '12px',
+            },
+            // contractAmount 컬럼만 오른쪽 정렬
+            '& .MuiDataGrid-cell[data-field="contractAmount"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
             },
           }}
           onRowSelectionModelChange={(newSelection) => {

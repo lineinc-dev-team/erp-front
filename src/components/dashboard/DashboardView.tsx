@@ -114,7 +114,7 @@ export default function ChartPage() {
     )
   }
 
-  const maxValue = Math.max(...chartData.map((d: any) => d.total)) // 스택 전체 합 기준
+  const maxValue = Math.max(...(chartData?.map((d: any) => d.total) || [0]))
   const step = Math.ceil(maxValue / 8) // 원하는 줄 개수 기준 자동 조정
   const ticks = Array.from({ length: 9 }, (_, i) => step * i) // 0 ~ maxValue 부드럽게 분할
 
