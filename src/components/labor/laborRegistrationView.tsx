@@ -478,6 +478,13 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
     if (!form.residentNumber?.trim()) return '주민등록번호를 입력하세요.'
 
+    // 숫자만 있는지 확인
+    const residentNumberOnlyDigits = form.residentNumber.replace(/[^0-9]/g, '')
+
+    if (residentNumberOnlyDigits.length !== 13) {
+      return '주민등록번호는 13자리로 입력해야 합니다.'
+    }
+
     if (form.residentNumberIsCheck && !isDuplicateChecked) {
       return '주민등록번호 중복확인을 해주세요.'
     }
