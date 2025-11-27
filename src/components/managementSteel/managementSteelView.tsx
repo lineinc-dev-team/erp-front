@@ -558,6 +558,54 @@ export default function ManagementSteel() {
               paddingTop: '12px', // 위 여백
               paddingBottom: '12px', // 아래 여백
             },
+            '& .MuiDataGrid-cell[data-field="onSiteRemainingWeight"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+            '& .MuiDataGrid-cell[data-field="totalInvestmentAmount"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+
+            '& .MuiDataGrid-cell[data-field="scrap"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+
+            '& .MuiDataGrid-cell[data-field="onSiteStock"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+
+            '& .MuiDataGrid-cell[data-field="outgoingRental"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+
+            '& .MuiDataGrid-cell[data-field="incomingOwnMaterial"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+
+            '& .MuiDataGrid-cell[data-field="incomingPurchase"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+
+            '& .MuiDataGrid-cell[data-field="incomingRental"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+
+            '& .MuiDataGrid-cell[data-field="outgoingOwnMaterial"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+
+            '& .MuiDataGrid-cell[data-field="outgoingPurchase"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
           }}
           onRowSelectionModelChange={(newSelection) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
