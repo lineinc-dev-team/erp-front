@@ -72,6 +72,8 @@ export default function OutsourcingCompanyView() {
         headerAlign: 'center',
         align: 'center',
         flex: 2,
+        minWidth: 80,
+        maxWidth: 80,
         renderCell: (params: GridRenderCellParams) => {
           const text = params.value as string
           if (!text) return <span style={{ fontSize: 12 }}>-</span>
@@ -118,6 +120,8 @@ export default function OutsourcingCompanyView() {
         headerAlign: 'center',
         align: 'center',
         flex: 2,
+        minWidth: 80,
+        maxWidth: 80,
         renderCell: (params: GridRenderCellParams) => {
           const item = params.row as OutsourcingCompanyList
 
@@ -149,6 +153,8 @@ export default function OutsourcingCompanyView() {
       return {
         ...col,
         headerName: '계약 이력',
+        minWidth: 80,
+        maxWidth: 80,
         renderCell: (params) => (
           <button
             className="px-2 py-1 bg-blue-500 cursor-pointer text-white rounded hover:bg-blue-600"
@@ -170,6 +176,8 @@ export default function OutsourcingCompanyView() {
         headerAlign: 'center',
         align: 'center',
         flex: 2,
+        minWidth: 120,
+        maxWidth: 120,
         renderCell: (params: GridRenderCellParams) => {
           const item = params.row as OutsourcingCompanyList
 
@@ -217,12 +225,94 @@ export default function OutsourcingCompanyView() {
         },
       }
     }
+
+    if (col.field === 'isActive') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+        maxWidth: 70,
+      }
+    }
+
+    if (col.field === 'hasFile') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 110,
+        maxWidth: 110,
+      }
+    }
+
+    if (col.field === 'contactName') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+        maxWidth: 70,
+      }
+    }
+
+    if (col.field === 'email') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 140,
+        maxWidth: 140,
+      }
+    }
+
+    if (col.field === 'businessNumber') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 120,
+        maxWidth: 120,
+      }
+    }
+
+    if (col.field === 'type') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+        maxWidth: 70,
+      }
+    }
+
+    if (col.field === 'ceoName') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 90,
+        maxWidth: 90,
+      }
+    }
+
+    if (col.field === 'landlineNumber') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 110,
+        maxWidth: 110,
+      }
+    }
+
     if (col.field === 'no') {
       return {
         ...col,
         headerAlign: 'center',
         align: 'center',
-        flex: 0.5,
+        minWidth: 40,
+        maxWidth: 40,
         renderCell: (params: GridRenderCellParams) => {
           const sortedRowIds = params.api.getSortedRowIds?.() ?? []
           const indexInCurrentPage = sortedRowIds.indexOf(params.id)
@@ -293,6 +383,12 @@ export default function OutsourcingCompanyView() {
     '외주업체 관리',
     enabled,
   )
+  const handleEnterKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      search.setField('currentPage', 1) // 페이지 초기화
+      search.handleSearch()
+    }
+  }
 
   return (
     <>
@@ -302,7 +398,7 @@ export default function OutsourcingCompanyView() {
             <label className="w-36 text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               업체명
             </label>
-            <div className="border border-gray-400 px-2 w-full">
+            <div className="border border-gray-400 px-2 w-full" onKeyDown={handleEnterKey}>
               <CommonInput
                 value={search.name}
                 onChange={(value) => search.setField('name', value)}
@@ -315,7 +411,7 @@ export default function OutsourcingCompanyView() {
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               사업자등록번호
             </label>
-            <div className="border border-gray-400 px-2 w-full">
+            <div className="border border-gray-400 px-2 w-full" onKeyDown={handleEnterKey}>
               <CommonInput
                 value={search.businessNumber}
                 onChange={(value) => search.setField('businessNumber', value)}
@@ -328,7 +424,10 @@ export default function OutsourcingCompanyView() {
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               대표자명
             </label>
-            <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
+            <div
+              className="border border-gray-400 px-2 w-full flex justify-center items-center"
+              onKeyDown={handleEnterKey}
+            >
               <CommonInput
                 value={search.ceoName}
                 onChange={(value) => search.setField('ceoName', value)}
@@ -344,6 +443,7 @@ export default function OutsourcingCompanyView() {
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
               <CommonInput
                 placeholder="'-' 포함 숫자만 입력"
+                onKeyDown={handleEnterKey}
                 value={search.landlineNumber}
                 onChange={(value) => {
                   // const resultAreaNumber = formatAreaNumber(value)
