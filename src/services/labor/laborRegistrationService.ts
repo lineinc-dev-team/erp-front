@@ -2,8 +2,8 @@ import { API } from '@/api/config/env'
 import { useLaborFormStore } from '@/stores/laborStore'
 
 //  노무(인력) 공종 구분 목록 조회
-export async function WorkTypeService() {
-  const resData = await fetch(`${API.LABOR}/work-types`, {
+export async function WorkTypeService({ keyword }: { keyword: string }) {
+  const resData = await fetch(`${API.LABOR}/work-types?keyword=${keyword}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -229,4 +229,28 @@ export async function CheckReSidentNumberService(residentNumber: string) {
   }
 
   return await res.json()
+}
+
+// 은행명 키워드 검색
+
+export async function BankNameService({ keyword }: { keyword: string }) {
+  const resData = await fetch(`${API.COMMON}/banks?keyword=${keyword}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
 }

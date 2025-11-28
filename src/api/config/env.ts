@@ -34,6 +34,7 @@ export const API = {
   STEEL: `${apiBaseUrl}/steel-managements`,
   STEELv2: `${apiBaseUrlv2}/steel-managements`,
   MATERIAL: `${apiBaseUrl}/material-managements`,
+  COMMON: `${apiBaseUrl}/common`,
   DAILYREPORT: `${apiBaseUrl}/daily-reports`,
   LABOR: `${apiBaseUrl}/labors`,
   LABORPAY: `${apiBaseUrl}/labor-payrolls`,

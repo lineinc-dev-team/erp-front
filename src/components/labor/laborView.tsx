@@ -138,15 +138,15 @@ export default function LaborView() {
       }
     }
 
-    if (col.field === 'tenureMonths') {
-      return {
-        ...col,
-        headerAlign: 'center',
-        align: 'center',
-        minWidth: 80,
-        maxWidth: 80,
-      }
-    }
+    // if (col.field === 'tenureMonths') {
+    //   return {
+    //     ...col,
+    //     headerAlign: 'center',
+    //     align: 'center',
+    //     minWidth: 80,
+    //     maxWidth: 80,
+    //   }
+    // }
 
     if (col.field === 'dailyWage') {
       return {
@@ -238,22 +238,22 @@ export default function LaborView() {
       }
     }
 
-    if (col.field === 'tenureMonths') {
-      return {
-        ...col,
-        headerAlign: 'center',
-        align: 'center',
-        flex: 1,
-        renderCell: (params: GridRenderCellParams) => {
-          const value = params.value as number | string
+    // if (col.field === 'tenureMonths') {
+    //   return {
+    //     ...col,
+    //     headerAlign: 'center',
+    //     align: 'center',
+    //     flex: 1,
+    //     renderCell: (params: GridRenderCellParams) => {
+    //       const value = params.value as number | string
 
-          // 문자열이면 '일' 제거 후 숫자로 변환
-          const numericValue = typeof value === 'string' ? Number(value.replace('개월', '')) : value
+    //       // 문자열이면 '일' 제거 후 숫자로 변환
+    //       const numericValue = typeof value === 'string' ? Number(value.replace('개월', '')) : value
 
-          return <div>{numericValue ?? '-'}</div>
-        },
-      }
-    }
+    //       return <div>{numericValue ?? '-'}</div>
+    //     },
+    //   }
+    // }
     if (col.field === 'type') {
       return {
         ...col,

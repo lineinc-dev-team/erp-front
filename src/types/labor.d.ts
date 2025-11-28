@@ -7,6 +7,7 @@ export interface LaborDataList {
   typeDescription: string
   name: string
   workType: string
+
   workTypeDescription: string
   isHeadOffice: boolean | null
   mainWork: string

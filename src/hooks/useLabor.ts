@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useManagementMaterialFormStore } from '@/stores/materialManagementStore'
 
 import {
+  BankNameService,
   CreateLabor,
   LabelTypeService,
   LaborInfoHistoryService,
@@ -29,13 +30,14 @@ export function useLaborInfo() {
   const router = useRouter()
   const queryClient = useQueryClient()
 
-  //   공종 구분조회
-  const { data: workTypeInfoId } = useQuery({
-    queryKey: ['LaborWorkTypeInfo'],
-    queryFn: WorkTypeService,
-  })
-
-  const WorkTypeMethodOptions = [...(workTypeInfoId?.data ?? [])]
+  const useWorkTypeInfiniteScroll = (keyword: string) => {
+    return useInfiniteQuery({
+      queryKey: ['LaborWorkTypeInfo', keyword],
+      queryFn: () => WorkTypeService({ keyword }),
+      initialPageParam: 0,
+      getNextPageParam: () => undefined,
+    })
+  }
 
   //   노무 구분 조회
   const { data: laborTypeInfoId } = useQuery({
@@ -288,10 +290,22 @@ export function useLaborInfo() {
     return [...defaultOptions, ...options]
   }, [etcDescriptionInfo])
 
+  // 은행명 키워드 검색
+
+  const useBankNameInfiniteScroll = (keyword: string) => {
+    return useInfiniteQuery({
+      queryKey: ['bankNameInfo', keyword],
+      queryFn: () => BankNameService({ keyword }),
+      initialPageParam: 0,
+      getNextPageParam: () => undefined,
+    })
+  }
+
   return {
     createLaborInfo,
-    WorkTypeMethodOptions,
     LaborTypeMethodOptions,
+
+    useWorkTypeInfiniteScroll,
 
     LaborDeleteMutation,
 
@@ -312,5 +326,7 @@ export function useLaborInfo() {
     etcDescriptionhasNextPage,
     etcDescriptionFetching,
     etcDescriptionLoading,
+
+    useBankNameInfiniteScroll,
   }
 }

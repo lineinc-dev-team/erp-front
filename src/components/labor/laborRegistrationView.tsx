@@ -16,7 +16,6 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { bankOptions } from '@/config/erp.confing'
 import { formatPhoneNumber } from '@/utils/formatPhoneNumber'
 import CommonFileInput from '@/components/common/FileInput'
 import { useParams } from 'next/navigation'
@@ -41,13 +40,11 @@ import {
 } from '@/services/labor/laborRegistrationService'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { AttachedFile, LaborFormState } from '@/types/labor'
-import { idTypeValueToName } from '@/stores/outsourcingCompanyStore'
 import { CommonResidentNumberInput } from '@/utils/commonResidentNumberInput'
 import { HistoryItem } from '@/types/ordering'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 import { useUserMg } from '@/hooks/useUserMg'
-import CommonKeywordInput from '../common/CommonKeywordInput'
 
 export default function LaborRegistrationView({ isEditMode = false }) {
   const {
@@ -69,11 +66,13 @@ export default function LaborRegistrationView({ isEditMode = false }) {
   const {
     createLaborInfo,
     LaborModifyMutation,
-    WorkTypeMethodOptions,
     LaborTypeMethodOptions,
     laborCancel,
     useOutsourcingNameListInfiniteScroll,
     useOutsourcingContractNameListInfiniteScroll,
+    useWorkTypeInfiniteScroll,
+
+    useBankNameInfiniteScroll,
 
     useLaborHistoryDataQuery,
   } = useLaborInfo()
@@ -122,9 +121,6 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     address: '주소',
     gradeName: '직급',
   }
-
-  const [searchTerm, setSearchTerm] = useState('') // 인풋 텍스트
-  const [filteredList, setFilteredList] = useState<any[]>([])
 
   // useEffect(() => {
   //   if (!searchTerm.trim()) return setFilteredList([])
@@ -221,13 +217,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       setField('mainWork', client.mainWork)
       setField('dailyWage', client.dailyWage)
 
-      const mappedItemType = idTypeValueToName[client.bankName ?? '']
-
-      if (mappedItemType) {
-        setField('bankName', mappedItemType)
-      } else {
-        setField('bankName', '0') // 혹은 기본값 처리
-      }
+      setField('bankName', client.bankName) // 혹은 기본값 처리
       setField('accountNumber', client.accountNumber)
 
       if (client.typeCode === 'DIRECT_CONTRACT') {
@@ -298,6 +288,54 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
   )
 
+  // 은행명 키워드 검색
+
+  const [isBankNameFocused, setIsBankNameFocused] = useState(false)
+
+  const handleSelectBankName = (selectedUser: any) => {
+    console.log('뱅크 이름', selectedUser)
+    setField('bankName', selectedUser)
+  }
+
+  const debouncedBankNameKeyword = useDebouncedValue(form.bankName, 300)
+
+  const {
+    data: BankNameData,
+    fetchNextPage: BankeNamFetchNextPage,
+    hasNextPage: BankNameHasNextPage,
+    isFetching: BankNameIsFetching,
+    isLoading: BankNameIsLoading,
+  } = useBankNameInfiniteScroll(debouncedBankNameKeyword)
+
+  const BankNameRawList = BankNameData?.pages.flatMap((page) => page.data) ?? []
+  const bankNameList = Array.from(new Map(BankNameRawList.map((user) => [user, user])).values())
+
+  // 공종명 키워드 검색
+
+  const [isWorkTypeNameFocused, setIsWorkTypeNameFocused] = useState(false)
+
+  const handleSelectWorkTypeName = (selectedUser: any) => {
+    console.log('공종명 24', selectedUser)
+    setField('workType', selectedUser.name)
+    setField('workTypeCode', selectedUser.code)
+  }
+
+  const debouncedWorkTypeNameKeyword = useDebouncedValue(form.workType, 300)
+
+  const {
+    data: WorkTypeNameData,
+    fetchNextPage: WorkTypeeNamFetchNextPage,
+    hasNextPage: WorkTypeNameHasNextPage,
+    isFetching: WorkTypeNameIsFetching,
+    isLoading: WorkTypeNameIsLoading,
+  } = useWorkTypeInfiniteScroll(debouncedWorkTypeNameKeyword)
+  console.log('WorkTypeNameDataWorkTypeNameData', WorkTypeNameData)
+
+  const WorkTypeNameRawList = WorkTypeNameData?.pages.flatMap((page) => page.data) ?? []
+  const workTypeNameList = Array.from(
+    new Map(WorkTypeNameRawList.map((user) => [user.name, user])).values(),
+  )
+
   // const OutsourcingRawList = OutsourcingNameData?.pages.flatMap((page) => page.data.content) ?? []
 
   // let outsourcingList = Array.from(
@@ -342,8 +380,13 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
   const OutsourcingContractRawList =
     OutsourcingContractNameData?.pages.flatMap((page) => page.data.content) ?? []
+
   const outsourcingContractList = Array.from(
-    new Map(OutsourcingContractRawList.map((user) => [user.contractName, user])).values(),
+    new Map(
+      OutsourcingContractRawList.filter(
+        (user) => user.contractName && user.contractName.trim() !== '',
+      ).map((user) => [user.contractName, user]),
+    ).values(),
   )
 
   const handleSetField = (key: any, value: any) => {
@@ -502,16 +545,21 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       return '비고는 500자 이하로 입력해주세요.'
     }
 
-    if (!form.workType?.trim()) return '공종을 선택하세요.'
-    if (!form.mainWork?.trim()) return '주 작업을 입력하세요.'
-
-    if (!form.dailyWage || form.dailyWage <= 0) {
-      return '기준일당을 입력하세요.'
+    if (form.type !== 'REGULAR_EMPLOYEE') {
+      if (!form.workType?.trim()) return '공종을 선택하세요.'
     }
 
-    if (!form.bankName?.trim()) return '은행을 선택하세요.'
-    if (!form.accountNumber?.trim()) return '계좌번호를 입력하세요.'
-    if (!form.accountHolder?.trim()) return '예금주를 입력하세요.'
+    if (!form.mainWork?.trim()) return '주 작업을 입력하세요.'
+
+    if (form.type !== 'REGULAR_EMPLOYEE') {
+      if (!form.dailyWage || form.dailyWage <= 0) {
+        return '기준일당을 입력하세요.'
+      }
+
+      if (!form.bankName?.trim()) return '은행을 선택하세요.'
+      if (!form.accountNumber?.trim()) return '계좌번호를 입력하세요.'
+      if (!form.accountHolder?.trim()) return '예금주를 입력하세요.'
+    }
 
     // if (!form.hireDate) return '입사일을 선택하세요.'
     // // 퇴사일은 선택 optional → 선택되면 입사일보다 이후인지 확인
@@ -679,6 +727,10 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                   onChange={(value) => {
                     setField('type', value)
                     setField('typeDescription', '')
+                    setField('accountNumber', '')
+                    setField('accountHolder', '')
+                    setField('outsourcingCompanyName', '')
+                    setField('outsourcingCompanyContractName', '')
                   }}
                   options={LaborTypeMethodOptions}
                   disabled={isEditMode}
@@ -934,54 +986,30 @@ export default function LaborRegistrationView({ isEditMode = false }) {
         <div className="grid grid-cols-2 mt-1">
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300  font-bold text-center">
-              공종 <span className="text-red-500 ml-1">*</span>
+              공종
+              {form.type !== 'REGULAR_EMPLOYEE' && <span className="text-red-500 ml-1">*</span>}
             </label>
-            <div className="border border-gray-400 w-full flex flex-col gap-2 p-2 relative">
-              <div className="relative w-full">
-                {form.type === 'OUTSOURCING' ? (
-                  <CommonInput
-                    className="text-2xl"
-                    value={form.workType ?? ''}
-                    onChange={() => {}}
-                    disabled
-                  />
-                ) : (
-                  <>
-                    <CommonKeywordInput
-                      className="text-2xl"
-                      value={form.workType || searchTerm}
-                      onChange={(val) => setSearchTerm(val)}
-                      options={WorkTypeMethodOptions} // 필수
-                      onSelect={(opt) => {
-                        setSearchTerm(opt.name)
-                        setField('workTypeCode', opt.code)
-                        setField('workType', opt.name)
-                      }} // 필수
-                      placeholder="공종명을 입력하세요"
-                    />
-
-                    {filteredList.length > 0 && (
-                      <div className="absolute z-10 bg-white border border-gray-400 mt-1 w-full rounded-md max-h-40 overflow-y-auto shadow-md">
-                        {filteredList.map((item) => (
-                          <div
-                            key={item.code}
-                            className="px-2 py-1 hover:bg-gray-200 cursor-pointer"
-                            onMouseDown={() => {
-                              // onClick 대신 onMouseDown 사용 (blur 전에 선택 가능)
-                              setSearchTerm(item.name)
-                              setField('workTypeCode', item.code)
-                              setField('workType', item.name)
-                              setFilteredList([])
-                            }}
-                          >
-                            {item.name}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </>
+            <div className="border border-gray-400  w-full flex  py-2 px-1">
+              <InfiniteScrollSelect
+                placeholder="공종을 입력해주세요."
+                keyword={form.workType ?? ''}
+                onChangeKeyword={(newKeyword) => setField('workType', newKeyword)}
+                items={workTypeNameList}
+                hasNextPage={WorkTypeNameHasNextPage ?? false}
+                fetchNextPage={WorkTypeeNamFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
                 )}
-              </div>
+                onSelect={handleSelectWorkTypeName}
+                isLoading={WorkTypeNameIsLoading || WorkTypeNameIsFetching}
+                debouncedKeyword={debouncedWorkTypeNameKeyword}
+                shouldShowList={isWorkTypeNameFocused}
+                onFocus={() => setIsWorkTypeNameFocused(true)}
+                onBlur={() => setIsWorkTypeNameFocused(false)}
+                disabled={form.type === 'OUTSOURCING'}
+              />
             </div>
           </div>
 
@@ -1001,7 +1029,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              기준일당 <span className="text-red-500 ml-1">*</span>
+              기준일당
+              {form.type !== 'REGULAR_EMPLOYEE' && <span className="text-red-500 ml-1">*</span>}
             </label>
             <div className="border flex  items-center border-gray-400 px-2 w-full">
               <AmountInput
@@ -1016,39 +1045,73 @@ export default function LaborRegistrationView({ isEditMode = false }) {
             </div>
           </div>
 
-          <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              계좌정보 <span className="text-red-500 ml-1">*</span>
+          <div className="flex ">
+            {/* 라벨 (고정폭) */}
+
+            <label
+              className="
+                      w-[120px]                 /* 기본 */
+                      min-[1400px]:w-[119px]   /* 노트북 (1400px 이상) */
+                      min-[1900px]:w-[124px]   /* 큰 모니터 (1900px 이상) */
+                      text-[14px] flex items-center justify-center text-center
+                      border border-gray-400 bg-gray-300 font-bold
+                    "
+            >
+              계좌정보
+              {form.type !== 'REGULAR_EMPLOYEE' && <span className="text-red-500 ml-1">*</span>}
             </label>
-            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
-              <CommonSelect
-                className="text-2xl"
-                value={form.bankName ?? ''}
-                onChange={(value) => setField('bankName', value)}
-                options={bankOptions}
-              />
 
-              <CommonInput
-                value={form.accountNumber ?? ''}
-                onChange={(value) => setField('accountNumber', value)}
-                className=" flex-1"
-                placeholder="'-' 을 포함한 숫자 입력"
-                disabled={form.type === 'OUTSOURCING_CONTRACT' || form.type === 'OUTSOURCING'}
-              />
+            {/* 내용 영역 */}
+            <div className="flex-1 border border-gray-400">
+              <div className="grid grid-cols-[180px_1fr_0.8fr] gap-3 pr-2 items-center">
+                {/* 은행명 */}
+                <div className="w-full">
+                  <InfiniteScrollSelect
+                    placeholder="은행명을 입력해주세요."
+                    keyword={form.bankName ?? ''}
+                    onChangeKeyword={(newKeyword) => setField('bankName', newKeyword)}
+                    items={bankNameList}
+                    hasNextPage={BankNameHasNextPage ?? false}
+                    fetchNextPage={BankeNamFetchNextPage}
+                    renderItem={(item, isHighlighted) => (
+                      <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+                        {item}
+                      </div>
+                    )}
+                    onSelect={handleSelectBankName}
+                    isLoading={BankNameIsLoading || BankNameIsFetching}
+                    debouncedKeyword={debouncedBankNameKeyword}
+                    shouldShowList={isBankNameFocused}
+                    onFocus={() => setIsBankNameFocused(true)}
+                    onBlur={() => setIsBankNameFocused(false)}
+                  />
+                </div>
 
-              <CommonInput
-                value={form.accountHolder ?? ''}
-                onChange={(value) => setField('accountHolder', value)}
-                className=" flex-1"
-                placeholder="예금주"
-                disabled={
-                  form.type === 'DIRECT_CONTRACT' ||
-                  form.type === 'OUTSOURCING_CONTRACT' ||
-                  form.type === 'OUTSOURCING'
-                }
-              />
+                {/* 계좌번호 */}
+                <CommonInput
+                  value={form.accountNumber ?? ''}
+                  onChange={(value) => setField('accountNumber', value)}
+                  placeholder="'-' 포함 숫자 입력"
+                  disabled={form.type === 'OUTSOURCING_CONTRACT' || form.type === 'OUTSOURCING'}
+                  className="flex-1"
+                />
+
+                {/* 예금주 */}
+                <CommonInput
+                  value={form.accountHolder ?? ''}
+                  onChange={(value) => setField('accountHolder', value)}
+                  placeholder="예금주"
+                  disabled={
+                    form.type === 'DIRECT_CONTRACT' ||
+                    form.type === 'OUTSOURCING_CONTRACT' ||
+                    form.type === 'OUTSOURCING'
+                  }
+                  className="flex-1 "
+                />
+              </div>
             </div>
           </div>
+
           {/* <div className="flex">
             <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
               입사일
@@ -1083,7 +1146,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
           </div> */}
           {isEditMode && (
             <>
-              <div className="flex">
+              {/* <div className="flex">
                 <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
                   근속기간
                 </label>
@@ -1095,7 +1158,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                     disabled
                   />
                 </div>
-              </div>
+              </div> */}
 
               <div className="flex">
                 <label className="w-36 text-[14px]  border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">

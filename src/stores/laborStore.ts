@@ -2,39 +2,6 @@ import { AttachedFile, LaborInfoFormStore, LaborSearchState } from '@/types/labo
 import { getTodayDateString } from '@/utils/formatters'
 import { create } from 'zustand'
 
-export const bankTypeValueToLabel: Record<string, string> = {
-  '0': '선택',
-  '1': '기업은행',
-  '2': '농협은행',
-  '3': '우리은행',
-  '4': '카카오뱅크',
-  '5': '국민은행',
-  '6': '신한은행',
-  '7': 'KB증권',
-  '8': 'BNK투자증권',
-  '9': 'DB금융투자',
-  '10': 'IBK투자증권',
-  '11': 'KTB투자증권',
-  '12': '키움증권',
-  '13': '교보증권',
-  '14': '대신증권',
-  '15': '메리츠증권',
-  '16': '미래에셋증권',
-  '17': '부국증권',
-  '18': '삼성증권',
-  '19': '신한금융투자',
-  '20': '신영증권',
-  '21': '아이엠투자증권',
-  '22': '유안타증권',
-  '23': '유진투자증권',
-  '24': '이베스트투자증권',
-  '25': '케이에프투자증권',
-  '26': '한화증권',
-  '27': '하나금융투자',
-  '28': 'SK증권',
-  '29': '카카오페이증권',
-}
-
 export const useLaborSearchStore = create<{ search: LaborSearchState }>((set) => ({
   search: {
     searchTrigger: 0,
@@ -108,7 +75,7 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
     workTypeDescription: '',
     mainWork: '',
     dailyWage: 0,
-    bankName: '0',
+    bankName: '',
     accountNumber: '',
     accountHolder: '',
     hireDate: null,
@@ -169,7 +136,7 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
         workTypeDescription: '',
         mainWork: '',
         dailyWage: 0,
-        bankName: '0',
+        bankName: '',
         accountNumber: '',
         accountHolder: '',
         hireDate: null,
@@ -322,7 +289,7 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
     return {
       ...form,
 
-      bankName: bankTypeValueToLabel[form.bankName] || '',
+      bankName: form.bankName,
       hireDate: hireDateStr !== form.initialHireDateAt ? hireDateStr : form.initialHireDateAt,
       resignationDate:
         resignationDateStr !== form.initialResignationDateAt
