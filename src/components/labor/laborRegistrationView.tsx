@@ -549,9 +549,11 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       if (!form.workType?.trim()) return '공종을 선택하세요.'
     }
 
-    if (!form.mainWork?.trim()) return '주 작업을 입력하세요.'
-
     if (form.type !== 'REGULAR_EMPLOYEE') {
+      if (!form.mainWork?.trim()) return '주 작업을 입력하세요.'
+    }
+
+    if (form.type !== 'REGULAR_EMPLOYEE' && form.type !== 'OUTSOURCING_CONTRACT') {
       if (!form.dailyWage || form.dailyWage <= 0) {
         return '기준일당을 입력하세요.'
       }
@@ -1015,7 +1017,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              주 작업 <span className="text-red-500 ml-1">*</span>
+              주 작업
+              {form.type !== 'REGULAR_EMPLOYEE' && <span className="text-red-500 ml-1">*</span>}
             </label>
             <div className="border border-gray-400 flex items-center px-2 w-full">
               <CommonInput
@@ -1030,7 +1033,9 @@ export default function LaborRegistrationView({ isEditMode = false }) {
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               기준일당
-              {form.type !== 'REGULAR_EMPLOYEE' && <span className="text-red-500 ml-1">*</span>}
+              {form.type !== 'REGULAR_EMPLOYEE' && form.type !== 'OUTSOURCING_CONTRACT' && (
+                <span className="text-red-500 ml-1">*</span>
+              )}
             </label>
             <div className="border flex  items-center border-gray-400 px-2 w-full">
               <AmountInput
@@ -1058,7 +1063,9 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                     "
             >
               계좌정보
-              {form.type !== 'REGULAR_EMPLOYEE' && <span className="text-red-500 ml-1">*</span>}
+              {form.type !== 'REGULAR_EMPLOYEE' && form.type !== 'OUTSOURCING_CONTRACT' && (
+                <span className="text-red-500 ml-1">*</span>
+              )}
             </label>
 
             {/* 내용 영역 */}
