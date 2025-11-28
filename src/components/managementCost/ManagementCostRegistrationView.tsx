@@ -63,6 +63,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     reset,
     updateMemo,
     addItem,
+    setForm,
     getPersonTotal,
     getAmountTotal,
     getPriceTotal,
@@ -359,10 +360,6 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
     mealFeelOutPersonData.length > 0 &&
     checkedMealFeelOutPersonDataIds.length === mealFeelOutPersonData.length
 
-  const attachedFiles = form.attachedFiles
-  const fileCheckIds = form.checkedAttachedFileIds
-  const isFilesAllChecked = attachedFiles.length > 0 && fileCheckIds.length === attachedFiles.length
-
   // 간식비 넣을 시 업체명  로직
 
   const [isOutsourcingFocusedBySnack, setIsOutsourcingFocusedBySnack] = useState(false)
@@ -423,6 +420,33 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
       ).map((user) => [user.contractName, user]),
     ).values(),
   )
+
+  const attachedFiles = form.attachedFiles
+  const fileCheckIds = form.checkedAttachedFileIds
+
+  const filesToCheck = attachedFiles.filter((f) => f.type !== 'UTILITY')
+
+  const isFilesAllChecked = filesToCheck.length > 0 && fileCheckIds.length === filesToCheck.length
+
+  useEffect(() => {
+    const files = []
+
+    if (
+      form.itemType === 'UTILITY_GAS' ||
+      form.itemType === 'UTILITY_ELECTRICITY' ||
+      form.itemType === 'UTILITY_WATER'
+    ) {
+      files.push({
+        id: Date.now() + 1,
+        name: '공과금',
+        memo: '',
+        files: [],
+        type: 'UTILITY',
+      })
+    }
+
+    setForm({ attachedFiles: files })
+  }, [form.itemType])
 
   const params = useParams()
   const costDetailId = Number(params?.id)
@@ -706,6 +730,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
         id: item.id,
         name: item.name,
         memo: item.memo,
+        type: item.typeCode,
         files: [
           {
             fileUrl: item.fileUrl || '', // null 대신 안전하게 빈 문자열
@@ -1149,9 +1174,83 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
     if (mealFeelDetails.length > 0) {
       for (const item of mealFeelDetails) {
+        if (!item.laborId || item.laborId === 0) return '직원의 이름을 선택해주세요.'
         const mealTotal = (item.breakfastCount ?? 0) + (item.lunchCount ?? 0)
-        if (mealTotal === 0) return '조식 또는 중식을 입력해주세요.'
+        if (mealTotal === 0) return '조식 또는 중식 또는 석식을 입력해주세요.'
         if (!item.amount && item.amount !== 0) return '금액을 입력해주세요.'
+      }
+    }
+
+    // 식대에서 직영
+    if (mealFeelDirectContractDetails.length > 0) {
+      for (const item of mealFeelDirectContractDetails) {
+        // 이름(laborId) 체크
+        if (!item.laborId || item.laborId === 0) return '직영의 이름을 선택해주세요.'
+
+        // 식사 수량 체크
+        const mealTotal =
+          (item.breakfastCount ?? 0) + (item.lunchCount ?? 0) + (item.dinnerCount ?? 0)
+        if (mealTotal === 0) return '조식, 중식, 석식 중 하나 이상 입력해주세요.'
+
+        // 금액 체크
+        if (item.amount === undefined || item.amount === null) return '금액을 입력해주세요.'
+      }
+    }
+    // 식대에서 용역
+    if (mealFeelOutData.length > 0) {
+      for (const item of mealFeelOutData) {
+        // 이름(laborId) 체크
+        if (!item.outsourcingCompanyId || item.outsourcingCompanyId === 0)
+          return '용역의 업체명을 선택해주세요.'
+        if (!item.laborId || item.laborId === 0) return '용역의 이름을 선택해주세요.'
+
+        // 식사 수량 체크
+        const mealTotal =
+          (item.breakfastCount ?? 0) + (item.lunchCount ?? 0) + (item.dinnerCount ?? 0)
+        if (mealTotal === 0) return '조식, 중식, 석식 중 하나 이상 입력해주세요.'
+
+        // 금액 체크
+        if (item.amount === undefined || item.amount === null) return '금액을 입력해주세요.'
+      }
+    }
+
+    // 식대에서 장비기사
+    if (mealFeeDetailEquipmentData.length > 0) {
+      for (const item of mealFeeDetailEquipmentData) {
+        // 이름(laborId) 체크
+        if (!item.outsourcingCompanyId || item.outsourcingCompanyId === 0)
+          return '장비기사의 업체명을 선택해주세요.'
+        if (
+          !item.outsourcingCompanyContractDriverId ||
+          item.outsourcingCompanyContractDriverId === 0
+        )
+          return '장비기사의 이름을 선택해주세요.'
+
+        // 식사 수량 체크
+        const mealTotal =
+          (item.breakfastCount ?? 0) + (item.lunchCount ?? 0) + (item.dinnerCount ?? 0)
+        if (mealTotal === 0) return '조식, 중식, 석식 중 하나 이상 입력해주세요.'
+
+        // 금액 체크
+        if (item.amount === undefined || item.amount === null) return '금액을 입력해주세요.'
+      }
+    }
+
+    // 식대에서 외주인력
+    if (mealFeelOutPersonData.length > 0) {
+      for (const item of mealFeelOutPersonData) {
+        // 이름(laborId) 체크
+        if (!item.outsourcingCompanyId || item.outsourcingCompanyId === 0)
+          return '외주인력의 업체명을 선택해주세요.'
+        if (!item.laborId || item.laborId === 0) return '외주인력의 이름을 선택해주세요.'
+
+        // 식사 수량 체크
+        const mealTotal =
+          (item.breakfastCount ?? 0) + (item.lunchCount ?? 0) + (item.dinnerCount ?? 0)
+        if (mealTotal === 0) return '조식, 중식, 석식 중 하나 이상 입력해주세요.'
+
+        // 금액 체크
+        if (item.amount === undefined || item.amount === null) return '금액을 입력해주세요.'
       }
     }
 
@@ -1174,11 +1273,12 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
       return
     }
 
-    if (!form.attachedFiles || form.attachedFiles.length === 0) {
-      showSnackbar('증빙서류 1개 이상 입력해주세요.', 'warning')
-      return
+    if (form.itemType !== 'MEAL_FEE') {
+      if (!form.attachedFiles || form.attachedFiles.length === 0) {
+        showSnackbar('증빙서류 1개 이상 입력해주세요.', 'warning')
+        return
+      }
     }
-
     if (isEditMode) {
       if (window.confirm('수정하시겠습니까?')) {
         CostModifyMutation.mutate(costDetailId)
@@ -1732,7 +1832,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                         size="small"
                         inputMode="numeric"
                         placeholder="숫자 입력"
-                        value={m.quantity === 0 || m.quantity === null ? '' : m.quantity}
+                        value={m.quantity ?? 0}
                         onChange={(e) => {
                           const quantity =
                             e.target.value === '' ? 0 : unformatNumber(e.target.value)
@@ -1758,9 +1858,7 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                         size="small"
                         inputMode="numeric"
                         placeholder="숫자 입력"
-                        value={
-                          m.unitPrice === 0 || m.unitPrice === null ? '' : formatNumber(m.unitPrice)
-                        }
+                        value={m.unitPrice ?? 0}
                         onChange={(e) => {
                           const unitPrice =
                             e.target.value === '' ? 0 : unformatNumber(e.target.value)
@@ -4137,7 +4235,9 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
                       fontWeight: 'bold',
                     }}
                   >
-                    {label === '비고' || label === '첨부' ? (
+                    {label === '비고' ||
+                    label === '첨부' ||
+                    (label === '문서명' && form.itemType === 'MEAL_FEE') ? (
                       label
                     ) : (
                       <div className="flex items-center justify-center">
@@ -4150,84 +4250,87 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
               </TableRow>
             </TableHead>
             <TableBody>
-              {attachedFiles.map((m) => (
-                <TableRow key={m.id} sx={{ border: '1px solid  #9CA3AF' }}>
-                  <TableCell
-                    padding="checkbox"
-                    align="center"
-                    sx={{ border: '1px solid  #9CA3AF' }}
-                  >
-                    <Checkbox
-                      checked={fileCheckIds.includes(m.id)}
-                      onChange={(e) => toggleCheckItem('attachedFile', m.id, e.target.checked)}
-                    />
-                  </TableCell>
-                  <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
-                    <TextField
-                      size="small"
-                      placeholder="텍스트 입력"
-                      sx={{ width: '100%' }}
-                      value={m.name}
-                      onChange={(e) =>
-                        updateItemField('attachedFile', m.id, 'name', e.target.value)
-                      }
-                    />
-                  </TableCell>
-
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
-                      <CommonFileInput
-                        acceptedExtensions={[
-                          'pdf',
-                          'txt',
-                          'rtf',
-                          'docx',
-                          'hwp',
-                          'xlsx',
-                          'csv',
-                          'ods',
-                          'pptx',
-                          'ppt',
-                          'odp',
-                          'jpg',
-                          'jpeg',
-                          'png',
-                          'gif',
-                          'tif',
-                          'tiff',
-                          'bmp',
-                          'zip',
-                          '7z',
-                          'mp3',
-                          'wav',
-                          'mp4',
-                          'mov',
-                          'avi',
-                          'wmv',
-                          'dwg',
-                        ]}
-                        multiple={false}
-                        files={m.files} // 각 항목별 files
-                        onChange={(newFiles) => {
-                          updateItemField('attachedFile', m.id, 'files', newFiles.slice(0, 1))
-                        }}
-                        uploadTarget="MANAGEMENT_COST"
+              {attachedFiles.length > 0 &&
+                attachedFiles.map((m) => (
+                  <TableRow key={m.id} sx={{ border: '1px solid  #9CA3AF' }}>
+                    <TableCell
+                      padding="checkbox"
+                      align="center"
+                      sx={{ border: '1px solid  #9CA3AF' }}
+                    >
+                      <Checkbox
+                        checked={fileCheckIds.includes(m.id)}
+                        disabled={m.type === 'UTILITY'}
+                        onChange={(e) => toggleCheckItem('attachedFile', m.id, e.target.checked)}
                       />
-                    </div>
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                    <TextField
-                      size="small"
-                      placeholder="500자 이하 텍스트 입력"
-                      sx={{ width: '100%' }}
-                      value={m.memo}
-                      onChange={(e) =>
-                        updateItemField('attachedFile', m.id, 'memo', e.target.value)
-                      }
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
+                      <TextField
+                        size="small"
+                        placeholder="텍스트 입력"
+                        sx={{ width: '100%' }}
+                        value={m.name}
+                        onChange={(e) =>
+                          updateItemField('attachedFile', m.id, 'name', e.target.value)
+                        }
+                        disabled={m.type === 'UTILITY'}
+                      />
+                    </TableCell>
+
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                        <CommonFileInput
+                          acceptedExtensions={[
+                            'pdf',
+                            'txt',
+                            'rtf',
+                            'docx',
+                            'hwp',
+                            'xlsx',
+                            'csv',
+                            'ods',
+                            'pptx',
+                            'ppt',
+                            'odp',
+                            'jpg',
+                            'jpeg',
+                            'png',
+                            'gif',
+                            'tif',
+                            'tiff',
+                            'bmp',
+                            'zip',
+                            '7z',
+                            'mp3',
+                            'wav',
+                            'mp4',
+                            'mov',
+                            'avi',
+                            'wmv',
+                            'dwg',
+                          ]}
+                          multiple={false}
+                          files={m.files} // 각 항목별 files
+                          onChange={(newFiles) => {
+                            updateItemField('attachedFile', m.id, 'files', newFiles.slice(0, 1))
+                          }}
+                          uploadTarget="MANAGEMENT_COST"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        size="small"
+                        placeholder="500자 이하 텍스트 입력"
+                        sx={{ width: '100%' }}
+                        value={m.memo}
+                        onChange={(e) =>
+                          updateItemField('attachedFile', m.id, 'memo', e.target.value)
+                        }
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </TableContainer>

@@ -171,6 +171,11 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
       form: { ...state.form, [field]: value },
     })),
 
+  setForm: (newForm) =>
+    set((state) => ({
+      form: { ...state.form, ...newForm },
+    })),
+
   updateMemo: (id, value) =>
     set((state) => {
       const updatedHistories = state.form.changeHistories.map((history) =>
@@ -209,6 +214,7 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
           name: '',
           memo: '',
           files: [],
+          type: 'BASIC',
         }
         return { form: { ...state.form, attachedFiles: [...state.form.attachedFiles, newFile] } }
       } else if (type === 'mealListData') {
@@ -479,13 +485,6 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
             checkedCostIds: checked ? state.form.details.map((m) => m.id) : [],
           },
         }
-      } else if (type === 'attachedFile') {
-        return {
-          form: {
-            ...state.form,
-            checkedAttachedFileIds: checked ? state.form.attachedFiles.map((f) => f.id) : [],
-          },
-        }
       } else if (type === 'mealListData') {
         return {
           form: {
@@ -536,7 +535,19 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
             checkedKeyMoneyIds: checked ? state.form.keyMoneyDetails.map((m) => m.id) : [],
           },
         }
+      } else {
+        return {
+          form: {
+            ...state.form,
+            checkedAttachedFileIds: checked
+              ? state.form.attachedFiles
+                  .filter((f) => f.type !== 'UTILITY') // 제외
+                  .map((f) => f.id)
+              : [],
+          },
+        }
       }
+
       return state
     }),
 
@@ -902,6 +913,7 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
                 memo: f.memo,
                 fileUrl: '',
                 originalFileName: '',
+                type: f.type,
               },
             ]
           : f.files.map((fileObj) => ({
@@ -910,6 +922,7 @@ export const useManagementCostFormStore = create<CostFormStore>((set, get) => ({
               memo: f.memo,
               fileUrl: fileObj.fileUrl,
               originalFileName: fileObj.name || fileObj.originalFileName,
+              type: f.type,
             })),
       ),
       changeHistories: form.editedHistories ?? [],

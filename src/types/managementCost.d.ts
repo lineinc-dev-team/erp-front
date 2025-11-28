@@ -172,6 +172,8 @@ export type AttachedFile = {
   fileUrl?: string
   originalFileName?: string
   files: FileUploadInfo[]
+  type: string
+  typeCode?: string
 }
 
 // 외주업체 정보
@@ -254,6 +256,8 @@ type CostFormStore = {
     field: K,
     value: T,
   ) => void
+
+  setForm: (newForm) => void
 
   addItem: (
     type:
