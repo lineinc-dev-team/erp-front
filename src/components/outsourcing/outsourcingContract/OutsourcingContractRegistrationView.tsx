@@ -33,6 +33,7 @@ import AmountInput from '@/components/common/AmountInput'
 import {
   ContractDetailService,
   ContractEquipmentDetailService,
+  ContractInfoDetailService,
   ContractPersonDetailService,
   GetCompanyNameInfoService,
   OutsourcingConstructionDetailService,
@@ -164,8 +165,46 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
         },
         { id: Date.now(), name: '계약서', memo: '', files: [], type: 'CONTRACT' },
       )
+    } else if (form.type === 'EQUIPMENT') {
+      files.push(
+        {
+          id: Date.now() + 1,
+          name: '계약서',
+          memo: '',
+          files: [],
+          type: 'CONTRACT',
+        },
+        {
+          id: Date.now() + 2,
+          name: '사업자등록증',
+          memo: '',
+          files: [],
+          type: 'BUSINESS_REGISTRATION',
+        },
+        {
+          id: Date.now() + 3,
+          name: '통장사본',
+          memo: '',
+          files: [],
+          type: 'BANK_ACCOUNT_COPY',
+        },
+        {
+          id: Date.now() + 4,
+          name: '장비등록증',
+          memo: '',
+          files: [],
+          type: 'EQUIPMENT_REGISTRATION',
+        },
+        {
+          id: Date.now() + 5,
+          name: '차량보험증권',
+          memo: '',
+          files: [],
+          type: 'VEHICLE_INSURANCE',
+        },
+      )
     } else {
-      files.push({ id: Date.now(), name: '계약서', memo: '', files: [], type: 'CONTRACT' })
+      files.push({ id: Date.now() + 5, name: '계약서', memo: '', files: [], type: 'CONTRACT' })
     }
 
     setForm({ attachedFiles: files })
@@ -266,6 +305,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     outsourcingContractQuantity: '외주계약금액의 수량',
     contractPrice: '계약금액의 금액',
     processName: '업체명',
+    contractName: '계약명',
   }
 
   const { showSnackbar } = useSnackbarStore()
@@ -422,6 +462,37 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
   //     setField('CompanyId', 0) // "선택" 기본값
   //   }
   // }, [contractDetailData, isEditMode, companyOptions])
+
+  // 담당자 데이터 불러오기
+
+  const { data: contractNameInfo } = useQuery({
+    queryKey: ['ContractDetailInfo', form.CompanyId],
+    queryFn: () => ContractInfoDetailService(form.CompanyId),
+    enabled: !!form.CompanyId,
+    select: (res) =>
+      res.data.map((item: any) => {
+        const [area, ...rest] = item.landlineNumber?.split('-') || []
+        return {
+          id: item.id,
+          name: item.name,
+          position: item.position,
+          department: item.department,
+          managerAreaNumber: area || '',
+          landlineNumber: rest.join('-') || '',
+          phoneNumber: item.phoneNumber,
+          email: item.email,
+          memo: item.memo ?? '',
+          isMain: item.isMain ?? false,
+          checked: false,
+        }
+      }),
+  })
+
+  // 후속 처리
+  useEffect(() => {
+    if (!contractNameInfo) return
+    setField('headManagers', contractNameInfo)
+  }, [contractNameInfo])
 
   useEffect(() => {
     reset()
@@ -971,8 +1042,8 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
         if (!item.position?.trim()) return '담당자의 부서를 입력해주세요.'
         if (!item.department?.trim()) return '담당자의 직급(직책)을 입력해주세요.'
         if (!item.landlineNumber?.trim()) return '담당자의 전화번호를 입력해주세요.'
-        if (!item.phoneNumber?.trim()) return '담당자의 개인 휴대폰을 입력해주세요.'
-        if (!item.email?.trim()) return '담당자의 이메일을 입력해주세요.'
+        // if (!item.phoneNumber?.trim()) return '담당자의 개인 휴대폰을 입력해주세요.'
+        // if (!item.email?.trim()) return '담당자의 이메일을 입력해주세요.'
         if (item.memo.length > 500) {
           return '담당자의 비고는 500자 이하로 입력해주세요.'
         }
@@ -1031,26 +1102,70 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     }
 
     if (contractAddAttachedFiles.length > 0) {
-      // for (const item of contractAddAttachedFiles) {
-      //   if (!item.item?.trim()) return '공사의 항목을 입력해주세요.'
-      //   if (!item.specification?.trim()) return '공사의 규격을 입력해주세요.'
-      //   if (!item.unit?.trim()) return '공사의 단가를 입력해주세요.'
-      //   if (!item.unitPrice) return '공사의 도급단가를 입력해주세요.'
-      //   if (!item.contractQuantity) return '공사의 계약금액의 수량을 입력해주세요.'
-      //   if (!item.contractPrice) return '공사의 계약금액의 금액을 입력해주세요.'
-      //   if (!item.outsourcingContractQuantity) return '공사의 외주계약금액의 수량을 입력해주세요.'
-      //   if (!item.outsourcingContractPrice) return '공사의 외주계약금액의 금액을 입력해주세요.'
-      //   if (item.memo.length > 500) {
-      //     return '공사의 비고는 500자 이하로 입력해주세요.'
-      //   }
-      // }
+      for (const group of contractAddAttachedFiles) {
+        // 1차 항목명 (itemName)
+        if (!group.itemName?.trim()) {
+          return '공사의 항목명을 입력해주세요.'
+        }
+
+        // 2차 상세 항목들
+        for (const item of group.items) {
+          if (!item.item?.trim()) {
+            return '공사의 항목을 입력해주세요.'
+          }
+
+          if (!item.specification?.trim()) {
+            return '공사의 규격을 입력해주세요.'
+          }
+
+          if (item.unit == '') {
+            return '공사의 단위를 입력해주세요.'
+          }
+
+          // 숫자값은 0 허용 여부를 기준으로 체크
+          if (item.unitPrice == 0) {
+            return '공사의 도급단가를 입력해주세요.'
+          }
+          if (item.contractQuantity == 0) {
+            return '공사의 도급수량를 입력해주세요.'
+          }
+
+          if (item.contractPrice == 0) {
+            return '공사의 도급금액를 입력해주세요.'
+          }
+
+          if (item.outsourcingContractQuantity == 0) {
+            return '공사의 외주계약금액의 수량을 입력해주세요.'
+          }
+
+          if (item.outsourcingContractPrice == 0) {
+            return '공사의 외주계약금액의 금액을 입력해주세요.'
+          }
+
+          if (item.memo && item.memo.length > 500) {
+            return '공사의 비고는 500자 이하로 입력해주세요.'
+          }
+        }
+      }
     }
 
-    if (attachedFiles.length > 0) {
+    // form.type이 EQUIPMENT일 때만 검사
+    if (form.type === 'EQUIPMENT') {
       for (const item of attachedFiles) {
+        // 이름 체크
         if (!item.name?.trim()) return '첨부파일의 이름을 입력해주세요.'
+
+        // 메모 길이 체크
         if (item.memo.length > 500) {
           return '첨부파일의 비고는 500자 이하로 입력해주세요.'
+        }
+
+        // 계약서(CONTRACT)는 파일 없어도 OK
+        if (item.type === 'CONTRACT') continue
+
+        // 그 외 필수 항목은 files.length >= 1 필요
+        if (!item.files || item.files.length === 0) {
+          return `${item.name} 파일을 첨부해주세요.`
         }
       }
     }
@@ -1064,6 +1179,11 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       showSnackbar(errorMsg, 'warning')
       return
     }
+    if (!managers || managers.length === 0) {
+      showSnackbar('담당자 1개 이상 입력해주세요.', 'warning')
+      return
+    }
+
     if (form.type === 'EQUIPMENT') {
       if (!equipmentAddAttachedFiles || equipmentAddAttachedFiles.length === 0) {
         showSnackbar('장비 항목을 1개 이상 입력해주세요.', 'warning')
@@ -1202,6 +1322,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                   // 업체명을 지우면 사업자등록번호도 같이 초기화
                   if (newKeyword === '') {
                     setField('businessNumber', '')
+                    setField('headManagers', [])
                   }
                 }}
                 items={outsourcingList}
@@ -1566,7 +1687,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {label === '비고' ? (
+                    {label === '비고' || label === '개인 휴대폰' || label === '이메일' ? (
                       label
                     ) : (
                       <div className="flex items-center justify-center">
@@ -1730,7 +1851,9 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       fontWeight: 'bold',
                     }}
                   >
-                    {label === '비고' || label === '첨부' ? (
+                    {label === '비고' ||
+                    label === '첨부' ||
+                    (label === '문서명' && form.type !== 'EQUIPMENT') ? (
                       label
                     ) : (
                       <div className="flex items-center justify-center">
@@ -1752,7 +1875,14 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                   >
                     <Checkbox
                       checked={fileCheckIds.includes(m.id)}
-                      disabled={m.type === 'CONTRACT' || m.type === 'GUARANTEE'}
+                      disabled={
+                        m.type === 'CONTRACT' ||
+                        m.type === 'GUARANTEE' ||
+                        m.type === 'BUSINESS_REGISTRATION' ||
+                        m.type === 'BANK_ACCOUNT_COPY' ||
+                        m.type === 'EQUIPMENT_REGISTRATION' ||
+                        m.type === 'VEHICLE_INSURANCE'
+                      }
                       onChange={(e) => toggleCheckItem('attachedFile', m.id, e.target.checked)}
                     />
                   </TableCell>
@@ -1765,7 +1895,14 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       onChange={(e) =>
                         updateItemField('attachedFile', m.id, 'name', e.target.value)
                       }
-                      disabled={m.type === 'CONTRACT' || m.type === 'GUARANTEE'}
+                      disabled={
+                        m.type === 'CONTRACT' ||
+                        m.type === 'GUARANTEE' ||
+                        m.type === 'BUSINESS_REGISTRATION' ||
+                        m.type === 'BANK_ACCOUNT_COPY' ||
+                        m.type === 'EQUIPMENT_REGISTRATION' ||
+                        m.type === 'VEHICLE_INSURANCE'
+                      }
                     />
                   </TableCell>
                   <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>

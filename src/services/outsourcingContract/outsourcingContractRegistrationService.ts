@@ -401,3 +401,24 @@ export async function OutsourcingContractInfoHistoryService(
   const data = await resData.json()
   return data
 }
+
+// 외주 계약에서 업체 선택 시 담담자 불러오기
+export async function ContractInfoDetailService(id: number) {
+  const res = await fetch(`${API.OUTSOURCINGCOMPANY}/${id}/contacts`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
+  }
+
+  return await res.json()
+}
