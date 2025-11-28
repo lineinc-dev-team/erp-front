@@ -107,12 +107,108 @@ export default function SiteManagement() {
         },
       }
     }
+
+    if (col.field === 'majorInsurance') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 80,
+      }
+    }
+
+    if (col.field === 'employeeSalary') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 80,
+      }
+    }
+
+    if (col.field === 'yearMonth') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 80,
+        maxWidth: 80,
+      }
+    }
+
+    if (col.field === 'regularRetirementPension') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 120,
+      }
+    }
+
+    if (col.field === 'retirementDeduction') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 80,
+      }
+    }
+
+    if (col.field === 'contractGuaranteeFee') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 140,
+        maxWidth: 140,
+      }
+    }
+
+    if (col.field === 'equipmentGuaranteeFee') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 180,
+        maxWidth: 180,
+      }
+    }
+
+    if (col.field === 'nationalTaxPayment') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 80,
+      }
+    }
+
+    if (col.field === 'siteManagementTotal') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 80,
+      }
+    }
+
+    if (col.field === 'headquartersManagementCost') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 80,
+      }
+    }
+
     if (col.field === 'no') {
       return {
         ...col,
         headerAlign: 'center',
         align: 'center',
         flex: 0.5,
+        minWidth: 40,
+        maxWidth: 40,
         renderCell: (params: GridRenderCellParams) => {
           const sortedRowIds = params.api.getSortedRowIds?.() ?? []
           const indexInCurrentPage = sortedRowIds.indexOf(params.id)
@@ -190,6 +286,13 @@ export default function SiteManagement() {
     enabled,
   )
 
+  const handleEnterKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      search.setField('currentPage', 1) // 페이지 초기화
+      search.handleSearch()
+    }
+  }
+
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
@@ -198,7 +301,10 @@ export default function SiteManagement() {
             <label className="w-[144px] text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명
             </label>
-            <div className="border border-gray-400 w-full flex items-center">
+            <div
+              className="border border-gray-400 w-full flex items-center"
+              onKeyDown={handleEnterKey}
+            >
               <InfiniteScrollSelect
                 placeholder="현장명을 입력하세요"
                 keyword={search.siteName}
@@ -473,6 +579,43 @@ export default function SiteManagement() {
               lineHeight: '2.8rem', // 줄 간격
               paddingTop: '12px', // 위 여백
               paddingBottom: '12px', // 아래 여백
+            },
+            '& .MuiDataGrid-cell[data-field="regularRetirementPension"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+            '& .MuiDataGrid-cell[data-field="employeeSalary"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+
+            '& .MuiDataGrid-cell[data-field="retirementDeduction"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+            '& .MuiDataGrid-cell[data-field="majorInsurance"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+            '& .MuiDataGrid-cell[data-field="contractGuaranteeFee"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+            '& .MuiDataGrid-cell[data-field="equipmentGuaranteeFee"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+            '& .MuiDataGrid-cell[data-field="nationalTaxPayment"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+            '& .MuiDataGrid-cell[data-field="siteManagementTotal"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+            '& .MuiDataGrid-cell[data-field="headquartersManagementCost"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
             },
           }}
           onRowSelectionModelChange={(newSelection) => {
