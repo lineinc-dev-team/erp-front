@@ -348,10 +348,10 @@ export default function useOutSourcingContract() {
   //   return [defaultOption, ...options]
   // }, [comPanyNameInfo])
 
-  const useOutsourcingNameListInfiniteScroll = (keyword: string) => {
+  const useOutsourcingNameListInfiniteScroll = (keyword: string, type: string = '') => {
     return useInfiniteQuery({
-      queryKey: ['outsourcingInfo', keyword],
-      queryFn: ({ pageParam }) => GetCompanyNameInfoService({ pageParam, keyword }),
+      queryKey: ['outsourcingInfo', keyword, type], // type도 queryKey에 포함
+      queryFn: ({ pageParam }) => GetCompanyNameInfoService({ pageParam, keyword, type }), // type이 없으면 빈 문자열
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
         const { sliceInfo } = lastPage.data

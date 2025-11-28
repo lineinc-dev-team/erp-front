@@ -819,13 +819,15 @@ export default function ManagementCostRegistrationView({ isEditMode = false }) {
 
   const debouncedOutsourcingKeyword = useDebouncedValue(form.outsourcingCompanyName, 300)
 
+  const typeParam = form.itemType === 'MEAL_FEE' ? 'MEAL_FEE' : ''
+
   const {
     data: OutsourcingNameData,
     fetchNextPage: OutsourcingeNameFetchNextPage,
     hasNextPage: OutsourcingNameHasNextPage,
     isFetching: OutsourcingNameIsFetching,
     isLoading: OutsourcingNameIsLoading,
-  } = useOutsourcingNameListInfiniteScroll(debouncedOutsourcingKeyword)
+  } = useOutsourcingNameListInfiniteScroll(debouncedOutsourcingKeyword, typeParam)
 
   const OutsourcingRawList = OutsourcingNameData?.pages.flatMap((page) => page.data.content) ?? []
   const outsourcingList = Array.from(
