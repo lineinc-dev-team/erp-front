@@ -393,6 +393,13 @@ export default function LaborView() {
     enabled,
   )
 
+  const handleEnterKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      search.setField('currentPage', 1) // 페이지 초기화
+      search.handleSearch()
+    }
+  }
+
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
@@ -446,7 +453,7 @@ export default function LaborView() {
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               이름
             </label>
-            <div className="border border-gray-400 px-2 w-full">
+            <div className="border border-gray-400 px-2 w-full" onKeyDown={handleEnterKey}>
               <CommonInput
                 value={search.name}
                 onChange={(value) => search.setField('name', value)}
@@ -460,7 +467,10 @@ export default function LaborView() {
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               주민번호
             </label>
-            <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
+            <div
+              className="border border-gray-400 px-2 w-full flex justify-center items-center"
+              onKeyDown={handleEnterKey}
+            >
               <CommonInput
                 value={search.residentNumber}
                 onChange={(value) => search.setField('residentNumber', value)}
@@ -474,7 +484,10 @@ export default function LaborView() {
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               소속업체
             </label>
-            <div className="border border-gray-400  w-full flex items-center">
+            <div
+              className="border border-gray-400  w-full flex items-center"
+              onKeyDown={handleEnterKey}
+            >
               <InfiniteScrollSelect
                 placeholder="업체명을 입력하세요"
                 keyword={search.outsourcingCompanyName}
@@ -503,7 +516,7 @@ export default function LaborView() {
             <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
               개인휴대폰
             </label>
-            <div className="border border-gray-400 p-2 w-full">
+            <div className="border border-gray-400 p-2 w-full" onKeyDown={handleEnterKey}>
               <CommonInput
                 placeholder="'-'없이 숫자만 입력"
                 value={search.phoneNumber}
