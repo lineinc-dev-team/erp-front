@@ -383,7 +383,7 @@ export default function Header() {
       </AppBar>
 
       <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
-        <List sx={{ width: 260 }}>
+        <List sx={{ width: 290 }}>
           {!isLoading &&
             !isError &&
             menuItemsWithDashboard.length > 0 &&
