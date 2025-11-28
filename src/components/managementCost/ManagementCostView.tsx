@@ -108,6 +108,8 @@ export default function ManagementCost() {
         headerAlign: 'center',
         align: 'center',
         flex: 2,
+        minWidth: 70,
+        maxWidth: 70,
         renderCell: (params: GridRenderCellParams) => {
           const text = params.value as string
           if (!text) return <span style={{ fontSize: 12 }}>-</span>
@@ -128,6 +130,8 @@ export default function ManagementCost() {
         headerAlign: 'center',
         align: 'center',
         flex: 1,
+        minWidth: 60,
+        maxWidth: 60,
 
         renderCell: (params: GridRenderCellParams) => {
           const costId = params.row.id
@@ -153,12 +157,90 @@ export default function ManagementCost() {
         },
       }
     }
+
+    if (col.field === 'paymentDate') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 100,
+        maxWidth: 100,
+      }
+    }
+
+    if (col.field === 'businessNumber') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 120,
+        maxWidth: 120,
+      }
+    }
+    if (col.field === 'hasFile') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+        maxWidth: 70,
+      }
+    }
+
+    if (col.field === 'ceoName') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+        maxWidth: 70,
+      }
+    }
+
+    if (col.field === 'supplyPrice') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+      }
+    }
+
+    if (col.field === 'vat') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+      }
+    }
+
+    if (col.field === 'deductibleAmount') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+      }
+    }
+
+    if (col.field === 'total') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+      }
+    }
+
     if (col.field === 'no') {
       return {
         ...col,
         headerAlign: 'center',
         align: 'center',
         flex: 0.5,
+        minWidth: 40,
+        maxWidth: 40,
         renderCell: (params: GridRenderCellParams) => {
           const sortedRowIds = params.api.getSortedRowIds?.() ?? []
           const indexInCurrentPage = sortedRowIds.indexOf(params.id)
@@ -267,6 +349,13 @@ export default function ManagementCost() {
     enabled,
   )
 
+  const handleEnterKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      search.setField('currentPage', 1) // 페이지 초기화
+      search.handleSearch()
+    }
+  }
+
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
@@ -275,7 +364,10 @@ export default function ManagementCost() {
             <label className="w-[144px] text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명
             </label>
-            <div className="border border-gray-400 w-full flex items-center">
+            <div
+              className="border border-gray-400 w-full flex items-center"
+              onKeyDown={handleEnterKey}
+            >
               <InfiniteScrollSelect
                 placeholder="현장명을 입력하세요"
                 keyword={search.siteName}
@@ -414,7 +506,10 @@ export default function ManagementCost() {
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               구매처
             </label>
-            <div className="border border-gray-400  w-full flex items-center">
+            <div
+              className="border border-gray-400  w-full flex items-center"
+              onKeyDown={handleEnterKey}
+            >
               <InfiniteScrollSelect
                 placeholder="구매처를 입력하세요"
                 keyword={search.outsourcingCompanyName}
@@ -588,7 +683,34 @@ export default function ManagementCost() {
           disableColumnMenu
           hideFooterPagination
           // pageSize={pageSize}
-          rowHeight={60}
+          getRowHeight={() => 'auto'}
+          sx={{
+            '& .MuiDataGrid-cell': {
+              display: 'flex',
+              justifyContent: 'center', // 가로 가운데 정렬
+              alignItems: 'center', // 세로 가운데 정렬
+              whiteSpace: 'normal', // 줄바꿈 허용
+              lineHeight: '2.8rem', // 줄 간격
+              paddingTop: '12px', // 위 여백
+              paddingBottom: '12px', // 아래 여백
+            },
+            '& .MuiDataGrid-cell[data-field="supplyPrice"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+            '& .MuiDataGrid-cell[data-field="vat"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+            '& .MuiDataGrid-cell[data-field="deductibleAmount"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+            '& .MuiDataGrid-cell[data-field="total"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
+            },
+          }}
           onRowSelectionModelChange={(newSelection) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setSelectedIds(newSelection as any) // 타입 보장된다면 사용 가능
