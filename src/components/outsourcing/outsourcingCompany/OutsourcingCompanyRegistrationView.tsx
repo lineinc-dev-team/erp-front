@@ -383,8 +383,8 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     if (!form.ceoName?.trim()) return '대표자명을 입력하세요.'
     if (!form.address?.trim()) return '본사 주소를 입력하세요.'
     // if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
-    if (!form.landlineNumber?.trim()) return '전화번호를 입력하세요.'
-    if (!form.email?.trim()) return '이메일을 입력하세요.'
+    // if (!form.landlineNumber?.trim()) return '전화번호를 입력하세요.'
+    // if (!form.email?.trim()) return '이메일을 입력하세요.'
     if (form.isActive === '0') return '사용 여부를 선택하세요.'
 
     // 기본공제 항목 체크 (선택된 값이 없으면 안내)
@@ -393,13 +393,13 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     // }
 
     // 계좌정보 체크
-    if (!form.bankName?.trim() || form.bankName === '0') return '은행명을 선택하세요.'
-    if (!form.accountNumber?.trim()) return '계좌번호를 입력하세요.'
-    if (!form.accountHolder?.trim()) return '예금주를 입력하세요.'
+    // if (!form.bankName?.trim() || form.bankName === '0') return '은행명을 선택하세요.'
+    // if (!form.accountNumber?.trim()) return '계좌번호를 입력하세요.'
+    // if (!form.accountHolder?.trim()) return '예금주를 입력하세요.'
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      return '유효한 이메일을 입력하세요.'
-    }
+    // if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    //   return '유효한 이메일을 입력하세요.'
+    // }
     if (form.isActive === '0') return '사용 여부를 선택하세요.'
 
     if (form.memo.length > 500) {
@@ -413,16 +413,16 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
         if (!item.department?.trim()) return '담당자의 부서를 입력해주세요.'
         if (!item.position?.trim()) return '담당자의 직급(직책)을 입력해주세요.'
         if (!item.landlineNumber?.trim()) return '담당자의 전화번호를 입력해주세요.'
-        if (!item.phoneNumber?.trim()) return '담당자의 개인 휴대폰을 입력해주세요.'
-        if (!item.email?.trim()) return '담당자의 이메일을 입력해주세요.'
+        // if (!item.phoneNumber?.trim()) return '담당자의 개인 휴대폰을 입력해주세요.'
+        // if (!item.email?.trim()) return '담당자의 이메일을 입력해주세요.'
 
         // 필요시 형식 체크
-        if (!/^\d{2,3}-\d{3,4}-\d{4}$/.test(item.phoneNumber)) {
-          return '담당자의 휴대폰 번호를 xxx-xxxx-xxxx 형식으로 입력해주세요.'
-        }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item.email)) {
-          return '담당자의 이메일 형식이 올바르지 않습니다.'
-        }
+        // if (!/^\d{2,3}-\d{3,4}-\d{4}$/.test(item.phoneNumber)) {
+        //   return '담당자의 휴대폰 번호를 xxx-xxxx-xxxx 형식으로 입력해주세요.'
+        // }
+        // if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item.email)) {
+        //   return '담당자의 이메일 형식이 올바르지 않습니다.'
+        // }
 
         if (item.memo.length > 500) {
           return '담당자의 비고는 500자 이하로 입력해주세요.'
@@ -587,7 +587,8 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
-              전화번호 <span className="text-red-500 ml-1">*</span>
+              전화번호
+              {/* <span className="text-red-500 ml-1">*</span> */}
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
@@ -611,7 +612,8 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              이메일(대표) <span className="text-red-500 ml-1">*</span>
+              이메일(대표)
+              {/* <span className="text-red-500 ml-1">*</span> */}
             </label>
             <div className="border border-gray-400 px-2 w-full">
               <CommonInput
@@ -664,7 +666,8 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
 
           <div className="flex">
             <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
-              계좌정보 <span className="text-red-500 ml-1">*</span>
+              계좌정보
+              {/* <span className="text-red-500 ml-1">*</span> */}
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
               <CommonSelect
@@ -756,7 +759,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {label === '비고' ? (
+                    {label === '비고' || label === '개인 휴대폰' || label === '이메일' ? (
                       label
                     ) : (
                       <div className="flex items-center justify-center">
