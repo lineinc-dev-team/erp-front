@@ -92,6 +92,8 @@ export default function OutsourcingContractView() {
         headerAlign: 'center',
         align: 'center',
         flex: 2,
+        minWidth: 70,
+        maxWidth: 70,
         renderCell: (params: GridRenderCellParams) => {
           const text = params.value as string
           if (!text) return <span style={{ fontSize: 12 }}>-</span>
@@ -114,6 +116,8 @@ export default function OutsourcingContractView() {
         headerAlign: 'center',
         align: 'center',
         flex: 2,
+        minWidth: 140,
+        maxWidth: 140,
         renderCell: (params: GridRenderCellParams) => {
           const item = params.row as OutsourcingContractList
 
@@ -165,12 +169,115 @@ export default function OutsourcingContractView() {
         },
       }
     }
+
+    if (col.field === 'hasGuaranteeCertificate') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 60,
+        maxWidth: 60,
+      }
+    }
+
+    if (col.field === 'hasContractCertificate') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 60,
+        maxWidth: 60,
+      }
+    }
+
+    if (col.field === 'businessNumber') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 120,
+        maxWidth: 120,
+      }
+    }
+
+    if (col.field === 'type') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+        maxWidth: 70,
+      }
+    }
+
+    if (col.field === 'ceoName') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 70,
+        maxWidth: 70,
+      }
+    }
+
+    if (col.field === 'contractAmount') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 60,
+      }
+    }
+
+    if (col.field === 'taxInvoiceCondition') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 130,
+        maxWidth: 130,
+      }
+    }
+
+    if (col.field === 'contactName') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 80,
+        maxWidth: 80,
+      }
+    }
+
+    if (col.field === 'createdAt') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 100,
+        maxWidth: 100,
+      }
+    }
+
+    if (col.field === 'contractStatus') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 60,
+        maxWidth: 60,
+      }
+    }
+
     if (col.field === 'no') {
       return {
         ...col,
         headerAlign: 'center',
         align: 'center',
         flex: 0.5,
+        minWidth: 40,
+        maxWidth: 40,
+
         renderCell: (params: GridRenderCellParams) => {
           const sortedRowIds = params.api.getSortedRowIds?.() ?? []
           const indexInCurrentPage = sortedRowIds.indexOf(params.id)
@@ -260,6 +367,13 @@ export default function OutsourcingContractView() {
     enabled,
   )
 
+  const handleEnterKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      search.setField('currentPage', 1) // 페이지 초기화
+      search.handleSearch()
+    }
+  }
+
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
@@ -268,7 +382,10 @@ export default function OutsourcingContractView() {
             <label className="w-[144px] text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명
             </label>
-            <div className="border border-gray-400 w-full flex items-center">
+            <div
+              className="border border-gray-400 w-full flex items-center"
+              onKeyDown={handleEnterKey}
+            >
               <InfiniteScrollSelect
                 placeholder="현장명을 입력하세요"
                 keyword={search.siteName}
@@ -368,6 +485,7 @@ export default function OutsourcingContractView() {
             </label>
             <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
               <CommonInput
+                onKeyDown={handleEnterKey}
                 value={search.companyName}
                 onChange={(value) => search.setField('companyName', value)}
                 className="flex-1"
@@ -382,6 +500,7 @@ export default function OutsourcingContractView() {
             <div className="border border-gray-400 px-2 p-2 w-full flex justify-center items-center">
               <CommonInput
                 value={search.businessNumber}
+                onKeyDown={handleEnterKey}
                 onChange={(value) => search.setField('businessNumber', value)}
                 className="flex-1"
               />
@@ -458,6 +577,7 @@ export default function OutsourcingContractView() {
             </label>
             <div className="border border-gray-400 px-2 w-full flex justify-center items-center">
               <CommonInput
+                onKeyDown={handleEnterKey}
                 value={search.contactName}
                 onChange={(value) => search.setField('contactName', value)}
                 className="flex-1"
@@ -603,6 +723,10 @@ export default function OutsourcingContractView() {
               lineHeight: '2.8rem', // 줄 간격
               paddingTop: '12px', // 위 여백
               paddingBottom: '12px', // 아래 여백
+            },
+            '& .MuiDataGrid-cell[data-field="contractAmount"]': {
+              justifyContent: 'flex-end',
+              paddingRight: '16px', // 원하는 여백
             },
           }}
           onRowSelectionModelChange={(newSelection) => {
