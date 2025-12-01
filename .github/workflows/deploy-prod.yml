@@ -21,11 +21,11 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Create .env.production
+      - name: Create .env.production and Build
         run: |
-          echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}" >> .env.production
+          echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}" > .env.production
           echo "NEXT_PUBLIC_API_URL_V2=${{ secrets.NEXT_PUBLIC_API_URL_V2 }}" >> .env.production
-        run: npm run build
+          npm run build
 
       - name: Compress build result
         run: |
