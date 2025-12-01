@@ -46,7 +46,7 @@ jobs:
           source: 'build.tar.gz'
           target: '/home/${{ secrets.EC2_PROD_USER }}/deploy/build.tar.gz'
 
-      # 7️⃣ EC2 배포
+      # 7️⃣ EC2 배포 및 Nginx 설정
       - name: Deploy on EC2 and Configure Nginx
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -56,24 +56,25 @@ jobs:
           script: |
             DEPLOY_PATH="/var/www/erp-front"
 
-            # 배포 폴더 생성 및 권한 설정
+            # 1️⃣ 배포 폴더 생성 및 권한 설정
             sudo mkdir -p $DEPLOY_PATH
             sudo chown -R $USER:$USER $DEPLOY_PATH
 
-            # 압축 해제
+            # 2️⃣ 압축 해제
             if [ ! -f ~/deploy/build.tar.gz ]; then
               echo "Error: build.tar.gz not found!"
               exit 1
             fi
-            tar -xzf ~/deploy/build.tar.gz -C $DEPLOY_PATH --strip-components=0
+            tar -xzf ~/deploy/build.tar.gz -C $DEPLOY_PATH
             rm -f ~/deploy/build.tar.gz
 
-            # pm2 배포
+            # 3️⃣ PM2 배포
+            cd $DEPLOY_PATH
             pm2 delete erp-front || true
-            pm2 start npm --name "erp-front" -- start --cwd $DEPLOY_PATH
+            pm2 start npm --name "erp-front" -- start
             pm2 save
 
-            # Nginx 설정
+            # 4️⃣ Nginx 설정
             sudo tee /etc/nginx/sites-available/erp-front > /dev/null <<'EOF'
 server {
     listen 80;
