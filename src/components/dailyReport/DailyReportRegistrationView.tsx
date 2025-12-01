@@ -66,13 +66,13 @@ import {
   FuelEquipmentNameScroll,
 } from '@/services/fuelAggregation/fuelAggregationRegistrationService'
 // import { useManagementCost } from '@/hooks/useManagementCost'
-import { useSearchParams } from 'next/navigation'
 import AmountInput from '../common/AmountInput'
 import { useSiteId } from '@/hooks/useSiteIdNumber'
 import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 import { useFocusStore } from '@/stores/focusStore'
 import { GetCompanyNameInfoService } from '@/services/outsourcingContract/outsourcingContractRegistrationService'
+import { useSearchParams } from 'next/navigation'
 
 export default function DailyReportRegistrationView() {
   const {
@@ -125,11 +125,7 @@ export default function DailyReportRegistrationView() {
 
   const [isEditMode, setIsEditMode] = useState(false)
   const {
-    sitesOptions,
-    siteNameFetchNextPage,
-    siteNamehasNextPage,
-    siteNameFetching,
-    siteNameLoading,
+    useSitePersonNameListInfiniteScroll,
 
     // 공정명
     processOptions,
@@ -263,6 +259,21 @@ export default function DailyReportRegistrationView() {
   // const [directContarctPersonNameByCompany, setDirectContarctPersonNameByCompany] = useState<
   //   Record<any, any[]>
   // >({})
+
+  const [isSiteFocused, setIsSiteFocused] = useState(false)
+
+  const debouncedSiteKeyword = useDebouncedValue(form.siteName, 300)
+
+  const {
+    data: SiteNameData,
+    fetchNextPage: SiteNameFetchNextPage,
+    hasNextPage: SiteNameHasNextPage,
+    isFetching: SiteNameIsFetching,
+    isLoading: SiteNameIsLoading,
+  } = useSitePersonNameListInfiniteScroll(debouncedSiteKeyword)
+
+  const SiteRawList = SiteNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const siteList = Array.from(new Map(SiteRawList.map((user) => [user.name, user])).values())
 
   const [modifyFuelNumber, setModifyFuelNumber] = useState(0)
 
@@ -3333,9 +3344,17 @@ export default function DailyReportRegistrationView() {
     }
 
     fetchData()
-  }, [activeTab, activeSubTab, form.siteId, form.siteProcessId, form.reportDate])
+  }, [activeTab, activeSubTab, form.siteId, form.siteName, form.siteProcessId, form.reportDate])
 
   // 출역일보 전체 데이터 조회
+
+  console.log(
+    'form.siteIdform.siteId',
+    form.siteId,
+    form.siteName,
+    form.siteProcessId,
+    form.siteProcessName,
+  )
 
   const detailReportQuery = useQuery({
     queryKey: ['detailReport', form.siteId, form.siteProcessId, form.reportDate],
@@ -3346,9 +3365,6 @@ export default function DailyReportRegistrationView() {
         reportDate: getTodayDateString(form.reportDate) || '',
       }),
     enabled: !!form.siteId && !!form.siteProcessId && !!form.reportDate,
-    refetchOnWindowFocus: true, // 포커스 바뀌어도 재요청 안 함
-    refetchOnReconnect: true, // 네트워크 재연결해도 재요청 안 함
-    retry: true, // 실패했을 때 자동 재시도 X
   })
 
   const { data: detailReport } = detailReportQuery
@@ -3389,12 +3405,13 @@ export default function DailyReportRegistrationView() {
 
   const { data: fuelCompany } = detailFuelCompany
 
-  console.log('fuelCompanyfuelCompany', fuelCompany)
+  console.log('fuelCompanyfuelCompany', detailReport)
 
   useEffect(() => {
     if (detailReport?.status === 200 && !isEditMode) {
       setIsEditMode(true)
       setField('gasolinePrice', oilPrice?.data.gasolinePrice) // 상세 데이터가 있을 때만 세팅
+
       setField('dieselPrice', oilPrice?.data.dieselPrice) // 상세 데이터가 있을 때만 세팅
       setField('ureaPrice', oilPrice?.data.ureaPrice) // 상세 데이터가 있을 때만 세팅
       setField('outsourcingCompanyId', fuelCompany?.data?.outsourcingCompany?.id)
@@ -3752,6 +3769,8 @@ export default function DailyReportRegistrationView() {
   const siteId = searchParams.get('site')
   const processId = searchParams.get('process')
 
+  const siteName = searchParams.get('siteName')
+
   useEffect(() => {
     const headerData = sessionStorage.getItem('myInfo')
     reset()
@@ -3764,6 +3783,7 @@ export default function DailyReportRegistrationView() {
     setField('reportDate', new Date(date))
     if (siteId) setField('siteId', Number(siteId))
     if (processId) setField('siteProcessId', Number(processId))
+    setField('siteName', String(siteName))
   }, [])
 
   const isHeadOfficeInfo = myInfo?.isHeadOffice
@@ -4873,7 +4893,7 @@ export default function DailyReportRegistrationView() {
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명
             </label>
-            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
+            {/* <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
               <CommonSelect
                 fullWidth
                 value={form.siteId || 0}
@@ -4902,6 +4922,75 @@ export default function DailyReportRegistrationView() {
                 }}
                 // onInputChange={(value) => setSitesSearch(value)}
                 loading={siteNameLoading}
+              />
+            </div> */}
+
+            <div className="border border-gray-400 w-full flex items-center">
+              <InfiniteScrollSelect
+                disabled={false}
+                placeholder="현장명을 입력하세요"
+                keyword={form.siteName}
+                onChangeKeyword={(newKeyword) => {
+                  setField('siteName', newKeyword)
+
+                  // 현장명 지웠을 경우 공정명도 같이 초기화
+                  if (newKeyword === '') {
+                    setField('siteProcessName', '')
+                    setField('siteProcessId', 0)
+                  }
+                }}
+                items={siteList}
+                hasNextPage={SiteNameHasNextPage ?? false}
+                fetchNextPage={SiteNameFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                // onSelect={handleSelectSiting}
+                onSelect={async (selectedSite) => {
+                  if (!selectedSite) return
+
+                  console.log('데이터 확인@@', selectedSite)
+
+                  // 선택된 현장 세팅
+                  setField('siteId', selectedSite.id)
+                  setField('siteName', selectedSite.name)
+
+                  if (selectedSite.deleted) {
+                    setField('siteProcessName', '')
+                    return
+                  }
+
+                  try {
+                    // 공정 목록 조회
+                    const res = await SitesProcessNameScroll({
+                      pageParam: 0,
+                      siteId: selectedSite.id,
+                      keyword: '',
+                    })
+
+                    const processes = res.data?.content || []
+
+                    if (processes.length > 0) {
+                      // 첫 번째 공정 자동 세팅
+                      setField('siteProcessName', processes[0].name)
+                      setField('siteProcessId', processes[0].id)
+                    } else {
+                      setField('siteProcessName', '')
+                      setField('siteProcessId', 0)
+                    }
+                  } catch (err) {
+                    console.error('공정 조회 실패:', err)
+                  }
+                }}
+                isLoading={SiteNameIsLoading || SiteNameIsFetching}
+                debouncedKeyword={debouncedSiteKeyword}
+                shouldShowList={isSiteFocused}
+                onFocus={() => {
+                  setIsSiteFocused(true)
+                }}
+                onBlur={() => setIsSiteFocused(false)}
               />
             </div>
           </div>

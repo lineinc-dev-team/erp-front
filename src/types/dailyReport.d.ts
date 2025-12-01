@@ -270,7 +270,9 @@ export type outContractItem = {
 
 export type DailyFormState = {
   siteId: number // 발행부서
+  siteName: string
   siteProcessId: number // 공정명
+  siteProcessName: string
 
   reportDate: Date | null // 일자 (YYYY-MM-DD)
   weather: string

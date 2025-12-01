@@ -76,7 +76,9 @@ export const useDailySearchList = create<{ search: DailyDataSearchState }>((set)
 export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
   form: {
     siteId: 0,
+    siteName: '',
     siteProcessId: 0,
+    siteProcessName: '',
     outsourcingCompanyName: '',
     outsourcingCompanyId: 0,
     reportDate: null,
@@ -152,7 +154,9 @@ export const useDailyFormStore = create<DailyReportFormStore>((set, get) => ({
     set(() => ({
       form: {
         siteId: 0,
+        siteName: '',
         siteProcessId: 0,
+        siteProcessName: '',
         outsourcingCompanyName: '',
         outsourcingCompanyId: 0,
         reportDate: null,

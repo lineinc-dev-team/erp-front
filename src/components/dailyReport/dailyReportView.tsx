@@ -56,6 +56,7 @@ export default function DailyReportView() {
       ...item,
       siteId: item.site?.id,
       processId: item.siteProcess?.id,
+      siteName: item.site?.name,
 
       site: item.site?.name || '-',
       employeeWorkQuantitySum: `${item.employeeWorkQuantitySum || 0} / ${
@@ -194,6 +195,7 @@ export default function DailyReportView() {
           const clientReportDate = params.row.reportDate
           const clientReportSiteId = params.row.siteId
           const clientProcessId = params.row.processId
+          const clientReportSiteName = params.row.siteName
 
           console.log('clientIdclientId', params.row)
 
@@ -203,6 +205,7 @@ export default function DailyReportView() {
                 date: clientReportDate,
                 site: clientReportSiteId,
                 process: clientProcessId,
+                siteName: clientReportSiteName,
               }).toString()
 
               router.push(`/dailyReport/registration?${queryString}`)
