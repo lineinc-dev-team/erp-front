@@ -95,11 +95,11 @@ export default function AggregateLaborPayRollView() {
       account:
         labor.type === '직영'
           ? formatValue(labor.accountNumber)
-          : formatValue(labor.outsourcingCompany.bankName),
+          : formatValue(labor.outsourcingCompany.accountNumber),
       accountName:
         labor.type === '직영'
           ? formatValue(labor.accountHolder)
-          : formatValue(labor.outsourcingCompany.bankName),
+          : formatValue(labor.outsourcingCompany.accountHolder),
     }
   })
 
