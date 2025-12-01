@@ -18,7 +18,6 @@ import {
 } from '@mui/material'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import CommonDatePicker from '../common/DatePicker'
 import { useDailyReport } from '@/hooks/useDailyReport'
 import { useDailyFormStore } from '@/stores/dailyReportStore'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
@@ -73,6 +72,7 @@ import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 import { useFocusStore } from '@/stores/focusStore'
 import { GetCompanyNameInfoService } from '@/services/outsourcingContract/outsourcingContractRegistrationService'
 import { useSearchParams } from 'next/navigation'
+import CommonPreviousDatePicker from '../common/PreviousDatePick'
 
 export default function DailyReportRegistrationView() {
   const {
@@ -5026,7 +5026,7 @@ export default function DailyReportRegistrationView() {
               일자
             </label>
             <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
-              <CommonDatePicker
+              <CommonPreviousDatePicker
                 value={form.reportDate || null}
                 onChange={(value) => setField('reportDate', value)}
               />
