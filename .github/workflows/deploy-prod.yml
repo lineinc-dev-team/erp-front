@@ -34,7 +34,9 @@ jobs:
       # 5️⃣ 빌드 압축
       - name: Compress build result
         run: |
-          tar -czf build.tar.gz .next public package.json
+          mkdir -p deploy_temp
+          cp -r .next public package.json deploy_temp/
+          tar -czf build.tar.gz -C deploy_temp .
 
       # 6️⃣ EC2로 파일 전송
       - name: Copy build file to EC2
@@ -43,8 +45,10 @@ jobs:
           host: ${{ secrets.EC2_PROD_HOST }}
           username: ${{ secrets.EC2_PROD_USER }}
           key: ${{ secrets.EC2_PROD_KEY }}
+          # source: 'build.tar.gz'
+          # target: '/home/${{ secrets.EC2_PROD_USER }}/deploy/build.tar.gz'
           source: 'build.tar.gz'
-          target: '/home/${{ secrets.EC2_PROD_USER }}/deploy/build.tar.gz'
+          target: '/home/${{ secrets.EC2_PROD_USER }}/deploy/'
 
       # 7️⃣ EC2 배포 및 Nginx 설정
       - name: Deploy on EC2 and Configure Nginx
