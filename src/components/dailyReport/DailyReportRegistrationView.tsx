@@ -8143,12 +8143,11 @@ export default function DailyReportRegistrationView() {
                           </div>
 
                           {m.subEquipments && m.subEquipments?.length > 0 && (
-                            <div className="flex flex-col gap-2 mt-2">
+                            <div className="flex flex-col ">
                               {m.subEquipments.map((item) => (
                                 <div
                                   key={item.id || item.outsourcingCompanyContractSubEquipmentId}
-                                  className="flex items-center justify-between gap-2 w-full"
-                                  style={{ minHeight: '40px' }}
+                                  className="flex items-center justify-between gap-2"
                                 >
                                   <CommonInput
                                     className="flex-1 text-2xl"
@@ -8156,26 +8155,6 @@ export default function DailyReportRegistrationView() {
                                     onChange={() => {}}
                                     disabled
                                   />
-
-                                  {/* <CommonSelect
-                                    className="flex-1 text-2xl"
-                                    value={item.outsourcingCompanyContractSubEquipmentId || 0}
-                                    onChange={(value) => {
-                                      updateContractDetailField(
-                                        'equipment',
-                                        m.id,
-                                        item.id,
-                                        'outsourcingCompanyContractSubEquipmentId',
-                                        value,
-                                      )
-                                    }}
-                                    disabled
-                                    options={
-                                      testArrayByRow[m.outsourcingCompanyContractEquipmentId] ?? [
-                                        { id: 0, name: '선택', taskDescription: '', unitPrice: 0 },
-                                      ]
-                                    }
-                                  /> */}
 
                                   <CommonInput
                                     className="flex-1 text-2xl"
@@ -8188,18 +8167,6 @@ export default function DailyReportRegistrationView() {
                             </div>
                           )}
                         </TableCell>
-
-                        {/* 구분 */}
-                        {/* <TableCell
-                          align="center"
-                          sx={{
-                            border: '1px solid  #9CA3AF',
-                            verticalAlign: 'top',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {m.type ?? '-'}
-                        </TableCell> */}
 
                         <TableCell align="center" sx={cellStyle}>
                           <TextField
@@ -8219,7 +8186,7 @@ export default function DailyReportRegistrationView() {
 
                           {m.subEquipments &&
                             m.subEquipments?.map((detail) => (
-                              <div key={detail.id} className="flex gap-2 mt-1 items-center">
+                              <div key={detail.id} className="flex gap-2 mt-4 items-center">
                                 <TextField
                                   size="small"
                                   placeholder="작업 내용 입력"
@@ -8263,7 +8230,7 @@ export default function DailyReportRegistrationView() {
                           />
                           {m.subEquipments &&
                             m.subEquipments.map((detail) => (
-                              <div key={detail.id} className="flex gap-2 mt-1 items-center">
+                              <div key={detail.id} className="flex gap-2 mt-4 items-center">
                                 <TextField
                                   size="small"
                                   placeholder="숫자만"
@@ -8309,6 +8276,9 @@ export default function DailyReportRegistrationView() {
                               setClearEquipmentDriverNameFocusedId(null)
                               setClearEquipmentCarNumberFocusedId(null)
                             }}
+                            onWheel={(e) => {
+                              ;(e.target as HTMLInputElement).blur()
+                            }}
                             onChange={(e) => {
                               const value = e.target.value
                               const numericValue = value === '' ? null : parseFloat(value)
@@ -8324,7 +8294,6 @@ export default function DailyReportRegistrationView() {
                               },
                               '& input': {
                                 textAlign: 'center',
-                                padding: '10px',
                                 MozAppearance: 'textfield', // Firefox
                                 '&::-webkit-outer-spin-button': {
                                   // Chrome, Safari
@@ -8342,13 +8311,16 @@ export default function DailyReportRegistrationView() {
 
                           {m.subEquipments &&
                             m.subEquipments.map((detail) => (
-                              <div key={detail.id} className="flex gap-2 mt-1 items-center">
+                              <div key={detail.id} className="flex gap-2 mt-4 items-center">
                                 <TextField
                                   size="small"
                                   type="number" // type을 number로 변경
                                   placeholder="숫자를 입력해주세요."
                                   inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
                                   value={detail.workHours ?? ''}
+                                  onWheel={(e) => {
+                                    ;(e.target as HTMLInputElement).blur()
+                                  }}
                                   onFocus={() => {
                                     setClearEquipmentOutsourcingNameFocusedId(null)
                                     setClearEquipmentDriverNameFocusedId(null)
@@ -8458,7 +8430,7 @@ export default function DailyReportRegistrationView() {
                           />
                           {m.subEquipments &&
                             m.subEquipments.map((detail) => (
-                              <div key={detail.id} className="flex gap-2 mt-1 items-center">
+                              <div key={detail.id} className="flex gap-2 mt-4  items-center">
                                 <TextField
                                   size="small"
                                   placeholder="500자 이하 텍스트 입력"
