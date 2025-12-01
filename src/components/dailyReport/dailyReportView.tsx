@@ -125,6 +125,8 @@ export default function DailyReportView() {
         headerAlign: 'center',
         align: 'center',
         flex: 1,
+        minWidth: 60,
+        maxWidth: 60,
         renderCell: (params: GridRenderCellParams) => {
           const value = params.value as string
           return (
@@ -185,6 +187,8 @@ export default function DailyReportView() {
         headerAlign: 'center',
         align: 'center',
         flex: 1,
+        minWidth: 100,
+        maxWidth: 100,
         cellClassName: 'no-hover-bg', // 커스텀 클래스 지정
         renderCell: (params: GridRenderCellParams) => {
           const clientReportDate = params.row.reportDate
@@ -222,12 +226,34 @@ export default function DailyReportView() {
       }
     }
 
+    if (col.field === 'sitePhotoSubmitted') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 100,
+        maxWidth: 100,
+      }
+    }
+
+    if (col.field === 'weather') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 60,
+        maxWidth: 60,
+      }
+    }
+
     if (col.field === 'no') {
       return {
         ...col,
         headerAlign: 'center',
         align: 'center',
         flex: 0.5,
+        minWidth: 40,
+        maxWidth: 40,
         renderCell: (params: GridRenderCellParams) => {
           const sortedRowIds = params.api.getSortedRowIds?.() ?? []
           const indexInCurrentPage = sortedRowIds.indexOf(params.id)
@@ -289,6 +315,13 @@ export default function DailyReportView() {
 
   const [createModalOpen, setCreateModalOpen] = useState(false)
 
+  const handleEnterKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      search.setField('currentPage', 1) // 페이지 초기화
+      search.handleSearch()
+    }
+  }
+
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
@@ -297,7 +330,10 @@ export default function DailyReportView() {
             <label className="w-[144px] text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명
             </label>
-            <div className="border border-gray-400 w-full flex items-center">
+            <div
+              className="border border-gray-400 w-full flex items-center"
+              onKeyDown={handleEnterKey}
+            >
               <InfiniteScrollSelect
                 placeholder="현장명을 입력하세요"
                 keyword={search.siteName}

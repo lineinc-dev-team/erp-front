@@ -265,7 +265,6 @@ export const DailyColumnList: GridColDef[] = [
   { field: 'no', headerName: 'No', width: 10 },
   { field: 'site', headerName: '현장', width: 130 },
   { field: 'siteProcess', headerName: '공정', width: 130 },
-  { field: 'reportDate', headerName: '일자', width: 130 },
   { field: 'employeeWorkQuantitySum', headerName: '직원(공수)/증빙', width: 180 },
   { field: 'directContractWorkQuantitySum', headerName: '직영,용역(공수)/증빙', width: 100 },
   { field: 'equipmentTotalHours', headerName: '장비(시간)/증빙', width: 120 },
@@ -274,13 +273,15 @@ export const DailyColumnList: GridColDef[] = [
   { field: 'outsourcingWorkQuantitySum', headerName: '외주(공수)/증빙', width: 100 },
 
   { field: 'isConstructionReport', headerName: '공사일보', width: 100 },
-  { field: 'sitePhotoSubmitted', headerName: '현장사진', width: 100 },
   { field: 'gasolineTotalAmount', headerName: '유류(L)/휘발유', width: 100 },
   { field: 'dieselTotalAmount', headerName: '유류(L)/경유', width: 100 },
   { field: 'ureaTotalAmount', headerName: '유류(L)/요소수', width: 100 },
   { field: 'etcTotalAmount', headerName: '유류(L)/기타', width: 100 },
   // { field: 'accountNumber', headerName: '현장사진', width: 100 },
   // { field: 'tenureMonths', headerName: '작업내용', width: 100 },
+  { field: 'reportDate', headerName: '일자', width: 130 },
+  { field: 'sitePhotoSubmitted', headerName: '현장사진', width: 100 },
+
   { field: 'weather', headerName: '날씨', width: 100 },
   { field: 'status', headerName: '마감', width: 100 },
 ]
