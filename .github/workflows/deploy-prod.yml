@@ -55,18 +55,19 @@ jobs:
           key: ${{ secrets.EC2_PROD_KEY }}
           script: |
             DEPLOY_PATH="/var/www/erp-front"
+            BUILD_FILE="/home/${{ secrets.EC2_PROD_USER }}/deploy/build.tar.gz"
 
             # 1️⃣ 배포 폴더 생성 및 권한 설정
             sudo mkdir -p $DEPLOY_PATH
             sudo chown -R $USER:$USER $DEPLOY_PATH
 
             # 2️⃣ 압축 해제
-            if [ ! -f ~/deploy/build.tar.gz ]; then
-              echo "Error: build.tar.gz not found!"
+            if [ ! -f $BUILD_FILE ]; then
+              echo "Error: build.tar.gz not found at $BUILD_FILE"
               exit 1
             fi
-            tar -xzf ~/deploy/build.tar.gz -C $DEPLOY_PATH
-            rm -f ~/deploy/build.tar.gz
+            tar -xzf $BUILD_FILE -C $DEPLOY_PATH
+            rm -f $BUILD_FILE
 
             # 3️⃣ PM2 배포
             cd $DEPLOY_PATH
@@ -90,6 +91,7 @@ jobs:
                 }
             }
             EOF
+
                         sudo ln -sf /etc/nginx/sites-available/erp-front /etc/nginx/sites-enabled/erp-front
                         sudo nginx -t
                         sudo systemctl reload nginx
