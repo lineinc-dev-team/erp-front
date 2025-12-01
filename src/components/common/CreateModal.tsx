@@ -4,12 +4,12 @@
 
 import React, { useEffect } from 'react'
 import CommonSelect from '../common/Select'
-import CommonDatePicker from '../common/DatePicker'
 import { useDailyFormStore, useDailySearchList } from '@/stores/dailyReportStore'
 import { useFuelAggregation } from '@/hooks/useFuelAggregation'
 import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
 import useOutSourcingContract from '@/hooks/useOutSourcingContract'
 import { useDailyReport } from '@/hooks/useDailyReport'
+import CommonPreviousDatePicker from './PreviousDatePick'
 
 type Props = {
   open: boolean
@@ -123,7 +123,7 @@ export default function CreateModal({ open, onClose, title }: Props) {
               일자 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
-              <CommonDatePicker
+              <CommonPreviousDatePicker
                 value={form.reportDate || null}
                 onChange={(value) => setField('reportDate', value)}
               />
