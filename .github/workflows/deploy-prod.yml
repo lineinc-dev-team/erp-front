@@ -70,7 +70,7 @@ jobs:
             if [ $? -eq 0 ]; then
                 pm2 reload erp-front
             else
-                pm2 start npm --name "erp-front" -- start
+                pm2 start npm --name "erp-front" -- start --cwd $DEPLOY_PATH
             fi
             pm2 save
 
