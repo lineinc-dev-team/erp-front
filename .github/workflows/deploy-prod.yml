@@ -40,7 +40,7 @@ jobs:
           source: 'build.tar.gz'
           target: '/home/${{ secrets.EC2_PROD_USER }}/deploy/build.tar.gz'
 
-      - name: Deploy on EC2
+      - name: Deploy on EC2 and Configure Nginx
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_PROD_HOST }}
@@ -48,15 +48,40 @@ jobs:
           key: ${{ secrets.EC2_PROD_KEY }}
           script: |
             DEPLOY_PATH="/var/www/erp-front"
+            DOMAIN="erp.dooson.it"
 
-            mkdir -p $DEPLOY_PATH
+            # 1️⃣ 배포 경로 생성
+            sudo mkdir -p $DEPLOY_PATH
+            sudo chown -R $USER:$USER $DEPLOY_PATH
 
-            # 압축 해제
+            # 2️⃣ 압축 해제
             tar -xzf ~/deploy/build.tar.gz -C $DEPLOY_PATH
-
             rm ~/deploy/build.tar.gz
 
-            # pm2 restart 또는 시작
+            # 3️⃣ pm2로 Next.js 서버 실행
             pm2 restart erp-front || pm2 start npm --name "erp-front" -- start
 
-            sudo systemctl reload nginx
+            # 4️⃣ Nginx 설정 자동화
+            NGINX_CONF="/etc/nginx/sites-available/erp-front"
+            sudo bash -c "cat > $NGINX_CONF <<EOL
+            server {
+                listen 80;
+                server_name $DOMAIN;
+
+                location / {
+                    proxy_pass http://localhost:3000;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade \$http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host \$host;
+                    proxy_cache_bypass \$http_upgrade;
+                }
+            }
+            EOL"
+
+                        # 심볼릭 링크 생성
+                        sudo ln -sf $NGINX_CONF /etc/nginx/sites-enabled/erp-front
+
+                        # Nginx 문법 체크 후 reload
+                        sudo nginx -t
+                        sudo systemctl reload nginx
