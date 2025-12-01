@@ -10,8 +10,8 @@ import {
   Paper,
   Button,
 } from '@mui/material'
-import * as XLSX from 'xlsx'
-import { saveAs } from 'file-saver'
+// import * as XLSX from 'xlsx'
+import * as XLSX from 'xlsx-js-style'
 import useFinalAggregationView from '@/hooks/useFinalAggregation'
 import { useHeadOfficeAggregationSearchStore } from '@/stores/headOfficeAggregationStore'
 
@@ -32,9 +32,6 @@ export default function HeadOfficeAggregateView() {
   const totalConstructionAmount = apiData.totalConstructionAmount || 0
   const costSummaries = apiData.costSummaries || []
 
-  /* ------------------------
-      🔥 데이터 매핑
-  ------------------------- */
   const rows = costSummaries.map((item: any, index: number) => {
     const prev = item.previousSummary || {}
     const curr = item.currentSummary || {}
@@ -65,6 +62,139 @@ export default function HeadOfficeAggregateView() {
       totalTotal,
     }
   })
+
+  // const handleExcelDownload = () => {
+  //   const wb = XLSX.utils.book_new()
+
+  //   const headerRow1 = [
+  //     '총 공사금액',
+  //     'NO.',
+  //     '공종명',
+  //     '계약금액',
+  //     '전회까지 청구내역',
+  //     '',
+  //     '',
+  //     '',
+  //     '금회 청구내역',
+  //     '',
+  //     '',
+  //     '',
+  //     '누계 청구내역',
+  //     '',
+  //     '',
+  //     '',
+  //   ]
+
+  //   const headerRow2 = [
+  //     '',
+  //     '',
+  //     '',
+  //     '',
+  //     '공급가',
+  //     '부가세',
+  //     '공제금액',
+  //     '계',
+  //     '공급가',
+  //     '부가세',
+  //     '공제금액',
+  //     '계',
+  //     '공급가',
+  //     '부가세',
+  //     '공제금액',
+  //     '계',
+  //   ]
+
+  //   const sheetData: any[] = []
+  //   sheetData.push(headerRow1)
+  //   sheetData.push(headerRow2)
+
+  //   rows.forEach((r: any, index: number) => {
+  //     sheetData.push([
+  //       index === 0 ? totalConstructionAmount.toLocaleString() : '',
+  //       r.no,
+  //       r.processName,
+  //       r.contractAmount.toLocaleString(),
+  //       r.prevSupply.toLocaleString(),
+  //       r.prevTax.toLocaleString(),
+  //       r.prevDeduction.toLocaleString(),
+  //       r.prevTotal.toLocaleString(),
+  //       r.currSupply.toLocaleString(),
+  //       r.currTax.toLocaleString(),
+  //       r.currDeduction.toLocaleString(),
+  //       r.currTotal.toLocaleString(),
+  //       r.totalSupply.toLocaleString(),
+  //       r.totalTax.toLocaleString(),
+  //       r.totalDeduction.toLocaleString(),
+  //       r.totalTotal.toLocaleString(),
+  //     ])
+  //   })
+
+  //   // 소계 행
+  //   sheetData.push([
+  //     '소계',
+  //     '',
+  //     '',
+  //     '',
+  //     rows.reduce((s: any, r: any) => s + r.prevSupply, 0).toLocaleString(),
+  //     rows.reduce((s: any, r: any) => s + r.prevTax, 0).toLocaleString(),
+  //     rows.reduce((s: any, r: any) => s + r.prevDeduction, 0).toLocaleString(),
+  //     rows.reduce((s: any, r: any) => s + r.prevTotal, 0).toLocaleString(),
+  //     rows.reduce((s: any, r: any) => s + r.currSupply, 0).toLocaleString(),
+  //     rows.reduce((s: any, r: any) => s + r.currTax, 0).toLocaleString(),
+  //     rows.reduce((s: any, r: any) => s + r.currDeduction, 0).toLocaleString(),
+  //     rows.reduce((s: any, r: any) => s + r.currTotal, 0).toLocaleString(),
+  //     rows.reduce((s: any, r: any) => s + r.totalSupply, 0).toLocaleString(),
+  //     rows.reduce((s: any, r: any) => s + r.totalTax, 0).toLocaleString(),
+  //     rows.reduce((s: any, r: any) => s + r.totalDeduction, 0).toLocaleString(),
+  //     rows.reduce((s: any, r: any) => s + r.totalTotal, 0).toLocaleString(),
+  //   ])
+
+  //   const ws = XLSX.utils.aoa_to_sheet(sheetData)
+
+  //   // 병합 설정
+  //   ws['!merges'] = [
+  //     { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, // 총 공사금액 헤더 2줄 병합
+  //     { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } },
+  //     { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } },
+  //     { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } },
+  //     { s: { r: 0, c: 4 }, e: { r: 0, c: 7 } },
+  //     { s: { r: 0, c: 8 }, e: { r: 0, c: 11 } },
+  //     { s: { r: 0, c: 12 }, e: { r: 0, c: 15 } },
+  //     // 총 공사금액 실제 데이터 첫 행 세로 병합
+  //     { s: { r: 2, c: 0 }, e: { r: 1 + rows.length, c: 0 } },
+  //     // 소계 부분 4칸 병합 (계약금액~계)
+  //     { s: { r: 2 + rows.length, c: 1 }, e: { r: 2 + rows.length, c: 4 } },
+  //   ]
+
+  //   // 스타일 적용
+  //   const range = XLSX.utils.decode_range(ws['!ref']!)
+  //   for (let R = range.s.r; R <= range.e.r; ++R) {
+  //     for (let C = range.s.c; C <= range.e.c; ++C) {
+  //       const cellRef = XLSX.utils.encode_cell({ r: R, c: C })
+  //       if (!ws[cellRef]) ws[cellRef] = { v: '' }
+
+  //       const isHeader = R < 2
+  //       const isAmount = !isHeader && C >= 3 // 금액/계 숫자 컬럼만 오른쪽 정렬
+
+  //       ws[cellRef].s = {
+  //         border: {
+  //           top: { style: 'thin', color: { rgb: '000000' } },
+  //           bottom: { style: 'thin', color: { rgb: '000000' } },
+  //           left: { style: 'thin', color: { rgb: '000000' } },
+  //           right: { style: 'thin', color: { rgb: '000000' } },
+  //         },
+  //         fill: isHeader ? { patternType: 'solid', fgColor: { rgb: 'C0C0C0' } } : undefined,
+  //         alignment: {
+  //           vertical: 'center',
+  //           horizontal: isAmount ? 'right' : 'center',
+  //         },
+  //       }
+  //     }
+  //   }
+
+  //   XLSX.utils.book_append_sheet(wb, ws, 'Sheet1')
+  //   XLSX.writeFile(wb, '집계표(본사).xlsx')
+  // }
 
   const handleExcelDownload = () => {
     const wb = XLSX.utils.book_new()
@@ -111,26 +241,20 @@ export default function HeadOfficeAggregateView() {
     sheetData.push(headerRow1)
     sheetData.push(headerRow2)
 
-    /* -------------------------------------
-      2. UI 본문 rows 그대로 추가
-  --------------------------------------*/
     rows.forEach((r: any, index: number) => {
       sheetData.push([
         index === 0 ? totalConstructionAmount.toLocaleString() : '',
         r.no,
         r.processName,
-        r.contractAmount,
-
+        r.contractAmount.toLocaleString(),
         r.prevSupply.toLocaleString(),
         r.prevTax.toLocaleString(),
         r.prevDeduction.toLocaleString(),
         r.prevTotal.toLocaleString(),
-
         r.currSupply.toLocaleString(),
         r.currTax.toLocaleString(),
         r.currDeduction.toLocaleString(),
         r.currTotal.toLocaleString(),
-
         r.totalSupply.toLocaleString(),
         r.totalTax.toLocaleString(),
         r.totalDeduction.toLocaleString(),
@@ -138,65 +262,86 @@ export default function HeadOfficeAggregateView() {
       ])
     })
 
-    /* -------------------------------------
-      3. 소계 Row 추가
-  --------------------------------------*/
+    // 소계 행
+    const prevSupplySum = rows.reduce((s: any, r: any) => s + r.prevSupply, 0)
+    const prevTaxSum = rows.reduce((s: any, r: any) => s + r.prevTax, 0)
+    const prevDeductionSum = rows.reduce((s: any, r: any) => s + r.prevDeduction, 0)
+    const prevTotalSum = rows.reduce((s: any, r: any) => s + r.prevTotal, 0)
+
+    const currSupplySum = rows.reduce((s: any, r: any) => s + r.currSupply, 0)
+    const currTaxSum = rows.reduce((s: any, r: any) => s + r.currTax, 0)
+    const currDeductionSum = rows.reduce((s: any, r: any) => s + r.currDeduction, 0)
+    const currTotalSum = rows.reduce((s: any, r: any) => s + r.currTotal, 0)
+
+    const totalSupplySum = rows.reduce((s: any, r: any) => s + r.totalSupply, 0)
+    const totalTaxSum = rows.reduce((s: any, r: any) => s + r.totalTax, 0)
+    const totalDeductionSum = rows.reduce((s: any, r: any) => s + r.totalDeduction, 0)
+    const totalTotalSum = rows.reduce((s: any, r: any) => s + r.totalTotal, 0)
+
     sheetData.push([
       '소계',
       '',
       '',
-      '',
-      rows.reduce((s: any, r: any) => s + r.prevSupply, 0).toLocaleString(),
-      rows.reduce((s: any, r: any) => s + r.prevTax, 0).toLocaleString(),
-      rows.reduce((s: any, r: any) => s + r.prevDeduction, 0).toLocaleString(),
-      rows.reduce((s: any, r: any) => s + r.prevTotal, 0).toLocaleString(),
-
-      rows.reduce((s: any, r: any) => s + r.currSupply, 0).toLocaleString(),
-      rows.reduce((s: any, r: any) => s + r.currTax, 0).toLocaleString(),
-      rows.reduce((s: any, r: any) => s + r.currDeduction, 0).toLocaleString(),
-      rows.reduce((s: any, r: any) => s + r.currTotal, 0).toLocaleString(),
-
-      rows.reduce((s: any, r: any) => s + r.totalSupply, 0).toLocaleString(),
-      rows.reduce((s: any, r: any) => s + r.totalTax, 0).toLocaleString(),
-      rows.reduce((s: any, r: any) => s + r.totalDeduction, 0).toLocaleString(),
-      rows.reduce((s: any, r: any) => s + r.totalTotal, 0).toLocaleString(),
+      '', // 계약금액 포함 4칸 병합
+      prevSupplySum.toLocaleString(),
+      prevTaxSum.toLocaleString(),
+      prevDeductionSum.toLocaleString(),
+      prevTotalSum.toLocaleString(),
+      currSupplySum.toLocaleString(),
+      currTaxSum.toLocaleString(),
+      currDeductionSum.toLocaleString(),
+      currTotalSum.toLocaleString(),
+      totalSupplySum.toLocaleString(),
+      totalTaxSum.toLocaleString(),
+      totalDeductionSum.toLocaleString(),
+      totalTotalSum.toLocaleString(),
     ])
 
-    /* -------------------------------------
-      4. sheet 로 변환
-  --------------------------------------*/
-    const wsGenerated = XLSX.utils.aoa_to_sheet(sheetData)
+    const ws = XLSX.utils.aoa_to_sheet(sheetData)
 
-    /* -------------------------------------
-      5. 병합 영역 UI와 동일하게 적용
-  --------------------------------------*/
-
-    wsGenerated['!merges'] = [
-      // 총 공사금액 (rowSpan = rows.length)
-      {
-        s: { r: 2, c: 0 }, // 시작: 3번째 줄 1번째 칸
-        e: { r: 1 + rows.length, c: 0 }, // rows 만큼 아래로 병합
-      },
-
-      // 첫 번째 헤더 줄 병합
-      { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, // 총 공사금액 (2줄 병합)
-      { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } }, // NO
-      { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } }, // 공종명
-      { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } }, // 계약금액
-
-      // 전회 colSpan=4
+    // 병합 설정
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, // 총 공사금액 헤더 2줄
+      { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } },
+      { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } },
+      { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } },
       { s: { r: 0, c: 4 }, e: { r: 0, c: 7 } },
-      // 금회 colSpan=4
       { s: { r: 0, c: 8 }, e: { r: 0, c: 11 } },
-      // 누계 colSpan=4
       { s: { r: 0, c: 12 }, e: { r: 0, c: 15 } },
+      { s: { r: 2, c: 0 }, e: { r: 1 + rows.length, c: 0 } }, // 총 공사금액 실제 값 병합
+      { s: { r: 2 + rows.length, c: 0 }, e: { r: 2 + rows.length, c: 3 } }, // 소계 텍스트 + 계약금액 포함 4칸 병합
     ]
 
-    XLSX.utils.book_append_sheet(wb, wsGenerated, 'Sheet1')
+    // 스타일 적용
+    const range = XLSX.utils.decode_range(ws['!ref']!)
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cellRef = XLSX.utils.encode_cell({ r: R, c: C })
+        if (!ws[cellRef]) ws[cellRef] = { v: '' }
 
-    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
-    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' })
-    saveAs(blob, '집계표(본사).xlsx')
+        const isHeader = R < 2
+        const isAmount = !isHeader && C >= 4 // 금액/계 컬럼만 오른쪽 정렬
+
+        const isSubtotalLabel = R === 2 + rows.length && C === 0 // 소계 텍스트 위치
+
+        ws[cellRef].s = {
+          border: {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } },
+          },
+          fill: isHeader ? { patternType: 'solid', fgColor: { rgb: 'C0C0C0' } } : undefined,
+          alignment: {
+            vertical: 'center',
+            horizontal: isHeader || isSubtotalLabel ? 'center' : isAmount ? 'right' : 'center',
+          },
+        }
+      }
+    }
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1')
+    XLSX.writeFile(wb, '집계표(본사).xlsx')
   }
 
   /* ------------------------

@@ -97,19 +97,19 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
         dayValues[i] = dayData && dayData.amount ? dayData.amount : 0
       }
 
-      const total = Object.values(dayValues).reduce((acc, cur) => acc + (cur as number), 0)
+      // const total = Object.values(dayValues).reduce((acc, cur) => acc + (cur as number), 0)
 
-      //       const total = Object.entries(dayValues).reduce((acc, [day, amount]) => {
-      //   const dayNum = Number(day)
-      //   const price =
-      //     fuelType === 'DIESEL'
-      //       ? Number(String(getFuelPrice(dayNum, 'dieselPrice')).replaceAll(',', '').trim()) || 0
-      //       : fuelType === 'GASOLINE'
-      //       ? Number(String(getFuelPrice(dayNum, 'gasolinePrice')).replaceAll(',', '').trim()) || 0
-      //       : Number(String(getFuelPrice(dayNum, 'ureaPrice')).replaceAll(',', '').trim()) || 0
+      const total = Object.entries(dayValues).reduce((acc, [day, amount]) => {
+        const dayNum = Number(day)
+        const price =
+          fuelType === 'DIESEL'
+            ? Number(String(getFuelPrice(dayNum, 'dieselPrice')).replaceAll(',', '').trim()) || 0
+            : fuelType === 'GASOLINE'
+            ? Number(String(getFuelPrice(dayNum, 'gasolinePrice')).replaceAll(',', '').trim()) || 0
+            : Number(String(getFuelPrice(dayNum, 'ureaPrice')).replaceAll(',', '').trim()) || 0
 
-      //   return acc + amount * price
-      // }, 0)
+        return acc + amount * price
+      }, 0)
 
       rows.push({
         fuelType,
@@ -403,6 +403,7 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
               {fuelTypes.map((fuelType) => {
                 const fuelRows = rows.filter((r) => r.fuelType === fuelType)
 
+                console.log('fuelRowsfuelRows', fuelRows)
                 return (
                   <React.Fragment key={fuelType}>
                     {/* 유종별 데이터 */}
@@ -489,8 +490,15 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
 
                             <TableCell align="right" sx={cellStyle}>
                               {rows
-                                .filter((r) => r.fuelType === 'DIESEL')
-                                .reduce((acc, r) => acc + r.total, 0)
+                                .filter((r) => r.fuelType === 'DIESEL') // GASOLINE만 선택
+                                .reduce((acc, r) => {
+                                  // 각 row의 days 모든 날짜 합산
+                                  const rowTotal = Object.values(r.days).reduce(
+                                    (sum: any, cur) => sum + (cur || 0),
+                                    0,
+                                  )
+                                  return acc + rowTotal
+                                }, 0)
                                 .toLocaleString()}
                             </TableCell>
                           </TableRow>
@@ -543,8 +551,15 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
 
                             <TableCell align="right" sx={cellStyle}>
                               {rows
-                                .filter((r) => r.fuelType === 'GASOLINE')
-                                .reduce((acc, r) => acc + r.total, 0)
+                                .filter((r) => r.fuelType === 'GASOLINE') // GASOLINE만 선택
+                                .reduce((acc, r) => {
+                                  // 각 row의 days 모든 날짜 합산
+                                  const rowTotal = Object.values(r.days).reduce(
+                                    (sum: any, cur) => sum + (cur || 0),
+                                    0,
+                                  )
+                                  return acc + rowTotal
+                                }, 0)
                                 .toLocaleString()}
                             </TableCell>
                           </TableRow>
@@ -596,9 +611,16 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
                             ))}
 
                             <TableCell align="right" sx={cellStyle}>
-                              {fuelRows
-                                .filter((r) => r.fuelType === 'UREA') // 전체 합산도 필터링
-                                .reduce((acc, r) => acc + r.total, 0)
+                              {rows
+                                .filter((r) => r.fuelType === 'UREA') // GASOLINE만 선택
+                                .reduce((acc, r) => {
+                                  // 각 row의 days 모든 날짜 합산
+                                  const rowTotal = Object.values(r.days).reduce(
+                                    (sum: any, cur) => sum + (cur || 0),
+                                    0,
+                                  )
+                                  return acc + rowTotal
+                                }, 0)
                                 .toLocaleString()}
                             </TableCell>
                           </TableRow>
