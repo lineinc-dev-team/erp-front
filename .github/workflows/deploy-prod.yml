@@ -62,8 +62,9 @@ jobs:
             sudo chown -R $USER:$USER $DEPLOY_PATH
 
             # 2️⃣ 압축 해제
-            tar -xzf ~/deploy/build.tar.gz -C $DEPLOY_PATH
+            tar -xzf ~/deploy/build.tar.gz -C $DEPLOY_PATH --strip-components=1
             rm -f ~/deploy/build.tar.gz
+
 
             pm2 delete erp-front || true
             pm2 start npm --name "erp-front" -- start --cwd $DEPLOY_PATH
