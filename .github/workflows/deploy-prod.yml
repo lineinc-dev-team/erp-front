@@ -56,7 +56,27 @@ jobs:
 
             rm ~/deploy/build.tar.gz
 
-            # pm2 restart 또는 시작
-            pm2 restart erp-front || pm2 start npm --name "erp-front" -- start
+            # pm2 배포
+            pm2 delete erp-front || true
+            pm2 start npm --name "erp-front" -- start --cwd $DEPLOY_PATH
+            pm2 save
 
-            sudo systemctl reload nginx
+            # Nginx 설정
+            sudo tee /etc/nginx/sites-available/erp-front > /dev/null <<'EOF'
+            server {
+                listen 80;
+                server_name erp.dooson.it;
+
+                location / {
+                    proxy_pass http://localhost:3000;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade $http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host $host;
+                    proxy_cache_bypass $http_upgrade;
+                }
+            }
+            EOF
+                        sudo ln -sf /etc/nginx/sites-available/erp-front /etc/nginx/sites-enabled/erp-front
+                        sudo nginx -t
+                        sudo systemctl reload nginx
