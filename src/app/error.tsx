@@ -34,7 +34,7 @@ export default function Error({ reset }: { reset: () => void }) {
           일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.
         </Typography>
         <Button variant="contained" color="primary" onClick={() => reset()} sx={{ mt: 2, px: 4 }}>
-          다시 시도하기
+          다시 시도하기.
         </Button>
       </Paper>
     </Box>
