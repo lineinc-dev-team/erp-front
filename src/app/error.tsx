@@ -28,7 +28,7 @@ export default function Error({ reset }: { reset: () => void }) {
       >
         <ErrorOutlineIcon color="error" sx={{ fontSize: 60, mb: 2 }} />
         <Typography variant="h5" gutterBottom>
-          문제가 발생했습니다
+          문제가 발생했습니다.
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
           일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.
