@@ -10,27 +10,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ 소스 체크아웃
       - name: Checkout source
         uses: actions/checkout@v4
 
+      # 2️⃣ Node 설정
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
+      # 3️⃣ 의존성 설치
       - name: Install dependencies
         run: npm install
 
+      # 4️⃣ 환경파일 생성 및 빌드
       - name: Create .env.production and Build
         run: |
           echo "NEXT_PUBLIC_API_URL=https://erp-api.dooson.it/api/v1" > .env.production
           echo "NEXT_PUBLIC_API_URL_V2=https://erp-api.dooson.it/api/v2" >> .env.production
           npm run build
 
+      # 5️⃣ 빌드 압축
       - name: Compress build result
         run: |
           tar -czf build.tar.gz .next public package.json
 
+      # 6️⃣ EC2로 파일 전송
       - name: Copy build file to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -40,6 +46,7 @@ jobs:
           source: 'build.tar.gz'
           target: '/home/${{ secrets.EC2_PROD_USER }}/deploy/build.tar.gz'
 
+      # 7️⃣ EC2 배포 및 Nginx 설정
       - name: Deploy on EC2 and Configure Nginx
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -56,34 +63,37 @@ jobs:
 
             # 2️⃣ 압축 해제
             tar -xzf ~/deploy/build.tar.gz -C $DEPLOY_PATH
-            rm -rf ~/deploy/build.tar.gz
+            rm -f ~/deploy/build.tar.gz
 
-            # 3️⃣ pm2 기존 프로세스 삭제 후 새로 실행
-            pm2 delete erp-front || true
-            pm2 start npm --name "erp-front" -- start
+            # 3️⃣ pm2 무중단 배포
+            pm2 describe erp-front > /dev/null 2>&1
+            if [ $? -eq 0 ]; then
+                pm2 reload erp-front
+            else
+                pm2 start npm --name "erp-front" -- start
+            fi
             pm2 save
 
             # 4️⃣ Nginx 설정 자동화
-            NGINX_CONF="/etc/nginx/sites-available/erp-front"
-            sudo bash -c "cat > $NGINX_CONF <<EOL
+            sudo tee /etc/nginx/sites-available/erp-front > /dev/null <<'EOF'
             server {
                 listen 80;
-                server_name $DOMAIN;
+                server_name erp.dooson.it;
 
                 location / {
                     proxy_pass http://localhost:3000;
                     proxy_http_version 1.1;
-                    proxy_set_header Upgrade \$http_upgrade;
+                    proxy_set_header Upgrade $http_upgrade;
                     proxy_set_header Connection 'upgrade';
-                    proxy_set_header Host \$host;
-                    proxy_cache_bypass \$http_upgrade;
+                    proxy_set_header Host $host;
+                    proxy_cache_bypass $http_upgrade;
                 }
             }
-            EOL"
+            EOF
 
-                        # 심볼릭 링크 생성
-                        sudo ln -sf $NGINX_CONF /etc/nginx/sites-enabled/erp-front
+                        # 심볼릭 링크
+                        sudo ln -sf /etc/nginx/sites-available/erp-front /etc/nginx/sites-enabled/erp-front
 
-                        # Nginx 문법 체크 후 reload
+                        # Nginx 문법 확인 후 재시작
                         sudo nginx -t
                         sudo systemctl reload nginx
