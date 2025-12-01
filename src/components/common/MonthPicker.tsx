@@ -23,15 +23,17 @@ export default function CommonMonthPicker({
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ko}>
       <MUIDatePicker
-        views={['year', 'month']} // ✅ 년/월만 선택 가능
-        value={value}
+        views={['year', 'month']} // 🌟 연/월 둘 다 선택 가능
+        openTo="month" // 🌟 달력 열면 바로 월 선택 화면부터 시작
+        value={value} // 🌟 기본값 = 현재 날짜
         disabled={disabled}
         onChange={(date) => {
           if (!date) return onChange(null)
 
-          // 🔥 선택한 연/월의 1일 오전 9시로 고정
-          const adjustedDate = new Date(date.getFullYear(), date.getMonth(), 1, 9, 0, 0)
-          onChange(adjustedDate)
+          // 선택된 연/월의 1일 오전 9시로 고정
+          const fixed = new Date(date.getFullYear(), date.getMonth(), 1, 9, 0, 0)
+
+          onChange(fixed)
         }}
         format="yyyy/MM"
         slotProps={{
