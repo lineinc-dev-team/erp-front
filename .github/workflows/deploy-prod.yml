@@ -56,10 +56,12 @@ jobs:
 
             # 2️⃣ 압축 해제
             tar -xzf ~/deploy/build.tar.gz -C $DEPLOY_PATH
-            rm ~/deploy/build.tar.gz
+            rm -rf ~/deploy/build.tar.gz
 
-            # 3️⃣ pm2로 Next.js 서버 실행
-            pm2 restart erp-front || pm2 start npm --name "erp-front" -- start
+            # 3️⃣ pm2 기존 프로세스 삭제 후 새로 실행
+            pm2 delete erp-front || true
+            pm2 start npm --name "erp-front" -- start
+            pm2 save
 
             # 4️⃣ Nginx 설정 자동화
             NGINX_CONF="/etc/nginx/sites-available/erp-front"
