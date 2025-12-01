@@ -1,20 +1,27 @@
 import { create } from 'zustand'
-import type { FormState, Manager, AttachedFile, OrderingSearchState } from '@/types/ordering'
+import type {
+  Manager,
+  AttachedFile,
+  OrderingSearchState,
+  ClientCompanyFormStore,
+} from '@/types/ordering'
 
 export const useOrderingSearchStore = create<{ search: OrderingSearchState }>((set) => ({
   search: {
+    searchTrigger: 0,
     name: '',
     businessNumber: '',
     ceoName: '',
+    userName: '',
     landlineNumber: '',
-    orderCEOname: '',
+    contactName: '',
     email: '',
     startDate: null,
     endDate: null,
-    bossName: '',
-    isActive: '선택',
+    isActive: '0',
     arraySort: '최신순',
-    pageCount: '10',
+    currentPage: 1,
+    pageCount: '20',
 
     setField: (field, value) =>
       set((state) => ({
@@ -22,42 +29,32 @@ export const useOrderingSearchStore = create<{ search: OrderingSearchState }>((s
       })),
 
     handleSearch: () =>
-      set((state) => {
-        const search = state.search
+      set((state) => ({
+        search: {
+          ...state.search,
+          searchTrigger: state.search.searchTrigger + 1,
+        },
+      })),
 
-        const payload = {
-          name: search.name,
-          businessNumber: search.businessNumber,
-          ceoName: search.ceoName,
-          landlineNumber: search.landlineNumber,
-          orderCEOname: search.orderCEOname,
-          email: search.email,
-          startDate: search.startDate,
-          endDate: search.endDate,
-          bossName: search.bossName,
-          isActive: search.isActive === '사용' ? true : false,
-        }
-        alert(JSON.stringify(payload, null, 2))
-
-        return state
-      }),
     reset: () =>
       set((state) => ({
         search: {
           ...state.search,
+          searchTrigger: 0,
           name: '',
           businessNumber: '',
+          currentPage: 1,
           ceoName: '',
+          userName: '',
           areaNumber: '',
           landlineNumber: '',
-          orderCEOname: '',
+          contactName: '',
           email: '',
           startDate: null,
           endDate: null,
-          bossName: '',
           arraySort: '최신순',
-          pageCount: '10',
-          isActive: '선택',
+          pageCount: '20',
+          isActive: '0',
         },
       })),
 
@@ -67,189 +64,332 @@ export const useOrderingSearchStore = create<{ search: OrderingSearchState }>((s
   },
 }))
 
-export const useOrderingStore = create<{ form: FormState }>((set) => ({
+export const useOrderingFormStore = create<ClientCompanyFormStore>((set, get) => ({
   form: {
     name: '',
-    businessNumber: '',
+    businessNumber: null,
     ceoName: '',
     address: '',
     detailAddress: '',
     areaNumber: '지역번호',
     landlineNumber: '',
+    phoneNumber: '',
     isModalOpen: false,
     email: '',
-    paymentMethod: '선택',
+    paymentMethod: '',
     paymentPeriod: '',
     memo: '',
-    isActive: '선택',
-    headManagers: [],
+    isActive: '1',
+    userId: 0,
+    userName: '',
+    homepageUrl: '',
+    homepageLoginId: '',
+    homepagePassword: '',
+    headManagers: [
+      {
+        id: Date.now(),
+        name: '',
+        position: '',
+        department: '',
+        managerAreaNumber: '지역번호',
+        landlineNumber: '',
+        phoneNumber: '',
+        email: '',
+        memo: '',
+        isMain: false, //대표 담당자
+      },
+    ],
     checkedManagerIds: [],
-    attachedFiles: [],
+    attachedFiles: [
+      // {
+      //   id: Date.now(),
+      //   name: '사업자등록증',
+      //   memo: '',
+      //   files: [],
+      //   type: 'BUSINESS_LICENSE',
+      // },
+    ],
     checkedAttachedFileIds: [],
     modificationHistory: [],
-
-    setField: (field, value) =>
-      set((state) => ({
-        form: { ...state.form, [field]: value },
-      })),
-
-    addItem: (type) =>
-      set((state) => {
-        if (type === 'manager') {
-          const newItem: Manager = {
+    changeHistories: [],
+  },
+  reset: () =>
+    set(() => ({
+      form: {
+        name: '',
+        businessNumber: null,
+        ceoName: '',
+        address: '',
+        userId: 0,
+        userName: '',
+        detailAddress: '',
+        areaNumber: '지역번호',
+        landlineNumber: '',
+        phoneNumber: '',
+        isModalOpen: false,
+        email: '',
+        paymentMethod: '',
+        paymentPeriod: '',
+        memo: '',
+        isActive: '1',
+        homepageUrl: '',
+        homepageLoginId: '',
+        homepagePassword: '',
+        headManagers: [
+          {
             id: Date.now(),
             name: '',
             position: '',
-            tel: '',
-            phone: '',
+            department: '',
+            managerAreaNumber: '지역번호',
+            landlineNumber: '',
+            phoneNumber: '',
             email: '',
             memo: '',
-          }
-          return { form: { ...state.form, headManagers: [...state.form.headManagers, newItem] } }
-        } else {
-          const newItem: AttachedFile = {
-            id: Date.now(),
-            fileName: '',
-            memo: '',
-            files: [],
-          }
-          return { form: { ...state.form, attachedFiles: [...state.form.attachedFiles, newItem] } }
+            isMain: false, //대표 담당자
+          },
+        ],
+        checkedManagerIds: [],
+        attachedFiles: [
+          // {
+          //   id: Date.now(),
+          //   name: '사업자등록증',
+          //   memo: '',
+          //   files: [],
+          //   type: 'BUSINESS_LICENSE',
+          // },
+        ],
+        checkedAttachedFileIds: [],
+        modificationHistory: [],
+        changeHistories: [],
+      },
+    })),
+
+  setField: (field, value) =>
+    set((state) => ({
+      form: { ...state.form, [field]: value },
+    })),
+
+  updateMemo: (id, value) =>
+    set((state) => {
+      // 기존 changeHistories 업데이트
+      const updatedHistories = state.form.changeHistories.map((history) =>
+        history.id === id ? { ...history, memo: value } : history,
+      )
+
+      // 기존에 저장된 editedHistories 복사
+      const edited = state.form.editedHistories ?? []
+
+      // 이미 수정된 항목이 있으면 덮어쓰기, 없으면 새로 추가
+      const updatedEditedHistories = edited.some((h) => h.id === id)
+        ? edited.map((h) => (h.id === id ? { id, memo: value } : h))
+        : [...edited, { id, memo: value }]
+
+      return {
+        form: {
+          ...state.form,
+          changeHistories: updatedHistories,
+          editedHistories: updatedEditedHistories,
+        },
+      }
+    }),
+
+  addItem: (type) =>
+    set((state) => {
+      if (type === 'manager') {
+        const newItem: Manager = {
+          id: Date.now(),
+          name: '',
+          position: '',
+          department: '',
+          managerAreaNumber: '지역번호',
+          landlineNumber: '',
+          phoneNumber: '',
+          email: '',
+          memo: '',
         }
-      }),
+        return { form: { ...state.form, headManagers: [...state.form.headManagers, newItem] } }
+      } else {
+        // 기존 파일 개수 확인
 
-    updateItemField: (type, id, field, value) =>
-      set((state) => {
-        if (type === 'manager') {
-          return {
-            form: {
-              ...state.form,
-              headManagers: state.form.headManagers.map((m) =>
-                m.id === id ? { ...m, [field]: value } : m,
-              ),
-            },
-          }
-        } else {
-          return {
-            form: {
-              ...state.form,
-              attachedFiles: state.form.attachedFiles.map((f) =>
-                f.id === id ? { ...f, [field]: value } : f,
-              ),
-            },
-          }
-        }
-      }),
-
-    toggleCheckItem: (type, id, checked) =>
-      set((state) => {
-        if (type === 'manager') {
-          return {
-            form: {
-              ...state.form,
-              checkedManagerIds: checked
-                ? [...state.form.checkedManagerIds, id]
-                : state.form.checkedManagerIds.filter((cid) => cid !== id),
-            },
-          }
-        } else {
-          return {
-            form: {
-              ...state.form,
-              checkedAttachedFileIds: checked
-                ? [...state.form.checkedAttachedFileIds, id]
-                : state.form.checkedAttachedFileIds.filter((cid) => cid !== id),
-            },
-          }
-        }
-      }),
-
-    toggleCheckAllItems: (type, checked) =>
-      set((state) => {
-        if (type === 'manager') {
-          return {
-            form: {
-              ...state.form,
-              checkedManagerIds: checked ? state.form.headManagers.map((m) => m.id) : [],
-            },
-          }
-        } else {
-          return {
-            form: {
-              ...state.form,
-              checkedAttachedFileIds: checked ? state.form.attachedFiles.map((f) => f.id) : [],
-            },
-          }
-        }
-      }),
-
-    removeCheckedItems: (type) =>
-      set((state) => {
-        if (type === 'manager') {
-          return {
-            form: {
-              ...state.form,
-              headManagers: state.form.headManagers.filter(
-                (m) => !state.form.checkedManagerIds.includes(m.id),
-              ),
-              checkedManagerIds: [],
-            },
-          }
-        } else {
-          return {
-            form: {
-              ...state.form,
-              attachedFiles: state.form.attachedFiles.filter(
-                (f) => !state.form.checkedAttachedFileIds.includes(f.id),
-              ),
-              checkedAttachedFileIds: [],
-            },
-          }
-        }
-      }),
-
-    newOrderingData: () =>
-      set((state) => {
-        const form = state.form
-
-        const payload = {
-          name: form.name,
-          businessNumber: form.businessNumber,
-          ceoName: form.ceoName,
-          address: `${form.address} ${form.detailAddress || ''}`.trim(),
-          landlineNumber: `${form.areaNumber}-${form.landlineNumber}`,
-          email: form.email,
-          paymentMethod: form.paymentMethod,
-          paymentPeriod: form.paymentPeriod,
-          memo: form.memo,
-          isActive: form.isActive === '사용' ? true : false,
-          contacts: form.headManagers.map((m) => ({
-            name: m.name,
-            position: m.position,
-            landlineNumber: m.tel,
-            phoneNumber: m.phone,
-            email: m.email,
-            memo: m.memo,
-          })),
-          files: form.attachedFiles.map((f) => ({
-            documentName: f.fileName,
-            fileUrl: '', // 백엔드 업로드 후 URL 받아와서 넣기
-            originalFileName: f.files[0]?.name || '',
-            memo: f.memo,
-          })),
+        const newItem: AttachedFile = {
+          id: Date.now(),
+          name: '',
+          memo: '',
+          files: [],
+          type: 'BASIC',
         }
 
-        console.log('백엔드에 보낼 데이터:', JSON.stringify(payload, null, 2))
-        alert(JSON.stringify(payload, null, 2))
+        return { form: { ...state.form, attachedFiles: [...state.form.attachedFiles, newItem] } }
+      }
+    }),
 
-        return state
+  updateItemField: (type, id, field, value) =>
+    set((state) => {
+      if (type === 'manager') {
+        return {
+          form: {
+            ...state.form,
+            headManagers: state.form.headManagers.map((m) =>
+              m.id === id ? { ...m, [field]: value } : m,
+            ),
+          },
+        }
+      } else {
+        return {
+          form: {
+            ...state.form,
+            attachedFiles: state.form.attachedFiles.map((f) =>
+              f.id === id ? { ...f, [field]: value } : f,
+            ),
+          },
+        }
+      }
+    }),
+
+  toggleCheckItem: (type, id, checked) =>
+    set((state) => {
+      if (type === 'manager') {
+        return {
+          form: {
+            ...state.form,
+            checkedManagerIds: checked
+              ? [...state.form.checkedManagerIds, id]
+              : state.form.checkedManagerIds.filter((cid) => cid !== id),
+          },
+        }
+      } else {
+        return {
+          form: {
+            ...state.form,
+            checkedAttachedFileIds: checked
+              ? [...state.form.checkedAttachedFileIds, id]
+              : state.form.checkedAttachedFileIds.filter((cid) => cid !== id),
+          },
+        }
+      }
+    }),
+
+  toggleCheckAllItems: (type, checked) =>
+    set((state) => {
+      if (type === 'manager') {
+        return {
+          form: {
+            ...state.form,
+            checkedManagerIds: checked ? state.form.headManagers.map((m) => m.id) : [],
+          },
+        }
+      } else {
+        return {
+          form: {
+            ...state.form,
+            checkedAttachedFileIds: checked
+              ? state.form.attachedFiles
+                  .filter((f) => f.type !== 'BUSINESS_LICENSE') // 제외
+                  .map((f) => f.id) // id만 추출
+              : [],
+          },
+        }
+      }
+    }),
+
+  setRepresentativeManager: (id: number) =>
+    set((state) => ({
+      form: {
+        ...state.form,
+        headManagers: state.form.headManagers.map((m) => ({
+          ...m,
+          isMain: m.id === id,
+        })),
+      },
+    })),
+
+  removeCheckedItems: (type) =>
+    set((state) => {
+      if (type === 'manager') {
+        return {
+          form: {
+            ...state.form,
+            headManagers: state.form.headManagers.filter(
+              (m) => !state.form.checkedManagerIds.includes(m.id),
+            ),
+            checkedManagerIds: [],
+          },
+        }
+      } else {
+        return {
+          form: {
+            ...state.form,
+            attachedFiles: state.form.attachedFiles.filter(
+              (f) => !state.form.checkedAttachedFileIds.includes(f.id),
+            ),
+            checkedAttachedFileIds: [],
+          },
+        }
+      }
+    }),
+
+  newClientCompanyData: () => {
+    const form = get().form
+    return {
+      name: form.name,
+      businessNumber: form.businessNumber,
+      ceoName: form.ceoName,
+      address: form.address,
+      detailAddress: form.detailAddress,
+      landlineNumber:
+        `${form.areaNumber}-${form.landlineNumber}` === '지역번호-'
+          ? null
+          : `${form.areaNumber}-${form.landlineNumber}`,
+      phoneNumber: form.phoneNumber === '' ? null : form.phoneNumber,
+      email: form.email,
+      paymentMethod: form.paymentMethod === '' ? null : form.paymentMethod,
+      paymentPeriod: form.paymentPeriod,
+      memo: form.memo,
+      isActive: form.isActive === '1' ? true : false,
+      userId: form.userId === 0 ? null : form.userId,
+      homepageUrl: form.homepageUrl,
+      homepageLoginId: form.homepageLoginId,
+      homepagePassword: form.homepagePassword,
+      contacts: form.headManagers.map((m) => ({
+        id: m.id,
+        name: m.name,
+        position: m.position,
+        department: m.department,
+        landlineNumber: `${m.managerAreaNumber}-${m.landlineNumber}`,
+        phoneNumber: m.phoneNumber,
+        email: m.email,
+        memo: m.memo,
+        isMain: m.isMain || false, // 여기 추가
+      })),
+
+      // 첨부파일에 파일 업로드를 안할 시 null 로 넣는다..
+      files: form.attachedFiles.flatMap((f) => {
+        if (!f.files || f.files.length === 0) {
+          // 파일이 없을 경우에도 name, memo는 전송
+          return [
+            {
+              id: f.id || Date.now(),
+              name: f.name,
+              memo: f.memo || '',
+              fileUrl: '',
+              originalFileName: '',
+              type: f.type,
+            },
+          ]
+        }
+
+        // 파일이 있을 경우
+        return f.files.map((fileObj: FileUploadInfo) => ({
+          id: f.id || Date.now(),
+          name: f.name,
+          fileUrl: fileObj.fileUrl || '',
+          originalFileName: fileObj.name || fileObj.originalFileName,
+          memo: f.memo || '',
+          type: f.type,
+        }))
       }),
-
-    handleCancelData: () => {
-      alert('이전 페이지 등록')
-    },
-
-    handleSearch: () => {
-      alert('이전 페이지 등록')
-    },
+      changeHistories: form.editedHistories ?? [],
+    }
   },
 }))

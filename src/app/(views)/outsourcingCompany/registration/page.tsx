@@ -3,7 +3,7 @@ import OutsourcingCompanyRegistrationView from '@/components/outsourcing/outsour
 export default function page() {
   return (
     <div>
-      <OutsourcingCompanyRegistrationView />
+      <OutsourcingCompanyRegistrationView isEditMode={false} />
     </div>
   )
 }

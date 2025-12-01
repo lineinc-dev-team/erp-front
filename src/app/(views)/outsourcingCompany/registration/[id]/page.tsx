@@ -1,5 +1,9 @@
-import React from 'react'
+import OutsourcingCompanyRegistrationView from '@/components/outsourcing/outsourcingCompany/OutsourcingCompanyRegistrationView'
 
 export default function page() {
-  return <div></div>
+  return (
+    <div>
+      <OutsourcingCompanyRegistrationView isEditMode={true} />
+    </div>
+  )
 }

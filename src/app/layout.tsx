@@ -3,23 +3,66 @@
 import './globals.css'
 import HeaderWrapper from '@/components/layout/HeaderWrapper'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { Snackbar, Alert, IconButton } from '@mui/material'
+import { useSnackbarStore } from '@/stores/useSnackbarStore'
+import { useState } from 'react'
+import { usePathname } from 'next/navigation'
+import { Close } from '@mui/icons-material'
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const queryClient = new QueryClient()
+  const [queryClient] = useState(() => new QueryClient())
+  const { open, message, severity, closeSnackbar } = useSnackbarStore()
+
+  const pathname = usePathname()
+  const isLoginPage = pathname === '/' || pathname === '/resetPassword' || pathname === '/dashboard'
+
+  // 다른 브라우저로 이동 시 쿠키에 세션값이 있으면 유저의 정보를 세션스토리지에 넣기
 
   return (
-    <html lang="en">
+    <html lang="ko">
       <body>
-        <HeaderWrapper />
-
         <QueryClientProvider client={queryClient}>
-          {children}
-          <ReactQueryDevtools initialIsOpen={false} />
+          <HeaderWrapper />
+
+          <div className={isLoginPage ? '' : 'mt-32'}>{children}</div>
+
+          <Snackbar
+            open={open}
+            autoHideDuration={2000} // 필요 없으면 제거 가능
+            onClose={(event, reason) => {
+              if (reason !== 'clickaway') closeSnackbar() // 바깥 클릭은 무시
+            }}
+            sx={{
+              '& .MuiPaper-root': {
+                position: 'fixed !important', // 기존 position 무시
+                top: '50% !important', // 화면 세로 중앙
+                left: '50% !important', // 화면 가로 중앙
+                transform: 'translate(-50%, -50%) !important', // 정확히 중앙
+                margin: '0 !important', // 기존 margin 무시
+              },
+            }}
+          >
+            <Alert
+              severity={severity}
+              sx={{ fontSize: '17px' }} // 가운데 보이도록 최소폭
+              action={
+                <IconButton
+                  aria-label="close"
+                  color="inherit"
+                  size="small"
+                  onClick={closeSnackbar} // X 버튼 클릭 시 닫힘
+                >
+                  <Close fontSize="small" />
+                </IconButton>
+              }
+            >
+              {message}
+            </Alert>
+          </Snackbar>
         </QueryClientProvider>
       </body>
     </html>

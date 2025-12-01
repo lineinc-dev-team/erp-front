@@ -1,0 +1,1537 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
+'use client'
+
+import CommonInput from '../common/Input'
+import CommonSelect from '../common/Select'
+import CommonButton from '../common/Button'
+import CommonFileInput from '../common/FileInput'
+import {
+  Checkbox,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+} from '@mui/material'
+import CommonDatePicker from '../common/DatePicker'
+import { formatDateTime, formatNumber, unformatNumber } from '@/utils/formatters'
+import { useManagementMaterial } from '@/hooks/useMaterialManagement'
+import { useManagementMaterialFormStore } from '@/stores/materialManagementStore'
+import { MaterialDetailService } from '@/services/materialManagement/materialManagementRegistrationService'
+import { useParams } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { AttachedFile, DetailItem, ManagementMaterialFormState } from '@/types/materialManagement'
+import useOutSourcingContract from '@/hooks/useOutSourcingContract'
+import { SitesProcessNameScroll } from '@/services/managementCost/managementCostRegistrationService'
+import { SupplyPriceInput, TotalInput, VatInput } from '@/utils/supplyVatTotalInput'
+import { useSnackbarStore } from '@/stores/useSnackbarStore'
+import { HistoryItem } from '@/types/ordering'
+import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
+import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
+import { useLaborInfo } from '@/hooks/useLabor'
+import { useFocusStore } from '@/stores/focusStore'
+// import { useEffect } from 'react'
+// import { AttachedFile, DetailItem } from '@/types/managementSteel'
+
+export default function MaterialManagementRegistrationView({ isEditMode = false }) {
+  const {
+    setField,
+    form,
+    updateItemField,
+    removeCheckedItems,
+    reset,
+    addItem,
+    updateMemo,
+    toggleCheckItem,
+    toggleCheckAllItems,
+
+    getTotalQuantityAmount,
+    getTotalUnitPrice,
+    getTotalSupplyAmount,
+    getTotalSurtax,
+    getTotalSum,
+  } = useManagementMaterialFormStore()
+
+  const { showSnackbar } = useSnackbarStore()
+
+  const {
+    useSitePersonNameListInfiniteScroll,
+
+    // 공정명
+    setProcessSearch,
+    processOptions,
+    processInfoFetchNextPage,
+    processInfoHasNextPage,
+    processInfoIsFetching,
+    processInfoLoading,
+
+    // 업체명
+
+    useOutsourcingNameListInfiniteScroll,
+  } = useOutSourcingContract()
+
+  const { useOutsourcingContractNameListInfiniteScroll } = useLaborInfo()
+
+  const setClearMaterialItemFocusedId = useFocusStore((s) => s.setMaterialItemFocusedId)
+
+  const {
+    createMaterialMutation,
+    useMaterialHistoryDataQuery,
+    materialCancel,
+    MaterialModifyMutation,
+    InputTypeMethodOptions,
+
+    useMaterialListInfiniteScroll,
+    MaterialDeleteMutation,
+  } = useManagementMaterial()
+
+  const textFieldStyle = {
+    '& .MuiOutlinedInput-root': {
+      '& fieldset': { borderColor: 'black' },
+      '&:hover fieldset': { borderColor: 'black' },
+      '&.Mui-focused fieldset': { borderColor: 'black' },
+    },
+  }
+
+  // 체크 박스에 활용
+  const managers = form.details
+  const checkedIds = form.checkedMaterialItemIds
+  // const isAllChecked = managers.length > 0 && checkedIds.length === managers.length
+
+  const attachedFiles = form.attachedFiles
+  const fileCheckIds = form.checkedAttachedFileIds
+  const isFilesAllChecked = attachedFiles.length > 0 && fileCheckIds.length === attachedFiles.length
+
+  const [isOutsourcingFocusedBySnack, setIsOutsourcingFocusedBySnack] = useState(false)
+
+  // 유저 선택 시 처리
+  const handleSelectDeduction = (selectedUser: any) => {
+    setField('deductionCompanyName', selectedUser.name)
+    setField('deductionCompanyId', selectedUser.id)
+  }
+
+  const debouncedOutsourcingKeywordBySnack = useDebouncedValue(form.deductionCompanyName, 300)
+
+  const {
+    data: OutsourcingNameDataBySnack,
+    fetchNextPage: OutsourcingNameDataBySnackFetchNextPage,
+    hasNextPage: OutsourcingNameDataBySnackHasNextPage,
+    isFetching: OutsourcingNameDataBySnackIsFetching,
+    isLoading: OutsourcingNameDataBySnackIsLoading,
+  } = useOutsourcingNameListInfiniteScroll(debouncedOutsourcingKeywordBySnack)
+
+  const OutsourcingRawListBySnack =
+    OutsourcingNameDataBySnack?.pages.flatMap((page) => page.data.content) ?? []
+
+  const outsourcingListBySnackData = Array.from(
+    new Map(OutsourcingRawListBySnack.map((user) => [user.name, user])).values(),
+  )
+
+  const [isdeductionCompanyFocused, setIsdeductionCompanyFocused] = useState(false)
+
+  // 유저 선택 시 처리
+  const handleSelectOutsourcingContract = (selectedUser: any) => {
+    setField('deductionCompanyContractName', selectedUser.contractName)
+    setField('deductionCompanyContractId', selectedUser.id ?? 0)
+  }
+
+  const debounceddeductionCompanyKeyWord = useDebouncedValue(form.deductionCompanyContractName, 300)
+
+  const {
+    data: OutsourcingContractNameData,
+    fetchNextPage: OutsourcingContractNameFetchNextPage,
+    hasNextPage: OutsourcingContractNameHasNextPage,
+    isFetching: OutsourcingContractNameIsFetching,
+    isLoading: OutsourcingContractNameIsLoading,
+  } = useOutsourcingContractNameListInfiniteScroll(
+    debounceddeductionCompanyKeyWord,
+    form.deductionCompanyId,
+  )
+
+  const OutsourcingContractRawList =
+    OutsourcingContractNameData?.pages.flatMap((page) => page.data.content) ?? []
+  // const deductionCompanyList = Array.from(
+  //   new Map(OutsourcingContractRawList.map((user) => [user.contractName, user])).values(),
+  // )
+
+  const deductionCompanyList = Array.from(
+    new Map(
+      OutsourcingContractRawList.filter(
+        (user) => user.contractName && user.contractName.trim() !== '',
+      ).map((user) => [user.contractName, user]),
+    ).values(),
+  )
+
+  // 상세페이지 로직
+
+  const params = useParams()
+  const materialDetailId = Number(params?.id)
+
+  const { data } = useQuery({
+    queryKey: ['MaterialInfo'],
+    queryFn: () => MaterialDetailService(materialDetailId),
+    enabled: isEditMode && !!materialDetailId, // 수정 모드일 때만 fetch
+  })
+
+  const PROPERTY_NAME_MAP: Record<string, string> = {
+    siteName: '현장명',
+    processName: '공정명',
+    outsourcingCompanyName: '자재업체명',
+    inputTypeName: '투입 구분',
+    inputTypeDescription: '투입 구분 설명',
+    deliveryDateFormat: '요청일자',
+    memo: '비고',
+    name: '품명',
+    vat: '부가세',
+    standard: '규격',
+    unitPrice: '단가',
+    total: '합계',
+    quantity: '수량',
+    supplyPrice: '공급가',
+    usage: '사용용도',
+    originalFileName: '파일 추가',
+    deductionCompanyName: '업체명',
+    deductionCompanyContractName: '업체계약명',
+  }
+
+  const {
+    data: materialHistoryList,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useMaterialHistoryDataQuery(materialDetailId, isEditMode)
+
+  const historyList = useManagementMaterialFormStore((state) => state.form.changeHistories)
+
+  const [updatedProcessOptions, setUpdatedProcessOptions] = useState(processOptions)
+
+  useEffect(() => {
+    if (isEditMode && data) {
+      const client = data.data
+
+      const newProcessOptions = [...processOptions]
+
+      if (client.process) {
+        const isDeleted = client.process.deleted
+        const processName = client.process.name + (isDeleted ? ' (삭제됨)' : '')
+
+        if (!newProcessOptions.some((p) => p.id === client.process.id)) {
+          newProcessOptions.push({
+            id: client.process.id,
+            name: processName,
+            deleted: isDeleted,
+          })
+        }
+
+        if (!form.siteProcessId) {
+          setField('siteProcessId', client.process.id)
+          setField('siteProcessName', processName)
+        }
+      }
+
+      // 삭제된 공정 / 일반 공정 분리
+      const deletedProcesses = newProcessOptions.filter((p) => p.deleted)
+      const normalProcesses = newProcessOptions.filter((p) => !p.deleted && p.id !== 0)
+
+      setUpdatedProcessOptions([
+        newProcessOptions.find((s) => s.id === 0) ?? { id: 0, name: '선택', deleted: false },
+        ...deletedProcesses,
+        ...normalProcesses,
+      ])
+    } else if (!isEditMode) {
+      // 등록 모드에서는 항상 processOptions로 초기화
+      setUpdatedProcessOptions(processOptions)
+    }
+  }, [data, isEditMode, processOptions, setField])
+
+  // const [updatedCompanyOptions, setUpdatedCompanyOptions] = useState(companyOptions)
+
+  // useEffect(() => {
+  //   if (data && isEditMode) {
+  //     const client = data.data
+
+  //     const newCompanyOptions = [...companyOptions]
+
+  //     if (client.company) {
+  //       const companyName = client.company.name + (client.company.deleted ? ' (삭제됨)' : '')
+
+  //       // 이미 options에 있는지 체크
+  //       const exists = newCompanyOptions.some((c) => c.id === client.company.id)
+  //       if (!exists) {
+  //         newCompanyOptions.push({
+  //           id: client.company.id,
+  //           name: companyName,
+  //           businessNumber: client.company.businessNumber ?? '',
+  //           ceoName: client.company.ceoName ?? '',
+  //           bankName: client.company.bankName ?? '',
+  //           accountNumber: client.company.accountNumber ?? '',
+  //           accountHolder: client.company.accountHolder ?? '',
+  //           deleted: client.company.deleted,
+  //         })
+  //       }
+  //     }
+
+  //     const deletedCompanies = newCompanyOptions.filter((c) => c.deleted)
+  //     const normalCompanies = newCompanyOptions.filter((c) => !c.deleted && c.id !== 0)
+
+  //     setUpdatedCompanyOptions([
+  //       newCompanyOptions.find((c) => c.id === 0) ?? {
+  //         id: 0,
+  //         name: '선택',
+  //         businessNumber: '',
+  //         ceoName: '',
+  //         bankName: '',
+  //         accountNumber: '',
+  //         accountHolder: '',
+  //         deleted: false,
+  //       },
+  //       ...deletedCompanies,
+  //       ...normalCompanies,
+  //     ])
+
+  //     setField('outsourcingCompanyId', client.company?.id ?? 0)
+  //   } else if (!isEditMode) {
+  //     setUpdatedCompanyOptions(companyOptions)
+  //     setField('outsourcingCompanyId', 0) // "선택" 기본값
+  //   }
+  // }, [data, isEditMode, companyOptions])
+
+  useEffect(() => {
+    if (data && isEditMode === true) {
+      const client = data.data
+
+      console.log('242', client)
+
+      // // 상세 항목 가공
+      const formattedDetails = (client.details ?? []).map((c: DetailItem) => ({
+        id: c.id,
+        name: c.name,
+        quantity: c.quantity,
+        total: c.total,
+        usage: c.usage,
+        vat: c.vat,
+        unitPrice: c.unitPrice,
+        supplyPrice: c.supplyPrice,
+        unitWeight: c.unitWeight,
+        standard: c.standard,
+        memo: c.memo,
+      }))
+      setField('details', formattedDetails)
+
+      // // 첨부 파일 가공
+      const formattedFiles = (client.files ?? []).map((item: AttachedFile) => ({
+        id: item.id,
+        name: item.name,
+        memo: item.memo,
+        files: [
+          {
+            fileUrl: item.fileUrl || '', // null 대신 안전하게 빈 문자열
+            originalFileName: item.originalFileName || '',
+          },
+        ],
+      }))
+
+      // const mappedItemType = MaterialTypeLabelToValue[client.inputType ?? '']
+
+      setField('attachedFiles', formattedFiles)
+
+      // 각 필드에 값 세팅
+      setField('siteId', client.site?.id ?? '')
+      setField('siteProcessId', client.process?.id ?? '')
+      setField('outsourcingCompanyId', client.company?.id ?? '')
+
+      setField('siteName', client.site?.name ?? '')
+      setField('siteProcessName', client.process?.name ?? '')
+      setField('outsourcingCompanyName', client.company?.name ?? '')
+
+      setField('deliveryDate', client.deliveryDate ? new Date(client.deliveryDate) : null)
+      setField('inputType', client.inputTypeCode)
+      setField('inputTypeDescription', client.inputTypeDescription)
+      setField('memo', client.memo ?? '')
+
+      setField('deductionCompanyId', client.deductionCompany?.id)
+      setField('deductionCompanyName', client.deductionCompany?.name)
+
+      setField('deductionCompanyContractId', client.deductionCompanyContract?.id)
+      setField('deductionCompanyContractName', client.deductionCompanyContract?.contractName)
+
+      const hasDeductionInfo =
+        !!client.deductionCompany?.id || !!client.deductionCompanyContract?.id
+
+      setField('isDeductible', hasDeductionInfo)
+    } else {
+      reset()
+    }
+  }, [data, isEditMode, reset, setField])
+
+  const [isSiteFocused, setIsSiteFocused] = useState(false)
+
+  const debouncedSiteKeyword = useDebouncedValue(form.siteName, 300)
+
+  const {
+    data: SiteNameData,
+    fetchNextPage: SiteNameFetchNextPage,
+    hasNextPage: SiteNameHasNextPage,
+    isFetching: SiteNameIsFetching,
+    isLoading: SiteNameIsLoading,
+  } = useSitePersonNameListInfiniteScroll(debouncedSiteKeyword)
+
+  const SiteRawList = SiteNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const siteList = Array.from(new Map(SiteRawList.map((user) => [user.name, user])).values())
+
+  // 업체명 이름 키워드
+
+  // 업체명 키워드 검색
+
+  const [isOutsourcingFocused, setIsOutsourcingFocused] = useState(false)
+
+  // 유저 선택 시 처리
+  const handleSelectOutsourcing = (selectedUser: any) => {
+    setField('outsourcingCompanyName', selectedUser.name)
+    setField('outsourcingCompanyId', selectedUser.id)
+  }
+
+  const debouncedOutsourcingKeyword = useDebouncedValue(form.outsourcingCompanyName, 300)
+
+  const {
+    data: OutsourcingNameData,
+    fetchNextPage: OutsourcingeNameFetchNextPage,
+    hasNextPage: OutsourcingNameHasNextPage,
+    isFetching: OutsourcingNameIsFetching,
+    isLoading: OutsourcingNameIsLoading,
+  } = useOutsourcingNameListInfiniteScroll(debouncedOutsourcingKeyword)
+
+  const OutsourcingRawList = OutsourcingNameData?.pages.flatMap((page) => page.data.content) ?? []
+  const outsourcingList = Array.from(
+    new Map(OutsourcingRawList.map((user) => [user.name, user])).values(),
+  )
+
+  // 상세 품목에서 품명 키워드 검색 로직
+
+  const handleSelectMaterial = (id: number, selectedCompany: any) => {
+    if (!selectedCompany) {
+      // updateItemField('MaterialItem', id, 'outsourcingCompanyId', 0)
+      updateItemField('MaterialItem', id, 'name', '')
+      return
+    }
+
+    console.log('품명을 키워드 검색으로 검색했을 때의 값', selectedCompany)
+
+    // updateItemField('MaterialItem', id, 'outsourcingCompanyId', selectedCompany.id)
+    updateItemField('MaterialItem', id, 'name', selectedCompany.name)
+  }
+
+  function MaterialItemRow({ row }: { row: any }) {
+    const materialItemFocusedId = useFocusStore((s) => s.materialItemFocusedId)
+    const setMaterialItemFocusedId = useFocusStore((s) => s.setMaterialItemFocusedId)
+
+    const [localKeyword, setLocalKeyword] = React.useState(row.name ?? '')
+
+    React.useEffect(() => {
+      if (localKeyword !== row.name) {
+        setLocalKeyword(row.name ?? '')
+      }
+    }, [row.name])
+
+    const isFocused = materialItemFocusedId === row.id
+
+    // 입력값이 외부에서 바뀌면 로컬 상태도 업데이트
+    React.useEffect(() => {
+      setLocalKeyword(row.name ?? '')
+    }, [row.name])
+
+    // debounce 적용 (백엔드 호출용)
+    const debouncedKeyword = useDebouncedValue(localKeyword, 300)
+
+    const {
+      data: MaterialItemData,
+      fetchNextPage: MaterialItemFetchNextPage,
+      hasNextPage: MaterialItemHasNextPage,
+      isFetching: MaterialItemIsFetching,
+      isLoading: MaterialItemIsLoading,
+    } = useMaterialListInfiniteScroll(debouncedKeyword)
+
+    const materialItemList = Array.from(
+      new Map(
+        MaterialItemData?.pages.flatMap((page) => page.data.content).map((u) => [u.name, u]),
+      )?.values() ?? [],
+    )
+
+    // onBlur 딜레이용 ref
+    const blurTimeout = React.useRef<NodeJS.Timeout | null>(null)
+
+    return (
+      <InfiniteScrollSelect
+        keyword={localKeyword}
+        placeholder="품명을 입력해주세요."
+        debouncedKeyword={debouncedKeyword}
+        items={materialItemList}
+        hasNextPage={MaterialItemHasNextPage ?? false}
+        fetchNextPage={MaterialItemFetchNextPage}
+        isLoading={MaterialItemIsLoading || MaterialItemIsFetching}
+        onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
+        renderItem={(item, isHighlighted) => (
+          <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+            {item.name}
+          </div>
+        )}
+        onSelect={(selectedCompany) => handleSelectMaterial(row.id ?? 0, selectedCompany)}
+        shouldShowList={isFocused} // 포커스 기반 리스트 표시
+        onFocus={() => {
+          if (blurTimeout.current) clearTimeout(blurTimeout.current)
+          setMaterialItemFocusedId(row.id)
+        }}
+        onBlur={() => {
+          blurTimeout.current = setTimeout(() => setMaterialItemFocusedId(null), 200) // 200ms 딜레이
+        }}
+      />
+    )
+  }
+
+  const formatChangeDetail = (getChanges: string) => {
+    try {
+      const parsed = JSON.parse(getChanges)
+      if (!Array.isArray(parsed)) return '-'
+
+      return parsed.map(
+        (item: { property: string; before: string | null; after: string | null }, idx: number) => {
+          const propertyKo = PROPERTY_NAME_MAP[item.property] || item.property
+
+          const convertValue = (value: string | null) => {
+            if (value === 'true') return '사용'
+            if (value === 'false') return '미사용'
+            if (value === null || value === 'null') return 'null'
+            return value
+          }
+
+          let before = convertValue(item.before)
+          let after = convertValue(item.after)
+
+          // 스타일 결정
+          let style = {}
+          if (before === 'null') {
+            before = '추가'
+            style = { color: '#1976d2' } // 파란색 - 추가
+          } else if (after === 'null' || after === '') {
+            after = '삭제'
+            style = { color: '#d32f2f' } // 빨간색 - 삭제
+          }
+
+          return (
+            <Typography key={idx} component="div" style={style}>
+              {before === '추가'
+                ? `추가됨 => ${after}`
+                : after === '삭제'
+                ? ` ${before} => 삭제됨`
+                : `${propertyKo} : ${before} => ${after}`}
+            </Typography>
+          )
+        },
+      )
+    } catch (e) {
+      if (e instanceof Error) return '-'
+    }
+  }
+
+  // 수정이력 데이터가 들어옴
+  useEffect(() => {
+    if (materialHistoryList?.pages) {
+      const allHistories = materialHistoryList.pages.flatMap((page) =>
+        page.data.content.map((item: HistoryItem) => ({
+          id: item.id,
+          type: item.type || '-',
+          typeCode: item.typeCode,
+          isEditable: item.isEditable,
+          content:
+            formatChangeDetail(item.getChanges) === '-'
+              ? item?.description
+              : formatChangeDetail(item.getChanges), // 여기 변경
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+          updatedBy: item.updatedBy,
+          memo: item.memo ?? '',
+        })),
+      )
+      setField('changeHistories', allHistories)
+    }
+  }, [materialHistoryList, setField])
+
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  const loadMoreRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (isLoading || isFetchingNextPage) return
+      if (observerRef.current) observerRef.current.disconnect()
+
+      observerRef.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage()
+        }
+      })
+
+      if (node) observerRef.current.observe(node)
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading],
+  )
+
+  function validateMaterialForm(form: ManagementMaterialFormState) {
+    if (!form.siteId) return '현장을 선택해주세요.'
+    if (!form.siteProcessId) return '공정을 선택해주세요.'
+    if (form.inputType === 'BASE' || form.inputType === '') return '투입구분을 선택해주세요.'
+    if (form.inputType === 'DIRECT_INPUT' && !form.inputTypeDescription?.trim()) {
+      return '투입구분 설명을 입력해주세요.'
+    }
+    if (!form.deliveryDate) return '요청일자를 선택해주세요.'
+    if (!form.outsourcingCompanyId) return '자재업체를 선택해주세요.'
+
+    if (form.memo.length > 500) {
+      return '비고는 500자 이하로 입력해주세요.'
+    }
+
+    // 자재 유효성 체크
+    if (managers.length > 0) {
+      for (const item of managers) {
+        if (!item.name?.trim()) return '자재의 품명을 입력해주세요.'
+        if (!item.standard?.trim()) return '자재의 규격을 입력해주세요.'
+        if (!item.usage?.trim()) return '자재의 사용용도를 입력해주세요.'
+        if (!item.quantity) return '자재의 수량을 입력해주세요.'
+        if (!item.unitPrice) return '자재의 단가를 입력해주세요.'
+        if (item.memo.length > 500) {
+          return '자재의 비고는 500자 이하로 입력해주세요.'
+        }
+      }
+    }
+
+    if (attachedFiles.length > 0) {
+      for (const item of attachedFiles) {
+        if (!item.name?.trim()) return '첨부파일의 이름을 입력해주세요.'
+        if (item.memo.length > 500) {
+          return '첨부파일의 비고는 500자 이하로 입력해주세요.'
+        }
+      }
+    }
+
+    return null
+  }
+
+  const handleMaterialSubmit = () => {
+    const errorMsg = validateMaterialForm(form)
+    if (errorMsg) {
+      showSnackbar(errorMsg, 'warning')
+      return
+    }
+
+    if (!form.details || form.details.length === 0) {
+      showSnackbar('자재 항목을 1개 이상 입력해주세요.', 'warning')
+      return
+    }
+
+    if (isEditMode) {
+      if (window.confirm('수정하시겠습니까?')) {
+        MaterialModifyMutation.mutate(materialDetailId)
+      }
+    } else {
+      createMaterialMutation.mutate()
+    }
+  }
+
+  return (
+    <>
+      <div>
+        <span className="font-bold border-b-2 mb-4">기본 정보</span>
+        <div className="grid grid-cols-2 mt-1 ">
+          <div className="flex">
+            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+              현장명 <span className="text-red-500 ml-1">*</span>
+            </label>
+            <div className="border border-gray-400 w-full flex items-center">
+              <InfiniteScrollSelect
+                disabled={false}
+                placeholder="현장명을 입력하세요"
+                keyword={form.siteName}
+                onChangeKeyword={(newKeyword) => {
+                  setField('siteName', newKeyword)
+
+                  // 현장명 지웠을 경우 공정명도 같이 초기화
+                  if (newKeyword === '') {
+                    setField('siteProcessName', '')
+                    setField('siteProcessId', 0)
+                  }
+                }}
+                items={siteList}
+                hasNextPage={SiteNameHasNextPage ?? false}
+                fetchNextPage={SiteNameFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                // onSelect={handleSelectSiting}
+                onSelect={async (selectedSite) => {
+                  if (!selectedSite) return
+
+                  // 선택된 현장 세팅
+                  setField('siteId', selectedSite.id)
+                  setField(
+                    'siteName',
+                    selectedSite.name + (selectedSite.deleted ? ' (삭제됨)' : ''),
+                  )
+
+                  if (selectedSite.deleted) {
+                    setField('siteProcessName', '')
+                    return
+                  }
+
+                  try {
+                    // 공정 목록 조회
+                    const res = await SitesProcessNameScroll({
+                      pageParam: 0,
+                      siteId: selectedSite.id,
+                      keyword: '',
+                    })
+
+                    const processes = res.data?.content || []
+
+                    if (processes.length > 0) {
+                      // 첫 번째 공정 자동 세팅
+                      setField('siteProcessName', processes[0].name)
+                      setField('siteProcessId', processes[0].id)
+                    } else {
+                      setField('siteProcessName', '')
+                      setField('siteProcessId', 0)
+                    }
+                  } catch (err) {
+                    console.error('공정 조회 실패:', err)
+                  }
+                }}
+                isLoading={SiteNameIsLoading || SiteNameIsFetching}
+                debouncedKeyword={debouncedSiteKeyword}
+                shouldShowList={isSiteFocused}
+                onFocus={() => {
+                  setIsSiteFocused(true)
+                  setClearMaterialItemFocusedId(null)
+                }}
+                onBlur={() => setIsSiteFocused(false)}
+              />
+            </div>
+          </div>
+          <div className="flex">
+            <label className="w-36 text-[14px]  border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center">
+              공정명 <span className="text-red-500 ml-1">*</span>
+            </label>
+            <div className="border border-gray-400 px-2 p-2 w-full flex items-center">
+              <CommonSelect
+                fullWidth
+                className="text-xl"
+                value={form.siteProcessId || 0}
+                onChange={(value) => {
+                  const selectedProcess = updatedProcessOptions.find((opt) => opt.name === value)
+                  if (selectedProcess) {
+                    setField('siteProcessId', selectedProcess.id)
+                    setField('siteProcessName', selectedProcess.name)
+                  }
+                }}
+                options={updatedProcessOptions}
+                displayLabel
+                onScrollToBottom={() => {
+                  if (processInfoHasNextPage && !processInfoIsFetching) processInfoFetchNextPage()
+                }}
+                onInputChange={(value) => setProcessSearch(value)}
+                loading={processInfoLoading}
+                disabled
+              />
+            </div>
+          </div>
+          <div className="flex">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+              투입구분 <span className="text-red-500 ml-1">*</span>
+            </label>
+            <div className="border flex items-center p-2 gap-4 border-gray-400 px-2 w-full">
+              <CommonSelect
+                className="text-2xl"
+                value={form.inputType || 'BASE'} //  값
+                displayLabel
+                onChange={(value) => {
+                  setField('inputType', value)
+
+                  // 직접입력이 아닌 다른 타입으로 바꾸면 설명 초기화
+                  if (value !== 'DIRECT_INPUT') {
+                    setField('inputTypeDescription', '')
+                  }
+                }}
+                options={InputTypeMethodOptions}
+              />
+
+              <CommonInput
+                value={form.inputTypeDescription}
+                onChange={(value) => setField('inputTypeDescription', value)}
+                className=" flex-1"
+                disabled={form.inputType !== 'DIRECT_INPUT'}
+                placeholder={form.inputType === 'DIRECT_INPUT' ? '기타 내용을 입력하세요' : ''}
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+              요청일자 <span className="text-red-500 ml-1">*</span>
+            </label>
+            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
+              <CommonDatePicker
+                value={form.deliveryDate}
+                onChange={(value) => setField('deliveryDate', value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+              자재업체명 <span className="text-red-500 ml-1">*</span>
+            </label>
+            <div className="border border-gray-400  w-full">
+              <InfiniteScrollSelect
+                placeholder="업체명을 입력하세요"
+                keyword={form.outsourcingCompanyName}
+                onChangeKeyword={(newKeyword) => setField('outsourcingCompanyName', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                items={outsourcingList}
+                hasNextPage={OutsourcingNameHasNextPage ?? false}
+                fetchNextPage={OutsourcingeNameFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                onSelect={handleSelectOutsourcing}
+                // shouldShowList={true}
+                isLoading={OutsourcingNameIsLoading || OutsourcingNameIsFetching}
+                debouncedKeyword={debouncedOutsourcingKeyword}
+                shouldShowList={isOutsourcingFocused}
+                onFocus={() => {
+                  setIsOutsourcingFocused(true)
+                  setClearMaterialItemFocusedId(null)
+                }}
+                onBlur={() => setIsOutsourcingFocused(false)}
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+              공제여부
+            </label>
+
+            <div className="border border-gray-400 px-2 w-full flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <Checkbox
+                  checked={form.isDeductible ?? false}
+                  onChange={(e) => {
+                    const checked = e.target.checked
+                    setField('isDeductible', checked)
+
+                    // ✅ 체크 해제하면 관련 필드 전체 초기화
+                    if (!checked) {
+                      setField('deductionCompanyName', '')
+                      setField('deductionCompanyId', 0)
+                      setField('deductionCompanyContractName', '')
+                      setField('deductionCompanyContractId', 0)
+                    }
+                  }}
+                  size="small"
+                />
+                <span className="text-[16px] font-medium  whitespace-nowrap">공제</span>
+              </div>
+
+              {/* ✅ 업체명 입력 (체크되어야만 활성화됨) */}
+              <InfiniteScrollSelect
+                placeholder="업체명을 입력하세요"
+                keyword={form.deductionCompanyName ?? ''}
+                onChangeKeyword={(newKeyword) => {
+                  setField('deductionCompanyName', newKeyword)
+
+                  if (newKeyword.trim() === '') {
+                    setField('deductionCompanyContractName', '')
+                    setField('deductionCompanyContractId', 0)
+                    setField('deductionCompanyId', 0)
+                  }
+                }}
+                items={outsourcingListBySnackData}
+                hasNextPage={OutsourcingNameDataBySnackHasNextPage ?? false}
+                fetchNextPage={OutsourcingNameDataBySnackFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                onSelect={handleSelectDeduction}
+                isLoading={
+                  OutsourcingNameDataBySnackIsLoading || OutsourcingNameDataBySnackIsFetching
+                }
+                debouncedKeyword={debouncedOutsourcingKeywordBySnack}
+                shouldShowList={isOutsourcingFocusedBySnack}
+                onFocus={() => {
+                  setIsOutsourcingFocusedBySnack(true)
+
+                  setClearMaterialItemFocusedId(null)
+                }}
+                onBlur={() => setIsOutsourcingFocusedBySnack(false)}
+                disabled={!form.isDeductible} // ✅ 체크 안되면 비활성화
+              />
+
+              {/* ✅ 업체계약 입력 (체크되어야만 활성화됨) */}
+              <div className="flex items-center w-full">
+                <label className="w-20 text-[16px] flex items-center justify-center font-bold text-center">
+                  업체계약
+                </label>
+                <div className="py-2 w-full flex justify-center items-center">
+                  <InfiniteScrollSelect
+                    placeholder="업체계약을 입력하세요"
+                    keyword={form.deductionCompanyContractName ?? ''}
+                    onChangeKeyword={(newKeyword) =>
+                      setField('deductionCompanyContractName', newKeyword)
+                    }
+                    items={deductionCompanyList}
+                    hasNextPage={OutsourcingContractNameHasNextPage ?? false}
+                    fetchNextPage={OutsourcingContractNameFetchNextPage}
+                    renderItem={(item, isHighlighted) => (
+                      <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+                        {item.contractName}
+                      </div>
+                    )}
+                    onSelect={handleSelectOutsourcingContract}
+                    isLoading={
+                      OutsourcingContractNameIsLoading || OutsourcingContractNameIsFetching
+                    }
+                    debouncedKeyword={debounceddeductionCompanyKeyWord}
+                    shouldShowList={isdeductionCompanyFocused}
+                    onFocus={() => {
+                      setIsdeductionCompanyFocused(true)
+                      setClearMaterialItemFocusedId(null)
+                    }}
+                    onBlur={() => setIsdeductionCompanyFocused(false)}
+                    disabled={!form.isDeductible}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+              비고
+            </label>
+            <div className="border border-gray-400 px-2 w-full">
+              <CommonInput
+                value={form.memo}
+                onFocus={() => setClearMaterialItemFocusedId(null)}
+                placeholder="500자 이하 텍스트 입력"
+                onChange={(value) => setField('memo', value)}
+                className="flex-1"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div className="flex justify-between items-center mt-10 mb-2">
+          <span className="font-bold border-b-2 mb-4">자재</span>
+          <div className="flex gap-4">
+            <CommonButton
+              label="삭제"
+              className="px-7"
+              variant="danger"
+              onClick={() => removeCheckedItems('MaterialItem')}
+            />
+            <CommonButton
+              label="추가"
+              className="px-7"
+              variant="secondary"
+              onClick={() => addItem('MaterialItem')}
+            />
+          </div>
+        </div>
+        <TableContainer
+          component={Paper}
+          sx={{
+            height: '300px',
+            overflowX: 'auto', // 가로 스크롤 허용
+            overflowY: 'auto',
+          }}
+        >
+          <Table size="small">
+            <TableHead>
+              <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}></TableCell>
+                {[
+                  '품명',
+                  '규격',
+                  '사용용도',
+                  '수량',
+                  '단가',
+                  '공급가',
+                  '부가세',
+                  '합계',
+                  '비고',
+                ].map((label) => (
+                  <TableCell
+                    key={label}
+                    align="center"
+                    sx={{
+                      backgroundColor: '#D1D5DB',
+                      border: '1px solid  #9CA3AF',
+                      color: 'black',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    {label === '비고' || label === '부가세' || label === '합계' ? (
+                      label
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <span>{label}</span>
+                        <span className="text-red-500 ml-1">*</span>
+                      </div>
+                    )}
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {managers.map((m) => (
+                <TableRow key={m.id}>
+                  {/* 체크박스 */}
+                  <TableCell
+                    padding="checkbox"
+                    align="center"
+                    sx={{ border: '1px solid  #9CA3AF' }}
+                  >
+                    <Checkbox
+                      checked={checkedIds.includes(m.id)}
+                      onChange={(e) => toggleCheckItem('MaterialItem', m.id, e.target.checked)}
+                    />
+                  </TableCell>
+
+                  <TableCell sx={{ display: 'flex', gap: '4px', width: '320px' }}>
+                    {/* <CommonSelectByName
+                      value={m.inputType === 'manual' ? '직접입력' : m.name || '선택'}
+                      onChange={async (value) => {
+                        if (value === '직접입력') {
+                          updateItemField('MaterialItem', m.id, 'inputType', 'manual')
+                          updateItemField('MaterialItem', m.id, 'name', '') // 직접입력 모드 전환 시 빈 값
+                          return
+                        }
+
+                        const selectedProduct = productOptions.find((opt) => opt.name === value)
+                        if (!selectedProduct) return
+                        updateItemField('MaterialItem', m.id, 'inputType', 'select')
+                        updateItemField('MaterialItem', m.id, 'name', selectedProduct.name)
+                      }}
+                      options={[{ id: -1, name: '직접입력' }, ...productOptions]}
+                      onScrollToBottom={() => {
+                        if (productNamehasNextPage && !productNameFetching)
+                          productNameFetchNextPage()
+                      }}
+                      onInputChange={(value) => setProductSearch(value)}
+                      loading={productNameLoading}
+                    /> */}
+
+                    <MaterialItemRow key={m.id} row={m} />
+                  </TableCell>
+
+                  {/* 규격 */}
+                  <TableCell sx={{ border: '1px solid  #9CA3AF', width: '140px' }}>
+                    <TextField
+                      size="small"
+                      placeholder="텍스트 입력"
+                      value={m.standard}
+                      onFocus={() => setClearMaterialItemFocusedId(null)}
+                      onChange={(e) =>
+                        updateItemField('MaterialItem', m.id, 'standard', e.target.value)
+                      }
+                      variant="outlined"
+                      sx={textFieldStyle}
+                    />
+                  </TableCell>
+
+                  {/* 사용용도 */}
+                  <TableCell sx={{ border: '1px solid  #9CA3AF', width: '140px' }}>
+                    <TextField
+                      size="small"
+                      placeholder="텍스트 입력"
+                      value={m.usage}
+                      onFocus={() => setClearMaterialItemFocusedId(null)}
+                      onChange={(e) =>
+                        updateItemField('MaterialItem', m.id, 'usage', e.target.value)
+                      }
+                      variant="outlined"
+                      sx={textFieldStyle}
+                    />
+                  </TableCell>
+                  {/* 수량 */}
+                  {/* 수량 */}
+                  <TableCell sx={{ border: '1px solid  #9CA3AF', width: '90px' }}>
+                    <TextField
+                      size="small"
+                      placeholder="수량"
+                      onFocus={() => setClearMaterialItemFocusedId(null)}
+                      value={m.quantity || ''}
+                      onChange={(e) => {
+                        const quantity = e.target.value === '' ? '' : Number(e.target.value)
+
+                        // 공급가 계산 (수량 * 단가)
+                        const supplyPrice = quantity && m.unitPrice ? quantity * m.unitPrice : 0
+                        const vat = Math.floor(supplyPrice * 0.1)
+                        const total = supplyPrice + vat
+
+                        updateItemField('MaterialItem', m.id, 'quantity', quantity)
+                        updateItemField('MaterialItem', m.id, 'supplyPrice', supplyPrice)
+                        updateItemField('MaterialItem', m.id, 'vat', vat)
+                        updateItemField('MaterialItem', m.id, 'total', total)
+                      }}
+                      variant="outlined"
+                      sx={textFieldStyle}
+                      inputProps={{ style: { textAlign: 'right' } }}
+                    />
+                  </TableCell>
+
+                  {/* 단가 */}
+                  <TableCell align="right" sx={{ border: '1px solid  #9CA3AF' }}>
+                    <TextField
+                      size="small"
+                      inputMode="numeric"
+                      placeholder="숫자 입력"
+                      onFocus={() => setClearMaterialItemFocusedId(null)}
+                      value={formatNumber(m.unitPrice) || ''}
+                      onChange={(e) => {
+                        const unitPrice =
+                          e.target.value === '' ? '' : unformatNumber(e.target.value)
+
+                        // 공급가 계산 (수량 * 단가)
+                        const supplyPrice = m.quantity && unitPrice ? m.quantity * unitPrice : 0
+                        const vat = Math.floor(supplyPrice * 0.1)
+                        const total = supplyPrice + vat
+
+                        updateItemField('MaterialItem', m.id, 'unitPrice', unitPrice)
+                        updateItemField('MaterialItem', m.id, 'supplyPrice', supplyPrice)
+                        updateItemField('MaterialItem', m.id, 'vat', vat)
+                        updateItemField('MaterialItem', m.id, 'total', total)
+                      }}
+                      variant="outlined"
+                      sx={textFieldStyle}
+                      inputProps={{
+                        style: {
+                          textAlign: 'right',
+                        },
+                      }}
+                    />
+                  </TableCell>
+
+                  {/* 공급가 */}
+                  <TableCell align="right" sx={{ border: '1px solid #9CA3AF' }}>
+                    <SupplyPriceInput
+                      value={m.supplyPrice}
+                      onChange={(supply) => {
+                        const vat = Math.floor(supply * 0.1)
+                        const total = supply + vat
+
+                        // MaterialItem 객체 업데이트
+                        updateItemField('MaterialItem', m.id, 'supplyPrice', supply)
+                        updateItemField('MaterialItem', m.id, 'vat', vat)
+                        updateItemField('MaterialItem', m.id, 'total', total)
+                      }}
+                    />
+                  </TableCell>
+
+                  {/* 부가세 */}
+                  <TableCell align="right" sx={{ border: '1px solid #9CA3AF' }}>
+                    <VatInput
+                      supplyPrice={m.supplyPrice}
+                      onFocus={() => setClearMaterialItemFocusedId(null)}
+                    />
+                  </TableCell>
+
+                  {/* 합계 */}
+                  <TableCell align="right" sx={{ border: '1px solid #9CA3AF' }}>
+                    {/* <TotalInput supplyPrice={m.supplyPrice} /> */}
+                    <TotalInput supplyPrice={m.supplyPrice} vat={Math.floor(m.supplyPrice * 0.1)} />
+                  </TableCell>
+
+                  {/* 비고 */}
+                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                    <TextField
+                      size="small"
+                      placeholder="500자 이하 텍스트 입력"
+                      value={m.memo}
+                      onFocus={() => setClearMaterialItemFocusedId(null)}
+                      onChange={(e) =>
+                        updateItemField('MaterialItem', m.id, 'memo', e.target.value)
+                      }
+                      variant="outlined"
+                      sx={textFieldStyle}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+              <TableRow sx={{ backgroundColor: '#f3f3f3' }}>
+                <TableCell
+                  colSpan={4}
+                  align="right"
+                  sx={{
+                    border: '1px solid #9CA3AF',
+                    fontSize: '16px',
+                    textAlign: 'center',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  소계
+                </TableCell>
+
+                <TableCell
+                  align="center"
+                  sx={{
+                    border: '1px solid #9CA3AF',
+                    textAlign: 'right',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  {getTotalQuantityAmount()}
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    border: '1px solid #9CA3AF',
+                    textAlign: 'right',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  {getTotalUnitPrice().toLocaleString()}
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    border: '1px solid #9CA3AF',
+                    textAlign: 'right',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  {getTotalSupplyAmount().toLocaleString()}
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    border: '1px solid #9CA3AF',
+                    textAlign: 'right',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  {getTotalSurtax().toLocaleString()}
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    border: '1px solid #9CA3AF',
+                    textAlign: 'right',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  {getTotalSum().toLocaleString()}
+                </TableCell>
+                <TableCell sx={{ border: '1px solid #9CA3AF' }} />
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </div>
+
+      {/* 첨부파일 */}
+      <div>
+        <div className="flex justify-between items-center mt-10 mb-2">
+          <span className="font-bold border-b-2 mb-4">증빙서류</span>
+          <div className="flex gap-4">
+            <CommonButton
+              label="삭제"
+              className="px-7"
+              variant="danger"
+              onClick={() => removeCheckedItems('attachedFile')}
+            />
+            <CommonButton
+              label="추가"
+              className="px-7"
+              variant="secondary"
+              onClick={() => addItem('attachedFile')}
+            />
+          </div>
+        </div>
+        <TableContainer component={Paper}>
+          <Table size="small">
+            <TableHead>
+              <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                  <Checkbox
+                    checked={isFilesAllChecked}
+                    indeterminate={fileCheckIds.length > 0 && !isFilesAllChecked}
+                    onChange={(e) => toggleCheckAllItems('attachedFile', e.target.checked)}
+                    sx={{ color: 'black' }}
+                  />
+                </TableCell>
+                {['문서명', '첨부', '비고'].map((label) => (
+                  <TableCell
+                    key={label}
+                    align="center"
+                    sx={{
+                      backgroundColor: '#D1D5DB',
+                      border: '1px solid  #9CA3AF',
+                      color: 'black',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    {label === '비고' || label === '첨부' ? (
+                      label
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <span>{label}</span>
+                        <span className="text-red-500 ml-1">*</span>
+                      </div>
+                    )}
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {attachedFiles.map((m) => (
+                <TableRow key={m.id} sx={{ border: '1px solid  #9CA3AF' }}>
+                  <TableCell
+                    padding="checkbox"
+                    align="center"
+                    sx={{ border: '1px solid  #9CA3AF' }}
+                  >
+                    <Checkbox
+                      checked={fileCheckIds.includes(m.id)}
+                      onChange={(e) => toggleCheckItem('attachedFile', m.id, e.target.checked)}
+                    />
+                  </TableCell>
+
+                  <TableCell sx={{ border: '1px solid  #9CA3AF' }} align="center">
+                    <TextField
+                      size="small"
+                      placeholder="텍스트 입력"
+                      sx={{ width: '100%' }}
+                      value={m.name ?? ''}
+                      onChange={(e) =>
+                        updateItemField('attachedFile', m.id, 'name', e.target.value)
+                      }
+                    />
+                  </TableCell>
+
+                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                    <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                      <CommonFileInput
+                        acceptedExtensions={[
+                          'pdf',
+                          'txt',
+                          'rtf',
+                          'docx',
+                          'hwp',
+                          'xlsx',
+                          'csv',
+                          'ods',
+                          'pptx',
+                          'ppt',
+                          'odp',
+                          'jpg',
+                          'jpeg',
+                          'png',
+                          'gif',
+                          'tif',
+                          'tiff',
+                          'bmp',
+                          'zip',
+                          '7z',
+                          'mp3',
+                          'wav',
+                          'mp4',
+                          'mov',
+                          'avi',
+                          'wmv',
+                          'dwg',
+                        ]}
+                        multiple={false}
+                        files={m.files} // 각 항목별 files
+                        onChange={(newFiles) => {
+                          updateItemField('attachedFile', m.id, 'files', newFiles.slice(0, 1))
+                          // updateItemField('attachedFile', m.id, 'files', newFiles)
+                        }}
+                        uploadTarget="MATERIAL_MANAGEMENT"
+                      />
+                    </div>
+                  </TableCell>
+                  <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                    <TextField
+                      size="small"
+                      placeholder="500자 이하 텍스트 입력"
+                      sx={{ width: '100%' }}
+                      value={m.memo}
+                      onChange={(e) =>
+                        updateItemField('attachedFile', m.id, 'memo', e.target.value)
+                      }
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </div>
+
+      {isEditMode && (
+        <div>
+          <div className="flex justify-between items-center mt-10 mb-2">
+            <span className="font-bold border-b-2 mb-4">수정이력</span>
+            <div className="flex gap-4">
+              {/* <CommonButton
+                          label="삭제"
+                          className="px-7"
+                          variant="danger"
+                          onClick={() => removeCheckedItems('manager')}
+                        />
+                        <CommonButton
+                          label="추가"
+                          className="px-7"
+                          variant="secondary"
+                          onClick={() => addItem('manager')}
+                        /> */}
+            </div>
+          </div>
+          <TableContainer component={Paper}>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                  {[
+                    { label: '수정일시', width: '12%' },
+                    { label: '항목', width: '5%' },
+                    { label: '수정항목', width: '30%' },
+                    { label: '수정자', width: '2%' },
+                    { label: '비고', width: '15%' },
+                  ].map(({ label, width }) => (
+                    <TableCell
+                      key={label}
+                      align="center"
+                      sx={{
+                        backgroundColor: '#D1D5DB',
+                        border: '1px solid #9CA3AF',
+                        color: 'black',
+                        fontWeight: 'bold',
+                        width,
+                        maxWidth: width,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {label}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {historyList.map((item: HistoryItem) => (
+                  <TableRow key={item.id}>
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      {formatDateTime(item.updatedAt)}
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{
+                        border: '1px solid  #9CA3AF',
+                        textAlign: 'center',
+                        whiteSpace: 'pre-line',
+                      }}
+                    >
+                      {item.type}
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'pre-line' }}
+                    >
+                      {item.content}
+                    </TableCell>
+                    <TableCell
+                      align="left"
+                      sx={{ border: '1px solid  #9CA3AF', whiteSpace: 'pre-line' }}
+                    >
+                      {item.updatedBy}
+                    </TableCell>
+
+                    <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        value={item.memo ?? ''}
+                        placeholder="500자 이하 텍스트 입력"
+                        onChange={(e) => updateMemo(item.id, e.target.value)}
+                        multiline
+                        inputProps={{ maxLength: 500 }}
+                        disabled={!item.isEditable}
+                        sx={{
+                          '& .MuiInputBase-root': {
+                            backgroundColor: item.isEditable ? 'white' : '#e4e4e4', // 비활성화 시 연한 배경
+                            color: item.isEditable ? 'inherit' : 'gray', // 비활성화 시 글자색
+                          },
+                        }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {hasNextPage && (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center" sx={{ border: 'none' }}>
+                      <div ref={loadMoreRef} className="p-4 text-gray-500 text-sm">
+                        불러오는 중...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </div>
+      )}
+
+      <div className="flex justify-center gap-10 mt-10">
+        {isEditMode && (
+          <CommonButton
+            label="삭제"
+            variant="danger"
+            onClick={() => {
+              if (window.confirm('정말 삭제하시겠습니까?')) {
+                MaterialDeleteMutation.mutate({
+                  materialManagementIds: [materialDetailId],
+                })
+              }
+            }}
+            className="px-4 font-bold"
+          />
+        )}
+
+        <CommonButton label="취소" variant="reset" className="px-10" onClick={materialCancel} />
+
+        <CommonButton
+          label={isEditMode ? '+ 수정' : '+ 등록'}
+          className="px-10 font-bold"
+          variant="secondary"
+          onClick={handleMaterialSubmit}
+        />
+      </div>
+    </>
+  )
+}

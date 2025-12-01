@@ -1,0 +1,186 @@
+import { HistoryItem } from './ordering'
+
+export interface DetailItem {
+  id: number
+  standard: string
+  name: string
+  unit: string
+  count: number
+  length: number
+  totalLength: number
+  unitWeight: number
+  quantity: number
+  unitPrice: number
+  supplyPrice: number
+  memo: string
+}
+
+export interface Site {
+  id: number
+  name: string
+}
+
+export interface Process {
+  id: number
+  name: string
+}
+
+export interface SteelList {
+  id: number
+  usage: string
+  type: string
+  typeCode: string
+  previousType: string
+  startDate: Date | null
+  endDate: Date | null
+  orderDate: Date | null
+  approvalDate: null
+  releaseDate: null
+  hasFile: true
+  memo: string
+  site: Site
+  process: Process
+  outsourcingCompany?: {
+    id: number
+    name: string
+    businessNumber: string
+  }
+  totalAmount?: T
+}
+
+// 검색타입
+export type SteelSearchState = {
+  searchTrigger: number
+  siteId: number
+  siteName: string
+  siteProcessName: string
+  itemName: string
+  type: string
+  outsourcingCompanyName: string
+  startDate: Date | null
+  endDate: Date | null
+  arraySort: string
+  currentPage: number
+  pageCount: string
+
+  reset: () => void
+
+  setField: <K extends keyof Omit<SteelSearchState, 'reset' | 'setField'>>(
+    field: K,
+    value: SteelSearchState[K],
+  ) => void
+
+  handleSearch: () => void
+}
+
+// 등록 타입
+export type MaterialItem = {
+  checkId: number
+  id: number | null
+  outsourcingCompanyId: number | null
+  outsourcingCompanyName?: string
+  name: string
+  specification: string
+  weight: number
+  count: number
+  totalWeight: number
+  unitPrice: number
+  amount: number
+  vat: number
+  total: number
+  isModifyType?: boolean
+  category: string
+  createdAt?: Date | null
+  fileUrl?: string
+  originalFileName?: string
+  files: FileUploadInfo[]
+  incomingDate: Date | null
+  outgoingDate: Date | null
+  salesDate: Date | null
+  memo
+}
+
+export type AttachedFile = {
+  id: number
+  name: string
+  memo: string
+  fileUrl?: string
+  originalFileName?: string
+  files: FileUploadInfo[]
+}
+
+export type ManagementSteelFormState = {
+  siteId: number // 발행부서
+  siteName: string
+  siteProcessId: number // 공정명
+  siteProcessName: string
+  type: string
+
+  // === Client Info ===
+
+  // === Material Items ===
+  details: MaterialItem[]
+  checkedMaterialItemIds: number[]
+
+  // 파일첨부, 수정이력
+  attachedFiles: AttachedFile[]
+  checkedAttachedFileIds: number[]
+
+  editedHistories?: Pick<HistoryItem, 'id' | 'memo'>[]
+  changeHistories: HistoryItem[] // 수정 이력 포함
+}
+
+export type SteelPayload = Omit<
+  ManagementSteelFormState,
+  'checkedMaterialItemIds' | 'checkedAttachedFileIds'
+> & {
+  files: {
+    name: string
+    fileUrl: string
+    originalFileName: string
+    memo: string
+  }[]
+}
+
+type SteelFormStore = {
+  form: ManagementSteelFormState
+  isSaved: boolean
+  setSaved: (saved: boolean) => void
+
+  reset: () => void
+
+  resetDetailData: () => void
+
+  // methods
+  setField: <K extends keyof Omit<ManagementSteelFormState, 'reset' | 'setField'>>(
+    field: K,
+    value: ManagementSteelFormState[K],
+  ) => void
+
+  addItem: (type: 'MaterialItem' | 'attachedFile') => void
+  updateItemField: (
+    type: 'MaterialItem' | 'attachedFile',
+    id: T,
+    field: T,
+    value: T,
+    type?: string,
+  ) => void
+
+  toggleCheckItem: (type: 'MaterialItem' | 'attachedFile', id: number, checked: boolean) => void
+  toggleCheckAllItems: (type: 'MaterialItem' | 'attachedFile', checked: boolean) => void
+  removeCheckedItems: (type: 'MaterialItem' | 'attachedFile') => void
+
+  getWeightAmount: () => number
+  getCountAmount: () => number
+  getTotalWeightAmount: () => number
+  getUnitPriceAmount: () => number
+  getAmountAmount: () => number
+  getvatTotal: () => number
+  getRealTotal: () => number
+  //관리비 등록하기
+
+  updateMemo: (id: number, newMemo: string) => void
+
+  //payload 값
+  newSteelData: () => void
+}

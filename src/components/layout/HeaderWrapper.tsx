@@ -6,11 +6,9 @@ import Header from './Header'
 export default function HeaderWrapper() {
   const pathName = usePathname()
 
-  const hideHederPaths = ['/', '/errorPage']
+  const hideHederPaths = ['/', '/resetPassword', '/errorPage']
 
   const showHeader = !hideHederPaths.includes(pathName)
-
-  console.log('헤더 데이터 ', pathName, showHeader)
 
   return (
     <>

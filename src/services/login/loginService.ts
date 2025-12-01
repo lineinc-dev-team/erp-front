@@ -3,11 +3,10 @@ import { API } from '@/api/config/env'
 export async function loginService({
   loginId,
   password,
-  autoLogin,
 }: {
   loginId: string
   password: string
-  autoLogin: boolean
+  autoLogin?: boolean
 }) {
   try {
     const res = await fetch(API.LOGIN, {
@@ -16,7 +15,7 @@ export async function loginService({
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ loginId, password, autoLogin }),
+      body: JSON.stringify({ loginId, password }),
       cache: 'no-store',
     })
 
@@ -24,26 +23,20 @@ export async function loginService({
       // 즉, 401, 403, 400, 500 등 모든 HTTP 에러는 여기서 처리 가능
       const data = await res.json()
 
-      console.log('API 응답 에러', res.status, data)
-
       if (res.status === 401 || res.status === 403) {
-        alert(data.message || '아이디 또는 비밀번호가 잘못되었습니다.')
-        return
+        return {
+          status: 'error',
+          message: data.message || '아이디 또는 비밀번호가 잘못되었습니다.',
+        }
       }
-      alert(data.message || '로그인에 실패했습니다.')
-      return
-    } else {
-      alert('로그인에 성공했습니다.')
-
-      return res.status
+      return { status: 'error', message: data.message || '로그인에 실패했습니다.' }
     }
+
+    return { status: 'success', message: '로그인에 성공했습니다.' }
   } catch (err) {
     if (err instanceof Error) {
-      alert('네트워크 에러입니다.')
-      throw err
-    } else {
-      alert('알 수 없는 에러가 발생했습니다.')
-      throw new Error('알 수 없는 에러가 발생했습니다.')
+      return { status: 'error', message: '네트워크 에러입니다.' }
     }
+    return { status: 'error', message: '알 수 없는 에러가 발생했습니다.' }
   }
 }

@@ -1,297 +1,120 @@
-'use client'
+import { API } from '@/api/config/env'
 
-import { useState } from 'react'
-import {
-  LocationStatusOptions,
-  ProcessStatusOptions,
-  statusOptions,
-  ArrayStatusOptions,
-} from '@/config/erp.confing'
-import { GridRowSelectionModel } from '@mui/x-data-grid'
-import { useRouter } from 'next/navigation'
+// 외주계약 조회
+export async function OutsourcingContractInfoService(params = {}) {
+  const query = new URLSearchParams(params).toString()
 
-export function OutsourcingContractService() {
-  // useQuery를 이용해 데이터를 불러옴 ..
-  // const { data, isLoading, error } = useQuery({
-  //   queryKey: ['businessList'],
-  //   queryFn: async () => {
-  //     const res = await fetch(API.LOGOUT, { cache: 'no-store' })
-  //     if (!res.ok) throw new Error('서버 에러')
-  //     return res.json()
-  //   },
-  // })
+  const resData = await fetch(`${API.OUTSOURCINGCONTRACT}?${query}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
 
-  // const [authData, setAuthData] = useState(null)
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const authRes = await fetch(API.AUTH, {
-  //         method: 'GET',
-  //         headers: {
-  //           'Content-Type': 'application/json',
-  //         },
-  //         credentials: 'include',
-  //         cache: 'no-store',
-  //       })
-  //       const authData = await authRes.json()
-  //       setAuthData(authData)
-
-  //       console.log('정보 데이터 확인', authData.data)
-  //     } catch (err) {
-  //       alert(err)
-  //     }
-  //   }
-
-  //   fetchData()
-  // }, [])
-
-  // console.log('정보 확인 @', authData)
-
-  const router = useRouter()
-
-  // 추후 api를 통해 데이터를 불러올 예정
-  const allRows = [
-    {
-      id: 1,
-      siteCode: 'A123',
-      location: '서울',
-      siteType: '본사',
-      period: '2025-01-01~2025-12-31',
-      status: '운영중',
-      registrar: '홍길동',
-      registeredDate: '2025-01-01',
-      modifiedDate: '2025-01-15',
-      attachments: '파일1.pdf',
-      remark: '확인',
-    },
-    {
-      id: 2,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '확인',
-    },
-    {
-      id: 3,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '확인',
-    },
-    {
-      id: 4,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 5,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 6,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 7,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 8,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 9,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 10,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 11,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 12,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 13,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 14,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-    {
-      id: 15,
-      siteCode: 'B456',
-      location: '부산',
-      siteType: '지사',
-      period: '2025-01-01~2025-06-30',
-      status: '중단',
-      registrar: '이영희',
-      registeredDate: '2025-01-02',
-      modifiedDate: '2025-01-10',
-      attachments: '파일2.xlsx',
-      remark: '중단됨',
-    },
-  ]
-
-  // 페이지네이션 상태관리
-  const [page, setPage] = useState(1) // 현재 페이지
-  const [pageSize] = useState(10) // 페이지당 수
-  const totalCount = allRows.length
-  const totalPages = Math.ceil(totalCount / pageSize)
-
-  // 현재 페이지에 맞는 데이터만 slice
-  const displayedRows = allRows.slice((page - 1) * pageSize, page * pageSize)
-
-  // 사업장 리스트에 있는 체크박스 선택 시 체크된 값을 저장하는 상태 값
-  const [selectedIds, setSelectedIds] = useState<GridRowSelectionModel>()
-
-  const [sortList, setSortList] = useState('최근순')
-
-  console.log('이 값을 가지고 나중에 어떤것들을 체크 했는지 확인 가능함', selectedIds)
-
-  const handleListRemove = () => {
-    alert('리스트에 대한 삭제가 됩니다.')
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
   }
 
-  const handleDownloadExcel = () => {
-    alert('엑셀 다운로드 로직이 들어감')
+  const data = await resData.json()
+  return data
+}
+
+//외주업체 삭제
+export async function OutsourcingContractRemoveService(contractIds: number[]) {
+  const res = await fetch(API.OUTSOURCINGCONTRACT, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ contractIds }),
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
 
-  const handleNewBusinessCreate = () => {
-    router.push('/outsourcingContract/registration')
+  return await res.status
+}
+
+// // 외주업체 엑셀 다운로드
+export async function OutsourcingContractExcelDownload({
+  sort = '',
+  siteName,
+  processName,
+  companyName,
+  businessNumber,
+  contractType,
+  contractStatus,
+  contractStartDate,
+  contractEndDate,
+  contactName,
+  fields,
+}: {
+  sort?: string
+  siteName?: string
+  processName?: string
+  companyName?: string
+  businessNumber?: string
+  contractType?: string
+  contractStatus?: string
+  contractStartDate?: string
+  contractEndDate?: string
+  contactName?: string
+  fields?: string[]
+}) {
+  const queryParams = new URLSearchParams()
+
+  queryParams.append('sort', sort)
+  if (siteName) queryParams.append('siteName', siteName)
+  if (processName) queryParams.append('processName', processName)
+  if (companyName) queryParams.append('companyName', companyName)
+  if (businessNumber) queryParams.append('businessNumber', businessNumber)
+  if (contractType) queryParams.append('contractType', contractType)
+  if (contractStatus) queryParams.append('contractStatus', contractStatus)
+  if (contractStartDate) queryParams.append('contractStartDate', contractStartDate)
+  if (contractEndDate) queryParams.append('contractEndDate', contractEndDate)
+  if (contactName) queryParams.append('contactName', contactName)
+
+  if (fields && fields.length > 0) {
+    queryParams.append('fields', fields.join(','))
   }
 
-  return {
-    handleListRemove,
-    handleDownloadExcel,
-    handleNewBusinessCreate,
-    LocationStatusOptions,
-    ProcessStatusOptions,
-    statusOptions,
-    ArrayStatusOptions,
-    displayedRows,
-    page,
-    setPage,
-    sortList,
-    setSortList,
-    pageSize,
-    totalPages,
-    setSelectedIds,
+  const res = await fetch(`${API.OUTSOURCINGCONTRACT}/download?${queryParams.toString()}`, {
+    method: 'GET',
+    // headers: {
+    //   Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    // },
+
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${res.status}`)
   }
+
+  const blob = await res.blob()
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = '외주계약 목록.xlsx'
+  a.click()
+  window.URL.revokeObjectURL(url)
+
+  return res.status
 }

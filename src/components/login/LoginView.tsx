@@ -1,8 +1,10 @@
 'use client'
 
+import React from 'react'
 import CommonInput from '../common/Input'
 import CommonButton from '../common/Button'
 import { useLoginForm } from '@/hooks/useLoginForm'
+import Image from 'next/image'
 
 export default function LoginView() {
   const {
@@ -10,18 +12,35 @@ export default function LoginView() {
     setLoginId,
     password,
     setPassword,
-    autoLogin,
-    setAutoLogin,
     userErrorId,
     setUserErrorId,
-    setUserErrorPassword,
     userErrorPassword,
+    setUserErrorPassword,
     handleLogin,
   } = useLoginForm()
 
+  const onLogin = async () => {
+    await handleLogin()
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault() // 기본 제출 막기
+      onLogin()
+    }
+  }
+
   return (
-    <div>
-      <h1 className="text-[42px] mb-4">라인공영 관리 시스템 Test!~</h1>
+    <div onKeyDown={handleKeyDown} className="flex justify-center flex-col items-center">
+      <Image
+        src="/logo/logo.png"
+        alt="대쉬보드 이미지"
+        width={120}
+        height={120}
+        className="mb-4 "
+      />
+
+      <h1 className="text-[42px] mb-4">라인공영 관리 시스템 </h1>
 
       <div className="w-88 flex flex-col gap-2 m-0">
         <CommonInput
@@ -29,7 +48,7 @@ export default function LoginView() {
           placeholder="아이디를 입력하세요."
           onChange={(value) => {
             setLoginId(value)
-            setUserErrorId(value === '') // 빈 값이면 에러 표시
+            setUserErrorId(value === '')
           }}
           error={userErrorId}
           helperText={userErrorId ? '아이디를 입력해주세요.' : ''}
@@ -51,25 +70,25 @@ export default function LoginView() {
           className="m-0"
         />
 
-        <label className="flex items-center gap-2 mt-1.5 mb-3.5 cursor-pointer select-none">
+        {/* <label className="flex items-center gap-2 mt-1.5 mb-3.5 cursor-pointer select-none">
           <input
             type="checkbox"
             checked={autoLogin}
             onChange={() => setAutoLogin((prev) => !prev)}
             className="
-                      appearance-none w-5 h-5 border border-black rounded-full 
-                      checked:bg-blue-600 checked:border-blue-600 
-                      relative transition-all
-                      after:content-[''] after:block after:w-2.5 after:h-2.5 after:bg-white after:rounded-full after:absolute after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:scale-0 checked:after:scale-100 after:transition
-                    "
+              appearance-none w-5 h-5 border border-black rounded-full 
+              checked:bg-blue-600 checked:border-blue-600 
+              relative transition-all
+              after:content-[''] after:block after:w-2.5 after:h-2.5 after:bg-white after:rounded-full after:absolute after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:scale-0 checked:after:scale-100 after:transition
+            "
           />
           <span>자동 로그인</span>
-        </label>
+        </label> */}
 
         <CommonButton
           label="로그인"
           variant="secondary"
-          onClick={handleLogin}
+          onClick={onLogin}
           fullWidth
           className="mb-3"
         />
