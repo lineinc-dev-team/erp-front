@@ -23,8 +23,8 @@ jobs:
 
       - name: Create .env.production and Build
         run: |
-          echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}" > .env.production
-          echo "NEXT_PUBLIC_API_URL_V2=${{ secrets.NEXT_PUBLIC_API_URL_V2 }}" >> .env.production
+          echo "NEXT_PUBLIC_API_URL=https://erp-api.dooson.it/api/v1" > .env.production
+          echo "NEXT_PUBLIC_API_URL_V2=https://erp-api.dooson.it/api/v2" >> .env.production
           npm run build
 
       - name: Compress build result
