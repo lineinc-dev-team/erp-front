@@ -106,6 +106,7 @@ export default function AggregateEquipmentOperationStatusView() {
     ...cellStyle,
     fontWeight: 'bold',
     backgroundColor: '#f3f4f6',
+    minWidth: 100, // 숫자 칸 최소 너비
   }
 
   // 합계 계산

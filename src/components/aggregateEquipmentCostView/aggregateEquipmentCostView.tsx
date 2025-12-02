@@ -10,8 +10,7 @@ import {
   Paper,
   Button,
 } from '@mui/material'
-import * as XLSX from 'xlsx'
-import { saveAs } from 'file-saver'
+import * as XLSX from 'xlsx-js-style'
 import useFinalAggregationView from '@/hooks/useFinalAggregation'
 import { useFinalAggregationSearchStore } from '@/stores/finalAggregationStore'
 import { myInfoProps } from '@/types/user'
@@ -66,66 +65,164 @@ export default function AggregateEquipmentCostView() {
   const allRows = [...rowsDirect]
 
   const handleExcelDownload = () => {
-    const formattedData: any[] = []
+    const wb = XLSX.utils.book_new()
+
+    // 헤더 1행
+    const headerRow1 = [
+      'NO.',
+      '사업자등록번호',
+      '규격',
+      '업체명',
+      '대표자',
+      '연락처',
+      '기성청구계좌',
+      '',
+      '',
+      '전회까지 청구내역',
+      '',
+      '',
+      '',
+      '금회 청구내역',
+      '',
+      '',
+      '',
+      '누계 청구내역',
+      '',
+      '',
+      '',
+    ]
+
+    // 헤더 2행
+    const headerRow2 = [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '은행',
+      '계좌번호',
+      '계좌명',
+      '공급가',
+      '부가세',
+      '공제금액',
+      '계',
+      '공급가',
+      '부가세',
+      '공제금액',
+      '계',
+      '공급가',
+      '부가세',
+      '공제금액',
+      '계',
+    ]
+
+    const sheetData: any[] = []
+    sheetData.push(headerRow1)
+    sheetData.push(headerRow2)
 
     rowsDirect.forEach((r: any) => {
-      formattedData.push({
-        NO: r.no,
-        사업자등록번호: r.businessNumber,
-        규격: r.specification,
-        업체명: r.company,
-        대표자: r.ceo,
-        연락처: r.contact,
-        은행: r.bank,
-        계좌번호: r.accountNumber,
-        계좌명: r.accountName,
-        전회_공급가: r.prevSupply,
-        전회_부가세: r.prevTax,
-        전회_공제금액: r.prevDeduction,
-        전회_계: r.prevTotal,
-        금회_공급가: r.currSupply,
-        금회_부가세: r.currTax,
-        금회_공제금액: r.currDeduction,
-        금회_계: r.currTotal,
-        누계_공급가: r.totalSupply,
-        누계_부가세: r.totalTax,
-        누계_공제금액: r.totalDeduction,
-        누계_계: r.totalTotal,
-      })
+      sheetData.push([
+        r.no,
+        r.businessNumber,
+        r.specification,
+        r.company,
+        r.ceo,
+        r.contact,
+        r.bank,
+        r.accountNumber,
+        r.accountName,
+        r.prevSupply.toLocaleString(),
+        r.prevTax.toLocaleString(),
+        r.prevDeduction.toLocaleString(),
+        r.prevTotal.toLocaleString(),
+        r.currSupply.toLocaleString(),
+        r.currTax.toLocaleString(),
+        r.currDeduction.toLocaleString(),
+        r.currTotal.toLocaleString(),
+        r.totalSupply.toLocaleString(),
+        r.totalTax.toLocaleString(),
+        r.totalDeduction.toLocaleString(),
+        r.totalTotal.toLocaleString(),
+      ])
     })
 
-    const sumTotal = calculateSum(allRows)
-    formattedData.push({
-      NO: '합계',
-      사업자등록번호: '',
-      규격: '',
+    // 🟢 소계 계산
+    const sum = (key: string) => rowsDirect.reduce((acc: any, r: any) => acc + (r as any)[key], 0)
 
-      업체명: '',
-      대표자: '',
-      연락처: '',
-      은행: '',
-      계좌번호: '',
-      계좌명: '',
-      전회_공급가: sumTotal[0],
-      전회_부가세: sumTotal[1],
-      전회_공제금액: sumTotal[2],
-      전회_계: sumTotal[3],
-      금회_공급가: sumTotal[4],
-      금회_부가세: sumTotal[5],
-      금회_공제금액: sumTotal[6],
-      금회_계: sumTotal[7],
-      누계_공급가: sumTotal[8],
-      누계_부가세: sumTotal[9],
-      누계_공제금액: sumTotal[10],
-      누계_계: sumTotal[11],
-    })
+    sheetData.push([
+      '소계',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      sum('prevSupply').toLocaleString(),
+      sum('prevTax').toLocaleString(),
+      sum('prevDeduction').toLocaleString(),
+      sum('prevTotal').toLocaleString(),
+      sum('currSupply').toLocaleString(),
+      sum('currTax').toLocaleString(),
+      sum('currDeduction').toLocaleString(),
+      sum('currTotal').toLocaleString(),
+      sum('totalSupply').toLocaleString(),
+      sum('totalTax').toLocaleString(),
+      sum('totalDeduction').toLocaleString(),
+      sum('totalTotal').toLocaleString(),
+    ])
 
-    const worksheet = XLSX.utils.json_to_sheet(formattedData)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
-    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' })
-    saveAs(blob, '장비비.xlsx')
+    const ws = XLSX.utils.aoa_to_sheet(sheetData)
+
+    // 병합
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
+      { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } },
+      { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } },
+      { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } },
+      { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } },
+      { s: { r: 0, c: 5 }, e: { r: 1, c: 5 } },
+
+      { s: { r: 0, c: 6 }, e: { r: 0, c: 8 } },
+      { s: { r: 0, c: 9 }, e: { r: 0, c: 12 } },
+      { s: { r: 0, c: 13 }, e: { r: 0, c: 16 } },
+      { s: { r: 0, c: 17 }, e: { r: 0, c: 20 } },
+
+      // 소계 병합
+      { s: { r: sheetData.length - 1, c: 0 }, e: { r: sheetData.length - 1, c: 8 } },
+    ]
+
+    // 스타일 적용 (기존 코드 그대로)
+    const range = XLSX.utils.decode_range(ws['!ref']!)
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cellRef = XLSX.utils.encode_cell({ r: R, c: C })
+        if (!ws[cellRef]) ws[cellRef] = { v: '' }
+
+        const isHeader = R < 2
+        const isAmount = !isHeader && C >= 9
+        const isSubtotalLabel = R === sheetData.length - 1 && C === 0
+
+        ws[cellRef].s = {
+          border: {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } },
+          },
+          fill: isHeader ? { patternType: 'solid', fgColor: { rgb: 'C0C0C0' } } : undefined,
+          alignment: {
+            vertical: 'center',
+            horizontal: isHeader || isSubtotalLabel ? 'center' : isAmount ? 'right' : 'center',
+          },
+        }
+      }
+    }
+
+    XLSX.utils.book_append_sheet(wb, ws, '장비비')
+    XLSX.writeFile(wb, '장비비.xlsx')
   }
 
   const cellStyle = {
@@ -138,6 +235,7 @@ export default function AggregateEquipmentCostView() {
     ...cellStyle,
     fontWeight: 'bold',
     backgroundColor: '#f3f4f6',
+    minWidth: 100, // 숫자 칸 최소 너비
   }
 
   const totalKeys = [
