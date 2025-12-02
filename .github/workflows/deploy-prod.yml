@@ -18,9 +18,13 @@ jobs:
         with:
           node-version: 20
 
+      # 빌드용 의존성 설치. npm ci는 package-lock.json 기준으로 깔끔하게 설치.
       - name: Install dependencies (for build)
         run: npm ci
 
+      # .next: Next.js 빌드 결과물
+      # public: 정적 파일
+      # package.json/package-lock.json: 서버에서 의존성 설치용
       - name: Create .env.production and Build
         run: |
           echo "NEXT_PUBLIC_API_URL=https://erp-api.dooson.it/api/v1" > .env.production
@@ -31,6 +35,8 @@ jobs:
         run: |
           tar -czf build.tar.gz .next public package.json package-lock.json
 
+      # EC2 서버로 압축파일 전송.
+      # SSH 키와 호스트 정보는 GitHub Secrets에 저장.
       - name: Copy build file to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
