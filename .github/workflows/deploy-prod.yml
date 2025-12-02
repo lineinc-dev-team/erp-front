@@ -84,7 +84,7 @@ jobs:
             sudo tee /etc/nginx/sites-available/erp-front > /dev/null <<'EOF'
             server {
                 listen 80;
-                server_name erp-api.dooson.it;
+                server_name erp.dooson.it;
 
                 location / {
                     proxy_pass http://localhost:3000;
