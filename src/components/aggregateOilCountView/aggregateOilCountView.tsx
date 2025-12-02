@@ -134,14 +134,13 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
     ...cellStyle,
     fontWeight: 'bold',
     backgroundColor: '#f3f4f6',
+    minWidth: 100, // 숫자 칸 최소 너비
   }
 
-  // 엑셀 다운로드
   // 엑셀 다운로드
   const handleExcelDownload = () => {
     const formattedData: any[] = []
 
-    // 1️⃣ 유종별 데이터 및 소계
     fuelTypes.forEach((fuelType) => {
       const fuelRows = rows.filter((r) => r.fuelType === fuelType)
       fuelRows.forEach((r) => {
@@ -157,7 +156,6 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
         })
       })
 
-      // ✅ 유종별 소계
       const subtotalRow: any = {
         NO: '소계',
         유류종류: fuelTypeMap[fuelType] + ' 계',
