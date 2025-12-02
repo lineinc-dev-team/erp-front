@@ -10,33 +10,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ 소스 체크아웃
       - name: Checkout source
         uses: actions/checkout@v4
 
-      # 2️⃣ Node 설정
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # 3️⃣ 의존성 설치
-      - name: Install dependencies
-        run: npm install
+      # 빌드용 의존성 설치. npm ci는 package-lock.json 기준으로 깔끔하게 설치.
+      - name: Install dependencies (for build)
+        run: npm ci
 
-      # 4️⃣ 환경파일 생성 및 빌드
+      # .next: Next.js 빌드 결과물
+      # public: 정적 파일
+      # package.json/package-lock.json: 서버에서 의존성 설치용
       - name: Create .env.production and Build
         run: |
           echo "NEXT_PUBLIC_API_URL=https://erp-api.dooson.it/api/v1" > .env.production
-          echo "NEXT_PUBLIC_API_URL_V2=https://erp-api.dooson.it/api/v2" >> .env.production
+          echo "NEXT_PUBLIC_API_URL_V2=https://erp-api.dooson.it/api/v1" >> .env.production
           npm run build
 
-      # 5️⃣ 빌드 + package.json 압축
       - name: Compress build result
         run: |
           tar -czf build.tar.gz .next public package.json package-lock.json
 
-      # 6️⃣ EC2로 파일 전송
+      # EC2 서버로 압축파일 전송.
+      # SSH 키와 호스트 정보는 GitHub Secrets에 저장.
       - name: Copy build file to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -44,36 +44,49 @@ jobs:
           username: ${{ secrets.EC2_PROD_USER }}
           key: ${{ secrets.EC2_PROD_KEY }}
           source: 'build.tar.gz'
-          target: '/home/${{ secrets.EC2_PROD_USER }}/deploy/build.tar.gz'
+          target: '/home/${{ secrets.EC2_PROD_USER }}/deploy/'
 
-      # 7️⃣ EC2 배포
-      - name: Deploy on EC2 and Configure Nginx
+      - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_PROD_HOST }}
           username: ${{ secrets.EC2_PROD_USER }}
           key: ${{ secrets.EC2_PROD_KEY }}
           script: |
+            set -e
+
             DEPLOY_PATH="/var/www/erp-front"
+            mkdir -p $DEPLOY_PATH
 
-            # 배포 폴더 생성 및 권한 설정
-            sudo mkdir -p $DEPLOY_PATH
-            sudo chown -R $USER:$USER $DEPLOY_PATH
-
-            # 압축 해제
-            if [ ! -f ~/deploy/build.tar.gz ]; then
-              echo "Error: build.tar.gz not found!"
-              exit 1
+            # 안전하게 기존 'build.tar.gz' 파일이 디렉토리로 존재하면 제거
+            if [ -d ~/deploy/build.tar.gz ]; then
+              rm -rf ~/deploy/build.tar.gz
             fi
-            tar -xzf ~/deploy/build.tar.gz -C $DEPLOY_PATH --strip-components=0
+
+            # 압축 이동(이미 업로드되어 있다고 가정)
+            # 압축 해제 (안전하게 덮어쓰기)
+            tar -xzf ~/deploy/build.tar.gz -C $DEPLOY_PATH
+
+            # 압축파일 제거
             rm -f ~/deploy/build.tar.gz
 
-            # pm2 배포
+            # DEPLOY_PATH로 이동하여 의존성 설치 (production)
+            cd $DEPLOY_PATH
+
+            # package-lock.json이 있으면 npm ci 사용 권장
+            if [ -f package-lock.json ]; then
+              npm ci --only=production
+            else
+              npm install --production
+            fi
+
+            # pm2 재시작
+            cd $DEPLOY_PATH
             pm2 delete erp-front || true
-            pm2 start npm --name "erp-front" -- start --cwd $DEPLOY_PATH
+            pm2 start node_modules/next/dist/bin/next --name "erp-front" -- start
             pm2 save
 
-            # Nginx 설정
+            # Nginx 설정 (서버 블럭 덮어쓰기)
             sudo tee /etc/nginx/sites-available/erp-front > /dev/null <<'EOF'
             server {
                 listen 80;
@@ -89,6 +102,7 @@ jobs:
                 }
             }
             EOF
-                        sudo ln -sf /etc/nginx/sites-available/erp-front /etc/nginx/sites-enabled/erp-front
-                        sudo nginx -t
-                        sudo systemctl reload nginx
+
+            sudo ln -sf /etc/nginx/sites-available/erp-front /etc/nginx/sites-enabled/erp-front
+            sudo nginx -t
+            sudo systemctl reload nginx
