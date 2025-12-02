@@ -75,8 +75,9 @@ jobs:
             fi
 
             # pm2 재시작
+            cd $DEPLOY_PATH
             pm2 delete erp-front || true
-            pm2 start npm --name "erp-front" -- start --cwd $DEPLOY_PATH
+            pm2 start "npm run start" --name "erp-front"
             pm2 save
 
             # Nginx 설정 (서버 블럭 덮어쓰기)
