@@ -10,7 +10,7 @@ import {
   Paper,
   Button,
 } from '@mui/material'
-import * as XLSX from 'xlsx'
+import * as XLSX from 'xlsx-js-style'
 import { saveAs } from 'file-saver'
 import useFinalAggregationView from '@/hooks/useFinalAggregation'
 import { useFinalAggregationSearchStore } from '@/stores/finalAggregationStore'
@@ -75,7 +75,7 @@ export default function AggregateManagementCostDetailView() {
   const handleExcelDownload = () => {
     const formattedRows: any[][] = []
 
-    // 사람별 데이터
+    // 1️⃣ 사람별 데이터
     rows.forEach((r: any) => {
       const totalMeals = r.meals.reduce(
         (sum: number, meal: any) =>
@@ -90,12 +90,7 @@ export default function AggregateManagementCostDetailView() {
       const unitPriceCount = allUnitPrices.filter((v: any) => v > 0).length
       const avgUnitPrice = unitPriceCount ? unitPriceSum / unitPriceCount : 0
 
-      const allAmounts = r.meals.flatMap((meal: any) =>
-        Object.values(meal.days).map((d: any) => d.amount),
-      )
-      const amountSum = allAmounts.reduce((a: any, b: any) => a + b, 0)
-      const amountCount = allAmounts.filter((v: any) => v > 0).length
-      const avgAmount = amountCount ? amountSum / amountCount : 0
+      const totalAmount = totalMeals * avgUnitPrice // ✅ 계 * 단가
 
       r.meals.forEach((meal: any, idx: number) => {
         const dayCounts = dateColumns.map((d) => meal.days[d].count)
@@ -106,16 +101,16 @@ export default function AggregateManagementCostDetailView() {
           idx === 0 ? r.name : '',
           meal.type,
           ...dayCounts,
-          idx === 0 ? totalMeals : '',
-          idx === 0 ? avgUnitPrice : '',
-          idx === 0 ? avgAmount : '',
+          idx === 0 ? totalMeals.toLocaleString() : '', // 천 단위 , 적용
+          idx === 0 ? avgUnitPrice.toLocaleString() : '',
+          idx === 0 ? totalAmount.toLocaleString() : '',
         ]
 
         formattedRows.push(row)
       })
     })
 
-    // 총합계 계산
+    // 2️⃣ 총합계 계산
     const totalPerDayByMeal = ['조식', '중식', '석식'].map((mealType) =>
       dateColumns.map((d) =>
         rows.reduce((sum: number, r: any) => {
@@ -125,39 +120,36 @@ export default function AggregateManagementCostDetailView() {
       ),
     )
 
-    const totalMealsByMeal = rows.reduce((sum: number, r: any) => {
-      return (
-        sum +
-        r.meals.reduce(
-          (mealSum: number, meal: any) =>
-            mealSum +
-            Object.values(meal.days || {}).reduce((c: number, d: any) => c + (d.count || 0), 0),
-          0,
+    const totalMealsByMeal = rows
+      .reduce((sum: number, r: any) => {
+        return (
+          sum +
+          r.meals.reduce(
+            (mealSum: number, meal: any) =>
+              mealSum +
+              Object.values(meal.days || {}).reduce((c: number, d: any) => c + (d.count || 0), 0),
+            0,
+          )
         )
-      )
-    }, 0)
+      }, 0)
+      .toLocaleString() // ✅ 천 단위
 
-    const totalUnitPriceByMeal = rows.reduce((sum: number, r: any) => {
-      const allPrices = r.meals.flatMap((meal: any) =>
-        Object.values(meal.days || {}).map((d: any) => d.unitPrice),
-      )
-      const filtered = allPrices.filter((v: any) => v > 0)
-      const avg = filtered.length
-        ? filtered.reduce((a: any, b: any) => a + b, 0) / filtered.length
-        : 0
-      return sum + avg
-    }, 0)
+    const totalUnitPriceByMeal = rows
+      .reduce((sum: number, r: any) => {
+        const allPrices = r.meals.flatMap((meal: any) =>
+          Object.values(meal.days || {}).map((d: any) => d.unitPrice),
+        )
+        const filtered = allPrices.filter((v: any) => v > 0)
+        const avg = filtered.length
+          ? filtered.reduce((a: any, b: any) => a + b, 0) / filtered.length
+          : 0
+        return sum + avg
+      }, 0)
+      .toLocaleString() // ✅ 천 단위
 
-    const totalAmountByMeal = rows.reduce((sum: number, r: any) => {
-      const allAmounts = r.meals.flatMap((meal: any) =>
-        Object.values(meal.days || {}).map((d: any) => d.amount),
-      )
-      const filtered = allAmounts.filter((v: any) => v > 0)
-      const avg = filtered.length
-        ? filtered.reduce((a: any, b: any) => a + b, 0) / filtered.length
-        : 0
-      return sum + avg
-    }, 0)
+    const totalAmountByMeal = (
+      Number(totalMealsByMeal.replace(/,/g, '')) * Number(totalUnitPriceByMeal.replace(/,/g, ''))
+    ).toLocaleString() // ✅ 계 * 단가, 천 단위
 
     const meals = ['조식', '중식', '석식']
 
@@ -178,6 +170,7 @@ export default function AggregateManagementCostDetailView() {
       formattedRows.push(row)
     })
 
+    // 3️⃣ 헤더
     const headerRow = [
       'No',
       '직종',
@@ -192,14 +185,77 @@ export default function AggregateManagementCostDetailView() {
     const sheetAoA = [headerRow, ...formattedRows]
     const worksheet = XLSX.utils.aoa_to_sheet(sheetAoA)
 
-    worksheet['!cols'] = sheetAoA[0].map((h) => ({
-      wch: Math.max(10, String(h).length + 5),
-    }))
+    // 4️⃣ 셀 스타일: 테두리, 회색 헤더
+    const borderStyle = {
+      top: { style: 'thin', color: { rgb: '000000' } },
+      bottom: { style: 'thin', color: { rgb: '000000' } },
+      left: { style: 'thin', color: { rgb: '000000' } },
+      right: { style: 'thin', color: { rgb: '000000' } },
+    }
+
+    sheetAoA.forEach((row, rowIndex) => {
+      row.forEach((_, colIndex) => {
+        const cell = worksheet[XLSX.utils.encode_cell({ r: rowIndex, c: colIndex })]
+        if (!cell) return
+        cell.s = {
+          border: borderStyle,
+          alignment: { vertical: 'center', horizontal: 'center' },
+          fill: rowIndex === 0 ? { fgColor: { rgb: 'CCCCCC' } } : undefined, // 헤더 회색
+        }
+      })
+    })
+
+    // 마지막 계 3x3 병합
+    worksheet['!merges'] = [
+      // 기존 마지막 계 텍스트 3x3 (No, 직종, 성명)
+      {
+        s: { r: sheetAoA.length - 3, c: 0 },
+        e: { r: sheetAoA.length - 1, c: 2 },
+      },
+
+      // 마지막 열 계, 단가, 총합계 세로 병합
+      {
+        s: { r: sheetAoA.length - 3, c: sheetAoA[0].length - 3 },
+        e: { r: sheetAoA.length - 1, c: sheetAoA[0].length - 3 },
+      }, // 계
+      {
+        s: { r: sheetAoA.length - 3, c: sheetAoA[0].length - 2 },
+        e: { r: sheetAoA.length - 1, c: sheetAoA[0].length - 2 },
+      }, // 단가
+      {
+        s: { r: sheetAoA.length - 3, c: sheetAoA[0].length - 1 },
+        e: { r: sheetAoA.length - 1, c: sheetAoA[0].length - 1 },
+      }, // 총합계
+
+      // 기존 사람별 세로 병합
+      ...rows.flatMap((_: any, rIdx: any) => {
+        const startRow = 1 + rIdx * 3
+        return [
+          { s: { r: startRow, c: 0 }, e: { r: startRow + 2, c: 0 } }, // No
+          { s: { r: startRow, c: 1 }, e: { r: startRow + 2, c: 1 } }, // 직종
+          { s: { r: startRow, c: 2 }, e: { r: startRow + 2, c: 2 } }, // 성명
+
+          // 마지막 3칸 병합 (계, 단가, 총합계)
+          {
+            s: { r: startRow, c: sheetAoA[0].length - 3 },
+            e: { r: startRow + 2, c: sheetAoA[0].length - 3 },
+          }, // 계
+          {
+            s: { r: startRow, c: sheetAoA[0].length - 2 },
+            e: { r: startRow + 2, c: sheetAoA[0].length - 2 },
+          }, // 단가
+          {
+            s: { r: startRow, c: sheetAoA[0].length - 1 },
+            e: { r: startRow + 2, c: sheetAoA[0].length - 1 },
+          }, // 총합계
+        ]
+      }),
+    ]
 
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, '식대집계')
 
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array', cellStyles: true })
     saveAs(
       new Blob([excelBuffer], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
