@@ -855,7 +855,7 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
         category: item.category,
         unitPrice: item.unitPrice,
         taskDescription: item.taskDescription,
-        type: item.type == '' ? undefined : item.type,
+        type: item.type == '' || item.type == 'BASE' ? undefined : item.type,
         memo: item.memo,
         subEquipments:
           item.subEquipments?.map((sub) => ({
