@@ -29,7 +29,7 @@ jobs:
 
       - name: Compress build result
         run: |
-          tar -czf build.tar.gz .next public package.json package-lock.json
+          tar -czf deploy.tar.gz package.json package-lock.json public pages app next.config.js .env.production
 
       - name: Copy build file to EC2
         uses: appleboy/scp-action@v0.1.4
