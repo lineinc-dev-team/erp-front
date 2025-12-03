@@ -178,13 +178,18 @@ export function useManagementSteel() {
   const useSteelHistoryDataQuery = (historyId: number, enabled: boolean) => {
     return useInfiniteQuery({
       queryKey: ['SteelInfo', historyId],
-      queryFn: ({ pageParam = 0 }) => SteelInfoHistoryService(historyId, pageParam, 4, 'id,desc'),
+      queryFn: ({ pageParam = 0 }) =>
+        SteelInfoHistoryService(historyId, pageParam, 4, 'updatedAt,desc'),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
-        const { sliceInfo } = lastPage?.data
-        const nextPage = sliceInfo?.page + 1
+        const { pageInfo } = lastPage?.data
 
-        return sliceInfo?.hasNext ? nextPage : undefined
+        if (!pageInfo) return undefined
+
+        const nextPage = pageInfo.page + 1
+        const hasNext = nextPage < pageInfo.totalPages
+
+        return hasNext ? nextPage : undefined
       },
       enabled: enabled && !!historyId && !isNaN(historyId),
     })

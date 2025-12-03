@@ -103,10 +103,10 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
 
   const {
     data: steelHistoryList,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
+    fetchNextPage: steelHistoryFetchNextPage,
+    isFetchingNextPage: steelHistoryIsFetchingNextPage,
+    hasNextPage: steelHistoryHasNextPage,
+    isLoading: steelHistoryIsLoading,
     refetch: refetchSteelHistory, // refetch 함수
   } = useSteelHistoryDataQuery(steelDetailId, isEditMode)
 
@@ -338,18 +338,23 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useCallback(
     (node: HTMLDivElement | null) => {
-      if (isLoading || isFetchingNextPage) return
+      if (steelHistoryIsLoading || steelHistoryIsFetchingNextPage) return
       if (observerRef.current) observerRef.current.disconnect()
 
       observerRef.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasNextPage) {
-          fetchNextPage()
+        if (entries[0].isIntersecting && steelHistoryHasNextPage) {
+          steelHistoryFetchNextPage()
         }
       })
 
       if (node) observerRef.current.observe(node)
     },
-    [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading],
+    [
+      steelHistoryFetchNextPage,
+      steelHistoryHasNextPage,
+      steelHistoryIsFetchingNextPage,
+      steelHistoryIsLoading,
+    ],
   )
 
   // function validateSteelForm(form: ManagementSteelFormState) {
@@ -1893,7 +1898,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     </TableCell>
                   </TableRow>
                 ))}
-                {hasNextPage && (
+                {steelHistoryHasNextPage && (
                   <TableRow>
                     <TableCell colSpan={5} align="center" sx={{ border: 'none' }}>
                       <div ref={loadMoreRef} className="p-4 text-gray-500 text-sm">
