@@ -216,7 +216,6 @@ export default function OutsourcingContractView() {
         headerAlign: 'center',
         align: 'center',
         minWidth: 70,
-        maxWidth: 70,
       }
     }
 
