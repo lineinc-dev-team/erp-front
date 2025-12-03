@@ -3,6 +3,7 @@ import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   CreateManagementSteel,
+  GetSpecificationsInfoService,
   ModifySteelManagement,
   SteelInfoHistoryService,
 } from '@/services/managementSteel/managementSteelRegistrationService'
@@ -195,6 +196,15 @@ export function useManagementSteel() {
     })
   }
 
+  // 규격 키워드 검색
+  const SpecificationsListQuery = (keyword: string) =>
+    useInfiniteQuery({
+      queryKey: ['SpecificationsNamesInfo', keyword],
+      queryFn: () => GetSpecificationsInfoService({ keyword }),
+      initialPageParam: 0,
+      getNextPageParam: () => undefined,
+    })
+
   // 구분 조회
 
   // const { data: steelTypeInfoId } = useQuery({
@@ -213,7 +223,7 @@ export function useManagementSteel() {
     SteelListQuery,
     SteelModifyMutation,
     steelCancel,
-
+    SpecificationsListQuery,
     useSteelHistoryDataQuery,
   }
 }

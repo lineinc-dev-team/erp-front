@@ -63,6 +63,10 @@ interface FocusState {
   // 자재 관리에서 품명 키워드 검색 시 포커스 관리
   materialItemFocusedId: number | null
   setMaterialItemFocusedId: (id: number | null) => void
+
+  // 강재수불부에서 규격 포커싱 관리
+  specificationItemFocusedId: number | null
+  setSpecificationItemFocusedId: (id: number | null) => void
 }
 
 export const useFocusStore = create<FocusState>((set) => ({
@@ -120,4 +124,8 @@ export const useFocusStore = create<FocusState>((set) => ({
   // 자재에서 품명
   materialItemFocusedId: null,
   setMaterialItemFocusedId: (id) => set({ materialItemFocusedId: id }),
+
+  // 강재에서 규격
+  specificationItemFocusedId: null,
+  setSpecificationItemFocusedId: (id) => set({ specificationItemFocusedId: id }),
 }))

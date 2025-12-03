@@ -88,8 +88,13 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
     useOutsourcingNameListInfiniteScroll,
   } = useOutSourcingContract()
 
-  const { createSteelMutation, useSteelHistoryDataQuery, SteelModifyMutation, steelCancel } =
-    useManagementSteel()
+  const {
+    createSteelMutation,
+    useSteelHistoryDataQuery,
+    SpecificationsListQuery,
+    SteelModifyMutation,
+    steelCancel,
+  } = useManagementSteel()
 
   // 체크 박스에 활용
   const contractAddAttachedFiles = form.details
@@ -144,6 +149,8 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
   ]
 
   const [activeTab, setActiveTab] = useState<string | undefined>('')
+
+  const setClearSpecificationItemFocusedId = useFocusStore((s) => s.setSpecificationItemFocusedId)
 
   const getTabLabel = (value: string | undefined) => {
     return TAB_CONFIG.find((tab) => tab.value === value)?.label ?? ''
@@ -214,6 +221,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         name: c.name, // 품명
         specification: c.specification, // 규격
         weight: c.weight, // 무게(톤)
+        length: c.length, // 길이
         count: c.count, // 본
         totalWeight: c.totalWeight, // 총 무게(톤)
         unitPrice: c.unitPrice, // 단가
@@ -397,7 +405,10 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         if (!isScrap && !item.specification?.trim()) return '규격을 입력해주세요.'
 
         // 무게
-        if (!isScrap && !item.weight) return '무게(톤)을 입력해주세요.'
+        if (!isScrap && !item.weight) return '단위중량(톤)을 입력해주세요.'
+
+        // 길이
+        if (!isScrap && !item.length) return '길이를 입력해주세요.'
 
         // 본
         if (!isScrap && !item.count) return '본 수량을 입력해주세요.'
@@ -519,6 +530,83 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
           blurTimeout.current = setTimeout(() => setFocusedRowId(null), 200) // 200ms 딜레이
         }}
         disabled={row.isModifyType === false || row.category === 'OWN_MATERIAL'}
+      />
+    )
+  }
+
+  // 규격명 키워드 검색
+
+  const handleSelectSpecificationsNames = (id: number, selectedCompany: any) => {
+    if (!selectedCompany) {
+      updateItemField('MaterialItem', id, 'weight', '')
+      updateItemField('MaterialItem', id, 'specification', '')
+      return
+    }
+
+    updateItemField('MaterialItem', id, 'weight', selectedCompany.weight)
+    updateItemField('MaterialItem', id, 'specification', selectedCompany.specification)
+  }
+
+  function SpecificationsNameRows({ row }: { row: any }) {
+    const specificationItemFocusedId = useFocusStore((s) => s.specificationItemFocusedId)
+    const setSpecificationItemFocusedId = useFocusStore((s) => s.setSpecificationItemFocusedId)
+
+    const [localKeyword, setLocalKeyword] = React.useState(row.specification ?? '')
+
+    const isFocused = specificationItemFocusedId === row.checkId
+
+    // 입력값이 외부에서 바뀌면 로컬 상태도 업데이트
+    React.useEffect(() => {
+      setLocalKeyword(row.specification ?? '')
+    }, [row.specification])
+
+    // debounce 적용 (백엔드 호출용)
+    const debouncedKeyword = useDebouncedValue(localKeyword, 300)
+
+    const {
+      data: SpecifiCationNameData,
+      fetchNextPage: SpecifiCationNameFetchNextPage,
+      hasNextPage: SpecifiCationNameHasNextPage,
+      isFetching: SpecifiCationNameIsFetching,
+      isLoading: SpecifiCationNameIsLoading,
+    } = SpecificationsListQuery(debouncedKeyword)
+
+    const specifiCationNameList = Array.from(
+      new Map(
+        SpecifiCationNameData?.pages.flatMap((page) => page.data).map((u) => [u.specification, u]),
+      )?.values() ?? [],
+    )
+
+    // onBlur 딜레이용 ref
+    const blurTimeout = React.useRef<NodeJS.Timeout | null>(null)
+
+    return (
+      <InfiniteScrollSelect
+        keyword={localKeyword}
+        placeholder="규격을 입력해주세요."
+        debouncedKeyword={debouncedKeyword}
+        items={specifiCationNameList}
+        hasNextPage={SpecifiCationNameHasNextPage ?? false}
+        fetchNextPage={SpecifiCationNameFetchNextPage}
+        isLoading={SpecifiCationNameIsLoading || SpecifiCationNameIsFetching}
+        onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
+        renderItem={(item, isHighlighted) => (
+          <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+            {item.specification}
+          </div>
+        )}
+        onSelect={(selectedCompany) =>
+          handleSelectSpecificationsNames(row.checkId ?? 0, selectedCompany)
+        }
+        shouldShowList={isFocused} // 포커스 기반 리스트 표시
+        onFocus={() => {
+          if (blurTimeout.current) clearTimeout(blurTimeout.current)
+          setSpecificationItemFocusedId(row.checkId)
+        }}
+        onBlur={() => {
+          blurTimeout.current = setTimeout(() => setSpecificationItemFocusedId(null), 200) // 200ms 딜레이
+        }}
+        disabled={row.isModifyType === false}
       />
     )
   }
@@ -1012,9 +1100,17 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
                   >
-                    무게(톤)
+                    단위중량(톤)
                     {form.type !== 'SCRAP' && <span className="text-red-500 ml-1">*</span>}
                   </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
+                  >
+                    길이(cm)
+                    {form.type !== 'SCRAP' && <span className="text-red-500 ml-1">*</span>}
+                  </TableCell>
+
                   <TableCell
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
@@ -1195,34 +1291,18 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         width: {
                           xs: 80, // 모바일 (smaller)
                           sm: 120, // 태블릿
-                          md: 140, // 데스크탑
+                          md: 280, // 데스크탑
                         },
                       }}
                     >
                       {activeTab === 'SCRAP' ? (
                         '-'
                       ) : (
-                        <TextField
-                          size="small"
-                          placeholder="입력"
-                          value={m.specification || ''}
-                          onChange={(e) =>
-                            updateItemField(
-                              'MaterialItem',
-                              m.checkId,
-                              'specification',
-                              e.target.value,
-                            )
-                          }
-                          inputProps={{
-                            style: { textAlign: 'center' },
-                          }}
-                          disabled={m.isModifyType === false}
-                        />
+                        <SpecificationsNameRows key={m.checkId} row={m} />
                       )}
                     </TableCell>
 
-                    {/* 무게(톤) */}
+                    {/* 단위중량(톤) */}
 
                     <TableCell
                       align="center"
@@ -1232,7 +1312,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         width: {
                           xs: 80, // 모바일 (smaller)
                           sm: 100, // 태블릿
-                          md: 140, // 데스크탑
+                          md: 80, // 데스크탑
                         },
                       }}
                     >
@@ -1243,10 +1323,46 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           size="small"
                           placeholder="입력"
                           value={m.weight || ''}
+                          onFocus={() => {
+                            setClearSpecificationItemFocusedId(null)
+                          }}
                           onChange={(e) => {
                             const regex = /^-?\d*\.?\d{0,4}$/
                             if (regex.test(e.target.value)) {
                               updateItemField('MaterialItem', m.checkId, 'weight', e.target.value)
+                            }
+                          }}
+                          inputProps={{
+                            style: { textAlign: 'center' },
+                          }}
+                          disabled={m.isModifyType === false}
+                        />
+                      )}
+                    </TableCell>
+
+                    {/* 길이  총합은 없음 */}
+
+                    <TableCell
+                      align="center"
+                      sx={{
+                        border: '1px solid #9CA3AF',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {activeTab === 'SCRAP' ? (
+                        '-'
+                      ) : (
+                        <TextField
+                          size="small"
+                          placeholder="입력"
+                          value={m.length || ''}
+                          onFocus={() => {
+                            setClearSpecificationItemFocusedId(null)
+                          }}
+                          onChange={(e) => {
+                            const regex = /^-?\d*\.?\d{0,4}$/
+                            if (regex.test(e.target.value)) {
+                              updateItemField('MaterialItem', m.checkId, 'length', e.target.value)
                             }
                           }}
                           inputProps={{
@@ -1268,6 +1384,9 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         <TextField
                           size="small"
                           placeholder="입력"
+                          onFocus={() => {
+                            setClearSpecificationItemFocusedId(null)
+                          }}
                           value={m.count || ''}
                           onChange={(e) =>
                             updateItemField('MaterialItem', m.checkId, 'count', e.target.value)
@@ -1286,16 +1405,14 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       sx={{
                         border: '1px solid #9CA3AF',
                         whiteSpace: 'nowrap',
-                        width: {
-                          xs: 80, // 모바일 (smaller)
-                          sm: 100, // 태블릿
-                          md: 120, // 데스크탑
-                        },
                       }}
                     >
                       <TextField
                         size="small"
                         placeholder="입력"
+                        onFocus={() => {
+                          setClearSpecificationItemFocusedId(null)
+                        }}
                         value={m.totalWeight || 0}
                         onChange={(e) => {
                           const formatted = unformatNumber(e.target.value)
@@ -1317,7 +1434,15 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     {/* 단가 */}
                     <TableCell
                       align="center"
-                      sx={{ border: '1px solid #9CA3AF', width: '150px', padding: '6px' }}
+                      sx={{
+                        border: '1px solid #9CA3AF',
+                        width: {
+                          xs: 80, // 모바일 (smaller)
+                          sm: 120, // 태블릿
+                          md: 80, // 데스크탑
+                        },
+                        padding: '6px',
+                      }}
                     >
                       {activeTab === 'ON_SITE_STOCK' ? (
                         '-'
@@ -1361,6 +1486,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                             if (e.target.value === '0') {
                               e.target.value = ''
                             }
+                            setClearSpecificationItemFocusedId(null)
                           }}
                           onChange={(e) => {
                             let inputValue = e.target.value
@@ -1421,7 +1547,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         width: {
                           xs: 80, // 모바일 (smaller)
                           sm: 120, // 태블릿
-                          md: 160, // 데스크탑
+                          md: 140, // 데스크탑
                         },
                       }}
                     >
@@ -1742,6 +1868,17 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                       maximumFractionDigits: 4,
                     })}
                   </TableCell>
+
+                  <TableCell
+                    colSpan={1}
+                    align="right"
+                    sx={{
+                      border: '1px solid #9CA3AF',
+                      fontSize: '16px',
+                      textAlign: 'center',
+                      fontWeight: 'bold',
+                    }}
+                  ></TableCell>
 
                   <TableCell
                     align="center"
