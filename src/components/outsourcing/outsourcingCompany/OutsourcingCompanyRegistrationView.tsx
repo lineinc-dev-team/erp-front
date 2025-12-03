@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import CommonInput from '../../common/Input'
@@ -19,8 +20,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { AreaCode, bankOptions, UseORnotOptions } from '@/config/erp.confing'
-import { idTypeValueToName, useOutsourcingFormStore } from '@/stores/outsourcingCompanyStore'
+import { AreaCode, UseORnotOptions } from '@/config/erp.confing'
+import { useOutsourcingFormStore } from '@/stores/outsourcingCompanyStore'
 import useOutSourcingCompany from '@/hooks/useOutSourcingCompany'
 import { formatPersonNumber, formatPhoneNumber } from '@/utils/formatPhoneNumber'
 import CommonFileInput from '@/components/common/FileInput'
@@ -28,7 +29,7 @@ import CommonInputnumber from '@/utils/formatBusinessNumber'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { OutsourcingDetailService } from '@/services/outsourcingCompany/outsourcingCompanyRegistrationService'
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ContractHistoryItem,
   OutsourcingAttachedFile,
@@ -38,6 +39,9 @@ import {
 import { formatDateTime, getTodayDateString } from '@/utils/formatters'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { HistoryItem } from '@/types/ordering'
+import { InfiniteScrollSelect } from '@/components/common/InfiniteScrollSelect'
+import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
+import { useLaborInfo } from '@/hooks/useLabor'
 
 export default function OutsourcingCompanyRegistrationView({ isEditMode = false }) {
   const {
@@ -62,6 +66,8 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
 
     useContractHistoryDataQuery,
   } = useOutSourcingCompany()
+
+  const { useBankNameInfiniteScroll } = useLaborInfo()
 
   console.log('typeMethodOptionstypeMethodOptions', typeMethodOptions)
 
@@ -122,6 +128,28 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     department: '부서',
     position: '직급(직책)',
   }
+
+  // 은행명 키워드 검색
+
+  const [isBankNameFocused, setIsBankNameFocused] = useState(false)
+
+  const handleSelectBankName = (selectedUser: any) => {
+    console.log('뱅크 이름', selectedUser)
+    setField('bankName', selectedUser)
+  }
+
+  const debouncedBankNameKeyword = useDebouncedValue(form.bankName, 300)
+
+  const {
+    data: BankNameData,
+    fetchNextPage: BankeNamFetchNextPage,
+    hasNextPage: BankNameHasNextPage,
+    isFetching: BankNameIsFetching,
+    isLoading: BankNameIsLoading,
+  } = useBankNameInfiniteScroll(debouncedBankNameKeyword)
+
+  const BankNameRawList = BankNameData?.pages.flatMap((page) => page.data) ?? []
+  const bankNameList = Array.from(new Map(BankNameRawList.map((user) => [user, user])).values())
 
   const {
     data: outsourcingHistoryList,
@@ -270,13 +298,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
       // }
       // setField('defaultDeductionsDescription', client.defaultDeductionsDescription)
 
-      const mappedItemType = idTypeValueToName[client.bankName ?? '']
-
-      if (mappedItemType) {
-        setField('bankName', mappedItemType)
-      } else {
-        setField('bankName', '') // 혹은 기본값 처리
-      }
+      setField('bankName', client.bankName)
 
       setField('accountNumber', client.accountNumber)
 
@@ -665,29 +687,52 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
           </div> */}
 
           <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+            <label
+              className="
+                      w-[120px]                 /* 기본 */
+                      min-[1400px]:w-[119px]   /* 노트북 (1400px 이상) */
+                      min-[1900px]:w-[124px]   /* 큰 모니터 (1900px 이상) */
+                      text-[14px] flex items-center justify-center text-center
+                      border border-gray-400 bg-gray-300 font-bold
+                    "
+            >
               계좌정보
               {/* <span className="text-red-500 ml-1">*</span> */}
             </label>
-            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
-              <CommonSelect
-                className="text-2xl"
-                value={form.bankName ?? ''}
-                onChange={(value) => setField('bankName', value)}
-                options={bankOptions}
-              />
+            <div className="flex-1 border border-gray-400">
+              <div className="grid grid-cols-[180px_1fr_0.8fr] gap-3 pr-2 items-center">
+                <InfiniteScrollSelect
+                  placeholder="은행명을 입력해주세요."
+                  keyword={form.bankName ?? ''}
+                  onChangeKeyword={(newKeyword) => setField('bankName', newKeyword)}
+                  items={bankNameList}
+                  hasNextPage={BankNameHasNextPage ?? false}
+                  fetchNextPage={BankeNamFetchNextPage}
+                  renderItem={(item, isHighlighted) => (
+                    <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+                      {item}
+                    </div>
+                  )}
+                  onSelect={handleSelectBankName}
+                  isLoading={BankNameIsLoading || BankNameIsFetching}
+                  debouncedKeyword={debouncedBankNameKeyword}
+                  shouldShowList={isBankNameFocused}
+                  onFocus={() => setIsBankNameFocused(true)}
+                  onBlur={() => setIsBankNameFocused(false)}
+                />
 
-              <CommonInput
-                value={form.accountNumber ?? ''}
-                onChange={(value) => setField('accountNumber', value)}
-                className=" flex-1"
-              />
+                <CommonInput
+                  value={form.accountNumber ?? ''}
+                  onChange={(value) => setField('accountNumber', value)}
+                  className=" flex-1"
+                />
 
-              <CommonInput
-                value={form.accountHolder ?? ''}
-                onChange={(value) => setField('accountHolder', value)}
-                className=" flex-1"
-              />
+                <CommonInput
+                  value={form.accountHolder ?? ''}
+                  onChange={(value) => setField('accountHolder', value)}
+                  className=" flex-1"
+                />
+              </div>
             </div>
           </div>
 
