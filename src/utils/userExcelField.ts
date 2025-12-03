@@ -184,10 +184,10 @@ export const outsourcingCompanyExcelFieldMap = {
   전화번호: 'landlineNumber',
   이메일: 'email',
   담당자명: 'contactName',
-  '직급,부서': 'contactPositionAndDepartment',
+  '부서/직급': 'contactPositionAndDepartment',
+  첨부파일유무: 'hasFile',
   사용여부: 'isActive',
   '등록일, 수정일': 'createdAtAndUpdatedAt',
-  첨부파일유무: 'hasFile',
   비고: 'memo',
 } as const
 
