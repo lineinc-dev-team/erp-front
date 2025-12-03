@@ -226,10 +226,14 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
   // 상세 데이터 넣기
 
+  const shouldFetch = isEditMode && !!outsourcingContractId
+
   const { data: contractDetailData } = useQuery({
-    queryKey: ['OutsourcingContractInfo'],
+    queryKey: shouldFetch
+      ? ['OutsourcingContractDetailInfo', outsourcingContractId]
+      : ['OutsourcingContractDetailInfo'], // ← 키 일관성 유지
     queryFn: () => ContractDetailService(outsourcingContractId),
-    enabled: isEditMode && !!outsourcingContractId, // 수정 모드일 때만 fetch
+    enabled: shouldFetch,
   })
 
   const { data: outsourcingPersonList } = useQuery({
@@ -465,6 +469,12 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
   // 담당자 데이터 불러오기
 
+  useEffect(() => {
+    if (isEditMode && contractDetailData?.isFetching) {
+      reset() // 이전 값 전부 초기화
+    }
+  }, [contractDetailData?.isFetching, isEditMode, reset])
+
   const { data: contractNameInfo } = useQuery({
     queryKey: ['ContractDetailInfo', form.CompanyId],
     queryFn: () => ContractInfoDetailService(form.CompanyId),
@@ -488,14 +498,16 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
       }),
   })
 
-  // 후속 처리
   useEffect(() => {
     if (!contractNameInfo) return
+    if (isEditMode) return // ← 수정 모드에서는 실행 금지
+
     setField('headManagers', contractNameInfo)
-  }, [contractNameInfo])
+  }, [contractNameInfo, isEditMode])
 
   useEffect(() => {
-    reset()
+    if (!contractDetailData) return // 상세 데이터가 없으면 스킵
+    if (isEditMode && !outsourcingContractId) return // 수정모드에서 id 없음 → 무시
 
     if (contractDetailData && isEditMode === true) {
       const client = contractDetailData.data
@@ -552,8 +564,11 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
           type: item.typeCode,
           files: [
             {
-              fileUrl: item.fileUrl || '', // null 대신 안전하게 빈 문자열
-              originalFileName: item.originalFileName || '',
+              fileUrl: item.fileUrl && item.fileUrl.trim() !== '' ? item.fileUrl : null,
+              originalFileName:
+                item.originalFileName && item.originalFileName.trim() !== ''
+                  ? item.originalFileName
+                  : null,
             },
           ],
         }))
@@ -563,6 +578,8 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
           const bPriority = priority.includes(b.type) ? 0 : 1
           return aPriority - bPriority
         })
+
+      console.log('파일 확인 해보쟈!!')
 
       // 각 필드에 set
       setField('siteId', client.site?.id)
@@ -627,6 +644,9 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
           ) ?? []
 
         setField('personManagers', getContractItems)
+        setField('contractManagers', [])
+        setField('articleManagers', [])
+        setField('equipmentManagers', [])
       } else if (client.type === '외주') {
         const contractData = contractConstructionDetailData?.data
 
@@ -839,6 +859,9 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
         }))
 
         setField('attachedFiles', etcFiles)
+        setField('contractManagers', [])
+        setField('articleManagers', [])
+        setField('equipmentManagers', [])
       }
     } else {
       reset()
