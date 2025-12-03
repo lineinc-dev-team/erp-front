@@ -85,6 +85,7 @@ export type LaborFormState = {
   outsourcingCompanyContractId: number | null
   outsourcingCompanyContractName: string
   name: string
+  foreignName: string
   residentNumber: string
   residentNumberIsCheck?: boolean
   address: string

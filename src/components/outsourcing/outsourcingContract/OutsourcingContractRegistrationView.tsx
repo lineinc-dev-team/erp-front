@@ -1137,9 +1137,9 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
             return '공사의 항목을 입력해주세요.'
           }
 
-          if (!item.specification?.trim()) {
-            return '공사의 규격을 입력해주세요.'
-          }
+          // if (!item.specification?.trim()) {
+          //   return '공사의 규격을 입력해주세요.'
+          // }
 
           if (item.unit == '') {
             return '공사의 단위를 입력해주세요.'
@@ -2221,7 +2221,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', color: 'black' }}
                   >
-                    규격 <span className="text-red-500 ml-1">*</span>
+                    규격
                   </TableCell>
                   <TableCell
                     rowSpan={2}

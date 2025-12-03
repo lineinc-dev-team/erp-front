@@ -120,6 +120,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     outsourcingCompanyName: '소속업체',
     address: '주소',
     gradeName: '직급',
+    foreignName: '외국인등록증상이름',
   }
 
   // useEffect(() => {
@@ -204,6 +205,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
       setField('residentNumber', client.residentNumber)
       setField('residentNumberIsCheck', false)
+
+      setField('foreignName', client.foreignName)
 
       setField('typeDescription', client.typeDescription)
       setField('address', client.address)
@@ -497,7 +500,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     }
   }, [form.residentNumber])
 
-  function validateClientForm(form: LaborFormState) {
+  function validateClientForm(form: LaborFormState, value: any) {
     if (!form.type?.trim()) return '구분을 선택하세요.'
     if (
       (form.type === 'ETC' || form.type === 'DIRECT_REGISTRATION') &&
@@ -521,6 +524,20 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
     if (!form.residentNumber?.trim()) return '주민등록번호를 입력하세요.'
 
+    const front = value.slice(0, 6) // 앞자리 6자리
+    if (!/^\d{6}$/.test(front)) return '주민등록번호 앞자리는 숫자 6자리여야 합니다.'
+
+    const month = parseInt(front.slice(2, 4), 10)
+    const day = parseInt(front.slice(4, 6), 10)
+
+    // 월/일 유효성 체크
+    if (month < 1 || month > 12) return '주민등록번호 월 정보가 올바르지 않습니다.'
+    if (day < 1 || day > 31) return '주민등록번호 일이 올바르지 않습니다.'
+
+    // 간단한 월별 일수 체크 (2월 윤년 제외)
+    const monthDays = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    if (day > monthDays[month - 1]) return '주민등록번호 일이 올바르지 않습니다.'
+
     if (!form.residentNumber.includes('*')) {
       const digits = form.residentNumber.replace(/[^0-9]/g, '')
 
@@ -531,6 +548,13 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
     if (form.residentNumberIsCheck && !isDuplicateChecked) {
       return '주민등록번호 중복확인을 해주세요.'
+    }
+
+    // ⬇️ 7번째 자리 = 5 → 외국인 이름 필수
+    if (form.residentNumber.length >= 7 && form.residentNumber[7] === '5') {
+      if (!form.foreignName?.trim()) {
+        return '외국인등록증상의 이름을 입력해주세요.'
+      }
     }
     if (!form.address?.trim()) return '주소를 입력하세요.'
     // if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
@@ -602,7 +626,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
   }
 
   const handleLaborSubmit = () => {
-    const errorMsg = validateClientForm(form)
+    const errorMsg = validateClientForm(form, form.residentNumber)
     if (errorMsg) {
       showSnackbar(errorMsg, 'warning')
       return
@@ -711,6 +735,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       }
     }
   }, [form.type, setField])
+
+  console.log('form.residentNumber[6]', form.residentNumber[7])
 
   return (
     <>
@@ -896,6 +922,16 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                     alert(err.message || '서버 오류가 발생했습니다.')
                   }
                 }}
+              />
+
+              <CommonInput
+                placeholder="외국인등록증상이름"
+                value={form.foreignName ?? ''}
+                disabled={!(form.residentNumber?.length >= 7 && form.residentNumber[7] === '5')}
+                onChange={(value) => {
+                  setField('foreignName', value)
+                }}
+                className="flex-1"
               />
             </div>
           </div>
