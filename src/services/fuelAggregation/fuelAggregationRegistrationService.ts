@@ -129,7 +129,7 @@ export async function FuelDriverNameScroll({
   keyword = '',
   id = 0,
   siteIdList,
-  sort = '',
+  sort = 'name, asc',
 }: {
   pageParam?: number
   size?: number

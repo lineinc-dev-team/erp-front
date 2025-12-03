@@ -117,12 +117,16 @@ export async function GetContractNameInfoService({
   pageParam = 0,
   size = 200,
   keyword = '',
+  sort = 'name, asc',
 }: {
   pageParam?: number
   size?: number
   keyword?: string
+  sort?: string
 }) {
-  const url = `${API.LABOR}/search?page=${pageParam}&size=${size}&keyword=${encodeURIComponent(
+  const url = `${
+    API.LABOR
+  }/search?page=${pageParam}&size=${size}&sort=${sort}&keyword=${encodeURIComponent(
     keyword,
   )}&types=DIRECT_CONTRACT`
 
@@ -228,16 +232,18 @@ export async function GetDirectContractNameInfoService({
   pageParam = 0,
   size = 40,
   keyword = '',
+  sort = 'name, asc',
   outsourcingCompanyId = 0,
 }: {
   pageParam?: number
   size?: number
   outsourcingCompanyId?: string | number | ''
   keyword?: string
+  sort?: string
 }) {
   const url = `${
     API.OUTSOURCINGCONTRACT
-  }/search?page=${pageParam}&size=${size}&outsourcingCompanyId=${outsourcingCompanyId}&keyword=${encodeURIComponent(
+  }/search?page=${pageParam}&size=${size}&sort=${sort}&outsourcingCompanyId=${outsourcingCompanyId}&keyword=${encodeURIComponent(
     keyword,
   )}&types=CONSTRUCTION`
 
@@ -454,10 +460,11 @@ export async function GetEmployeeInfoService({
   pageParam = 0,
   size = 40,
   keyword = '',
+  sort = 'name, asc',
   types = 'REGULAR_EMPLOYEE',
 }) {
   const resData = await fetch(
-    `${API.LABOR}/search?page=${pageParam}&size=${size}&keyword=${keyword}&types=${types}`,
+    `${API.LABOR}/search?page=${pageParam}&size=${size}&keyword=${keyword}&types=${types}&sort=${sort}`,
     {
       method: 'GET',
       headers: {
@@ -1662,17 +1669,20 @@ export async function GetContractGroup({
   pageParam = 0,
   size = 10,
   keyword = '',
+  sort = 'name, asc',
 }: {
   id: number
   siteId?: number
   pageParam?: number
   size?: number
   keyword: string
+  sort?: string
 }) {
   const query = new URLSearchParams({
     siteId: siteId.toString(),
     page: pageParam.toString(),
     size: size.toString(),
+    sort: sort.toString(),
     keyword,
   })
 

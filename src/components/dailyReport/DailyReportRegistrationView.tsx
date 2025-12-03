@@ -1798,10 +1798,13 @@ export default function DailyReportRegistrationView() {
       outsourcingCompanyContractEquipmentId: item.outsourcingCompanyContractEquipment?.id ?? 0,
       outsourcingCompanyContractEquipmentName:
         item.outsourcingCompanyContractEquipment?.vehicleNumber ?? 0,
+
       taskDescription: item.outsourcingCompanyContractEquipment?.taskDescription ?? '',
       specificationName: item.outsourcingCompanyContractEquipment?.specification ?? '',
       type: item.outsourcingCompanyContractEquipment?.category ?? '',
       workContent: item.workContent,
+
+      previousUnitPrice: item.unitPrice ?? 0,
       unitPrice: item?.unitPrice ?? 0,
       workHours: item.workHours,
       memo: item.memo,
@@ -1818,6 +1821,7 @@ export default function DailyReportRegistrationView() {
           taskDescription: contractSubEquipment.subEquipment.taskDescription ?? '',
           memo: contractSubEquipment.subEquipment.memo ?? '',
           workContent: contractSubEquipment.workContent ?? '',
+          previousUnitPrice: contractSubEquipment.unitPrice ?? 0,
           unitPrice: contractSubEquipment.unitPrice ?? 0,
           workHours: contractSubEquipment.workHours ?? 0,
         }),
@@ -2110,6 +2114,8 @@ export default function DailyReportRegistrationView() {
     updateItemField('equipment', id, 'unitPrice', selectedCompany.unitPrice || 0)
     updateItemField('equipment', id, 'workContent', selectedCompany.taskDescription || '')
 
+    updateItemField('equipment', id, 'previousUnitPrice', selectedCompany.previousUnitPrice || 0)
+
     const subEquipments = selectedCompany.subEquipments ?? []
 
     console.log('서브장비 데이터 보기 ', subEquipments)
@@ -2121,6 +2127,8 @@ export default function DailyReportRegistrationView() {
         outsourcingCompanyContractSubEquipmentName: sub.type,
         type: sub.type || sub.typeCode || '-',
         workContent: sub.workContent || sub.taskDescription || '',
+        previousUnitPrice: sub.previousUnitPrice || 0,
+
         description: sub.description || '',
         unitPrice: sub.unitPrice || 0,
         workHours: sub.workHours || 0,
@@ -7915,6 +7923,7 @@ export default function DailyReportRegistrationView() {
                       '장비명(규격)',
                       // '구분',
                       '작업내용',
+                      '이전(기준)단가',
                       '단가',
                       '시간',
                       '첨부파일',
@@ -7973,60 +7982,24 @@ export default function DailyReportRegistrationView() {
                           {equipmentData.length - index}
                         </TableCell>
 
-                        <TableCell align="center" sx={cellStyle}>
-                          {/* <CommonSelect
-                            fullWidth
-                            value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
-                            onChange={async (value) => {
-                              const selectedCompany = withEquipmentInfoOptions.find(
-                                (opt) => opt.id === value,
-                              )
-                              if (!selectedCompany) return
-
-                              // 해당 row만 업데이트
-                              setSelectedCompanyIds((prev) => ({
-                                ...prev,
-                                [m.id]: selectedCompany.id,
-                              }))
-
-                              setSelectId(m.id)
-
-                              updateItemField(
-                                'equipment',
-                                m.id,
-                                'outsourcingCompanyId',
-                                selectedCompany.id,
-                              )
-
-                              // 해당 row 기사, 차량 초기화
-                              setSelectedDriverIds((prev) => ({
-                                ...prev,
-                                [m.id]: 0,
-                              }))
-
-                              setSelectedCarNumberIds((prev) => ({
-                                ...prev,
-                                [m.id]: 0,
-                              }))
-
-                              // 차량 값도 추가
-                            }}
-                            options={withEquipmentInfoOptions}
-                            onScrollToBottom={() => {
-                              if (withEquipmenthasNextPage && !withEquipmentFetching)
-                                withEquipmentFetchNextPage()
-                            }}
-                            loading={withEquipmentLoading}
-                          /> */}
-
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top', padding: '0' }}
+                        >
                           <DailyEquipMentOutsourcingNameRow key={m.id} row={m} />
                         </TableCell>
 
-                        <TableCell align="center" sx={cellStyle}>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top', padding: '0' }}
+                        >
                           <DailyEquipMentDriverNameRow key={m.id} row={m} />
                         </TableCell>
 
-                        <TableCell align="center" sx={cellStyle}>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top', padding: '0' }}
+                        >
                           {/* <CommonSelect
                             fullWidth
                             value={
@@ -8214,6 +8187,67 @@ export default function DailyReportRegistrationView() {
                         <TableCell align="center" sx={cellStyle}>
                           <TextField
                             size="small"
+                            value={
+                              m.previousUnitPrice === 0 || m.previousUnitPrice === null
+                                ? ''
+                                : formatNumber(m.previousUnitPrice ?? 0)
+                            }
+                            onChange={(e) => {
+                              const numericValue =
+                                e.target.value === '' ? null : unformatNumber(e.target.value)
+
+                              updateItemField(
+                                'directContracts',
+                                m.id,
+                                'previousPrice',
+                                numericValue,
+                              )
+                            }}
+                            inputProps={{
+                              inputMode: 'numeric',
+                              pattern: '[0-9]*',
+                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                            }}
+                            disabled
+                          />
+
+                          {m.subEquipments &&
+                            m.subEquipments?.map((detail) => (
+                              <div key={detail.id} className="flex gap-2 mt-4 items-center">
+                                <TextField
+                                  size="small"
+                                  placeholder="숫자만"
+                                  value={formatNumber(detail.previousUnitPrice ?? 0)}
+                                  onFocus={() => {
+                                    setClearEquipmentOutsourcingNameFocusedId(null)
+                                    setClearEquipmentDriverNameFocusedId(null)
+                                    setClearEquipmentCarNumberFocusedId(null)
+                                  }}
+                                  onChange={(e) => {
+                                    const numericValue = unformatNumber(e.target.value)
+                                    updateContractDetailField(
+                                      'equipment',
+                                      m.id,
+                                      detail.id,
+                                      'previousUnitPrice',
+                                      numericValue,
+                                    )
+                                  }}
+                                  inputProps={{
+                                    inputMode: 'numeric',
+                                    pattern: '[0-9]*',
+                                    style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                                  }}
+                                  fullWidth
+                                  disabled
+                                />
+                              </div>
+                            ))}
+                        </TableCell>
+
+                        <TableCell align="center" sx={cellStyle}>
+                          <TextField
+                            size="small"
                             placeholder="작업 내용 입력"
                             value={formatNumber(m.unitPrice)}
                             onChange={(e) => {
@@ -8226,7 +8260,6 @@ export default function DailyReportRegistrationView() {
                               style: { textAlign: 'right' }, // ← 오른쪽 정렬
                             }}
                             fullWidth
-                            disabled
                           />
                           {m.subEquipments &&
                             m.subEquipments.map((detail) => (
@@ -8251,7 +8284,6 @@ export default function DailyReportRegistrationView() {
                                     style: { textAlign: 'right' }, // ← 오른쪽 정렬
                                   }}
                                   fullWidth
-                                  disabled
                                 />
                               </div>
                             ))}
