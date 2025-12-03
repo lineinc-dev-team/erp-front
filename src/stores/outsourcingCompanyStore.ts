@@ -75,6 +75,7 @@ export const useOutsourcingFormStore = create<OutsourcingCompanyFormStore>((set,
     accountNumber: '',
     accountHolder: '',
     memo: '',
+    vatType: '',
     isActive: '1',
 
     searchTrigger: 0,
@@ -117,6 +118,7 @@ export const useOutsourcingFormStore = create<OutsourcingCompanyFormStore>((set,
         accountNumber: '',
         accountHolder: '',
         memo: '',
+        vatType: '',
         isActive: '1',
 
         searchTrigger: 0,
@@ -320,6 +322,7 @@ export const useOutsourcingFormStore = create<OutsourcingCompanyFormStore>((set,
       accountNumber: form.accountNumber,
       accountHolder: form.accountHolder,
       memo: form.memo,
+      vatType: form.vatType,
       isActive: form.isActive === '1' ? true : false,
 
       contacts: form.headManagers.map((m) => ({

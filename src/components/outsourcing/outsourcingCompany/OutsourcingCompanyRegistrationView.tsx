@@ -65,6 +65,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     useOutsourcingCompanyHistoryDataQuery,
 
     useContractHistoryDataQuery,
+    vatTypeMethodOptions,
   } = useOutSourcingCompany()
 
   const { useBankNameInfiniteScroll } = useLaborInfo()
@@ -86,16 +87,29 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
   const params = useParams()
   const outsourcingCompanyId = Number(params?.id)
 
-  // const selectedValues = (form.defaultDeductions?.split(',') || []).filter(Boolean)
+  // const selectedValues = (form.vatType?.split(',') || []).filter(Boolean)
 
   // const handleCheckboxChange = (value: string, checked: boolean) => {
-  //   const current = (form.defaultDeductions?.split(',') || []).filter(Boolean)
+  //   const current = (form.vatType?.split(',') || []).filter(Boolean)
   //   const updated = checked
   //     ? [...new Set([...current, value])]
   //     : current.filter((item) => item !== value)
 
-  //   setField('defaultDeductions', updated.join(','))
+  //   setField('vatType', updated.join(','))
   // }
+
+  const handleCheckboxChange = (value: string, checked: boolean) => {
+    if (checked) {
+      // 체크하면 해당 값만 저장
+      setField('vatType', value)
+    } else {
+      // 해제하면 빈 문자열
+      setField('vatType', '')
+    }
+  }
+
+  // 체크 상태 계산
+  const selectedValues = form.vatType ? [form.vatType] : []
 
   const { data: outsourcingDetailData } = useQuery({
     queryKey: ['OutsourcingInfo'],
@@ -127,6 +141,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     address: '주소',
     department: '부서',
     position: '직급(직책)',
+    vatTypeName: '부가세 여부',
   }
 
   // 은행명 키워드 검색
@@ -279,6 +294,16 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
         setField('type', 'ETC')
       }
 
+      if (client.vatType) {
+        const deductionNames = client.vatType.split(',').map((s: string) => s.trim())
+
+        const matchedCodes = vatTypeMethodOptions
+          .filter((opt) => deductionNames.includes(opt.name))
+          .map((opt) => opt.code)
+
+        setField('vatType', matchedCodes.join(','))
+      }
+
       setField('typeDescription', client.typeDescription)
       setField('address', client.address)
       setField('phoneNumber', client.phoneNumber)
@@ -426,6 +451,12 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
 
     if (form.memo.length > 500) {
       return '비고는 500자 이하로 입력해주세요.'
+    }
+
+    // 구분 타입이 '식당'일 경우 VAT 타입 최소 1개 체크 필수
+    if (form.type === 'MEAL_FEE') {
+      const selectedVat = form.vatType?.split(',').filter(Boolean) || []
+      if (selectedVat.length === 0) return '부가세 여부 유형을 최소 1개 선택해야 합니다.'
     }
 
     // 담당자 유효성 체크
@@ -749,6 +780,31 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
               />
             </div>
           </div>
+          {form.type === 'MEAL_FEE' && (
+            <>
+              <div className="flex">
+                <label className="w-[119px] 2xl:w-[125px] text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+                  부가세 여부
+                </label>
+                <div className="flex border  border-gray-400 flex-wrap px-2 items-center gap-4 flex-1">
+                  {vatTypeMethodOptions.map((opt) => (
+                    <label key={opt.code} className="flex items-center gap-1 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={selectedValues.includes(opt.code)}
+                        onChange={(e) => handleCheckboxChange(opt.code, e.target.checked)}
+                      />
+                      {opt.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="flex">
+                <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center"></label>
+                <div className="border border-gray-400 px-2 w-full h-[54px]"></div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
