@@ -679,6 +679,8 @@ export default function OutsourcingCompanyView() {
             onChange={(_, newPage) => search.setField('currentPage', newPage)}
             shape="rounded"
             color="primary"
+            siblingCount={3} // 기본 1 → 증가
+            boundaryCount={2} // 기본 1 → 2 정도로
           />
         </div>
       </div>
