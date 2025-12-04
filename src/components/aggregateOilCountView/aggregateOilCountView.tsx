@@ -10,7 +10,7 @@ import {
   Paper,
   Button,
 } from '@mui/material'
-import * as XLSX from 'xlsx'
+import * as XLSX from 'xlsx-js-style'
 import { saveAs } from 'file-saver'
 import useFinalAggregationView from '@/hooks/useFinalAggregation'
 import { useFinalAggregationSearchStore } from '@/stores/finalAggregationStore'
@@ -141,6 +141,7 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
   const handleExcelDownload = () => {
     const formattedData: any[] = []
 
+    // 1️⃣ 데이터 + 소계
     fuelTypes.forEach((fuelType) => {
       const fuelRows = rows.filter((r) => r.fuelType === fuelType)
       fuelRows.forEach((r) => {
@@ -157,8 +158,8 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
       })
 
       const subtotalRow: any = {
-        NO: '소계',
-        유류종류: fuelTypeMap[fuelType] + ' 계',
+        NO: fuelTypeMap[fuelType] + ' 계',
+        유류종류: '',
         장비명: '',
         업체명: '',
         대표자: '',
@@ -175,7 +176,7 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
 
     const directRow: any = {
       NO: '직영 계',
-      유류종류: '직영 계',
+      유류종류: '',
       장비명: '',
       업체명: '',
       대표자: '',
@@ -187,33 +188,42 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
     directRow['합계'] = rows.reduce((acc, r) => acc + r.total, 0).toLocaleString()
     formattedData.push(directRow)
 
-    // 3️⃣ 수량 / 단가(VAT포함)
+    // 2️⃣ 수량 / 단가(VAT 포함)
     const fuelsForPrice = ['DIESEL', 'GASOLINE', 'UREA']
     fuelsForPrice.forEach((ft) => {
       const fuelRows = rows.filter((r) => r.fuelType === ft)
 
+      // 수량 행
       const qtyRow: any = {
-        NO: '',
+        NO: '직영 + 외주',
         유류종류: '',
-        장비명: '직영 + 외주', // 병합 대상 1
+        장비명: fuelTypeMap[ft],
         업체명: '',
-        대표자: '',
-        차량번호: fuelTypeMap[ft], // 병합 대상 2
+        대표자: '수량',
+        차량번호: '',
       }
       dateColumns.forEach((d) => {
         qtyRow[d + '일'] = fuelRows.reduce((acc, r) => acc + (r.days[d] || 0), 0).toLocaleString()
       })
-      qtyRow['합계'] = fuelRows.reduce((acc, r) => acc + r.total, 0).toLocaleString()
+      qtyRow['합계'] = fuelRows
+        .reduce((acc, r) => {
+          const rowTotal = Object.values(r.days).reduce((sum: any, cur) => sum + (cur || 0), 0)
+          return acc + rowTotal
+        }, 0)
+        .toLocaleString()
       formattedData.push(qtyRow)
 
+      // 단가(VAT 포함) 행
       const priceRow: any = {
         NO: '',
         유류종류: '',
-        장비명: '직영 + 외주',
+        장비명: '',
         업체명: '',
-        대표자: '',
-        차량번호: fuelTypeMap[ft],
+        대표자: '단가(VAT포함)',
+        차량번호: '',
       }
+
+      // 날짜별 셀에는 단가(원/단위)를 표시
       dateColumns.forEach((d) => {
         const rawPrice =
           ft === 'DIESEL'
@@ -221,37 +231,47 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
             : ft === 'GASOLINE'
             ? getFuelPrice(d, 'gasolinePrice')
             : getFuelPrice(d, 'ureaPrice')
+
         priceRow[d + '일'] = Number(
           String(rawPrice).replaceAll(',', '').trim() || 0,
         ).toLocaleString()
       })
 
+      // ✅ 합계는 "해당 연료의 각 날짜별 (수량 * 단가)"의 합
       priceRow['합계'] = dateColumns
         .reduce((acc, d) => {
+          // 해당 날짜의 단가
           const rawPrice =
             ft === 'DIESEL'
               ? getFuelPrice(d, 'dieselPrice')
               : ft === 'GASOLINE'
               ? getFuelPrice(d, 'gasolinePrice')
               : getFuelPrice(d, 'ureaPrice')
-          return acc + (Number(String(rawPrice).replaceAll(',', '').trim()) || 0)
+
+          const price = Number(String(rawPrice).replaceAll(',', '').trim()) || 0
+
+          // 해당 날짜의 전체 수량 (해당 연료만)
+          const qtyForDay = fuelRows.reduce((a, r) => a + (r.days[d] || 0), 0)
+
+          return acc + qtyForDay * price
         }, 0)
         .toLocaleString()
 
       formattedData.push(priceRow)
     })
 
-    // 4️⃣ 총합(VAT 포함)
+    // 3️⃣ 총합(VAT 포함)
     const grandTotalRow: any = {
-      NO: '총합계',
-      유류종류: '총 합계(VAT포함)',
+      NO: '총 합계(VAT포함)',
+      유류종류: '',
       장비명: '',
       업체명: '',
       대표자: '',
       차량번호: '',
     }
 
-    // 날짜별 (수량 × 단가)
+    let totalAmount = 0 // 날짜별 금액 합계 저장
+
     dateColumns.forEach((d) => {
       const dieselAmount = rows
         .filter((r) => r.fuelType === 'DIESEL')
@@ -269,61 +289,158 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
         Number(String(getFuelPrice(d, 'gasolinePrice')).replaceAll(',', '').trim()) || 0
       const ureaPrice = Number(String(getFuelPrice(d, 'ureaPrice')).replaceAll(',', '').trim()) || 0
 
-      const totalForDay =
+      const dailyTotal =
         dieselAmount * dieselPrice + gasolineAmount * gasolinePrice + ureaAmount * ureaPrice
-
-      grandTotalRow[d + '일'] = totalForDay.toLocaleString()
+      grandTotalRow[d + '일'] = dailyTotal.toLocaleString()
+      totalAmount += dailyTotal
     })
 
-    grandTotalRow['합계'] = (() => {
-      const dieselVatTotal = dateColumns.reduce((acc, d) => {
-        const raw = getFuelPrice(d, 'dieselPrice')
-        const price = Number(String(raw).replaceAll(',', '').trim()) || 0
-        return acc + price
-      }, 0)
-      const gasolineVatTotal = dateColumns.reduce((acc, d) => {
-        const raw = getFuelPrice(d, 'gasolinePrice')
-        const price = Number(String(raw).replaceAll(',', '').trim()) || 0
-        return acc + price
-      }, 0)
-      const ureaVatTotal = dateColumns.reduce((acc, d) => {
-        const raw = getFuelPrice(d, 'ureaPrice')
-        const price = Number(String(raw).replaceAll(',', '').trim()) || 0
-        return acc + price
-      }, 0)
-
-      return (dieselVatTotal + gasolineVatTotal + ureaVatTotal).toLocaleString()
-    })()
+    // 마지막 합계 컬럼에 날짜별 금액 합계 넣기
+    grandTotalRow['합계'] = totalAmount.toLocaleString()
 
     formattedData.push(grandTotalRow)
 
-    // 5️⃣ 워크시트 생성
-    const worksheet = XLSX.utils.json_to_sheet(formattedData)
+    const ws = XLSX.utils.json_to_sheet(formattedData)
 
-    worksheet['!merges'] = [
-      {
-        s: { r: formattedData.findIndex((r) => r.장비명 === '직영 + 외주') + 1, c: 3 },
-        e: { r: formattedData.findIndex((r) => r.장비명 === '직영 + 외주') + 1, c: 4 },
-      },
-      {
-        s: { r: formattedData.findIndex((r) => r.차량번호 === '경유') + 1, c: 6 },
-        e: { r: formattedData.findIndex((r) => r.차량번호 === '경유') + 1, c: 7 },
-      },
-      // 휘발유
-      {
-        s: { r: formattedData.findIndex((r) => r.차량번호 === '휘발유') + 1, c: 6 },
-        e: { r: formattedData.findIndex((r) => r.차량번호 === '휘발유') + 1, c: 7 },
-      },
-      // 요소수
-      {
-        s: { r: formattedData.findIndex((r) => r.차량번호 === '요소수') + 1, c: 6 },
-        e: { r: formattedData.findIndex((r) => r.차량번호 === '요소수') + 1, c: 7 },
-      },
+    // → 여기에 병합 코드 추가
+    ws['!merges'] = ws['!merges'] || []
+
+    const grandTotalRowIndex = formattedData.findIndex((r) => r.NO === '총 합계(VAT포함)') + 1
+    if (grandTotalRowIndex > -1) {
+      ws['!merges'].push({
+        s: { r: grandTotalRowIndex, c: 0 },
+        e: { r: grandTotalRowIndex, c: 5 },
+      })
+    }
+
+    const fuelTypesForMerge = ['DIESEL', 'GASOLINE', 'UREA']
+
+    fuelTypesForMerge.forEach((ft) => {
+      const equipmentName = ft === 'DIESEL' ? '경유' : ft === 'GASOLINE' ? '휘발유' : '요소수'
+      const dieselTotalRowIndex = formattedData.findIndex((r) => r.장비명 === equipmentName) + 1
+      if (dieselTotalRowIndex > -1) {
+        ws['!merges'] = ws['!merges'] || []
+        ws['!merges'].push({
+          s: { r: dieselTotalRowIndex, c: 2 },
+          e: { r: dieselTotalRowIndex + 1, c: 3 },
+        })
+      }
+    })
+
+    // 병합할 행 정보 배열
+    const mergeRows = [
+      { key: '수량', startCol: 4 },
+      { key: '단가(VAT포함)', startCol: 4 },
     ]
 
-    // 6️⃣ 엑셀 저장
+    mergeRows.forEach(({ key, startCol }) => {
+      const rowIndex = formattedData.findIndex((r) => r.대표자 === key) + 1
+      if (rowIndex > -1) {
+        ws['!merges'] = ws['!merges'] || []
+        ws['!merges'].push({
+          s: { r: rowIndex, c: startCol },
+          e: { r: rowIndex, c: startCol + 1 },
+        })
+      }
+    })
+
+    mergeRows.forEach(({ key, startCol }) => {
+      const rowIndex = formattedData.findIndex((r) => r.대표자 === key) + 3
+      if (rowIndex > -1) {
+        ws['!merges'] = ws['!merges'] || []
+        ws['!merges'].push({
+          s: { r: rowIndex, c: startCol },
+          e: { r: rowIndex, c: startCol + 1 },
+        })
+      }
+    })
+
+    mergeRows.forEach(({ key, startCol }) => {
+      const rowIndex = formattedData.findIndex((r) => r.대표자 === key) + 5
+      if (rowIndex > -1) {
+        ws['!merges'] = ws['!merges'] || []
+        ws['!merges'].push({
+          s: { r: rowIndex, c: startCol },
+          e: { r: rowIndex, c: startCol + 1 },
+        })
+      }
+    })
+
+    const directNameIndex = formattedData.findIndex((r) => r.NO === '직영 + 외주') + 1
+    if (directNameIndex > -1) {
+      ws['!merges'].push({
+        s: { r: directNameIndex, c: 0 }, // 시작: NO 컬럼
+        e: { r: directNameIndex + 1, c: 1 }, // 끝: 마지막 컬럼
+      })
+    }
+
+    const directNameSecondIndex = formattedData.findIndex((r) => r.NO === '직영 + 외주') + 3
+    if (directNameSecondIndex > -1) {
+      ws['!merges'].push({
+        s: { r: directNameSecondIndex, c: 0 }, // 시작: NO 컬럼
+        e: { r: directNameSecondIndex + 1, c: 1 }, // 끝: 마지막 컬럼
+      })
+    }
+
+    const directNameThirdIndex = formattedData.findIndex((r) => r.NO === '직영 + 외주') + 5
+    if (directNameThirdIndex > -1) {
+      ws['!merges'].push({
+        s: { r: directNameThirdIndex, c: 0 }, // 시작: NO 컬럼
+        e: { r: directNameThirdIndex + 1, c: 1 }, // 끝: 마지막 컬럼
+      })
+    }
+
+    // 경유
+
+    const directRowIndex = formattedData.findIndex((r) => r.NO === '직영 계') + 1
+    if (directRowIndex > -1) {
+      ws['!merges'].push({
+        s: { r: directRowIndex, c: 0 }, // 시작: NO 컬럼
+        e: { r: directRowIndex, c: 5 }, // 끝: 마지막 컬럼
+      })
+    }
+
+    fuelTypes.forEach((ft) => {
+      const rowIndex = formattedData.findIndex((r) => r.NO === fuelTypeMap[ft] + ' 계') + 1
+      if (rowIndex > -1) {
+        ws['!merges'] = ws['!merges'] || []
+        ws['!merges'].push({
+          s: { r: rowIndex, c: 0 },
+          e: { r: rowIndex, c: 5 },
+        })
+      }
+    })
+
+    // 5️⃣ 셀 스타일 적용
+    const range = XLSX.utils.decode_range(ws['!ref']!)
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cellRef = XLSX.utils.encode_cell({ r: R, c: C })
+        if (!ws[cellRef]) ws[cellRef] = { v: '' }
+
+        const isHeader = R < 1
+        const isAmount = C >= 6 // 날짜 컬럼 시작 index
+        const isSubtotalLabel = R === formattedData.length - 1 && C === 0
+        ws[cellRef].s = {
+          border: {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } },
+          },
+          fill: isHeader ? { patternType: 'solid', fgColor: { rgb: 'C0C0C0' } } : undefined,
+          alignment: {
+            vertical: 'center',
+            horizontal: isHeader || isSubtotalLabel ? 'center' : isAmount ? 'right' : 'center',
+          },
+          numFmt: isAmount ? '#,##0' : undefined, // 숫자에 쉼표 적용
+        }
+      }
+    }
+
+    // 6️⃣ 파일 저장
     const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, '유류집계')
+    XLSX.utils.book_append_sheet(workbook, ws, '유류집계')
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
     saveAs(new Blob([excelBuffer], { type: 'application/octet-stream' }), '유류집계_집계표.xlsx')
   }

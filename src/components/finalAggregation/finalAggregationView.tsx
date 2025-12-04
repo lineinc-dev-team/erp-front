@@ -26,8 +26,8 @@ const TAB_CONFIG = [
   { label: '노무비명세서', value: 'LABOR_DETAIL' },
   { label: '장비비', value: 'EQUIPMENT' },
   { label: '장비가동현황', value: 'EQUIPMENT_OPERATION' },
-  { label: '관리비', value: 'MANAGEMENT' },
   { label: '외주', value: 'OUTSOURCING' },
+  { label: '관리비', value: 'MANAGEMENT' },
 ]
 
 export default function FinalAggregationView() {
