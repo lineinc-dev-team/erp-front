@@ -1107,7 +1107,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                     align="center"
                     sx={{ border: '1px solid #9CA3AF', fontWeight: 'bold', width: 120 }}
                   >
-                    길이(cm)
+                    길이(m)
                     {form.type !== 'SCRAP' && <span className="text-red-500 ml-1">*</span>}
                   </TableCell>
 
