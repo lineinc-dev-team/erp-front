@@ -684,8 +684,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
   const dates = Array.from({ length: 31 }, (_, i) => i + 1)
 
   // 숫자를 그려주는 변수 0 부터 16
-  const firstHalfDates = dates.slice(0, 16) // 1~16
-  const secondHalfDates = dates.slice(16, 31) // 16~31
+  const firstHalfDates = [...dates.slice(0, 15), ''] // 1~15 + 빈칸
+  const secondHalfDates = dates.slice(15, 31) // 16~31
 
   // 스타일 변수
 
@@ -1418,20 +1418,20 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                   <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 80 }}>
                     소득세
                   </TableCell>
+                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 80 }}>
+                    주민세
+                  </TableCell>
                   <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
                     고용보험
                   </TableCell>
                   <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
                     건강보험
                   </TableCell>
-                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 80 }}>
-                    주민세
+                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
+                    장기요양
                   </TableCell>
                   <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
                     국민연금
-                  </TableCell>
-                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
-                    장기요양
                   </TableCell>
                   <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 120 }}>
                     차감지급액
@@ -1461,8 +1461,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
               <TableBody>
                 {laborList?.map((row: any) => {
-                  const firstHalf = row.dailyWork.slice(0, 16)
-                  const secondHalf = row.dailyWork.slice(16)
+                  const firstHalf = [...row.dailyWork.slice(0, 15), ''] // 1~15일 + 빈칸
+                  const secondHalf = row.dailyWork.slice(15) // 16일부터 끝까지
 
                   return (
                     <Fragment key={`${row.no}-${Math.random()}`}>
@@ -1502,20 +1502,21 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                           {row.incomeTax}
                         </TableCell>
                         <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
+                          {row.localTax}
+                        </TableCell>
+                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
                           {row.employmentInsurance}
                         </TableCell>
                         <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
                           {row.healthInsurance}
                         </TableCell>
                         <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          {row.localTax}
+                          {row.longTermCareInsurance}
                         </TableCell>
                         <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
                           {row.nationalPension}
                         </TableCell>
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          {row.longTermCareInsurance}
-                        </TableCell>
+
                         <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
                           {row.netPayment}
                         </TableCell>
