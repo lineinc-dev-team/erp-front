@@ -422,8 +422,6 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
       return
     }
 
-    console.log('품명을 키워드 검색으로 검색했을 때의 값', selectedCompany)
-
     // updateItemField('MaterialItem', id, 'outsourcingCompanyId', selectedCompany.id)
     updateItemField('MaterialItem', id, 'name', selectedCompany.name)
   }
@@ -791,7 +789,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
           </div>
 
           <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
+            <label className="w-[143px]  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               자재업체명 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="border border-gray-400  w-full">
@@ -804,7 +802,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
                 fetchNextPage={OutsourcingeNameFetchNextPage}
                 renderItem={(item, isHighlighted) => (
                   <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
-                    {item.name}
+                    {item.name} | {item.ceoName} | {item.businessNumber}
                   </div>
                 )}
                 onSelect={handleSelectOutsourcing}

@@ -601,7 +601,7 @@ export default function OrderingRegistrationView({ isEditMode = false }) {
           </div>
 
           <div className="flex">
-            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+            <label className="w-[143px]  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
               본사 담당자명
             </label>
             <div className="border w-full  border-gray-400">

@@ -117,7 +117,7 @@ export async function GetContractNameInfoService({
   pageParam = 0,
   size = 200,
   keyword = '',
-  sort = 'name, asc',
+  sort = 'name,asc',
 }: {
   pageParam?: number
   size?: number
@@ -230,9 +230,9 @@ export async function GetOutSourcingContractByLabor({
 // 계약/인력 쪽 인력 데이터 조회
 export async function GetDirectContractNameInfoService({
   pageParam = 0,
-  size = 40,
+  size = 200,
   keyword = '',
-  sort = 'name, asc',
+  sort = 'contractName,asc',
   outsourcingCompanyId = 0,
 }: {
   pageParam?: number
@@ -460,7 +460,7 @@ export async function GetEmployeeInfoService({
   pageParam = 0,
   size = 40,
   keyword = '',
-  sort = 'name, asc',
+  sort = 'name,asc',
   types = 'REGULAR_EMPLOYEE',
 }) {
   const resData = await fetch(
@@ -1669,7 +1669,6 @@ export async function GetContractGroup({
   pageParam = 0,
   size = 10,
   keyword = '',
-  sort = 'name, asc',
 }: {
   id: number
   siteId?: number
@@ -1682,7 +1681,6 @@ export async function GetContractGroup({
     siteId: siteId.toString(),
     page: pageParam.toString(),
     size: size.toString(),
-    sort: sort.toString(),
     keyword,
   })
 

@@ -517,7 +517,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
         renderItem={(item, isHighlighted) => (
           <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
-            {item.name}
+            {item.name} | {item.ceoName} | {item.businessNumber}
           </div>
         )}
         onSelect={(selectedCompany) => handleSelectOutsourcing(row.checkId ?? 0, selectedCompany)}
@@ -1748,7 +1748,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                           width: {
                             xs: 100, // 모바일 (smaller)
                             sm: 160, // 태블릿
-                            md: 320, // 데스크탑
+                            md: 440, // 데스크탑
                           },
                         }}
                       >

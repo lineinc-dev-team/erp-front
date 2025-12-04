@@ -499,7 +499,7 @@ export default function LaborView() {
                 fetchNextPage={OutsourcingeNameFetchNextPage}
                 renderItem={(item, isHighlighted) => (
                   <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
-                    {item.name}
+                    {item.name} | {item.ceoName} | {item.businessNumber}
                   </div>
                 )}
                 onSelect={handleSelectOutsourcing}

@@ -897,7 +897,7 @@ export default function DailyReportRegistrationView() {
         onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
         renderItem={(item, isHighlighted) => (
           <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
-            {item.name}
+            {item.name} | {item.ceoName} | {item.businessNumber}
           </div>
         )}
         onSelect={(selectedCompany) => handleSelectServiceName(row.checkId ?? 0, selectedCompany)}
@@ -1194,7 +1194,7 @@ export default function DailyReportRegistrationView() {
         onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
         renderItem={(item, isHighlighted) => (
           <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
-            {item.name}
+            {item.name} | {item.ceoName} | {item.businessNumber}
           </div>
         )}
         onSelect={(selectedCompany) => handleSelectOutsourcingName(row.id ?? 0, selectedCompany)}
@@ -1603,7 +1603,7 @@ export default function DailyReportRegistrationView() {
         onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
         renderItem={(item, isHighlighted) => (
           <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
-            {item.name}
+            {item.name} | {item.ceoName} | {item.businessNumber}
           </div>
         )}
         onSelect={(selectedCompany) =>
@@ -1963,7 +1963,7 @@ export default function DailyReportRegistrationView() {
         onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
         renderItem={(item, isHighlighted) => (
           <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
-            {item.name}
+            {item.name} | {item.ceoName} | {item.businessNumber}
           </div>
         )}
         onSelect={(selectedCompany) =>
@@ -2391,7 +2391,7 @@ export default function DailyReportRegistrationView() {
         onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
         renderItem={(item, isHighlighted) => (
           <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
-            {item.name}
+            {item.name} | {item.ceoName} | {item.businessNumber}
           </div>
         )}
         onSelect={(selectedCompany) =>
@@ -6226,7 +6226,10 @@ export default function DailyReportRegistrationView() {
                         <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
                           {directContractByData.length - idx}
                         </TableCell>
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', width: '400px' }}
+                        >
                           {m.isTemporary ? (
                             // <CommonSelect
                             //   fullWidth
@@ -6323,7 +6326,10 @@ export default function DailyReportRegistrationView() {
                           )}
                         </TableCell>
 
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', width: '180px' }}
+                        >
                           {m.isTemporary ? (
                             <TextField
                               size="small"
@@ -6394,7 +6400,7 @@ export default function DailyReportRegistrationView() {
 
                         <TableCell
                           align="center"
-                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px', width: '120px' }}
                         >
                           <TextField
                             size="small"
@@ -6437,7 +6443,7 @@ export default function DailyReportRegistrationView() {
                         </TableCell>
                         <TableCell
                           align="center"
-                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px', width: '80px' }}
                         >
                           <TextField
                             size="small"
@@ -6487,7 +6493,7 @@ export default function DailyReportRegistrationView() {
                         </TableCell>
                         <TableCell
                           align="center"
-                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px', width: '80px' }}
                         >
                           <TextField
                             size="small"
@@ -6540,7 +6546,7 @@ export default function DailyReportRegistrationView() {
                         </TableCell>
                         <TableCell
                           align="center"
-                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px', width: '60px' }}
                         >
                           <TextField
                             size="small"
@@ -6813,11 +6819,17 @@ export default function DailyReportRegistrationView() {
                           />
                         </TableCell>
 
-                        <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid #9CA3AF', width: '40px' }}
+                        >
                           {directContractOutsourcings.length - index}
                         </TableCell>
 
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', width: '400px' }}
+                        >
                           {/* <CommonSelect
                             fullWidth
                             // selectedCompanyIds[m.id] ||
@@ -6856,7 +6868,10 @@ export default function DailyReportRegistrationView() {
 
                         {/* 계약명 */}
 
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', width: '300px' }}
+                        >
                           {/* <CommonSelect
                             fullWidth
                             value={m.outsourcingCompanyContractId || 0}
@@ -6896,7 +6911,10 @@ export default function DailyReportRegistrationView() {
                           <DailyOutsourcingContractNameRow key={m.id} row={m} />
                         </TableCell>
 
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', width: '180px' }}
+                        >
                           {/* <CommonSelect
                             value={m.laborId || 0}
                             onChange={(value) => {
@@ -6926,7 +6944,7 @@ export default function DailyReportRegistrationView() {
 
                         <TableCell
                           align="center"
-                          sx={{ border: '1px solid  #9CA3AF', padding: '8px' }}
+                          sx={{ border: '1px solid  #9CA3AF', padding: '8px', width: '60px' }}
                         >
                           <TextField
                             size="small"
@@ -7029,7 +7047,10 @@ export default function DailyReportRegistrationView() {
                           </div>
                         </TableCell>
 
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <TableCell
+                          align="center"
+                          sx={{ border: '1px solid  #9CA3AF', width: '200px' }}
+                        >
                           <TextField
                             size="small"
                             placeholder="500자 이하 텍스트 입력"
@@ -7346,7 +7367,15 @@ export default function DailyReportRegistrationView() {
                           {resultOutsourcing.length - index}
                         </TableCell>
 
-                        <TableCell align="center" sx={cellStyle}>
+                        <TableCell
+                          align="center"
+                          sx={{
+                            border: '1px solid #9CA3AF',
+                            verticalAlign: 'top',
+                            padding: '8px',
+                            width: '400px',
+                          }}
+                        >
                           {/* <CommonSelect
                             fullWidth
                             value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
@@ -7524,7 +7553,15 @@ export default function DailyReportRegistrationView() {
                           )}
                         </TableCell>
 
-                        <TableCell align="center" sx={cellStyle}>
+                        <TableCell
+                          align="center"
+                          sx={{
+                            border: '1px solid #9CA3AF',
+                            verticalAlign: 'top',
+                            padding: '8px',
+                            width: '80px',
+                          }}
+                        >
                           {m.items && m.items.length > 0 ? (
                             <div className="flex flex-col">
                               {m.items.map((item, index) => (
@@ -7553,7 +7590,15 @@ export default function DailyReportRegistrationView() {
                           )}
                         </TableCell>
 
-                        <TableCell align="center" sx={cellStyle}>
+                        <TableCell
+                          align="center"
+                          sx={{
+                            border: '1px solid #9CA3AF',
+                            verticalAlign: 'top',
+                            padding: '8px',
+                            width: '80px',
+                          }}
+                        >
                           {m.items && m.items.length > 0 ? (
                             <div className="flex flex-col ">
                               {m.items.map((item, index) => (
@@ -7904,612 +7949,540 @@ export default function DailyReportRegistrationView() {
                 }
               }}
             >
-              <Table size="small">
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
-                      <Checkbox
-                        checked={isEquipmentAllChecked}
-                        indeterminate={checkedEquipmentIds.length > 0 && !isEquipmentAllChecked}
-                        onChange={(e) => toggleCheckAllItems('equipment', e.target.checked)}
-                        sx={{ color: 'black' }}
-                      />
-                    </TableCell>
-                    {[
-                      'No',
-                      '업체명',
-                      '기사명',
-                      '차량번호',
-                      '장비명(규격)',
-                      // '구분',
-                      '작업내용',
-                      '이전(기준)단가',
-                      '단가',
-                      '시간',
-                      '첨부파일',
-                      '비고',
-                      '등록/수정일',
-                    ].map((label) => (
-                      <TableCell
-                        key={label}
-                        align="center"
-                        sx={{
-                          backgroundColor: '#D1D5DB',
-                          border: '1px solid  #9CA3AF',
-                          color: 'black',
-                          fontWeight: 'bold',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {label === '비고' ||
-                        label === 'No' ||
-                        label === '등록/수정일' ||
-                        label === '첨부파일' ||
-                        label === '작업내용' ? (
-                          label
-                        ) : (
-                          <div className="flex items-center justify-center">
-                            <span>{label}</span>
-                            <span className="text-red-500 ml-1">*</span>
-                          </div>
-                        )}
+              <div style={{ minWidth: 2200, width: 'fit-content' }}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                      <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <Checkbox
+                          checked={isEquipmentAllChecked}
+                          indeterminate={checkedEquipmentIds.length > 0 && !isEquipmentAllChecked}
+                          onChange={(e) => toggleCheckAllItems('equipment', e.target.checked)}
+                          sx={{ color: 'black' }}
+                        />
                       </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-
-                <TableBody>
-                  {equipmentData.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={12} align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                        장비 데이터가 없습니다.
-                      </TableCell>
+                      {[
+                        'No',
+                        '업체명',
+                        '기사명',
+                        '차량번호',
+                        '장비명(규격)',
+                        // '구분',
+                        '작업내용',
+                        '이전(기준)단가',
+                        '단가',
+                        '시간',
+                        '첨부파일',
+                        '비고',
+                        '등록/수정일',
+                      ].map((label) => (
+                        <TableCell
+                          key={label}
+                          align="center"
+                          sx={{
+                            backgroundColor: '#D1D5DB',
+                            border: '1px solid  #9CA3AF',
+                            color: 'black',
+                            fontWeight: 'bold',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {label === '비고' ||
+                          label === 'No' ||
+                          label === '등록/수정일' ||
+                          label === '첨부파일' ||
+                          label === '작업내용' ? (
+                            label
+                          ) : (
+                            <div className="flex items-center justify-center">
+                              <span>{label}</span>
+                              <span className="text-red-500 ml-1">*</span>
+                            </div>
+                          )}
+                        </TableCell>
+                      ))}
                     </TableRow>
-                  ) : (
-                    equipmentData.map((m, index) => (
-                      <TableRow key={m.id}>
-                        <TableCell
-                          padding="checkbox"
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF' }}
-                        >
-                          <Checkbox
-                            checked={checkedEquipmentIds.includes(m.id)}
-                            onChange={(e) => toggleCheckItem('equipment', m.id, e.target.checked)}
-                          />
+                  </TableHead>
+
+                  <TableBody>
+                    {equipmentData.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={12} align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                          장비 데이터가 없습니다.
                         </TableCell>
-                        <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                          {equipmentData.length - index}
-                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      equipmentData.map((m, index) => (
+                        <TableRow key={m.id}>
+                          <TableCell
+                            padding="checkbox"
+                            align="center"
+                            sx={{ border: '1px solid  #9CA3AF' }}
+                          >
+                            <Checkbox
+                              checked={checkedEquipmentIds.includes(m.id)}
+                              onChange={(e) => toggleCheckItem('equipment', m.id, e.target.checked)}
+                            />
+                          </TableCell>
+                          <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                            {equipmentData.length - index}
+                          </TableCell>
 
-                        <TableCell
-                          align="center"
-                          sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top', padding: '0' }}
-                        >
-                          <DailyEquipMentOutsourcingNameRow key={m.id} row={m} />
-                        </TableCell>
-
-                        <TableCell
-                          align="center"
-                          sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top', padding: '0' }}
-                        >
-                          <DailyEquipMentDriverNameRow key={m.id} row={m} />
-                        </TableCell>
-
-                        <TableCell
-                          align="center"
-                          sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top', padding: '0' }}
-                        >
-                          {/* <CommonSelect
-                            fullWidth
-                            value={
-                              selectedCarNumberIds[m.id] ||
-                              m.outsourcingCompanyContractEquipmentId ||
-                              0
-                            }
-                            onChange={async (value) => {
-                              const selectedCarNumber = carNumberOptionsByCompany[
-                                m.outsourcingCompanyId
-                              ]?.find((opt) => opt.id === value)
-                              if (!selectedCarNumber) return
-
-                              console.log('selectedCarNumber24', selectedCarNumber)
-
-                              // 차량 및 관련 필드 업데이트
-                              updateItemField(
-                                'equipment',
-                                m.id,
-                                'outsourcingCompanyContractEquipmentId',
-                                selectedCarNumber.id,
-                              )
-                              updateItemField(
-                                'equipment',
-                                m.id,
-                                'specificationName',
-                                selectedCarNumber.specification || '',
-                              )
-                              updateItemField(
-                                'equipment',
-                                m.id,
-                                'unitPrice',
-                                selectedCarNumber.unitPrice || 0,
-                              )
-                              updateItemField(
-                                'equipment',
-                                m.id,
-                                'workContent',
-                                selectedCarNumber.taskDescription || '',
-                              )
-
-                              const subEquipments = selectedCarNumber.subEquipments ?? []
-
-                              if (subEquipments.length > 0) {
-                                const formattedSubEquipments = subEquipments.map((sub: any) => ({
-                                  id: sub.id,
-                                  outsourcingCompanyContractSubEquipmentId: sub.id,
-                                  type: sub.type || sub.typeCode || '-',
-                                  workContent: sub.workContent || sub.taskDescription || '',
-                                  description: sub.description || ' ',
-                                  unitPrice: sub.unitPrice || 0,
-                                  workHours: sub.workHours || 0,
-                                  memo: sub.memo || '',
-                                }))
-
-                                updateItemField(
-                                  'equipment',
-                                  m.id,
-                                  'subEquipments',
-                                  formattedSubEquipments,
-                                )
-
-                                const subEquipmentsOptions = formattedSubEquipments.map(
-                                  (sub: any) => ({
-                                    id: sub.id,
-                                    name: sub.type || sub.typeCode || '-',
-                                    taskDescription: sub.workContent,
-                                    unitPrice: sub.unitPrice,
-                                    description: sub.description || ' ',
-                                  }),
-                                )
-
-                                setTestArrayByRow((prev) => ({
-                                  ...prev,
-                                  [selectedCarNumber.id]: [
-                                    { id: 0, name: '선택' },
-                                    ...subEquipmentsOptions,
-                                  ],
-                                }))
-
-                                console.log('✅ 저장된 subEquipments:', subEquipmentsOptions)
-                              } else {
-                                updateItemField('equipment', m.id, 'subEquipments', [])
-                              }
+                          <TableCell
+                            align="center"
+                            sx={{
+                              border: '1px solid #9CA3AF',
+                              verticalAlign: 'top',
+                              padding: '0',
+                              width: '340px',
                             }}
-                            options={
-                              carNumberOptionsByCompany[m.outsourcingCompanyId] ?? [
-                                { id: 0, name: '선택', category: '' },
-                              ]
-                            }
-                            onScrollToBottom={() => {
-                              if (fuelEquipmentHasNextPage && !fuelEquipmentIsFetching)
-                                fuelEquipmentFetchNextPage()
+                          >
+                            <DailyEquipMentOutsourcingNameRow key={m.id} row={m} />
+                          </TableCell>
+
+                          <TableCell
+                            align="center"
+                            sx={{
+                              border: '1px solid #9CA3AF',
+                              verticalAlign: 'top',
+                              padding: '0',
+                              width: '140px',
                             }}
-                            loading={fuelEquipmentLoading}
-                          /> */}
+                          >
+                            <DailyEquipMentDriverNameRow key={m.id} row={m} />
+                          </TableCell>
 
-                          <DailyEquipMentCarNumberRow key={m.id} row={m} />
-                        </TableCell>
+                          <TableCell
+                            align="center"
+                            sx={{
+                              border: '1px solid #9CA3AF',
+                              verticalAlign: 'top',
+                              padding: '0',
+                              width: '140px',
+                            }}
+                          >
+                            <DailyEquipMentCarNumberRow key={m.id} row={m} />
+                          </TableCell>
 
-                        {/* 규격 (서브장비 부분) */}
-                        <TableCell align="center" sx={cellStyle}>
-                          <div className="flex items-center justify-between mb-2">
+                          {/* 규격 (서브장비 부분) */}
+                          <TableCell
+                            align="center"
+                            sx={{
+                              border: '1px solid #9CA3AF',
+                              verticalAlign: 'top',
+                              padding: '8px',
+                              width: '200px',
+                            }}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <TextField
+                                size="small"
+                                fullWidth
+                                value={m.specificationName ?? ''}
+                                placeholder="규격명"
+                                disabled
+                                sx={{
+                                  '& .MuiInputBase-input': { textAlign: 'center' },
+                                }}
+                              />
+                            </div>
+
+                            {m.subEquipments && m.subEquipments?.length > 0 && (
+                              <div className="flex flex-col ">
+                                {m.subEquipments.map((item) => (
+                                  <div
+                                    key={item.id || item.outsourcingCompanyContractSubEquipmentId}
+                                    className="flex items-center justify-between gap-2"
+                                  >
+                                    <CommonInput
+                                      className="flex-1 text-2xl"
+                                      value={item.outsourcingCompanyContractSubEquipmentName || 0}
+                                      onChange={() => {}}
+                                      disabled
+                                    />
+
+                                    <CommonInput
+                                      className="flex-1 text-2xl"
+                                      value={item.description || ''}
+                                      onChange={() => {}}
+                                      disabled
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </TableCell>
+
+                          <TableCell align="center" sx={cellStyle}>
                             <TextField
                               size="small"
-                              fullWidth
-                              value={m.specificationName ?? ''}
-                              placeholder="규격명"
-                              disabled
-                              sx={{
-                                '& .MuiInputBase-input': { textAlign: 'center' },
+                              placeholder="작업 내용 입력"
+                              value={m.workContent}
+                              onFocus={() => {
+                                setClearEquipmentOutsourcingNameFocusedId(null)
+                                setClearEquipmentDriverNameFocusedId(null)
+                                setClearEquipmentCarNumberFocusedId(null)
                               }}
+                              onChange={(e) =>
+                                updateItemField('equipment', m.id, 'workContent', e.target.value)
+                              }
+                              fullWidth
                             />
-                          </div>
 
-                          {m.subEquipments && m.subEquipments?.length > 0 && (
-                            <div className="flex flex-col ">
-                              {m.subEquipments.map((item) => (
-                                <div
-                                  key={item.id || item.outsourcingCompanyContractSubEquipmentId}
-                                  className="flex items-center justify-between gap-2"
-                                >
-                                  <CommonInput
-                                    className="flex-1 text-2xl"
-                                    value={item.outsourcingCompanyContractSubEquipmentName || 0}
-                                    onChange={() => {}}
-                                    disabled
+                            {m.subEquipments &&
+                              m.subEquipments?.map((detail) => (
+                                <div key={detail.id} className="flex gap-2 mt-4 items-center">
+                                  <TextField
+                                    size="small"
+                                    placeholder="작업 내용 입력"
+                                    value={detail.workContent}
+                                    onFocus={() => {
+                                      setClearEquipmentOutsourcingNameFocusedId(null)
+                                      setClearEquipmentDriverNameFocusedId(null)
+                                      setClearEquipmentCarNumberFocusedId(null)
+                                    }}
+                                    onChange={(e) =>
+                                      updateContractDetailField(
+                                        'equipment',
+                                        m.id,
+                                        detail.id,
+                                        'workContent',
+                                        e.target.value,
+                                      )
+                                    }
+                                    fullWidth
                                   />
+                                </div>
+                              ))}
+                          </TableCell>
 
-                                  <CommonInput
-                                    className="flex-1 text-2xl"
-                                    value={item.description || ''}
-                                    onChange={() => {}}
+                          <TableCell align="center" sx={cellStyle}>
+                            <TextField
+                              size="small"
+                              value={
+                                m.previousUnitPrice === 0 || m.previousUnitPrice === null
+                                  ? ''
+                                  : formatNumber(m.previousUnitPrice ?? 0)
+                              }
+                              onChange={(e) => {
+                                const numericValue =
+                                  e.target.value === '' ? null : unformatNumber(e.target.value)
+
+                                updateItemField(
+                                  'directContracts',
+                                  m.id,
+                                  'previousPrice',
+                                  numericValue,
+                                )
+                              }}
+                              inputProps={{
+                                inputMode: 'numeric',
+                                pattern: '[0-9]*',
+                                style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                              }}
+                              disabled
+                            />
+
+                            {m.subEquipments &&
+                              m.subEquipments?.map((detail) => (
+                                <div key={detail.id} className="flex gap-2 mt-4 items-center">
+                                  <TextField
+                                    size="small"
+                                    placeholder="숫자만"
+                                    value={formatNumber(detail.previousUnitPrice ?? 0)}
+                                    onFocus={() => {
+                                      setClearEquipmentOutsourcingNameFocusedId(null)
+                                      setClearEquipmentDriverNameFocusedId(null)
+                                      setClearEquipmentCarNumberFocusedId(null)
+                                    }}
+                                    onChange={(e) => {
+                                      const numericValue = unformatNumber(e.target.value)
+                                      updateContractDetailField(
+                                        'equipment',
+                                        m.id,
+                                        detail.id,
+                                        'previousUnitPrice',
+                                        numericValue,
+                                      )
+                                    }}
+                                    inputProps={{
+                                      inputMode: 'numeric',
+                                      pattern: '[0-9]*',
+                                      style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                                    }}
+                                    fullWidth
                                     disabled
                                   />
                                 </div>
                               ))}
-                            </div>
-                          )}
-                        </TableCell>
+                          </TableCell>
 
-                        <TableCell align="center" sx={cellStyle}>
-                          <TextField
-                            size="small"
-                            placeholder="작업 내용 입력"
-                            value={m.workContent}
-                            onFocus={() => {
-                              setClearEquipmentOutsourcingNameFocusedId(null)
-                              setClearEquipmentDriverNameFocusedId(null)
-                              setClearEquipmentCarNumberFocusedId(null)
-                            }}
-                            onChange={(e) =>
-                              updateItemField('equipment', m.id, 'workContent', e.target.value)
-                            }
-                            fullWidth
-                          />
-
-                          {m.subEquipments &&
-                            m.subEquipments?.map((detail) => (
-                              <div key={detail.id} className="flex gap-2 mt-4 items-center">
-                                <TextField
-                                  size="small"
-                                  placeholder="작업 내용 입력"
-                                  value={detail.workContent}
-                                  onFocus={() => {
-                                    setClearEquipmentOutsourcingNameFocusedId(null)
-                                    setClearEquipmentDriverNameFocusedId(null)
-                                    setClearEquipmentCarNumberFocusedId(null)
-                                  }}
-                                  onChange={(e) =>
-                                    updateContractDetailField(
-                                      'equipment',
-                                      m.id,
-                                      detail.id,
-                                      'workContent',
-                                      e.target.value,
-                                    )
-                                  }
-                                  fullWidth
-                                />
-                              </div>
-                            ))}
-                        </TableCell>
-
-                        <TableCell align="center" sx={cellStyle}>
-                          <TextField
-                            size="small"
-                            value={
-                              m.previousUnitPrice === 0 || m.previousUnitPrice === null
-                                ? ''
-                                : formatNumber(m.previousUnitPrice ?? 0)
-                            }
-                            onChange={(e) => {
-                              const numericValue =
-                                e.target.value === '' ? null : unformatNumber(e.target.value)
-
-                              updateItemField(
-                                'directContracts',
-                                m.id,
-                                'previousPrice',
-                                numericValue,
-                              )
-                            }}
-                            inputProps={{
-                              inputMode: 'numeric',
-                              pattern: '[0-9]*',
-                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
-                            }}
-                            disabled
-                          />
-
-                          {m.subEquipments &&
-                            m.subEquipments?.map((detail) => (
-                              <div key={detail.id} className="flex gap-2 mt-4 items-center">
-                                <TextField
-                                  size="small"
-                                  placeholder="숫자만"
-                                  value={formatNumber(detail.previousUnitPrice ?? 0)}
-                                  onFocus={() => {
-                                    setClearEquipmentOutsourcingNameFocusedId(null)
-                                    setClearEquipmentDriverNameFocusedId(null)
-                                    setClearEquipmentCarNumberFocusedId(null)
-                                  }}
-                                  onChange={(e) => {
-                                    const numericValue = unformatNumber(e.target.value)
-                                    updateContractDetailField(
-                                      'equipment',
-                                      m.id,
-                                      detail.id,
-                                      'previousUnitPrice',
-                                      numericValue,
-                                    )
-                                  }}
-                                  inputProps={{
-                                    inputMode: 'numeric',
-                                    pattern: '[0-9]*',
-                                    style: { textAlign: 'right' }, // ← 오른쪽 정렬
-                                  }}
-                                  fullWidth
-                                  disabled
-                                />
-                              </div>
-                            ))}
-                        </TableCell>
-
-                        <TableCell align="center" sx={cellStyle}>
-                          <TextField
-                            size="small"
-                            placeholder="작업 내용 입력"
-                            value={formatNumber(m.unitPrice)}
-                            onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
-                              updateItemField('equipment', m.id, 'unitPrice', numericValue)
-                            }}
-                            inputProps={{
-                              inputMode: 'numeric',
-                              pattern: '[0-9]*',
-                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
-                            }}
-                            fullWidth
-                          />
-                          {m.subEquipments &&
-                            m.subEquipments.map((detail) => (
-                              <div key={detail.id} className="flex gap-2 mt-4 items-center">
-                                <TextField
-                                  size="small"
-                                  placeholder="숫자만"
-                                  value={formatNumber(detail.unitPrice)}
-                                  onChange={(e) => {
-                                    const numericValue = unformatNumber(e.target.value)
-                                    updateContractDetailField(
-                                      'equipment',
-                                      m.id,
-                                      detail.id,
-                                      'unitPrice',
-                                      numericValue,
-                                    )
-                                  }}
-                                  inputProps={{
-                                    inputMode: 'numeric',
-                                    pattern: '[0-9]*',
-                                    style: { textAlign: 'right' }, // ← 오른쪽 정렬
-                                  }}
-                                  fullWidth
-                                />
-                              </div>
-                            ))}
-                        </TableCell>
-
-                        <TableCell
-                          align="center"
-                          sx={{
-                            border: '1px solid  #9CA3AF',
-                            padding: '8px',
-                            verticalAlign: 'top',
-                          }}
-                        >
-                          <TextField
-                            size="small"
-                            type="number" // type을 number로 변경
-                            placeholder="숫자를 입력해주세요."
-                            inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
-                            value={m.workHours ?? ''}
-                            onFocus={() => {
-                              setClearEquipmentOutsourcingNameFocusedId(null)
-                              setClearEquipmentDriverNameFocusedId(null)
-                              setClearEquipmentCarNumberFocusedId(null)
-                            }}
-                            onWheel={(e) => {
-                              ;(e.target as HTMLInputElement).blur()
-                            }}
-                            onChange={(e) => {
-                              const value = e.target.value
-                              const numericValue = value === '' ? null : parseFloat(value)
-
-                              // dailyWork 배열 idx 위치 업데이트
-                              updateItemField('equipment', m.id, 'workHours', numericValue)
-                            }}
-                            sx={{
-                              height: '100%',
-                              '& .MuiInputBase-root': {
-                                height: '100%',
-                                fontSize: '1rem',
-                              },
-                              '& input': {
-                                textAlign: 'center',
-                                MozAppearance: 'textfield', // Firefox
-                                '&::-webkit-outer-spin-button': {
-                                  // Chrome, Safari
-                                  WebkitAppearance: 'none',
-                                  margin: 0,
-                                },
-                                '&::-webkit-inner-spin-button': {
-                                  // Chrome, Safari
-                                  WebkitAppearance: 'none',
-                                  margin: 0,
-                                },
-                              },
-                            }}
-                          />
-
-                          {m.subEquipments &&
-                            m.subEquipments.map((detail) => (
-                              <div key={detail.id} className="flex gap-2 mt-4 items-center">
-                                <TextField
-                                  size="small"
-                                  type="number" // type을 number로 변경
-                                  placeholder="숫자를 입력해주세요."
-                                  inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
-                                  value={detail.workHours ?? ''}
-                                  onWheel={(e) => {
-                                    ;(e.target as HTMLInputElement).blur()
-                                  }}
-                                  onFocus={() => {
-                                    setClearEquipmentOutsourcingNameFocusedId(null)
-                                    setClearEquipmentDriverNameFocusedId(null)
-                                    setClearEquipmentCarNumberFocusedId(null)
-                                  }}
-                                  onChange={(e) => {
-                                    const value = e.target.value
-                                    const numericValue = value === '' ? null : parseFloat(value)
-
-                                    // dailyWork 배열 idx 위치 업데이트
-                                    updateContractDetailField(
-                                      'equipment',
-                                      m.id,
-                                      detail.id,
-                                      'workHours',
-                                      numericValue,
-                                    )
-                                  }}
-                                  sx={{
-                                    height: '100%',
-                                    '& .MuiInputBase-root': {
-                                      height: '100%',
-                                      fontSize: '1rem',
-                                    },
-                                    '& input': {
-                                      textAlign: 'center',
-                                      padding: '10px',
-                                      MozAppearance: 'textfield', // Firefox
-                                      '&::-webkit-outer-spin-button': {
-                                        // Chrome, Safari
-                                        WebkitAppearance: 'none',
-                                        margin: 0,
-                                      },
-                                      '&::-webkit-inner-spin-button': {
-                                        // Chrome, Safari
-                                        WebkitAppearance: 'none',
-                                        margin: 0,
-                                      },
-                                    },
-                                  }}
-                                />
-                              </div>
-                            ))}
-                        </TableCell>
-
-                        <TableCell
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
-                        >
-                          <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
-                            <CommonFileInput
-                              acceptedExtensions={[
-                                'pdf',
-                                'txt',
-                                'rtf',
-                                'docx',
-                                'hwp',
-                                'xlsx',
-                                'csv',
-                                'ods',
-                                'pptx',
-                                'ppt',
-                                'odp',
-                                'jpg',
-                                'jpeg',
-                                'png',
-                                'gif',
-                                'tif',
-                                'tiff',
-                                'bmp',
-                                'zip',
-                                '7z',
-                                'mp3',
-                                'wav',
-                                'mp4',
-                                'mov',
-                                'avi',
-                                'wmv',
-                                'dwg',
-                              ]}
-                              multiple={false}
-                              files={m.files} // 각 항목별 files
-                              onChange={(newFiles) => {
-                                updateItemField('equipment', m.id, 'files', newFiles.slice(0, 1))
+                          <TableCell align="center" sx={cellStyle}>
+                            <TextField
+                              size="small"
+                              placeholder="작업 내용 입력"
+                              value={formatNumber(m.unitPrice)}
+                              onChange={(e) => {
+                                const numericValue = unformatNumber(e.target.value)
+                                updateItemField('equipment', m.id, 'unitPrice', numericValue)
                               }}
-                              uploadTarget="WORK_DAILY_REPORT"
+                              inputProps={{
+                                inputMode: 'numeric',
+                                pattern: '[0-9]*',
+                                style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                              }}
+                              fullWidth
                             />
-                          </div>
-                        </TableCell>
+                            {m.subEquipments &&
+                              m.subEquipments.map((detail) => (
+                                <div key={detail.id} className="flex gap-2 mt-4 items-center">
+                                  <TextField
+                                    size="small"
+                                    placeholder="숫자만"
+                                    value={formatNumber(detail.unitPrice)}
+                                    onChange={(e) => {
+                                      const numericValue = unformatNumber(e.target.value)
+                                      updateContractDetailField(
+                                        'equipment',
+                                        m.id,
+                                        detail.id,
+                                        'unitPrice',
+                                        numericValue,
+                                      )
+                                    }}
+                                    inputProps={{
+                                      inputMode: 'numeric',
+                                      pattern: '[0-9]*',
+                                      style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                                    }}
+                                    fullWidth
+                                  />
+                                </div>
+                              ))}
+                          </TableCell>
 
-                        <TableCell
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
-                        >
-                          <TextField
-                            size="small"
-                            placeholder="500자 이하 텍스트 입력"
-                            onFocus={() => {
-                              setClearEquipmentOutsourcingNameFocusedId(null)
-                              setClearEquipmentDriverNameFocusedId(null)
-                              setClearEquipmentCarNumberFocusedId(null)
+                          <TableCell
+                            align="center"
+                            sx={{
+                              border: '1px solid  #9CA3AF',
+                              padding: '8px',
+                              verticalAlign: 'top',
                             }}
-                            value={m.memo}
-                            onChange={(e) =>
-                              updateItemField('equipment', m.id, 'memo', e.target.value)
-                            }
-                          />
-                          {m.subEquipments &&
-                            m.subEquipments.map((detail) => (
-                              <div key={detail.id} className="flex gap-2 mt-4  items-center">
-                                <TextField
-                                  size="small"
-                                  placeholder="500자 이하 텍스트 입력"
-                                  onFocus={() => {
-                                    setClearEquipmentOutsourcingNameFocusedId(null)
-                                    setClearEquipmentDriverNameFocusedId(null)
-                                    setClearEquipmentCarNumberFocusedId(null)
-                                  }}
-                                  value={detail.memo}
-                                  onChange={(e) =>
-                                    updateContractDetailField(
-                                      'equipment',
-                                      m.id,
-                                      detail.id,
-                                      'memo',
-                                      e.target.value,
-                                    )
-                                  }
-                                />
-                              </div>
-                            ))}
-                        </TableCell>
+                          >
+                            <TextField
+                              size="small"
+                              type="number" // type을 number로 변경
+                              placeholder="숫자를 입력해주세요."
+                              inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
+                              value={m.workHours ?? ''}
+                              onFocus={() => {
+                                setClearEquipmentOutsourcingNameFocusedId(null)
+                                setClearEquipmentDriverNameFocusedId(null)
+                                setClearEquipmentCarNumberFocusedId(null)
+                              }}
+                              onWheel={(e) => {
+                                ;(e.target as HTMLInputElement).blur()
+                              }}
+                              onChange={(e) => {
+                                const value = e.target.value
+                                const numericValue = value === '' ? null : parseFloat(value)
 
-                        {/* 등록/수정일 (임시: Date.now 기준) */}
-                        <TableCell
-                          align="center"
-                          sx={{
-                            border: '1px solid  #9CA3AF',
-                            width: '260px',
-                            verticalAlign: 'top',
-                          }}
-                        >
-                          <CommonInput
-                            placeholder="-"
-                            value={m.modifyDate ?? ''}
-                            onChange={(value) =>
-                              updateItemField('equipment', m.id, 'modifyDate', value)
-                            }
-                            disabled
-                            className="flex-1"
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                                // dailyWork 배열 idx 위치 업데이트
+                                updateItemField('equipment', m.id, 'workHours', numericValue)
+                              }}
+                              sx={{
+                                height: '100%',
+                                '& .MuiInputBase-root': {
+                                  height: '100%',
+                                  fontSize: '1rem',
+                                },
+                                '& input': {
+                                  textAlign: 'center',
+                                  MozAppearance: 'textfield', // Firefox
+                                  '&::-webkit-outer-spin-button': {
+                                    // Chrome, Safari
+                                    WebkitAppearance: 'none',
+                                    margin: 0,
+                                  },
+                                  '&::-webkit-inner-spin-button': {
+                                    // Chrome, Safari
+                                    WebkitAppearance: 'none',
+                                    margin: 0,
+                                  },
+                                },
+                              }}
+                            />
+
+                            {m.subEquipments &&
+                              m.subEquipments.map((detail) => (
+                                <div key={detail.id} className="flex gap-2 mt-4 items-center">
+                                  <TextField
+                                    size="small"
+                                    type="number" // type을 number로 변경
+                                    placeholder="숫자를 입력해주세요."
+                                    inputProps={{ step: 0.1, min: 0 }} // 소수점 1자리, 음수 방지
+                                    value={detail.workHours ?? ''}
+                                    onWheel={(e) => {
+                                      ;(e.target as HTMLInputElement).blur()
+                                    }}
+                                    onFocus={() => {
+                                      setClearEquipmentOutsourcingNameFocusedId(null)
+                                      setClearEquipmentDriverNameFocusedId(null)
+                                      setClearEquipmentCarNumberFocusedId(null)
+                                    }}
+                                    onChange={(e) => {
+                                      const value = e.target.value
+                                      const numericValue = value === '' ? null : parseFloat(value)
+
+                                      // dailyWork 배열 idx 위치 업데이트
+                                      updateContractDetailField(
+                                        'equipment',
+                                        m.id,
+                                        detail.id,
+                                        'workHours',
+                                        numericValue,
+                                      )
+                                    }}
+                                    sx={{
+                                      height: '100%',
+                                      '& .MuiInputBase-root': {
+                                        height: '100%',
+                                        fontSize: '1rem',
+                                      },
+                                      '& input': {
+                                        textAlign: 'center',
+                                        padding: '10px',
+                                        MozAppearance: 'textfield', // Firefox
+                                        '&::-webkit-outer-spin-button': {
+                                          // Chrome, Safari
+                                          WebkitAppearance: 'none',
+                                          margin: 0,
+                                        },
+                                        '&::-webkit-inner-spin-button': {
+                                          // Chrome, Safari
+                                          WebkitAppearance: 'none',
+                                          margin: 0,
+                                        },
+                                      },
+                                    }}
+                                  />
+                                </div>
+                              ))}
+                          </TableCell>
+
+                          <TableCell
+                            align="center"
+                            sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                          >
+                            <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                              <CommonFileInput
+                                acceptedExtensions={[
+                                  'pdf',
+                                  'txt',
+                                  'rtf',
+                                  'docx',
+                                  'hwp',
+                                  'xlsx',
+                                  'csv',
+                                  'ods',
+                                  'pptx',
+                                  'ppt',
+                                  'odp',
+                                  'jpg',
+                                  'jpeg',
+                                  'png',
+                                  'gif',
+                                  'tif',
+                                  'tiff',
+                                  'bmp',
+                                  'zip',
+                                  '7z',
+                                  'mp3',
+                                  'wav',
+                                  'mp4',
+                                  'mov',
+                                  'avi',
+                                  'wmv',
+                                  'dwg',
+                                ]}
+                                multiple={false}
+                                files={m.files} // 각 항목별 files
+                                onChange={(newFiles) => {
+                                  updateItemField('equipment', m.id, 'files', newFiles.slice(0, 1))
+                                }}
+                                uploadTarget="WORK_DAILY_REPORT"
+                              />
+                            </div>
+                          </TableCell>
+
+                          <TableCell
+                            align="center"
+                            sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                          >
+                            <TextField
+                              size="small"
+                              placeholder="500자 이하 텍스트 입력"
+                              onFocus={() => {
+                                setClearEquipmentOutsourcingNameFocusedId(null)
+                                setClearEquipmentDriverNameFocusedId(null)
+                                setClearEquipmentCarNumberFocusedId(null)
+                              }}
+                              value={m.memo}
+                              onChange={(e) =>
+                                updateItemField('equipment', m.id, 'memo', e.target.value)
+                              }
+                            />
+                            {m.subEquipments &&
+                              m.subEquipments.map((detail) => (
+                                <div key={detail.id} className="flex gap-2 mt-4  items-center">
+                                  <TextField
+                                    size="small"
+                                    placeholder="500자 이하 텍스트 입력"
+                                    onFocus={() => {
+                                      setClearEquipmentOutsourcingNameFocusedId(null)
+                                      setClearEquipmentDriverNameFocusedId(null)
+                                      setClearEquipmentCarNumberFocusedId(null)
+                                    }}
+                                    value={detail.memo}
+                                    onChange={(e) =>
+                                      updateContractDetailField(
+                                        'equipment',
+                                        m.id,
+                                        detail.id,
+                                        'memo',
+                                        e.target.value,
+                                      )
+                                    }
+                                  />
+                                </div>
+                              ))}
+                          </TableCell>
+
+                          {/* 등록/수정일 (임시: Date.now 기준) */}
+                          <TableCell
+                            align="center"
+                            sx={{
+                              border: '1px solid  #9CA3AF',
+                              width: '260px',
+                              verticalAlign: 'top',
+                            }}
+                          >
+                            <CommonInput
+                              placeholder="-"
+                              value={m.modifyDate ?? ''}
+                              onChange={(value) =>
+                                updateItemField('equipment', m.id, 'modifyDate', value)
+                              }
+                              disabled
+                              className="flex-1"
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
 
               {equipmentFetching && <div className="p-2 text-center">불러오는 중...</div>}
             </TableContainer>
@@ -8788,88 +8761,93 @@ export default function DailyReportRegistrationView() {
                 }
               }}
             >
-              <Table size="small">
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
-                    <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
-                      <Checkbox
-                        checked={isFuelAllChecked}
-                        indeterminate={checkedFuelIds.length > 0 && !isFuelAllChecked}
-                        onChange={(e) => toggleCheckAllItems('fuel', e.target.checked)}
-                        sx={{ color: 'black' }}
-                      />
-                    </TableCell>
-                    {[
-                      'No',
-                      '업체명',
-                      '구분',
-                      '차량번호',
-                      '규격',
-                      '유종',
-                      '주유량',
-                      '금액',
-                      '첨부파일',
-                      '비고',
-                      '등록/수정일',
-                    ].map((label) => (
-                      <TableCell
-                        key={label}
-                        align="center"
-                        sx={{
-                          backgroundColor: '#D1D5DB',
-                          border: '1px solid  #9CA3AF',
-                          color: 'black',
-                          fontWeight: 'bold',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {label === '비고' ||
-                        label === 'No' ||
-                        label === '등록/수정일' ||
-                        label === '첨부파일' ||
-                        label === '금액' ? (
-                          label
-                        ) : (
-                          <div className="flex items-center justify-center">
-                            <span>{label}</span>
-                            <span className="text-red-500 ml-1">*</span>
-                          </div>
-                        )}
+              <div style={{ minWidth: 2200, width: 'fit-content' }}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: '#D1D5DB', border: '1px solid  #9CA3AF' }}>
+                      <TableCell padding="checkbox" sx={{ border: '1px solid  #9CA3AF' }}>
+                        <Checkbox
+                          checked={isFuelAllChecked}
+                          indeterminate={checkedFuelIds.length > 0 && !isFuelAllChecked}
+                          onChange={(e) => toggleCheckAllItems('fuel', e.target.checked)}
+                          sx={{ color: 'black' }}
+                        />
                       </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-
-                <TableBody>
-                  {fuelData.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={10} align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                        유류 데이터가 없습니다.
-                      </TableCell>
+                      {[
+                        'No',
+                        '업체명',
+                        '구분',
+                        '차량번호',
+                        '규격',
+                        '유종',
+                        '주유량',
+                        '금액',
+                        '첨부파일',
+                        '비고',
+                        '등록/수정일',
+                      ].map((label) => (
+                        <TableCell
+                          key={label}
+                          align="center"
+                          sx={{
+                            backgroundColor: '#D1D5DB',
+                            border: '1px solid  #9CA3AF',
+                            color: 'black',
+                            fontWeight: 'bold',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {label === '비고' ||
+                          label === 'No' ||
+                          label === '등록/수정일' ||
+                          label === '첨부파일' ||
+                          label === '금액' ? (
+                            label
+                          ) : (
+                            <div className="flex items-center justify-center">
+                              <span>{label}</span>
+                              <span className="text-red-500 ml-1">*</span>
+                            </div>
+                          )}
+                        </TableCell>
+                      ))}
                     </TableRow>
-                  ) : (
-                    fuelData.map((m, index) => (
-                      <TableRow key={m.id}>
-                        <TableCell
-                          padding="checkbox"
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF' }}
-                        >
-                          <Checkbox
-                            checked={checkedFuelIds.includes(m.id)}
-                            onChange={(e) => toggleCheckItem('fuel', m.id, e.target.checked)}
-                          />
-                        </TableCell>
+                  </TableHead>
 
-                        <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
-                          {fuelData.length - index}
+                  <TableBody>
+                    {fuelData.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={10} align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                          유류 데이터가 없습니다.
                         </TableCell>
+                      </TableRow>
+                    ) : (
+                      fuelData.map((m, index) => (
+                        <TableRow key={m.id}>
+                          <TableCell
+                            padding="checkbox"
+                            align="center"
+                            sx={{ border: '1px solid  #9CA3AF' }}
+                          >
+                            <Checkbox
+                              checked={checkedFuelIds.includes(m.id)}
+                              onChange={(e) => toggleCheckItem('fuel', m.id, e.target.checked)}
+                            />
+                          </TableCell>
 
-                        <TableCell
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
-                        >
-                          {/* <CommonSelect
+                          <TableCell align="center" sx={{ border: '1px solid #9CA3AF' }}>
+                            {fuelData.length - index}
+                          </TableCell>
+
+                          <TableCell
+                            align="center"
+                            sx={{
+                              border: '1px solid  #9CA3AF',
+                              verticalAlign: 'top',
+                              width: '400px',
+                            }}
+                          >
+                            {/* <CommonSelect
                             fullWidth
                             // value={m.outsourcingCompanyId || 0}
                             value={selectedCompanyIds[m.id] || m.outsourcingCompanyId || 0}
@@ -8926,57 +8904,57 @@ export default function DailyReportRegistrationView() {
                             loading={withEquipmentLoading}
                           /> */}
 
-                          <DailyFuelOutsourcingNameRow key={m.id} row={m} />
-                        </TableCell>
+                            <DailyFuelOutsourcingNameRow key={m.id} row={m} />
+                          </TableCell>
 
-                        <TableCell
-                          align="center"
-                          sx={{
-                            border: '1px solid  #9CA3AF',
-                            verticalAlign: 'top',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          <div className="flex items-center gap-4 justify-center">
-                            <label className="flex items-center gap-1">
-                              <Radio
-                                checked={m.categoryType === 'CONSTRUCTION'}
-                                onChange={() => {
-                                  setFuelRadioBtn(m.id, 'CONSTRUCTION')
-                                  updateItemField('fuel', m.id, 'equipmentId', '')
-                                  updateItemField('fuel', m.id, 'equipmentName', '')
+                          <TableCell
+                            align="center"
+                            sx={{
+                              border: '1px solid  #9CA3AF',
+                              verticalAlign: 'top',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            <div className="flex items-center gap-4 justify-center">
+                              <label className="flex items-center gap-1">
+                                <Radio
+                                  checked={m.categoryType === 'CONSTRUCTION'}
+                                  onChange={() => {
+                                    setFuelRadioBtn(m.id, 'CONSTRUCTION')
+                                    updateItemField('fuel', m.id, 'equipmentId', '')
+                                    updateItemField('fuel', m.id, 'equipmentName', '')
 
-                                  updateItemField('fuel', m.id, 'specificationName', '')
-                                }}
-                                value="CONSTRUCTION"
-                                name={`categoryType-${m.id}`} // 각 행별로 고유 그룹
-                              />
-                              외주
-                            </label>
+                                    updateItemField('fuel', m.id, 'specificationName', '')
+                                  }}
+                                  value="CONSTRUCTION"
+                                  name={`categoryType-${m.id}`} // 각 행별로 고유 그룹
+                                />
+                                외주
+                              </label>
 
-                            <label className="flex items-center gap-1">
-                              <Radio
-                                checked={m.categoryType === 'EQUIPMENT'}
-                                onChange={() => {
-                                  setFuelRadioBtn(m.id, 'EQUIPMENT')
+                              <label className="flex items-center gap-1">
+                                <Radio
+                                  checked={m.categoryType === 'EQUIPMENT'}
+                                  onChange={() => {
+                                    setFuelRadioBtn(m.id, 'EQUIPMENT')
 
-                                  updateItemField('fuel', m.id, 'equipmentId', '')
-                                  updateItemField('fuel', m.id, 'equipmentName', '')
-                                  updateItemField('fuel', m.id, 'specificationName', '')
-                                }}
-                                value="EQUIPMENT"
-                                name={`categoryType-${m.id}`} // 각 행별로 고유 그룹
-                              />
-                              장비
-                            </label>
-                          </div>
-                        </TableCell>
+                                    updateItemField('fuel', m.id, 'equipmentId', '')
+                                    updateItemField('fuel', m.id, 'equipmentName', '')
+                                    updateItemField('fuel', m.id, 'specificationName', '')
+                                  }}
+                                  value="EQUIPMENT"
+                                  name={`categoryType-${m.id}`} // 각 행별로 고유 그룹
+                                />
+                                장비
+                              </label>
+                            </div>
+                          </TableCell>
 
-                        <TableCell
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
-                        >
-                          {/* <CommonSelect
+                          <TableCell
+                            align="center"
+                            sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                          >
+                            {/* <CommonSelect
                             fullWidth
                             value={selectedCarNumberIds[m.id] ?? m.equipmentId ?? 0}
                             onChange={async (value) => {
@@ -9029,25 +9007,25 @@ export default function DailyReportRegistrationView() {
                             // loading={fuelEquipmentLoading}
                           /> */}
 
-                          <DailyFuelCarNumberRow key={m.id} row={m} />
-                        </TableCell>
+                            <DailyFuelCarNumberRow key={m.id} row={m} />
+                          </TableCell>
 
-                        {/* 규격 */}
-                        <TableCell
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
-                        >
-                          <CommonInput
-                            placeholder="자동 입력"
-                            value={m.specificationName ?? ''}
-                            onChange={(value) =>
-                              updateItemField('fuel', m.id, 'specificationName', value)
-                            }
-                            disabled={true}
-                            className=" flex-1"
-                          />
+                          {/* 규격 */}
+                          <TableCell
+                            align="center"
+                            sx={{ border: '1px solid  #9CA3AF', verticalAlign: 'top' }}
+                          >
+                            <CommonInput
+                              placeholder="자동 입력"
+                              value={m.specificationName ?? ''}
+                              onChange={(value) =>
+                                updateItemField('fuel', m.id, 'specificationName', value)
+                              }
+                              disabled={true}
+                              className=" flex-1"
+                            />
 
-                          {/* {m.subEquipments && m.subEquipments?.length > 0 && (
+                            {/* {m.subEquipments && m.subEquipments?.length > 0 && (
                             <div className="flex flex-col gap-2 mt-2">
                               {m.subEquipments.map((item) => (
                                 <div
@@ -9077,20 +9055,20 @@ export default function DailyReportRegistrationView() {
                               ))}
                             </div>
                           )} */}
-                        </TableCell>
+                          </TableCell>
 
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <CommonSelect
-                            fullWidth={true}
-                            value={m.fuelType || 'BASE'}
-                            onChange={async (value) => {
-                              updateItemField('fuel', m.id, 'fuelType', value)
-                              calculateFuelAmount()
-                            }}
-                            options={OilTypeMethodOptions}
-                          />
+                          <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                            <CommonSelect
+                              fullWidth={true}
+                              value={m.fuelType || 'BASE'}
+                              onChange={async (value) => {
+                                updateItemField('fuel', m.id, 'fuelType', value)
+                                calculateFuelAmount()
+                              }}
+                              options={OilTypeMethodOptions}
+                            />
 
-                          {/* {m.subEquipments &&
+                            {/* {m.subEquipments &&
                             m.subEquipments?.map((detail, index) => (
                               <div key={index} className="flex gap-2 mt-1 items-center">
                                 <CommonSelect
@@ -9104,30 +9082,30 @@ export default function DailyReportRegistrationView() {
                                 />
                               </div>
                             ))} */}
-                        </TableCell>
+                          </TableCell>
 
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <TextField
-                            size="small"
-                            placeholder="숫자만"
-                            onFocus={() => {
-                              setClearFuelOutsourcingNameFocusedId(null)
-                              setClearFuelCarNumberFocusedId(null)
-                            }}
-                            value={formatNumber(m.fuelAmount)}
-                            onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
-                              updateItemField('fuel', m.id, 'fuelAmount', numericValue)
-                              calculateFuelAmount()
-                            }}
-                            inputProps={{
-                              inputMode: 'numeric',
-                              pattern: '[0-9]*',
-                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
-                            }}
-                          />
+                          <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자만"
+                              onFocus={() => {
+                                setClearFuelOutsourcingNameFocusedId(null)
+                                setClearFuelCarNumberFocusedId(null)
+                              }}
+                              value={formatNumber(m.fuelAmount)}
+                              onChange={(e) => {
+                                const numericValue = unformatNumber(e.target.value)
+                                updateItemField('fuel', m.id, 'fuelAmount', numericValue)
+                                calculateFuelAmount()
+                              }}
+                              inputProps={{
+                                inputMode: 'numeric',
+                                pattern: '[0-9]*',
+                                style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                              }}
+                            />
 
-                          {/* {m.subEquipments &&
+                            {/* {m.subEquipments &&
                             m.subEquipments?.map((detail, index) => (
                               <div key={index} className="flex gap-2 mt-1 items-center">
                                 <TextField
@@ -9152,30 +9130,30 @@ export default function DailyReportRegistrationView() {
                                 />
                               </div>
                             ))} */}
-                        </TableCell>
+                          </TableCell>
 
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <TextField
-                            size="small"
-                            placeholder="숫자만"
-                            value={formatNumber(m.amount)}
-                            onFocus={() => {
-                              setClearFuelOutsourcingNameFocusedId(null)
-                              setClearFuelCarNumberFocusedId(null)
-                            }}
-                            onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
-                              updateItemField('fuel', m.id, 'amount', numericValue)
-                            }}
-                            inputProps={{
-                              inputMode: 'numeric',
-                              pattern: '[0-9]*',
-                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
-                            }}
-                            disabled
-                          />
+                          <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="숫자만"
+                              value={formatNumber(m.amount)}
+                              onFocus={() => {
+                                setClearFuelOutsourcingNameFocusedId(null)
+                                setClearFuelCarNumberFocusedId(null)
+                              }}
+                              onChange={(e) => {
+                                const numericValue = unformatNumber(e.target.value)
+                                updateItemField('fuel', m.id, 'amount', numericValue)
+                              }}
+                              inputProps={{
+                                inputMode: 'numeric',
+                                pattern: '[0-9]*',
+                                style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                              }}
+                              disabled
+                            />
 
-                          {/* {m.subEquipments &&
+                            {/* {m.subEquipments &&
                             m.subEquipments?.map((detail, index) => (
                               <div key={index} className="flex gap-2 mt-1 items-center">
                                 <TextField
@@ -9195,63 +9173,65 @@ export default function DailyReportRegistrationView() {
                                 />
                               </div>
                             ))} */}
-                        </TableCell>
+                          </TableCell>
 
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
-                            <CommonFileInput
-                              acceptedExtensions={[
-                                'pdf',
-                                'txt',
-                                'rtf',
-                                'docx',
-                                'hwp',
-                                'xlsx',
-                                'csv',
-                                'ods',
-                                'pptx',
-                                'ppt',
-                                'odp',
-                                'jpg',
-                                'jpeg',
-                                'png',
-                                'gif',
-                                'tif',
-                                'tiff',
-                                'bmp',
-                                'zip',
-                                '7z',
-                                'mp3',
-                                'wav',
-                                'mp4',
-                                'mov',
-                                'avi',
-                                'wmv',
-                                'dwg',
-                              ]}
-                              multiple={false}
-                              files={m.files} // 각 항목별 files
-                              onChange={(newFiles) => {
-                                updateItemField('fuel', m.id, 'files', newFiles.slice(0, 1))
+                          <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                            <div className="px-2 p-2 w-full flex gap-2.5 items-center justify-center">
+                              <CommonFileInput
+                                acceptedExtensions={[
+                                  'pdf',
+                                  'txt',
+                                  'rtf',
+                                  'docx',
+                                  'hwp',
+                                  'xlsx',
+                                  'csv',
+                                  'ods',
+                                  'pptx',
+                                  'ppt',
+                                  'odp',
+                                  'jpg',
+                                  'jpeg',
+                                  'png',
+                                  'gif',
+                                  'tif',
+                                  'tiff',
+                                  'bmp',
+                                  'zip',
+                                  '7z',
+                                  'mp3',
+                                  'wav',
+                                  'mp4',
+                                  'mov',
+                                  'avi',
+                                  'wmv',
+                                  'dwg',
+                                ]}
+                                multiple={false}
+                                files={m.files} // 각 항목별 files
+                                onChange={(newFiles) => {
+                                  updateItemField('fuel', m.id, 'files', newFiles.slice(0, 1))
+                                }}
+                                uploadTarget="WORK_DAILY_REPORT"
+                              />
+                            </div>
+                          </TableCell>
+
+                          <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
+                            <TextField
+                              size="small"
+                              placeholder="500자 이하 텍스트 입력"
+                              onFocus={() => {
+                                setClearFuelOutsourcingNameFocusedId(null)
+                                setClearFuelCarNumberFocusedId(null)
                               }}
-                              uploadTarget="WORK_DAILY_REPORT"
+                              value={m.memo}
+                              onChange={(e) =>
+                                updateItemField('fuel', m.id, 'memo', e.target.value)
+                              }
                             />
-                          </div>
-                        </TableCell>
 
-                        <TableCell align="center" sx={{ border: '1px solid  #9CA3AF' }}>
-                          <TextField
-                            size="small"
-                            placeholder="500자 이하 텍스트 입력"
-                            onFocus={() => {
-                              setClearFuelOutsourcingNameFocusedId(null)
-                              setClearFuelCarNumberFocusedId(null)
-                            }}
-                            value={m.memo}
-                            onChange={(e) => updateItemField('fuel', m.id, 'memo', e.target.value)}
-                          />
-
-                          {/* {m.subEquipments &&
+                            {/* {m.subEquipments &&
                             m.subEquipments?.map((detail, index) => (
                               <div key={index} className="flex gap-2 mt-1 items-center">
                                 <TextField
@@ -9265,58 +9245,61 @@ export default function DailyReportRegistrationView() {
                                 />
                               </div>
                             ))} */}
-                        </TableCell>
+                          </TableCell>
 
-                        {/* 등록/수정일 (임시: Date.now 기준) */}
-                        <TableCell
-                          align="center"
-                          sx={{ border: '1px solid  #9CA3AF', width: '260px' }}
-                        >
-                          <CommonInput
-                            placeholder="-"
-                            value={m.modifyDate ?? ''}
-                            onChange={(value) => updateItemField('fuel', m.id, 'modifyDate', value)}
-                            disabled
-                            className="flex-1"
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
+                          {/* 등록/수정일 (임시: Date.now 기준) */}
+                          <TableCell
+                            align="center"
+                            sx={{ border: '1px solid  #9CA3AF', width: '260px' }}
+                          >
+                            <CommonInput
+                              placeholder="-"
+                              value={m.modifyDate ?? ''}
+                              onChange={(value) =>
+                                updateItemField('fuel', m.id, 'modifyDate', value)
+                              }
+                              disabled
+                              className="flex-1"
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
 
-                  <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
-                    <TableCell
-                      colSpan={6}
-                      align="right"
-                      sx={{
-                        border: '1px solid #9CA3AF',
-                        fontSize: '16px',
-                        textAlign: 'center',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      소계
-                    </TableCell>
-                    <TableCell
-                      align="center"
-                      sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
-                    >
-                      {getGasUseTotal().toLocaleString()}
-                    </TableCell>
-                    <TableCell
-                      align="center"
-                      sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
-                    >
-                      {getAmountTotal().toLocaleString()}
-                    </TableCell>
-                    <TableCell
-                      align="center"
-                      colSpan={3}
-                      sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
-                    ></TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+                    <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
+                      <TableCell
+                        colSpan={6}
+                        align="right"
+                        sx={{
+                          border: '1px solid #9CA3AF',
+                          fontSize: '16px',
+                          textAlign: 'center',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        소계
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                      >
+                        {getGasUseTotal().toLocaleString()}
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                      >
+                        {getAmountTotal().toLocaleString()}
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        colSpan={4}
+                        sx={{ border: '1px solid #9CA3AF', fontSize: '16px', fontWeight: 'bold' }}
+                      ></TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
 
               {fuelFetching && <div className="p-2 text-center">불러오는 중...</div>}
             </TableContainer>

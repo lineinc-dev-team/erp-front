@@ -75,8 +75,8 @@ export default function useOutSourcingContract() {
           search.arraySort === '최신순'
             ? 'id,desc'
             : search.arraySort === '오래된순'
-            ? 'id.asc'
-            : 'id.asc',
+            ? 'id,asc'
+            : 'id,asc',
       }
 
       const filteredParams = Object.fromEntries(

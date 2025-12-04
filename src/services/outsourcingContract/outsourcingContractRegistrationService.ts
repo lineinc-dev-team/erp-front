@@ -168,7 +168,7 @@ export async function GetCompanyNameInfoService({
   pageParam = 0,
   size = 200,
   keyword = '',
-  sort = 'name, asc',
+  sort = 'name,asc',
   type = '',
   outsourcingCompanyId = 0,
 }) {

@@ -151,7 +151,7 @@ export async function MaterialExcelDownload({
 export async function MaterialSearchTypeService({
   pageParam = 0,
   size = 40,
-  sort = 'name, asc',
+  sort = 'name,asc',
   keyword = '',
 }) {
   const resData = await fetch(
