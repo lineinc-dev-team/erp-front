@@ -10,7 +10,7 @@ import {
   Paper,
   Button,
 } from '@mui/material'
-import * as XLSX from 'xlsx'
+import * as XLSX from 'xlsx-js-style'
 import { saveAs } from 'file-saver'
 import { useFinalAggregationSearchStore } from '@/stores/finalAggregationStore'
 import useFinalAggregationView from '@/hooks/useFinalAggregation'
@@ -43,9 +43,8 @@ export default function AggregateLaborPayRollView() {
   // ✅ 두 데이터 합치기
   const allData = [...directData, ...outsourcingData]
 
-  // ✅ 값 포맷팅 함수
   const formatValue = (value: any) => {
-    if (value === null || value === undefined || value === '') return '-'
+    if (value === null || value === undefined || value === ' ') return ' '
     if (typeof value === 'number' && !isNaN(value)) return value
     return value
   }
@@ -56,7 +55,6 @@ export default function AggregateLaborPayRollView() {
     return num.toLocaleString()
   }
 
-  // ✅ 백엔드 데이터를 UI용으로 변환
   const rows = allData.map((item: any, idx: number) => {
     const labor = item.labor || {}
     const days = Array.from({ length: 31 }, (_, i) =>
@@ -135,7 +133,10 @@ export default function AggregateLaborPayRollView() {
   )
 
   const handleExcelDownload = () => {
-    const headers = [
+    // -------------------------------
+    // ▶ 헤더 2줄 구성
+    // -------------------------------
+    const headerRow1: string[] = [
       'No',
       '성명',
       '주민번호',
@@ -144,8 +145,7 @@ export default function AggregateLaborPayRollView() {
       '주소',
       '주작업',
       '일당',
-      ...Array.from({ length: 16 }, (_, i) => `${i + 1}`),
-      ...Array.from({ length: 15 }, (_, i) => `${i + 17}`),
+      ...Array.from({ length: 15 }, (_, i) => `${i + 1}`),
       '총 공수',
       '총 일수',
       '노무비 총액',
@@ -163,11 +163,43 @@ export default function AggregateLaborPayRollView() {
       '예금주',
     ]
 
+    const headerRow2: string[] = [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      ...Array.from({ length: 16 }, (_, i) => `${i + 1}`),
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+    ]
+
+    const testArray = []
+    testArray.push(...headerRow1, ...headerRow2)
+    // -------------------------------
+    // ▶ Excel 데이터 준비
+    // -------------------------------
     const excelData: any[] = []
 
-    // 데이터 행
-    rows.forEach((r: any) => {
-      // 첫 번째 행: 1~16일
+    rows.forEach((r) => {
+      // 1행: 1~15일 + 총공수 등
       excelData.push({
         No: r.no,
         성명: r.name,
@@ -177,8 +209,7 @@ export default function AggregateLaborPayRollView() {
         주소: r.address,
         주작업: r.mainWork,
         일당: formatNumber(r.salary),
-        ...Object.fromEntries(r.days.slice(0, 16).map((v: any, i: number) => [`${i + 1}`, v])),
-        ...Object.fromEntries(Array.from({ length: 15 }, (_, i) => [`${i + 17}`, ''])),
+        ...Object.fromEntries(r.days.map((v, i) => [`일${i + 1}`, i < 15 ? v : ''])),
         '총 공수': r.totalWork,
         '총 일수': r.totalDays,
         '노무비 총액': r.totalLaborCost,
@@ -196,7 +227,7 @@ export default function AggregateLaborPayRollView() {
         예금주: r.accountName,
       })
 
-      // 두 번째 행: 17~31일
+      // 2행: 16~31일
       excelData.push({
         No: '',
         성명: '',
@@ -206,8 +237,7 @@ export default function AggregateLaborPayRollView() {
         주소: '',
         주작업: '',
         일당: '',
-        ...Object.fromEntries(Array.from({ length: 16 }, (_, i) => [`${i + 1}`, ''])),
-        ...Object.fromEntries(r.days.slice(16, 31).map((v: any, i: number) => [`${i + 17}`, v])),
+        ...Object.fromEntries(r.days.map((v, i) => [`일${i + 1}`, i >= 15 ? v : ''])),
         '총 공수': '',
         '총 일수': '',
         '노무비 총액': '',
@@ -226,89 +256,39 @@ export default function AggregateLaborPayRollView() {
       })
     })
 
-    // 소계 행
-    const sumRow1: any = {
-      No: '',
-      성명: '소계',
-      주민번호: '',
-      직종: '',
-      팀명칭: '',
-      주소: '',
-      주작업: '',
-      일당: '',
-      ...Object.fromEntries(
-        Array.from({ length: 16 }, (_, i) => [
-          `${i + 1}`,
-          rows.reduce((acc: any, r: any) => acc + (Number(r.days[i]) || 0), 0),
-        ]),
-      ),
-      ...Object.fromEntries(Array.from({ length: 15 }, (_, i) => [`${i + 17}`, ''])),
-      '총 공수': sum.totalWork,
-      '총 일수': sum.totalDays,
-      '노무비 총액': sum.totalLaborCost,
-      소득세: sum.incomeTax,
-      주민세: sum.residentTax,
-      고용보험: sum.employmentInsurance,
-      국민연금: sum.nationalPension,
-      건강보험: sum.healthInsurance,
-      장기요양: sum.longTermCare,
-      공제합계: sum.deductionTotal,
-      차감지급액: sum.payAfterDeduction,
-      휴대전화: '',
-      은행명: '',
-      계좌번호: '',
-      예금주: '',
-    }
+    const ws = XLSX.utils.json_to_sheet(excelData, { header: testArray })
 
-    const sumRow2: any = {
-      No: '',
-      성명: '',
-      주민번호: '',
-      직종: '',
-      팀명칭: '',
-      주소: '',
-      주작업: '',
-      일당: '',
-      ...Object.fromEntries(Array.from({ length: 16 }, (_, i) => [`${i + 1}`, ''])),
-      ...Object.fromEntries(
-        Array.from({ length: 15 }, (_, i) => [
-          `${i + 17}`,
-          rows.reduce((acc: any, r: any) => acc + (Number(r.days[i + 16]) || 0), 0),
-        ]),
-      ),
-      '총 공수': '',
-      '총 일수': '',
-      '노무비 총액': '',
-      소득세: '',
-      주민세: '',
-      고용보험: '',
-      국민연금: '',
-      건강보험: '',
-      장기요양: '',
-      공제합계: '',
-      차감지급액: '',
-      휴대전화: '',
-      은행명: '',
-      계좌번호: '',
-      예금주: '',
-    }
+    // -------------------------------
+    // ▶ 헤더 병합
+    // -------------------------------
+    ws['!merges'] = [
+      // No~일당은 rowspan 2
+      { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
+      { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } },
+      { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } },
+      { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } },
+      { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } },
+      { s: { r: 0, c: 5 }, e: { r: 1, c: 5 } },
+      { s: { r: 0, c: 6 }, e: { r: 1, c: 6 } },
+      { s: { r: 0, c: 7 }, e: { r: 1, c: 7 } },
+      // 1~31일은 2줄 헤더 그대로
+      ...Array.from({ length: 31 }, (_, i) => ({ s: { r: 0, c: 8 + i }, e: { r: 0, c: 8 + i } })),
+      // 총공수~예금주 rowspan 2
+      ...Array.from({ length: 15 }, (_, i) => ({ s: { r: 0, c: 39 + i }, e: { r: 1, c: 39 + i } })),
+    ]
 
-    excelData.push(sumRow1)
-    excelData.push(sumRow2)
-
-    const worksheet = XLSX.utils.json_to_sheet(excelData, { header: headers })
     const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, '노무비대장')
-
+    XLSX.utils.book_append_sheet(workbook, ws, '노무비명세서')
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
-    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' })
-    saveAs(blob, '노무비명세서.xlsx')
+    saveAs(new Blob([excelBuffer], { type: 'application/octet-stream' }), '노무비명세서.xlsx')
   }
 
   const cellStyle = {
     border: '1px solid #9ca3af',
     padding: '4px 6px',
     whiteSpace: 'nowrap',
+    minWidth: 40,
+    height: 30,
   }
 
   const headerStyle = {
@@ -358,11 +338,12 @@ export default function AggregateLaborPayRollView() {
                   {h}
                 </TableCell>
               ))}
-              {Array.from({ length: 16 }, (_, i) => i + 1).map((d) => (
-                <TableCell key={d} sx={headerStyle}>
-                  {d}
+              {Array.from({ length: 16 }, (_, i) => (
+                <TableCell key={i} sx={headerStyle}>
+                  {i === 15 ? '' : i + 1}
                 </TableCell>
               ))}
+
               {[
                 '총 공수',
                 '총 일수',
@@ -370,9 +351,12 @@ export default function AggregateLaborPayRollView() {
                 '소득세',
                 '주민세',
                 '고용보험',
-                '국민연금',
                 '건강보험',
+
                 '장기요양',
+
+                '국민연금',
+
                 '공제합계',
                 '차감지급액',
                 '휴대전화',
@@ -387,7 +371,7 @@ export default function AggregateLaborPayRollView() {
             </TableRow>
 
             <TableRow>
-              {Array.from({ length: 15 }, (_, i) => i + 17).map((d) => (
+              {Array.from({ length: 16 }, (_, i) => i + 16).map((d) => (
                 <TableCell key={d} sx={headerStyle}>
                   {d}
                 </TableCell>
@@ -425,12 +409,14 @@ export default function AggregateLaborPayRollView() {
                     {formatNumber(r.salary)}
                   </TableCell>
 
-                  {/* 날짜 1~16일 */}
-                  {r.days.slice(0, 16).map((v: any, i: number) => (
+                  {/* 날짜 1~16일 (16번째 칸은 빈칸) */}
+                  {r.days.slice(0, 15).map((v: any, i: number) => (
                     <TableCell key={`day1-${i}`} align="center" sx={cellStyle}>
                       {v}
                     </TableCell>
                   ))}
+                  {/* 15뒤에 빈칸 */}
+                  <TableCell key="day1-empty" align="center" sx={cellStyle}></TableCell>
 
                   {/* 총 공수, 총 일수 등 */}
                   <TableCell align="center" rowSpan={2} sx={cellStyle}>
@@ -451,15 +437,17 @@ export default function AggregateLaborPayRollView() {
                   <TableCell align="right" rowSpan={2} sx={cellStyle}>
                     {formatNumber(r.employmentInsurance)}
                   </TableCell>
-                  <TableCell align="right" rowSpan={2} sx={cellStyle}>
-                    {formatNumber(r.nationalPension)}
-                  </TableCell>
+
                   <TableCell align="right" rowSpan={2} sx={cellStyle}>
                     {formatNumber(r.healthInsurance)}
                   </TableCell>
                   <TableCell align="right" rowSpan={2} sx={cellStyle}>
                     {formatNumber(r.longTermCare)}
                   </TableCell>
+                  <TableCell align="right" rowSpan={2} sx={cellStyle}>
+                    {formatNumber(r.nationalPension)}
+                  </TableCell>
+
                   <TableCell align="right" rowSpan={2} sx={cellStyle}>
                     {formatNumber(r.deductionTotal)}
                   </TableCell>
@@ -482,7 +470,7 @@ export default function AggregateLaborPayRollView() {
 
                 {/* 두 번째 행: 17~31일 */}
                 <TableRow>
-                  {r.days.slice(16, 31).map((v: any, i: number) => (
+                  {r.days.slice(16, 32).map((v: any, i: number) => (
                     <TableCell key={`day2-${i}`} align="center" sx={cellStyle}>
                       {v}
                     </TableCell>
@@ -497,14 +485,18 @@ export default function AggregateLaborPayRollView() {
                 소계
               </TableCell>
 
-              {/* 날짜 1~16일 합계 */}
-              {Array.from({ length: 16 }, (_, i) => (
+              {Array.from({ length: 15 }, (_, i) => (
                 <TableCell key={`sum-day1-${i}`} align="center" sx={cellStyle}>
                   {formatNumber(
                     rows.reduce((acc: any, r: any) => acc + (Number(r.days[i]) || 0), 0),
                   )}
                 </TableCell>
               ))}
+
+              {/* 마지막 16번째 칸은 빈칸 */}
+              <TableCell key="sum-day1-empty" align="center" sx={cellStyle}>
+                {' '}
+              </TableCell>
 
               {/* 총 공수, 총 일수 등 */}
               <TableCell align="center" rowSpan={2} sx={cellStyle}>
@@ -526,13 +518,13 @@ export default function AggregateLaborPayRollView() {
                 {formatNumber(sum.employmentInsurance)}
               </TableCell>
               <TableCell align="right" rowSpan={2} sx={cellStyle}>
-                {formatNumber(sum.nationalPension)}
-              </TableCell>
-              <TableCell align="right" rowSpan={2} sx={cellStyle}>
                 {formatNumber(sum.healthInsurance)}
               </TableCell>
               <TableCell align="right" rowSpan={2} sx={cellStyle}>
                 {formatNumber(sum.longTermCare)}
+              </TableCell>
+              <TableCell align="right" rowSpan={2} sx={cellStyle}>
+                {formatNumber(sum.nationalPension)}
               </TableCell>
               <TableCell align="right" rowSpan={2} sx={cellStyle}>
                 {formatNumber(sum.deductionTotal)}
@@ -545,12 +537,12 @@ export default function AggregateLaborPayRollView() {
               <TableCell align="center" colSpan={4} rowSpan={2} sx={cellStyle}></TableCell>
             </TableRow>
 
-            {/* 날짜 17~31일 합계 */}
+            {/* 날짜 16~31일 합계 */}
             <TableRow sx={{ backgroundColor: '#f9fafb', fontWeight: 'bold' }}>
-              {Array.from({ length: 15 }, (_, i) => (
+              {Array.from({ length: 16 }, (_, i) => (
                 <TableCell key={`sum-day2-${i}`} align="center" sx={cellStyle}>
                   {formatNumber(
-                    rows.reduce((acc: any, r: any) => acc + (Number(r.days[i + 16]) || 0), 0),
+                    rows.reduce((acc: any, r: any) => acc + (Number(r.days[i + 15]) || 0), 0),
                   )}
                 </TableCell>
               ))}
