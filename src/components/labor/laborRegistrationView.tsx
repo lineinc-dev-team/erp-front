@@ -273,6 +273,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     if (form.type === 'OUTSOURCING_CONTRACT' || form.type === 'OUTSOURCING') {
       setField('accountNumber', selectedUser.accountNumber)
       setField('accountHolder', selectedUser.accountHolder)
+      setField('bankName', selectedUser.bankName)
     }
   }
 
@@ -757,6 +758,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                     setField('typeDescription', '')
                     setField('accountNumber', '')
                     setField('accountHolder', '')
+                    setField('bankName', '')
                     setField('outsourcingCompanyName', '')
                     setField('outsourcingCompanyContractName', '')
                   }}
@@ -810,6 +812,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                     setField('outsourcingCompanyId', 0)
                     setField('accountNumber', '')
                     setField('accountHolder', '')
+                    setField('bankName', '')
                   }
                 }}
                 items={outsourcingList}
