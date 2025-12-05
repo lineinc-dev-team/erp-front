@@ -875,7 +875,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                 </TableCell>
               </TableRow>
               {/* 입고 소계 */}
-              <TableRow sx={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
+              <TableRow sx={{ backgroundColor: '#e0e0e0', fontWeight: 'bold' }}>
                 <TableCell colSpan={2} align="center" sx={{ border: '1px solid #999' }}>
                   소계
                 </TableCell>
@@ -925,7 +925,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                 </TableCell>
               </TableRow>
               {/* 출고 소계 */}
-              <TableRow sx={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
+              <TableRow sx={{ backgroundColor: '#e0e0e0', fontWeight: 'bold' }}>
                 <TableCell colSpan={2} align="center" sx={{ border: '1px solid #999' }}>
                   소계
                 </TableCell>
