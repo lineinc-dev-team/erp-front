@@ -398,6 +398,12 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
         const isOnSiteStock = form.type === 'ON_SITE_STOCK'
         const isScrap = form.type === 'SCRAP'
 
+        // 날짜 유효성 검사
+        if (activeTab === 'INCOMING' && !item.incomingDate) return '입고일을 선택해주세요.'
+        if (activeTab === 'OUTGOING' && !item.outgoingDate) return '출고일을 선택해주세요.'
+
+        if (activeTab === 'SCRAP' && !item.outgoingDate) return '판매일을 선택해주세요.'
+
         // 품명
         if (!item.name?.trim()) return '품명을 입력해주세요.'
 
@@ -1280,7 +1286,7 @@ export default function ManagementSteelRegistrationView({ isEditMode = false }) 
                         inputProps={{
                           style: { textAlign: 'center' },
                         }}
-                        disabled={m.isModifyType === false}
+                        disabled
                       />
                     </TableCell>
                     {/* 규격 */}
