@@ -11,7 +11,6 @@ import {
   Button,
 } from '@mui/material'
 import * as XLSX from 'xlsx-js-style'
-import { saveAs } from 'file-saver'
 import { useFinalAggregationSearchStore } from '@/stores/finalAggregationStore'
 import useFinalAggregationView from '@/hooks/useFinalAggregation'
 import { myInfoProps } from '@/types/user'
@@ -133,10 +132,10 @@ export default function AggregateLaborPayRollView() {
   )
 
   const handleExcelDownload = () => {
-    // -------------------------------
-    // ▶ 헤더 2줄 구성
-    // -------------------------------
-    const headerRow1: string[] = [
+    const dateColumns = Array.from({ length: 31 }, (_, i) => i + 1)
+
+    // header
+    const headerRow1 = [
       'No',
       '성명',
       '주민번호',
@@ -145,16 +144,17 @@ export default function AggregateLaborPayRollView() {
       '주소',
       '주작업',
       '일당',
-      ...Array.from({ length: 15 }, (_, i) => `${i + 1}`),
+      ...dateColumns.slice(0, 15),
+      '',
       '총 공수',
       '총 일수',
       '노무비 총액',
       '소득세',
       '주민세',
       '고용보험',
-      '국민연금',
       '건강보험',
       '장기요양',
+      '국민연금',
       '공제합계',
       '차감지급액',
       '휴대전화',
@@ -162,107 +162,83 @@ export default function AggregateLaborPayRollView() {
       '계좌번호',
       '예금주',
     ]
+    const headerRow2 = [...Array(8).fill(''), ...dateColumns.slice(16, 31), ...Array(14).fill('')]
 
-    const headerRow2: string[] = [
+    const formatNumberWithComma = (num: number | string) => {
+      const n = Number(num) || 0
+      return n.toLocaleString() // , 구분
+    }
+
+    const dataRows: any[][] = []
+
+    rows.forEach((r) => {
+      const row1 = [
+        r.no,
+        r.name,
+        r.id,
+        r.job,
+        r.team,
+        r.address,
+        r.mainWork,
+        formatNumberWithComma(r.salary),
+        ...r.days.slice(0, 15),
+        '',
+        formatNumberWithComma(r.totalWork),
+        formatNumberWithComma(r.totalDays),
+        formatNumberWithComma(r.totalLaborCost),
+        formatNumberWithComma(r.incomeTax),
+        formatNumberWithComma(r.residentTax),
+        formatNumberWithComma(r.employmentInsurance),
+        formatNumberWithComma(r.healthInsurance),
+        formatNumberWithComma(r.longTermCare),
+        formatNumberWithComma(r.nationalPension),
+        formatNumberWithComma(r.deductionTotal),
+        formatNumberWithComma(r.payAfterDeduction),
+        r.phone,
+        r.bank,
+        r.account,
+        r.accountName,
+      ]
+      const row2 = [...Array(8).fill(''), ...r.days.slice(16, 31), ...Array(14).fill('')]
+      dataRows.push(row1, row2)
+    })
+
+    const sumRow1 = [
+      '소계',
+      ...Array(7).fill(''),
+      ...Array.from({ length: 15 }, (_, i) =>
+        formatNumberWithComma(rows.reduce((acc, r) => acc + (Number(r.days[i]) || 0), 0)),
+      ),
       '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      ...Array.from({ length: 16 }, (_, i) => `${i + 1}`),
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
+      formatNumberWithComma(sum.totalWork),
+      formatNumberWithComma(sum.totalDays),
+      formatNumberWithComma(sum.totalLaborCost),
+      formatNumberWithComma(sum.incomeTax),
+      formatNumberWithComma(sum.residentTax),
+      formatNumberWithComma(sum.employmentInsurance),
+      formatNumberWithComma(sum.healthInsurance),
+      formatNumberWithComma(sum.longTermCare),
+      formatNumberWithComma(sum.nationalPension),
+      formatNumberWithComma(sum.deductionTotal),
+      formatNumberWithComma(sum.payAfterDeduction),
       '',
       '',
       '',
       '',
     ]
+    const sumRow2 = [
+      ...Array(8).fill(''),
+      ...Array.from({ length: 16 }, (_, i) =>
+        formatNumberWithComma(rows.reduce((acc, r) => acc + (Number(r.days[i + 15]) || 0), 0)),
+      ),
+      ...Array(14).fill(''),
+    ]
 
-    const testArray = []
-    testArray.push(...headerRow1, ...headerRow2)
-    // -------------------------------
-    // ▶ Excel 데이터 준비
-    // -------------------------------
-    const excelData: any[] = []
+    const sheetAoA = [headerRow1, headerRow2, ...dataRows, sumRow1, sumRow2]
+    const worksheet = XLSX.utils.aoa_to_sheet(sheetAoA)
 
-    rows.forEach((r) => {
-      // 1행: 1~15일 + 총공수 등
-      excelData.push({
-        No: r.no,
-        성명: r.name,
-        주민번호: r.id,
-        직종: r.job,
-        팀명칭: r.team,
-        주소: r.address,
-        주작업: r.mainWork,
-        일당: formatNumber(r.salary),
-        ...Object.fromEntries(r.days.map((v, i) => [`일${i + 1}`, i < 15 ? v : ''])),
-        '총 공수': r.totalWork,
-        '총 일수': r.totalDays,
-        '노무비 총액': r.totalLaborCost,
-        소득세: r.incomeTax,
-        주민세: r.residentTax,
-        고용보험: r.employmentInsurance,
-        국민연금: r.nationalPension,
-        건강보험: r.healthInsurance,
-        장기요양: r.longTermCare,
-        공제합계: r.deductionTotal,
-        차감지급액: r.payAfterDeduction,
-        휴대전화: r.phone,
-        은행명: r.bank,
-        계좌번호: r.account,
-        예금주: r.accountName,
-      })
-
-      // 2행: 16~31일
-      excelData.push({
-        No: '',
-        성명: '',
-        주민번호: '',
-        직종: '',
-        팀명칭: '',
-        주소: '',
-        주작업: '',
-        일당: '',
-        ...Object.fromEntries(r.days.map((v, i) => [`일${i + 1}`, i >= 15 ? v : ''])),
-        '총 공수': '',
-        '총 일수': '',
-        '노무비 총액': '',
-        소득세: '',
-        주민세: '',
-        고용보험: '',
-        국민연금: '',
-        건강보험: '',
-        장기요양: '',
-        공제합계: '',
-        차감지급액: '',
-        휴대전화: '',
-        은행명: '',
-        계좌번호: '',
-        예금주: '',
-      })
-    })
-
-    const ws = XLSX.utils.json_to_sheet(excelData, { header: testArray })
-
-    // -------------------------------
-    // ▶ 헤더 병합
-    // -------------------------------
-    ws['!merges'] = [
-      // No~일당은 rowspan 2
+    // 병합
+    worksheet['!merges'] = [
       { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
       { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } },
       { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } },
@@ -271,16 +247,77 @@ export default function AggregateLaborPayRollView() {
       { s: { r: 0, c: 5 }, e: { r: 1, c: 5 } },
       { s: { r: 0, c: 6 }, e: { r: 1, c: 6 } },
       { s: { r: 0, c: 7 }, e: { r: 1, c: 7 } },
-      // 1~31일은 2줄 헤더 그대로
-      ...Array.from({ length: 31 }, (_, i) => ({ s: { r: 0, c: 8 + i }, e: { r: 0, c: 8 + i } })),
-      // 총공수~예금주 rowspan 2
-      ...Array.from({ length: 15 }, (_, i) => ({ s: { r: 0, c: 39 + i }, e: { r: 1, c: 39 + i } })),
+      { s: { r: sheetAoA.length - 2, c: 0 }, e: { r: sheetAoA.length - 1, c: 7 } },
+
+      // { s: { r: 2, c: 0 }, e: { r: 3, c: 0 } },
+      // { s: { r: 2, c: 1 }, e: { r: 3, c: 1 } },
+
+      { s: { r: 0, c: 24 }, e: { r: 1, c: 24 } },
+      { s: { r: 0, c: 25 }, e: { r: 1, c: 25 } },
+      { s: { r: 0, c: 26 }, e: { r: 1, c: 26 } },
+      { s: { r: 0, c: 27 }, e: { r: 1, c: 27 } },
+      { s: { r: 0, c: 28 }, e: { r: 1, c: 28 } },
+      { s: { r: 0, c: 29 }, e: { r: 1, c: 29 } },
+      { s: { r: 0, c: 30 }, e: { r: 1, c: 30 } },
+      { s: { r: 0, c: 31 }, e: { r: 1, c: 31 } },
+      { s: { r: 0, c: 32 }, e: { r: 1, c: 32 } },
+      { s: { r: 0, c: 33 }, e: { r: 1, c: 33 } },
+      { s: { r: 0, c: 34 }, e: { r: 1, c: 34 } },
+      { s: { r: 0, c: 35 }, e: { r: 1, c: 35 } },
+      { s: { r: 0, c: 36 }, e: { r: 1, c: 36 } },
+      { s: { r: 0, c: 37 }, e: { r: 1, c: 37 } },
+      { s: { r: 0, c: 38 }, e: { r: 1, c: 38 } },
+      { s: { r: sheetAoA.length - 2, c: 24 }, e: { r: sheetAoA.length - 1, c: 24 } },
+      { s: { r: sheetAoA.length - 2, c: 25 }, e: { r: sheetAoA.length - 1, c: 25 } },
+      { s: { r: sheetAoA.length - 2, c: 26 }, e: { r: sheetAoA.length - 1, c: 26 } },
+      { s: { r: sheetAoA.length - 2, c: 27 }, e: { r: sheetAoA.length - 1, c: 27 } },
+      { s: { r: sheetAoA.length - 2, c: 28 }, e: { r: sheetAoA.length - 1, c: 28 } },
+      { s: { r: sheetAoA.length - 2, c: 29 }, e: { r: sheetAoA.length - 1, c: 29 } },
+      { s: { r: sheetAoA.length - 2, c: 30 }, e: { r: sheetAoA.length - 1, c: 30 } },
+      { s: { r: sheetAoA.length - 2, c: 31 }, e: { r: sheetAoA.length - 1, c: 31 } },
+      { s: { r: sheetAoA.length - 2, c: 32 }, e: { r: sheetAoA.length - 1, c: 32 } },
+      { s: { r: sheetAoA.length - 2, c: 33 }, e: { r: sheetAoA.length - 1, c: 33 } },
+      { s: { r: sheetAoA.length - 2, c: 34 }, e: { r: sheetAoA.length - 1, c: 34 } },
+      { s: { r: sheetAoA.length - 2, c: 35 }, e: { r: sheetAoA.length - 1, c: 38 } },
     ]
 
+    const range = XLSX.utils.decode_range(worksheet['!ref'] ?? '')
+    const totalRowStart = sheetAoA.length - 2
+    const totalRowEnd = sheetAoA.length - 1
+
+    const amountCols = [7, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34]
+
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cellRef = XLSX.utils.encode_cell({ r: R, c: C })
+        if (!worksheet[cellRef]) worksheet[cellRef] = { v: '' }
+
+        const isHeader = R < 2
+        const isTotalRow = R === totalRowStart || R === totalRowEnd
+        const isRightAlign = amountCols.includes(C)
+
+        worksheet[cellRef].s = {
+          border: {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } },
+          },
+          fill:
+            isHeader || isTotalRow
+              ? { patternType: 'solid', fgColor: { rgb: 'C0C0C0' } }
+              : undefined,
+          alignment: {
+            vertical: 'center',
+            horizontal: isRightAlign ? 'right' : 'center',
+          },
+        }
+      }
+    }
+
     const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, ws, '노무비명세서')
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
-    saveAs(new Blob([excelBuffer], { type: 'application/octet-stream' }), '노무비명세서.xlsx')
+    XLSX.utils.book_append_sheet(workbook, worksheet, '노무비명세서')
+    XLSX.writeFile(workbook, '노무비명세서.xlsx')
   }
 
   const cellStyle = {
