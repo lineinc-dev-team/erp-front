@@ -1026,6 +1026,11 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     if (!form.type?.trim()) return '구분을 입력하세요.'
     if (form.type === 'ETC' && !form.typeDescription?.trim())
       return '구분 상세 내용을 입력해주세요.'
+
+    if (form.type === 'CONSTRUCTION' && !form.contractName?.trim()) {
+      return '계약명을 입력해주세요.'
+    }
+
     if (!form.contractStartDate) return '계약 시작일을 입력해주세요.'
     if (!form.contractEndDate) return '계약 종료일을 입력해주세요.'
     if (
