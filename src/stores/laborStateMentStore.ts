@@ -186,9 +186,10 @@ export const useLaborSummaryFormStore = create<LaborSummaryStore>((set, get) => 
             company,
             name,
             idNumber,
+            address,
+
             accountHolder,
             accountNumber,
-            address,
             bankName,
             detailAddress,
 
