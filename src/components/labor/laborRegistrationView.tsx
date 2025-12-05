@@ -501,7 +501,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     }
   }, [form.residentNumber])
 
-  function validateClientForm(form: LaborFormState, value: any) {
+  function validateClientForm(form: LaborFormState) {
     if (!form.type?.trim()) return '구분을 선택하세요.'
     if (
       (form.type === 'ETC' || form.type === 'DIRECT_REGISTRATION') &&
@@ -524,20 +524,6 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     if (!form.name?.trim()) return '이름을 입력하세요.'
 
     if (!form.residentNumber?.trim()) return '주민등록번호를 입력하세요.'
-
-    const front = value.slice(0, 6) // 앞자리 6자리
-    if (!/^\d{6}$/.test(front)) return '주민등록번호 앞자리는 숫자 6자리여야 합니다.'
-
-    const month = parseInt(front.slice(2, 4), 10)
-    const day = parseInt(front.slice(4, 6), 10)
-
-    // 월/일 유효성 체크
-    if (month < 1 || month > 12) return '주민등록번호 월 정보가 올바르지 않습니다.'
-    if (day < 1 || day > 31) return '주민등록번호 일이 올바르지 않습니다.'
-
-    // 간단한 월별 일수 체크 (2월 윤년 제외)
-    const monthDays = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-    if (day > monthDays[month - 1]) return '주민등록번호 일이 올바르지 않습니다.'
 
     if (!form.residentNumber.includes('*')) {
       const digits = form.residentNumber.replace(/[^0-9]/g, '')
@@ -627,7 +613,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
   }
 
   const handleLaborSubmit = () => {
-    const errorMsg = validateClientForm(form, form.residentNumber)
+    const errorMsg = validateClientForm(form)
     if (errorMsg) {
       showSnackbar(errorMsg, 'warning')
       return
@@ -895,6 +881,11 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                 onChange={(val) => {
                   setField('residentNumber', val)
                   setField('residentNumberIsCheck', true)
+
+                  // 주민번호가 없으면 외국인 이름 초기화
+                  if (!val || val.trim() === '') {
+                    setField('foreignName', '')
+                  }
                 }}
                 className="flex-1"
               />
@@ -903,15 +894,40 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                 variant="secondary"
                 className="bg-gray-400 text-white px-3 rounded"
                 onClick={async () => {
-                  if (!form.residentNumber?.trim()) {
-                    showSnackbar('주민등록번호를 입력해주세요.', 'success')
+                  const residentNumber = form.residentNumber?.trim()
+                  if (!residentNumber) {
+                    showSnackbar('주민등록번호를 입력해주세요.', 'warning')
                     return
                   }
 
-                  try {
-                    const result = await CheckReSidentNumberService(form.residentNumber)
+                  const front = residentNumber.slice(0, 6) // 앞자리 6자리 (YYMMDD)
 
-                    lastCheckedNumber.current = form.residentNumber
+                  // 1. 숫자 6자리인지 확인
+                  if (!/^\d{6}$/.test(front)) {
+                    showSnackbar('주민등록번호 앞자리는 숫자 6자리여야 합니다.', 'warning')
+                    return
+                  }
+
+                  // 2. 생년월일 유효성 체크
+                  const year = parseInt(front.slice(0, 2), 10)
+                  const month = parseInt(front.slice(2, 4), 10)
+                  const day = parseInt(front.slice(4, 6), 10)
+
+                  if (month < 1 || month > 12) {
+                    showSnackbar('유효하지 않은 생년월일입니다. 월을 확인해주세요.', 'warning')
+                    return
+                  }
+
+                  const daysInMonth = new Date(year + 2000, month, 0).getDate() // 윤년 계산 포함
+                  if (day < 1 || day > daysInMonth) {
+                    showSnackbar('유효하지 않은 생년월일입니다. 일을 확인해주세요.', 'warning')
+                    return
+                  }
+
+                  // 3. 생년월일이 유효하면 중복 확인
+                  try {
+                    const result = await CheckReSidentNumberService(residentNumber)
+                    lastCheckedNumber.current = residentNumber
 
                     if (result.data.isDuplicate) {
                       setIsDuplicateChecked(false)
