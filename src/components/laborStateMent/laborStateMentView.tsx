@@ -71,7 +71,8 @@ export default function LaborStateMentView() {
         ...col,
         headerAlign: 'center',
         align: 'center',
-        flex: 2,
+        minWidth: 80,
+        maxWidth: 80,
         renderCell: (params: GridRenderCellParams) => {
           const text = params.value as string
           if (!text) return <span style={{ fontSize: 12 }}>-</span>
@@ -119,12 +120,68 @@ export default function LaborStateMentView() {
         },
       }
     }
+
+    if (col.field === 'totalNetPayment') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 120,
+      }
+    }
+
+    if (col.field === 'totalDeductions') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 120,
+      }
+    }
+
+    if (col.field === 'totalLaborCost') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 120,
+      }
+    }
+
+    if (col.field === 'outsourcingCount') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 120,
+      }
+    }
+
+    if (col.field === 'yearMonth') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 120,
+      }
+    }
+
+    if (col.field === 'directContractCount') {
+      return {
+        ...col,
+        headerAlign: 'center',
+        align: 'center',
+        minWidth: 120,
+      }
+    }
+
     if (col.field === 'no') {
       return {
         ...col,
         headerAlign: 'center',
         align: 'center',
-        flex: 0.5,
+        minWidth: 40,
+        maxWidth: 40,
         renderCell: (params: GridRenderCellParams) => {
           const sortedRowIds = params.api.getSortedRowIds?.() ?? []
           const indexInCurrentPage = sortedRowIds.indexOf(params.id)
@@ -200,6 +257,13 @@ export default function LaborStateMentView() {
   // "계정 관리" 메뉴에 대한 권한
   const { hasModify, hasExcelDownload } = useMenuPermission(roleId, '노무명세서 관리', enabled)
 
+  const handleEnterKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      search.setField('currentPage', 1) // 페이지 초기화
+      search.handleSearch()
+    }
+  }
+
   return (
     <>
       <div className="border-10 border-gray-400 p-4">
@@ -208,7 +272,10 @@ export default function LaborStateMentView() {
             <label className="w-[144px] text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
               현장명
             </label>
-            <div className="border border-gray-400 w-full flex items-center">
+            <div
+              className="border border-gray-400 w-full flex items-center"
+              onKeyDown={handleEnterKey}
+            >
               <InfiniteScrollSelect
                 placeholder="현장명을 입력하세요"
                 keyword={search.siteName}
