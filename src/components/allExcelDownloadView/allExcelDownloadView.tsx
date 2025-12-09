@@ -1463,8 +1463,371 @@ export default function AllExcelDownloadView({
     }
   }
 
+  // 장비가동현황 엑셀 다운로드
+
+  const { EquipmentStatusLaborCostListQuery } = useFinalAggregationView({
+    yearMonth: search.yearMonth,
+    siteId: search.siteId,
+    siteProcessId: search.siteProcessId,
+    tabName: 'EQUIPMENT_OPERATION',
+  })
+
+  const { WeatherInfoListQuery } = useFinalAggregationView({
+    yearMonth: search.yearMonth,
+    siteId: search.siteId,
+    siteProcessId: search.siteProcessId,
+    tabName: 'EQUIPMENT_OPERATION',
+  })
+
+  const EqOperationDateColumns = Array.from({ length: 31 }, (_, i) => i + 1)
+
+  const equipmentStatusList = EquipmentStatusLaborCostListQuery?.data?.data?.items || []
+  const WeatherInfo = WeatherInfoListQuery?.data?.data || {}
+
+  const weatherMap: Record<string, string> = {
+    SUNNY: '맑음',
+    CLOUDY: '흐림',
+    RAINY: '비',
+    SNOWY: '눈',
+    WINDY: '바람',
+  }
+
+  function getDays(data: any, count: number) {
+    const result: Record<number, { amount: number; unitPrice: number }> = {}
+    for (let i = 1; i <= count; i++) {
+      const key = `day${i.toString().padStart(2, '0')}`
+      const hours = data?.[key]?.hours || data?.[key]?.amount || 0
+      const unitPrice = data?.[key]?.unitPrice || 0
+      result[i] = { amount: hours, unitPrice }
+    }
+    return result
+  }
+
+  const eqOperationRows = equipmentStatusList.map((item: any, index: number) => {
+    const outsourcing = item.outsourcingCompany || {}
+    const driver = item.driver || {}
+    const subEquipments = item.subEquipments || []
+
+    const mainEquipment = {
+      name: '직영',
+      specification: item.specification || '-',
+      company: outsourcing.name || '-',
+      ceo:
+        driver.name && outsourcing.ceoName
+          ? `${outsourcing.ceoName} (${driver.name})`
+          : driver.name
+          ? driver.name
+          : outsourcing.ceoName
+          ? `(${outsourcing.ceoName})`
+          : '-',
+      carNumber: item.vehicleNumber || '-',
+    }
+
+    const allEquipments = [
+      {
+        type: item.equipment?.type || '-',
+        days: getDays(item.equipment, 31),
+      },
+      ...subEquipments.map((s: any) => ({
+        type: s.typeDescription || '-',
+        days: getDays(s, 31),
+      })),
+      {
+        type: '유류대',
+        days: getDays(item.fuel, 31), // getDays는 null이면 자동으로 0 처리됨
+      },
+    ]
+
+    return { no: index + 1, mainEquipment, allEquipments }
+  })
+
+  // 합계 계산
+  const verticalSums: {
+    amounts: number[]
+    totalHours: number
+    totalUnitPrice: number
+    totalSubtotal: number
+  } = {
+    amounts: Array(EqOperationDateColumns.length).fill(0),
+    totalHours: 0,
+    totalUnitPrice: 0,
+    totalSubtotal: 0,
+  }
+
+  eqOperationRows.forEach((r: any) => {
+    r.allEquipments.forEach((eq: any) => {
+      const days = Object.values(eq.days)
+      const totalHours = days.reduce((hAcc: number, cur: any) => hAcc + (cur.amount || 0), 0)
+
+      const unitPriceDays = days.filter((d: any) => (d.unitPrice || 0) > 0)
+      const totalUnitPrice: number = unitPriceDays.reduce(
+        (pAcc: number, cur: any) => pAcc + (cur.unitPrice as number),
+        0,
+      )
+      const unitPriceDaysCount = unitPriceDays.length
+      const displayUnitPrice = unitPriceDaysCount > 0 ? totalUnitPrice / unitPriceDaysCount : 0
+
+      const subtotal = totalHours * displayUnitPrice
+
+      // vertical sums
+      verticalSums.totalHours += totalHours
+      verticalSums.totalUnitPrice += displayUnitPrice
+      verticalSums.totalSubtotal += subtotal
+
+      EqOperationDateColumns.forEach((d, idx) => {
+        verticalSums.amounts[idx] += eq.days[d]?.amount || 0
+      })
+    })
+  })
+
+  const rowTotals = eqOperationRows.map((r: any) => {
+    let total = 0
+
+    r.allEquipments.forEach((eq: any) => {
+      const totalHours = Object.values(eq.days).reduce(
+        (acc: number, cur: any) => acc + (cur.amount || 0),
+        0,
+      )
+
+      const unitPriceDays = Object.values(eq.days).filter((d: any) => (d.unitPrice || 0) > 0)
+      const totalUnitPrice = unitPriceDays.reduce(
+        (acc: number, cur: any) => acc + (cur.unitPrice || 0),
+        0,
+      )
+      const unitPriceDaysCount = unitPriceDays.length
+
+      const averageUnitPrice = unitPriceDaysCount > 0 ? totalUnitPrice / unitPriceDaysCount : 0
+
+      let displayUnitPrice = averageUnitPrice
+      // 유류대는 따로 계산한다.
+
+      // 유류대면 별도 로직 적용
+      if (eq.type === '유류대') {
+        // r.allEquipments 전체 총 시간 합계
+        const totalHoursAllEquipments = r.allEquipments.reduce((acc: number, eq: any) => {
+          // 유류대는 제외
+          if (eq.type === '유류대') return acc
+
+          const eqTotal = Object.values(eq.days).reduce(
+            (sum: number, cur: any) => sum + (cur.amount || 0),
+            0,
+          )
+
+          return acc + eqTotal
+        }, 0)
+
+        displayUnitPrice = totalHoursAllEquipments > 0 ? totalHours / totalHoursAllEquipments : 0
+      }
+
+      console.log(
+        'totalHours * displayUnitPrice totalHours * displayUnitPrice ',
+        totalHours * displayUnitPrice,
+      )
+
+      const subtotal = totalHours * averageUnitPrice
+
+      total += subtotal
+    })
+
+    return total
+  })
+
+  const formattedRows: any[][] = []
+
+  const formatNumber = (num: number) => {
+    if (num == null || isNaN(num)) return ''
+    return Number(num).toLocaleString('ko-KR')
+  }
+
+  eqOperationRows.forEach((r: any) => {
+    r.allEquipments.forEach((eq: any, idx: number) => {
+      const totalHours = Object.values(eq.days).reduce(
+        (acc: number, d: any) => acc + (d.amount || 0),
+        0,
+      )
+
+      const unitPriceDays = Object.values(eq.days).filter((d: any) => (d.unitPrice || 0) > 0)
+      const totalUnitPrice = unitPriceDays.reduce(
+        (acc: number, d: any) => acc + (d.unitPrice || 0),
+        0,
+      )
+      const averageUnitPrice = unitPriceDays.length > 0 ? totalUnitPrice / unitPriceDays.length : 0
+
+      let displayUnitPrice: number
+      if (eq.type === '유류대') {
+        // const otherEquipmentsTotalHours = 0
+        //   .filter((e: any) => e.type !== '유류대')
+        //   .reduce(
+        //     (sum: number, e: any) =>
+        //       sum +
+        //       Object.values(e?.days || {}).reduce((a: number, d: any) => a + (d?.amount || 0), 0),
+        //     0,
+        //   )
+
+        displayUnitPrice = 0
+        // otherEquipmentsTotalHours > 0 ? totalHours / otherEquipmentsTotalHours : 0
+      } else {
+        displayUnitPrice = averageUnitPrice
+      }
+
+      const displaySubtotal = totalHours * displayUnitPrice
+
+      const rowArr = [
+        idx === 0 ? r.no : '',
+        idx === 0 ? r.mainEquipment.name : '',
+        idx === 0 ? r.mainEquipment.specification : '',
+        idx === 0 ? r.mainEquipment.company : '',
+        idx === 0 ? r.mainEquipment.ceo : '',
+        idx === 0 ? r.mainEquipment.carNumber : '',
+        eq.type,
+        ...EqOperationDateColumns.map((d) => formatNumber(eq.days[d]?.amount || 0)),
+        formatNumber(totalHours),
+        formatNumber(displayUnitPrice),
+        formatNumber(displaySubtotal),
+        idx === 0 ? formatNumber(rowTotals[r.no - 1] || 0) : '',
+      ]
+
+      formattedRows.push(rowArr)
+    })
+  })
+
+  // -----------------------------
+  // 2️⃣ 헤더
+  // -----------------------------
+  const headerRowDates = [
+    'No',
+    '직영',
+    '규격',
+    '업체명',
+    '대표/기사',
+    '차량번호',
+    '구분',
+    ...EqOperationDateColumns.map((d) => `${d}`),
+    '총계',
+    '단가',
+    '소계',
+    '총합계',
+  ]
+
+  const headerRowWeather = [
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    ...EqOperationDateColumns.map((d) => {
+      const key = `day${d.toString().padStart(2, '0')}`
+      return WeatherInfo[key] ? weatherMap[WeatherInfo[key]] || WeatherInfo[key] : '-'
+    }),
+    '',
+    '',
+    '',
+    '',
+  ]
+
+  // -----------------------------
+  // 3️⃣ 총합계 행
+  // -----------------------------
+  const eqOperationtotalRow = [
+    '총합계',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    ...EqOperationDateColumns.map((_, idx) => formatNumber(verticalSums.amounts[idx] || 0)),
+    formatNumber(verticalSums.totalHours),
+    formatNumber(verticalSums.totalUnitPrice),
+    formatNumber(verticalSums.totalSubtotal),
+    formatNumber(verticalSums.totalSubtotal),
+  ]
+
+  // AoA 생성
+  const eqOperationSheetAoA = [
+    headerRowDates,
+    headerRowWeather,
+    ...formattedRows,
+    eqOperationtotalRow,
+  ]
+
+  const equipmentOperationSheet = XLSX.utils.aoa_to_sheet(eqOperationSheetAoA)
+
+  // 전체 eqOperationRows 기반 index 계산
+  const totalRowIndex = 2 + formattedRows.length
+
+  // -----------------------------
+  // 4️⃣ 병합(Merge)
+  // -----------------------------
+  equipmentOperationSheet['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
+    { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } },
+    { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } },
+    { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } },
+    { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } },
+    { s: { r: 0, c: 5 }, e: { r: 1, c: 5 } },
+    { s: { r: 0, c: 6 }, e: { r: 1, c: 6 } },
+    {
+      s: { r: 0, c: 7 + EqOperationDateColumns.length },
+      e: { r: 1, c: 7 + EqOperationDateColumns.length },
+    },
+    {
+      s: { r: 0, c: 8 + EqOperationDateColumns.length },
+      e: { r: 1, c: 8 + EqOperationDateColumns.length },
+    },
+    {
+      s: { r: 0, c: 9 + EqOperationDateColumns.length },
+      e: { r: 1, c: 9 + EqOperationDateColumns.length },
+    },
+    {
+      s: { r: 0, c: 10 + EqOperationDateColumns.length },
+      e: { r: 1, c: 10 + EqOperationDateColumns.length },
+    },
+
+    // ⭐ 총합계 셀 병합 (1~7열)
+    { s: { r: totalRowIndex, c: 0 }, e: { r: totalRowIndex, c: 6 } },
+  ]
+
+  const equipmentOperationRange = XLSX.utils.decode_range(equipmentOperationSheet['!ref'] ?? '')
+
+  // 금액 컬럼 index 계산
+  const amountStartCol = 7 + EqOperationDateColumns.length // 총계
+  const unitPriceCol = amountStartCol + 1 // 단가
+  const subtotalCol = amountStartCol + 2 // 소계
+  const totalSumCol = amountStartCol + 3 // 총합계
+
+  for (let R = equipmentOperationRange.s.r; R <= equipmentOperationRange.e.r; ++R) {
+    for (let C = equipmentOperationRange.s.c; C <= equipmentOperationRange.e.c; ++C) {
+      const cellRef = XLSX.utils.encode_cell({ r: R, c: C })
+      if (!equipmentOperationSheet[cellRef]) equipmentOperationSheet[cellRef] = { v: '' }
+
+      const isHeader = R < 2
+      const isTotalRow = R === totalRowIndex
+
+      // 오른쪽 정렬 대상 컬럼인지 체크
+      const isRightAlign = C === unitPriceCol || C === subtotalCol || C === totalSumCol
+
+      equipmentOperationSheet[cellRef].s = {
+        border: {
+          top: { style: 'thin', color: { rgb: '000000' } },
+          bottom: { style: 'thin', color: { rgb: '000000' } },
+          left: { style: 'thin', color: { rgb: '000000' } },
+          right: { style: 'thin', color: { rgb: '000000' } },
+        },
+        fill:
+          isHeader || isTotalRow ? { patternType: 'solid', fgColor: { rgb: 'C0C0C0' } } : undefined,
+        alignment: {
+          vertical: 'center',
+          horizontal: isRightAlign ? 'right' : 'center',
+        },
+      }
+    }
+  }
+
   useEffect(() => {
-    if (!fuelDataReady || !laborDataReady) return // ✅ 기름 데이터 준비 안됐으면 실행 금지
+    if (!fuelDataReady || !laborDataReady) return
 
     const workbook = XLSX.utils.book_new()
 
@@ -1555,6 +1918,7 @@ export default function AllExcelDownloadView({
     XLSX.utils.book_append_sheet(workbook, laborCostSheet, '노무비')
     XLSX.utils.book_append_sheet(workbook, laborPaySheet, '노무비명세서')
     XLSX.utils.book_append_sheet(workbook, equipmentCostSheet, '장비비')
+    XLSX.utils.book_append_sheet(workbook, equipmentOperationSheet, '장비가동현황')
 
     const fileName = `${search.yearMonth}_${search.siteName}_사기성집계표.xlsx`
 

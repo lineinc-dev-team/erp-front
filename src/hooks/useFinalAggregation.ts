@@ -243,7 +243,7 @@ export default function useFinalAggregationView({
 
       return EquipmentStatusInfoServiceByAggregate(filteredParams)
     },
-    enabled: tabName === 'EQUIPMENT_OPERATION' && !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
+    enabled: !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
   })
 
   // 장비비 가동현황 날씨 조회
@@ -269,7 +269,7 @@ export default function useFinalAggregationView({
 
       return WeatherInfoServiceByAggregate(filteredParams)
     },
-    enabled: tabName === 'EQUIPMENT_OPERATION' && !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
+    enabled: !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
   })
 
   // 노무비 명세서
