@@ -9268,7 +9268,7 @@ export default function DailyReportRegistrationView() {
 
                     <TableRow sx={{ backgroundColor: '#D1D5DB' }}>
                       <TableCell
-                        colSpan={6}
+                        colSpan={7}
                         align="right"
                         sx={{
                           border: '1px solid #9CA3AF',
