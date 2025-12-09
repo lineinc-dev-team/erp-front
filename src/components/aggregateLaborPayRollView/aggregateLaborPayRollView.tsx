@@ -315,9 +315,11 @@ export default function AggregateLaborPayRollView() {
       }
     }
 
+    const fileName = `${search.yearMonth}_${search.siteName}_노무비명세서.xlsx`
+
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, '노무비명세서')
-    XLSX.writeFile(workbook, '노무비명세서.xlsx')
+    XLSX.writeFile(workbook, fileName)
   }
 
   const cellStyle = {

@@ -15,8 +15,6 @@ export default function AllExcelDownloadView({
 }) {
   const search = useFinalAggregationSearchStore((state) => state.search)
 
-  console.log('4044', search.siteName)
-
   const [, setReady] = useState(false)
   const [fuelDataReady, setFuelDataReady] = useState(false)
   const [laborDataReady, setLaborDataReady] = useState(false)
@@ -970,6 +968,306 @@ export default function AllExcelDownloadView({
     }
   }
 
+  // 노무비 명세서
+
+  const directQuery = useFinalAggregationView({
+    yearMonth: search.yearMonth,
+    siteId: search.siteId,
+    siteProcessId: search.siteProcessId,
+    type: 'DIRECT_CONTRACT',
+    tabName: 'LABOR_DETAIL',
+  })
+
+  const outsourcingQuery = useFinalAggregationView({
+    yearMonth: search.yearMonth,
+    siteId: search.siteId,
+    siteProcessId: search.siteProcessId,
+    type: 'OUTSOURCING',
+    tabName: 'LABOR_DETAIL',
+  })
+
+  const directData = directQuery.LaborPayCostListQuery.data?.data || []
+  const outsourcingData = outsourcingQuery.LaborPayCostListQuery.data?.data || []
+
+  // ✅ 두 데이터 합치기
+  const allData = [...directData, ...outsourcingData]
+
+  const formatValue = (value: any) => {
+    if (value === null || value === undefined || value === ' ') return ' '
+    if (typeof value === 'number' && !isNaN(value)) return value
+    return value
+  }
+
+  // const formatNumber = (value: any) => {
+  //   const num = Number(value)
+  //   if (isNaN(num)) return '0'
+  //   return num.toLocaleString()
+  // }
+
+  const laborCostRows = allData.map((item: any, idx: number) => {
+    const labor = item.labor || {}
+    const days = Array.from({ length: 31 }, (_, i) =>
+      formatValue(item[`day${String(i + 1).padStart(2, '0')}Hours`]),
+    )
+
+    return {
+      no: idx + 1,
+      name: formatValue(labor.name),
+      id: formatValue(labor.residentNumber),
+      job: labor.type === '직영' ? formatValue(labor.workType) : '용역',
+      team:
+        labor.type === '직영'
+          ? formatValue(labor.type)
+          : formatValue(labor.outsourcingCompany.name),
+      address: formatValue(labor.address),
+      mainWork: labor.type === '직영' ? formatValue(labor.mainWork) : '용역',
+      salary: item.dailyWage || 0,
+      days,
+      totalWork: item.totalWorkHours || 0,
+      totalDays: item.totalWorkDays || 0,
+      totalLaborCost: item.totalLaborCost || 0,
+      incomeTax: item.incomeTax || 0,
+      residentTax: item.localTax || 0,
+      employmentInsurance: item.employmentInsurance || 0,
+      nationalPension: item.nationalPension || 0,
+      healthInsurance: item.healthInsurance || 0,
+      longTermCare: item.longTermCareInsurance || 0,
+      deductionTotal: item.totalDeductions || 0,
+      payAfterDeduction: item.netPayment || 0,
+      phone: formatValue(labor.phoneNumber),
+      bank:
+        labor.type === '직영'
+          ? formatValue(labor.bankName)
+          : formatValue(labor.outsourcingCompany.bankName),
+      account:
+        labor.type === '직영'
+          ? formatValue(labor.accountNumber)
+          : formatValue(labor.outsourcingCompany.accountNumber),
+      accountName:
+        labor.type === '직영'
+          ? formatValue(labor.accountHolder)
+          : formatValue(labor.outsourcingCompany.accountHolder),
+    }
+  })
+
+  // ✅ 합계 계산
+  const laborPaySum = laborCostRows.reduce(
+    (acc: any, r: any) => {
+      acc.totalWork += r.totalWork || 0
+      acc.totalDays += r.totalDays || 0
+      acc.totalLaborCost += r.totalLaborCost || 0
+      acc.incomeTax += r.incomeTax || 0
+      acc.residentTax += r.residentTax || 0
+      acc.employmentInsurance += r.employmentInsurance || 0
+      acc.nationalPension += r.nationalPension || 0
+      acc.healthInsurance += r.healthInsurance || 0
+      acc.longTermCare += r.longTermCare || 0
+      acc.deductionTotal += r.deductionTotal || 0
+      acc.payAfterDeduction += r.payAfterDeduction || 0
+      return acc
+    },
+    {
+      totalWork: 0,
+      totalDays: 0,
+      totalLaborCost: 0,
+      incomeTax: 0,
+      residentTax: 0,
+      employmentInsurance: 0,
+      nationalPension: 0,
+      healthInsurance: 0,
+      longTermCare: 0,
+      deductionTotal: 0,
+      payAfterDeduction: 0,
+    },
+  )
+
+  const laborPayColumns = Array.from({ length: 31 }, (_, i) => i + 1)
+
+  // header
+  const laborPayHeaderRow1 = [
+    'No',
+    '성명',
+    '주민번호',
+    '직종',
+    '팀명칭',
+    '주소',
+    '주작업',
+    '일당',
+    ...laborPayColumns.slice(0, 15),
+    '',
+    '총 공수',
+    '총 일수',
+    '노무비 총액',
+    '소득세',
+    '주민세',
+    '고용보험',
+    '건강보험',
+    '장기요양',
+    '국민연금',
+    '공제합계',
+    '차감지급액',
+    '휴대전화',
+    '은행명',
+    '계좌번호',
+    '예금주',
+  ]
+  const laborPayHeaderRow2 = [
+    ...Array(8).fill(''),
+    ...laborPayColumns.slice(15, 31),
+    ...Array(15).fill(''),
+  ]
+
+  const formatNumberWithComma = (num: number | string) => {
+    const n = Number(num) || 0
+    return n.toLocaleString() // , 구분
+  }
+
+  const dataRows: any[][] = []
+
+  laborCostRows.forEach((r) => {
+    const row1 = [
+      r.no,
+      r.name,
+      r.id,
+      r.job,
+      r.team,
+      r.address,
+      r.mainWork,
+      formatNumberWithComma(r.salary),
+      ...r.days.slice(0, 15),
+      '',
+      formatNumberWithComma(r.totalWork),
+      formatNumberWithComma(r.totalDays),
+      formatNumberWithComma(r.totalLaborCost),
+      formatNumberWithComma(r.incomeTax),
+      formatNumberWithComma(r.residentTax),
+      formatNumberWithComma(r.employmentInsurance),
+      formatNumberWithComma(r.healthInsurance),
+      formatNumberWithComma(r.longTermCare),
+      formatNumberWithComma(r.nationalPension),
+      formatNumberWithComma(r.deductionTotal),
+      formatNumberWithComma(r.payAfterDeduction),
+      r.phone,
+      r.bank,
+      r.account,
+      r.accountName,
+    ]
+    const row2 = [...Array(8).fill(''), ...r.days.slice(15, 31), ...Array(15).fill('')]
+    dataRows.push(row1, row2)
+  })
+
+  const sumRow1 = [
+    '소계',
+    ...Array(7).fill(''),
+    ...Array.from({ length: 15 }, (_, i) =>
+      formatNumberWithComma(laborCostRows.reduce((acc, r) => acc + (Number(r.days[i]) || 0), 0)),
+    ),
+    '',
+    formatNumberWithComma(laborPaySum.totalWork),
+    formatNumberWithComma(laborPaySum.totalDays),
+    formatNumberWithComma(laborPaySum.totalLaborCost),
+    formatNumberWithComma(laborPaySum.incomeTax),
+    formatNumberWithComma(laborPaySum.residentTax),
+    formatNumberWithComma(laborPaySum.employmentInsurance),
+    formatNumberWithComma(laborPaySum.healthInsurance),
+    formatNumberWithComma(laborPaySum.longTermCare),
+    formatNumberWithComma(laborPaySum.nationalPension),
+    formatNumberWithComma(laborPaySum.deductionTotal),
+    formatNumberWithComma(laborPaySum.payAfterDeduction),
+    '',
+    '',
+    '',
+    '',
+  ]
+  const sumRow2 = [
+    ...Array(8).fill(''),
+    ...Array.from({ length: 16 }, (_, i) =>
+      formatNumberWithComma(
+        laborCostRows.reduce((acc, r) => acc + (Number(r.days[i + 15]) || 0), 0),
+      ),
+    ),
+    ...Array(14).fill(''),
+  ]
+
+  const sheetAoA = [laborPayHeaderRow1, laborPayHeaderRow2, ...dataRows, sumRow1, sumRow2]
+  const laborPaySheet = XLSX.utils.aoa_to_sheet(sheetAoA)
+
+  // 병합
+  laborPaySheet['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
+    { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } },
+    { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } },
+    { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } },
+    { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } },
+    { s: { r: 0, c: 5 }, e: { r: 1, c: 5 } },
+    { s: { r: 0, c: 6 }, e: { r: 1, c: 6 } },
+    { s: { r: 0, c: 7 }, e: { r: 1, c: 7 } },
+    { s: { r: sheetAoA.length - 2, c: 0 }, e: { r: sheetAoA.length - 1, c: 7 } },
+
+    // { s: { r: 2, c: 0 }, e: { r: 3, c: 0 } },
+    // { s: { r: 2, c: 1 }, e: { r: 3, c: 1 } },
+
+    { s: { r: 0, c: 24 }, e: { r: 1, c: 24 } },
+    { s: { r: 0, c: 25 }, e: { r: 1, c: 25 } },
+    { s: { r: 0, c: 26 }, e: { r: 1, c: 26 } },
+    { s: { r: 0, c: 27 }, e: { r: 1, c: 27 } },
+    { s: { r: 0, c: 28 }, e: { r: 1, c: 28 } },
+    { s: { r: 0, c: 29 }, e: { r: 1, c: 29 } },
+    { s: { r: 0, c: 30 }, e: { r: 1, c: 30 } },
+    { s: { r: 0, c: 31 }, e: { r: 1, c: 31 } },
+    { s: { r: 0, c: 32 }, e: { r: 1, c: 32 } },
+    { s: { r: 0, c: 33 }, e: { r: 1, c: 33 } },
+    { s: { r: 0, c: 34 }, e: { r: 1, c: 34 } },
+    { s: { r: 0, c: 35 }, e: { r: 1, c: 35 } },
+    { s: { r: 0, c: 36 }, e: { r: 1, c: 36 } },
+    { s: { r: 0, c: 37 }, e: { r: 1, c: 37 } },
+    { s: { r: 0, c: 38 }, e: { r: 1, c: 38 } },
+    { s: { r: sheetAoA.length - 2, c: 24 }, e: { r: sheetAoA.length - 1, c: 24 } },
+    { s: { r: sheetAoA.length - 2, c: 25 }, e: { r: sheetAoA.length - 1, c: 25 } },
+    { s: { r: sheetAoA.length - 2, c: 26 }, e: { r: sheetAoA.length - 1, c: 26 } },
+    { s: { r: sheetAoA.length - 2, c: 27 }, e: { r: sheetAoA.length - 1, c: 27 } },
+    { s: { r: sheetAoA.length - 2, c: 28 }, e: { r: sheetAoA.length - 1, c: 28 } },
+    { s: { r: sheetAoA.length - 2, c: 29 }, e: { r: sheetAoA.length - 1, c: 29 } },
+    { s: { r: sheetAoA.length - 2, c: 30 }, e: { r: sheetAoA.length - 1, c: 30 } },
+    { s: { r: sheetAoA.length - 2, c: 31 }, e: { r: sheetAoA.length - 1, c: 31 } },
+    { s: { r: sheetAoA.length - 2, c: 32 }, e: { r: sheetAoA.length - 1, c: 32 } },
+    { s: { r: sheetAoA.length - 2, c: 33 }, e: { r: sheetAoA.length - 1, c: 33 } },
+    { s: { r: sheetAoA.length - 2, c: 34 }, e: { r: sheetAoA.length - 1, c: 34 } },
+    { s: { r: sheetAoA.length - 2, c: 35 }, e: { r: sheetAoA.length - 1, c: 38 } },
+  ]
+
+  const laborPayRange = XLSX.utils.decode_range(laborPaySheet['!ref'] ?? '')
+  const totalRowStart = sheetAoA.length - 2
+  const totalRowEnd = sheetAoA.length - 1
+
+  const amountCols = [7, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34]
+
+  for (let R = laborPayRange.s.r; R <= laborPayRange.e.r; ++R) {
+    for (let C = laborPayRange.s.c; C <= laborPayRange.e.c; ++C) {
+      const cellRef = XLSX.utils.encode_cell({ r: R, c: C })
+      if (!laborPaySheet[cellRef]) laborPaySheet[cellRef] = { v: '' }
+
+      const isHeader = R < 2
+      const isTotalRow = R === totalRowStart || R === totalRowEnd
+      const isRightAlign = amountCols.includes(C)
+
+      laborPaySheet[cellRef].s = {
+        border: {
+          top: { style: 'thin', color: { rgb: '000000' } },
+          bottom: { style: 'thin', color: { rgb: '000000' } },
+          left: { style: 'thin', color: { rgb: '000000' } },
+          right: { style: 'thin', color: { rgb: '000000' } },
+        },
+        fill:
+          isHeader || isTotalRow ? { patternType: 'solid', fgColor: { rgb: 'C0C0C0' } } : undefined,
+        alignment: {
+          vertical: 'center',
+          horizontal: isRightAlign ? 'right' : 'center',
+        },
+      }
+    }
+  }
+
   useEffect(() => {
     if (!fuelDataReady || !laborDataReady) return // ✅ 기름 데이터 준비 안됐으면 실행 금지
 
@@ -1060,6 +1358,7 @@ export default function AllExcelDownloadView({
     XLSX.utils.book_append_sheet(workbook, materialSheet, '재료비')
     XLSX.utils.book_append_sheet(workbook, fuelSheet, '유류집계')
     XLSX.utils.book_append_sheet(workbook, laborCostSheet, '노무비')
+    XLSX.utils.book_append_sheet(workbook, laborPaySheet, '노무비명세서')
 
     const fileName = `${search.yearMonth}_${search.siteName}_사기성집계표.xlsx`
 

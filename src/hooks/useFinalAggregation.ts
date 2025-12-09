@@ -295,7 +295,7 @@ export default function useFinalAggregationView({
 
       return await LaborPayInfoServiceByAggregate(filteredParams)
     },
-    enabled: tabName === 'LABOR_DETAIL' && [yearMonth, siteId, siteProcessId, type].every(Boolean),
+    enabled: [yearMonth, siteId, siteProcessId, type].every(Boolean),
   })
 
   // 관리비 조회

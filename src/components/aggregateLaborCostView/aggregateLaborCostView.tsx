@@ -340,6 +340,7 @@ export default function AggregateLaborCostView() {
     applySheetStyleAndMerge(ws, rowsDirect.length, rowsOutsourcing.length)
 
     const fileName = `${search.yearMonth}_${search.siteName}_노무비.xlsx`
+
     XLSX.utils.book_append_sheet(wb, ws, '노무비')
     XLSX.writeFile(wb, fileName)
   }
