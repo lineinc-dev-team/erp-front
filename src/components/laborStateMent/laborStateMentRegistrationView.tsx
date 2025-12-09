@@ -205,6 +205,8 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
             id: client.site.id,
             name: siteName,
             deleted: client.site.deleted,
+            startedAt: '',
+            endedAt: '',
           })
         }
       }
@@ -215,7 +217,13 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
 
       // 최종 옵션 배열 세팅
       setUpdatedSiteOptions([
-        newSiteOptions.find((s) => s.id === 0) ?? { id: 0, name: '선택', deleted: false },
+        newSiteOptions.find((s) => s.id === 0) ?? {
+          id: 0,
+          name: '선택',
+          startedAt: '',
+          endedAt: '',
+          deleted: false,
+        },
         ...deletedSites,
         ...normalSites,
       ])
