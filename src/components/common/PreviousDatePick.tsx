@@ -25,9 +25,9 @@ export default function CommonPreviousDatePicker({
   helperText = '',
   disabled = false,
   minDate,
-  maxDate,
 }: CommonDatePickerProps) {
-  console.log('DatePicker 적용 범위:', minDate, maxDate) // ✅ 디버깅용
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ko}>
@@ -49,7 +49,7 @@ export default function CommonPreviousDatePicker({
         }}
         format="yyyy/MM/dd"
         minDate={minDate ?? undefined}
-        maxDate={maxDate ?? undefined}
+        maxDate={today}
         slotProps={{
           textField: {
             required,
