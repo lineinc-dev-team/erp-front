@@ -203,12 +203,14 @@ export default function useOutSourcingContract() {
   })
 
   const sitesOptions = useMemo(() => {
-    const defaultOption = { id: 0, name: '선택', deleted: false }
+    const defaultOption = { id: 0, name: '선택', startedAt: '', endedAt: '', deleted: false }
     const options = (siteNameInfo?.pages || [])
       .flatMap((page) => page.data.content)
       .map((user) => ({
         id: user.id,
         name: user.name,
+        startedAt: user.startedAt,
+        endedAt: user.endedAt,
         deleted: false,
       }))
 

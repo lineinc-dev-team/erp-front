@@ -121,6 +121,9 @@ export default function DailyReportRegistrationView() {
     // 직원 정보
   } = useDailyFormStore()
 
+  const [siteStartDate, setSiteStartDate] = useState<Date | null>(null)
+  const [siteEndDate, setSiteEndDate] = useState<Date | null>(null)
+
   const { WeatherTypeMethodOptions, useFuelOuysourcingName } = useFuelAggregation()
 
   const [isEditMode, setIsEditMode] = useState(false)
@@ -4945,6 +4948,7 @@ export default function DailyReportRegistrationView() {
                   if (newKeyword === '') {
                     setField('siteProcessName', '')
                     setField('siteProcessId', 0)
+                    setField('reportDate', null) // ✅ 현장 바꾸면 일자 초기화
                   }
                 }}
                 items={siteList}
@@ -4959,7 +4963,10 @@ export default function DailyReportRegistrationView() {
                 onSelect={async (selectedSite) => {
                   if (!selectedSite) return
 
-                  console.log('데이터 확인@@', selectedSite)
+                  setField('siteId', selectedSite.id)
+
+                  setSiteStartDate(new Date(selectedSite.startedAt))
+                  setSiteEndDate(new Date(selectedSite.endedAt))
 
                   // 선택된 현장 세팅
                   setField('siteId', selectedSite.id)
@@ -5037,6 +5044,9 @@ export default function DailyReportRegistrationView() {
               <CommonPreviousDatePicker
                 value={form.reportDate || null}
                 onChange={(value) => setField('reportDate', value)}
+                minDate={siteStartDate}
+                maxDate={siteEndDate}
+                disabled={!form.siteId} // 현장 선택 전까지 비활성화
               />
             </div>
           </div>

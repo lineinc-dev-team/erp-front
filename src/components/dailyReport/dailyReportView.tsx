@@ -197,8 +197,6 @@ export default function DailyReportView() {
           const clientProcessId = params.row.processId
           const clientReportSiteName = params.row.siteName
 
-          console.log('clientIdclientId', params.row)
-
           const handleClick = () => {
             if (hasModify) {
               const queryString = new URLSearchParams({
