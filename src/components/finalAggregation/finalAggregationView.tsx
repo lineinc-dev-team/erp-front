@@ -289,6 +289,7 @@ export default function FinalAggregationView() {
 
           {downloadTrigger && (
             <AllExcelDownloadView
+              fuelType={['DIESEL', 'GASOLINE', 'UREA']}
               onComplete={() => setDownloadTrigger(false)} // 다운로드 후 상태 초기화
             />
           )}

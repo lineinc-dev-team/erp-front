@@ -115,7 +115,7 @@ export default function useFinalAggregationView({
 
       return await FuelInfoServiceByAggregate(filteredParams)
     },
-    enabled: tabName === 'FUEL' && [yearMonth, siteId, siteProcessId, fuelType].every(Boolean),
+    enabled: [yearMonth, siteId, siteProcessId, fuelType].every(Boolean),
   })
 
   // 집계에서 유류집계쪽 날짜별 기름 가격 조회
@@ -141,7 +141,7 @@ export default function useFinalAggregationView({
 
       return FuelPriceInfoServiceByAggregate(filteredParams)
     },
-    enabled: tabName === 'FUEL' && !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
+    enabled: !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
   })
 
   // 노무비 조회
@@ -390,7 +390,6 @@ export default function useFinalAggregationView({
       !!outsourcingCompanyId, // 필수값 있을 때만 실행
   })
 
-  console.log('90', outsourcingCompanyContractId)
   // 외주 조회
   const ManagementOutSourcingListQuery = useQuery({
     queryKey: ['managementOutSourcingInfo', yearMonth, siteId, siteProcessId],

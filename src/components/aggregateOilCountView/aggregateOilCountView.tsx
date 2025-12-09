@@ -124,19 +124,6 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
     })
   })
 
-  const cellStyle = {
-    border: '1px solid #9ca3af',
-    whiteSpace: 'nowrap',
-    padding: '4px 6px',
-  }
-
-  const headerStyle = {
-    ...cellStyle,
-    fontWeight: 'bold',
-    backgroundColor: '#f3f4f6',
-    minWidth: 100, // 숫자 칸 최소 너비
-  }
-
   // 엑셀 다운로드
   const handleExcelDownload = () => {
     const formattedData: any[] = []
@@ -438,11 +425,26 @@ export default function AggregateOilCountViewAll({ fuelType }: AggregateOilCount
       }
     }
 
+    const fileName = `${search.yearMonth}_${search.siteName}_유류집계.xlsx`
+
     // 6️⃣ 파일 저장
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, ws, '유류집계')
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
-    saveAs(new Blob([excelBuffer], { type: 'application/octet-stream' }), '유류집계_집계표.xlsx')
+    saveAs(new Blob([excelBuffer], { type: 'application/octet-stream' }), fileName)
+  }
+
+  const cellStyle = {
+    border: '1px solid #9ca3af',
+    whiteSpace: 'nowrap',
+    padding: '4px 6px',
+  }
+
+  const headerStyle = {
+    ...cellStyle,
+    fontWeight: 'bold',
+    backgroundColor: '#f3f4f6',
+    minWidth: 100, // 숫자 칸 최소 너비
   }
 
   // 권한에 따른 버튼 활성화

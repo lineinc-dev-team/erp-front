@@ -234,8 +234,10 @@ export default function AggregateMaterialView() {
       }
     }
 
-    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1')
-    XLSX.writeFile(wb, '재료비.xlsx')
+    const fileName = `${search.yearMonth}_${search.siteName}_재료비.xlsx`
+
+    XLSX.utils.book_append_sheet(wb, ws, '재료비')
+    XLSX.writeFile(wb, fileName)
   }
 
   const cellStyle = {

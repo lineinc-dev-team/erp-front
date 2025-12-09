@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Table,
   TableBody,
@@ -16,372 +15,301 @@ import { useFinalAggregationSearchStore } from '@/stores/finalAggregationStore'
 import { useMenuPermission } from '../common/MenuPermissionView'
 import { myInfoProps } from '@/types/user'
 
+type Billing = {
+  supplyPrice?: number
+  vat?: number
+  deductionAmount?: number
+  total?: number
+}
+
+type OutsourcingCompany = {
+  type?: string
+  businessNumber?: string
+  name?: string
+  ceoName?: string
+  landlineNumber?: string
+  bankName?: string
+  accountNumber?: string
+  accountHolder?: string
+}
+
+type LaborInfo = {
+  workType?: string
+  name?: string
+  phoneNumber?: string
+  bankName?: string
+  accountNumber?: string
+  accountHolder?: string
+}
+
+type RawLaborItem = {
+  outsourcingCompany?: OutsourcingCompany
+  labor?: LaborInfo
+  previousBilling?: Billing
+  currentBilling?: Billing
+}
+
+type LaborRow = {
+  no: number
+  category: string
+  businessNumber: string
+  company: string
+  item: string
+  ceo: string
+  contact: string
+  bank: string
+  accountNumber: string
+  accountName: string
+  prevSupply: number
+  prevTax: number
+  prevDeduction: number
+  prevTotal: number
+  currSupply: number
+  currTax: number
+  currDeduction: number
+  currTotal: number
+  totalSupply: number
+  totalTax: number
+  totalDeduction: number
+  totalTotal: number
+}
+
+const amountKeys = [
+  'prevSupply',
+  'prevTax',
+  'prevDeduction',
+  'prevTotal',
+  'currSupply',
+  'currTax',
+  'currDeduction',
+  'currTotal',
+  'totalSupply',
+  'totalTax',
+  'totalDeduction',
+  'totalTotal',
+] as const
+
+type AmountKey = (typeof amountKeys)[number]
+
+const headerRow1 = [
+  'NO.',
+  '사업자등록번호',
+  '업체명',
+  '공종명',
+  '대표자',
+  '연락처',
+  '기성청구계좌',
+  '',
+  '',
+  '전회까지 청구내역',
+  '',
+  '',
+  '',
+  '금회 청구내역',
+  '',
+  '',
+  '',
+  '누계 청구내역',
+  '',
+  '',
+  '',
+]
+
+const headerRow2 = [
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '은행',
+  '계좌번호',
+  '계좌명',
+  '공급가',
+  '부가세',
+  '공제금액',
+  '계',
+  '공급가',
+  '부가세',
+  '공제금액',
+  '계',
+  '공급가',
+  '부가세',
+  '공제금액',
+  '계',
+]
+
+const cellStyle = {
+  border: '1px solid #9ca3af',
+  whiteSpace: 'nowrap',
+  padding: '4px 8px',
+}
+
+const headerStyle = {
+  ...cellStyle,
+  fontWeight: 'bold',
+  backgroundColor: '#f3f4f6',
+  minWidth: 100,
+}
+
+const toRow = (item: RawLaborItem, index: number): LaborRow => {
+  const outsourcing = item.outsourcingCompany || {}
+  const labor = item?.labor
+  const prev: Billing = item.previousBilling || {}
+  const curr: Billing = item.currentBilling || {}
+
+  return {
+    no: index + 1,
+    category: outsourcing.type || '-',
+    businessNumber: outsourcing.businessNumber || '-',
+    company: outsourcing.name || '-',
+    item: labor?.workType || '-',
+    ceo: outsourcing.ceoName || labor?.name || '-',
+    contact: outsourcing.landlineNumber || labor?.phoneNumber || '-',
+    bank: outsourcing.bankName || labor?.bankName || '-',
+    accountNumber: outsourcing.accountNumber || labor?.accountNumber || '-',
+    accountName: outsourcing.accountHolder || labor?.accountHolder || '-',
+    prevSupply: prev.supplyPrice || 0,
+    prevTax: prev.vat || 0,
+    prevDeduction: prev.deductionAmount || 0,
+    prevTotal: prev.total || 0,
+    currSupply: curr.supplyPrice || 0,
+    currTax: curr.vat || 0,
+    currDeduction: curr.deductionAmount || 0,
+    currTotal: curr.total || 0,
+    totalSupply: (prev.supplyPrice || 0) + (curr.supplyPrice || 0),
+    totalTax: (prev.vat || 0) + (curr.vat || 0),
+    totalDeduction: (prev.deductionAmount || 0) + (curr.deductionAmount || 0),
+    totalTotal: (prev.total || 0) + (curr.total || 0),
+  }
+}
+
+const sumRows = (rows: LaborRow[]) =>
+  amountKeys.map((key) => rows.reduce<number>((acc, r) => acc + (r[key] || 0), 0))
+
+const formatAmounts = (values: number[]) => values.map((v) => v.toLocaleString())
+
+const buildSheetData = (
+  rowsDirect: LaborRow[],
+  rowsOutsourcing: LaborRow[],
+  sumDirect: number[],
+  sumOutsourcing: number[],
+  sumTotal: number[],
+) => {
+  const sheet: (string | number)[][] = [headerRow1, headerRow2]
+
+  const pushRows = (rows: LaborRow[]) =>
+    rows.forEach((r) =>
+      sheet.push([
+        r.no,
+        r.businessNumber,
+        r.company,
+        r.item,
+        r.ceo,
+        r.contact,
+        r.bank,
+        r.accountNumber,
+        r.accountName,
+        ...amountKeys.map((k) => (r[k] || 0).toLocaleString()),
+      ]),
+    )
+
+  pushRows(rowsDirect)
+  sheet.push(['직영소계', '', '', '', '', '', '', '', '', ...formatAmounts(sumDirect)])
+  pushRows(rowsOutsourcing)
+  sheet.push(['용역소계', '', '', '', '', '', '', '', '', ...formatAmounts(sumOutsourcing)])
+  sheet.push(['합계', '', '', '', '', '', '', '', '', ...formatAmounts(sumTotal)])
+
+  return sheet
+}
+
+const applySheetStyleAndMerge = (
+  ws: XLSX.WorkSheet,
+  rowsDirectLength: number,
+  rowsOutsourcingLength: number,
+) => {
+  const directSubtotalRow = 2 + rowsDirectLength
+  const outsourcingStartRow = directSubtotalRow + 1
+  const outsourcingSubtotalRow = outsourcingStartRow + rowsOutsourcingLength
+  const totalRow = outsourcingSubtotalRow + 1
+
+  ws['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
+    { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } },
+    { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } },
+    { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } },
+    { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } },
+    { s: { r: 0, c: 5 }, e: { r: 1, c: 5 } },
+    { s: { r: 0, c: 6 }, e: { r: 0, c: 8 } },
+    { s: { r: 0, c: 9 }, e: { r: 0, c: 12 } },
+    { s: { r: 0, c: 13 }, e: { r: 0, c: 16 } },
+    { s: { r: 0, c: 17 }, e: { r: 0, c: 20 } },
+    { s: { r: directSubtotalRow, c: 0 }, e: { r: directSubtotalRow, c: 8 } },
+    { s: { r: outsourcingSubtotalRow, c: 0 }, e: { r: outsourcingSubtotalRow, c: 8 } },
+    { s: { r: totalRow, c: 0 }, e: { r: totalRow, c: 8 } },
+  ]
+
+  const range = XLSX.utils.decode_range(ws['!ref']!)
+  for (let R = 0; R <= range.e.r; R++) {
+    for (let C = 0; C <= range.e.c; C++) {
+      const cellRef = XLSX.utils.encode_cell({ r: R, c: C })
+      if (!ws[cellRef]) ws[cellRef] = { v: '' }
+
+      const cellValue = ws[cellRef].v
+      const isHeader = R < 2
+      const isAmount = !isHeader && C >= 9
+      const isSubtotal =
+        typeof cellValue === 'string' && (cellValue.includes('소계') || cellValue === '합계')
+
+      ws[cellRef].s = {
+        border: {
+          top: { style: 'thin', color: { rgb: '000000' } },
+          bottom: { style: 'thin', color: { rgb: '000000' } },
+          left: { style: 'thin', color: { rgb: '000000' } },
+          right: { style: 'thin', color: { rgb: '000000' } },
+        },
+        fill: isHeader ? { patternType: 'solid', fgColor: { rgb: 'C0C0C0' } } : undefined,
+        alignment: {
+          horizontal: isHeader || isSubtotal ? 'center' : isAmount ? 'right' : 'center',
+          vertical: 'center',
+        },
+        font: { bold: isHeader || isSubtotal },
+      }
+    }
+  }
+}
+
 export default function AggregateLaborCostView() {
   const search = useFinalAggregationSearchStore((state) => state.search)
-  const yearMonth = search.yearMonth
-  const siteId = search.siteId
-  const siteProcessId = search.siteProcessId
 
   const { LaborCostListQuery } = useFinalAggregationView({
-    yearMonth,
-    siteId,
-    siteProcessId,
+    yearMonth: search.yearMonth,
+    siteId: search.siteId,
+    siteProcessId: search.siteProcessId,
     laborType: 'DIRECT_CONTRACT',
     tabName: 'LABOR',
   })
 
   const { OutSourcingLaborCostListQuery } = useFinalAggregationView({
-    yearMonth,
-    siteId,
-    siteProcessId,
+    yearMonth: search.yearMonth,
+    siteId: search.siteId,
+    siteProcessId: search.siteProcessId,
     tabName: 'LABOR',
   })
 
-  const rowsDirect = (LaborCostListQuery.data?.data?.items || []).map(
-    (item: any, index: number) => {
-      const outsourcing = item.outsourcingCompany || {}
-      const labor = item?.labor
-      const prev = item.previousBilling || {}
-      const curr = item.currentBilling || {}
-
-      return {
-        no: index + 1,
-        category: outsourcing.type || '-',
-        businessNumber: outsourcing.businessNumber || '-',
-        company: outsourcing.name || '-',
-        item: labor?.workType || '-',
-        ceo: outsourcing.ceoName || labor?.name || '-',
-        contact: outsourcing.landlineNumber || labor?.phoneNumber || '-',
-        bank: outsourcing.bankName || labor?.bankName || '-',
-        accountNumber: outsourcing.accountNumber || labor?.accountNumber || '-',
-        accountName: outsourcing.accountHolder || labor?.accountHolder || '-',
-        prevSupply: prev.supplyPrice || 0,
-        prevTax: prev.vat || 0,
-        prevDeduction: prev.deductionAmount || 0,
-        prevTotal: prev.total || 0,
-        currSupply: curr.supplyPrice || 0,
-        currTax: curr.vat || 0,
-        currDeduction: curr.deductionAmount || 0,
-        currTotal: curr.total || 0,
-        totalSupply: (prev.supplyPrice || 0) + (curr.supplyPrice || 0),
-        totalTax: (prev.vat || 0) + (curr.vat || 0),
-        totalDeduction: (prev.deductionAmount || 0) + (curr.deductionAmount || 0),
-        totalTotal: (prev.total || 0) + (curr.total || 0),
-      }
-    },
+  const rowsDirect = useMemo(
+    () => (LaborCostListQuery.data?.data?.items || []).map(toRow),
+    [LaborCostListQuery.data],
   )
-
-  const rowsOutsourcing = (OutSourcingLaborCostListQuery.data?.data?.items || []).map(
-    (item: any, index: number) => {
-      const outsourcing = item.outsourcingCompany || {}
-      const labor = item?.labor
-      const prev = item.previousBilling || {}
-      const curr = item.currentBilling || {}
-
-      return {
-        no: index + 1,
-        category: outsourcing.type || '-',
-        businessNumber: outsourcing.businessNumber || '-',
-        company: outsourcing.name || '-',
-        item: labor?.workType || '-',
-        ceo: outsourcing.ceoName || labor?.name || '-',
-        contact: outsourcing.landlineNumber || '-',
-        bank: outsourcing.bankName || '-',
-        accountNumber: outsourcing.accountNumber || '-',
-        accountName: outsourcing.accountHolder || '-',
-        prevSupply: prev.supplyPrice || 0,
-        prevTax: prev.vat || 0,
-        prevDeduction: prev.deductionAmount || 0,
-        prevTotal: prev.total || 0,
-        currSupply: curr.supplyPrice || 0,
-        currTax: curr.vat || 0,
-        currDeduction: curr.deductionAmount || 0,
-        currTotal: curr.total || 0,
-        totalSupply: (prev.supplyPrice || 0) + (curr.supplyPrice || 0),
-        totalTax: (prev.vat || 0) + (curr.vat || 0),
-        totalDeduction: (prev.deductionAmount || 0) + (curr.deductionAmount || 0),
-        totalTotal: (prev.total || 0) + (curr.total || 0),
-      }
-    },
+  const rowsOutsourcing = useMemo(
+    () => (OutSourcingLaborCostListQuery.data?.data?.items || []).map(toRow),
+    [OutSourcingLaborCostListQuery.data],
   )
+  const allRows = useMemo(() => [...rowsDirect, ...rowsOutsourcing], [rowsDirect, rowsOutsourcing])
 
-  const allRows = [...rowsDirect, ...rowsOutsourcing]
-
-  const handleExcelDownload = () => {
-    const wb = XLSX.utils.book_new()
-
-    // 1️⃣ 헤더
-    const headerRow1 = [
-      'NO.',
-      '사업자등록번호',
-      '품명',
-      '업체명',
-      '대표자',
-      '연락처',
-      '기성청구계좌',
-      '',
-      '',
-      '전회까지 청구내역',
-      '',
-      '',
-      '',
-      '금회 청구내역',
-      '',
-      '',
-      '',
-      '누계 청구내역',
-      '',
-      '',
-      '',
-    ]
-
-    const headerRow2 = [
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '은행',
-      '계좌번호',
-      '계좌명',
-      '공급가',
-      '부가세',
-      '공제금액',
-      '계',
-      '공급가',
-      '부가세',
-      '공제금액',
-      '계',
-      '공급가',
-      '부가세',
-      '공제금액',
-      '계',
-    ]
-
-    const sheetData: any[] = []
-    sheetData.push(headerRow1)
-    sheetData.push(headerRow2)
-
-    // 총합에 사용할 키 배열 (이 위치에 있어야 calculateSum에서 참조 가능)
-    const totalKeys = [
-      'prevSupply',
-      'prevTax',
-      'prevDeduction',
-      'prevTotal',
-      'currSupply',
-      'currTax',
-      'currDeduction',
-      'currTotal',
-      'totalSupply',
-      'totalTax',
-      'totalDeduction',
-      'totalTotal',
-    ]
-
-    const calculateSum = (arr: any[]) =>
-      totalKeys.map((key) => arr.reduce((acc, r) => acc + (r?.[key] || 0), 0))
-
-    // 합계 계산
-    const sumDirect = calculateSum(rowsDirect)
-    const sumOutsourcing = calculateSum(rowsOutsourcing)
-    const sumTotal = calculateSum([...rowsDirect, ...rowsOutsourcing])
-
-    // ➊ 직영 rows 추가
-    rowsDirect.forEach((r: any) => {
-      sheetData.push([
-        r.no,
-        r.businessNumber,
-        r.item,
-        r.company,
-        r.ceo,
-        r.contact,
-        r.bank,
-        r.accountNumber,
-        r.accountName,
-        r.prevSupply?.toLocaleString(),
-        r.prevTax?.toLocaleString(),
-        r.prevDeduction?.toLocaleString(),
-        r.prevTotal?.toLocaleString(),
-        r.currSupply?.toLocaleString(),
-        r.currTax?.toLocaleString(),
-        r.currDeduction?.toLocaleString(),
-        r.currTotal?.toLocaleString(),
-        r.totalSupply?.toLocaleString(),
-        r.totalTax?.toLocaleString(),
-        r.totalDeduction?.toLocaleString(),
-        r.totalTotal?.toLocaleString(),
-      ])
-    })
-
-    // ➋ 직영 소계
-    sheetData.push([
-      '직영소계',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      ...sumDirect.map((v) => v.toLocaleString()),
-    ])
-
-    // ➌ 용역 rows 추가
-    rowsOutsourcing.forEach((r: any) => {
-      sheetData.push([
-        r.no,
-        r.businessNumber,
-        r.item,
-        r.company,
-        r.ceo,
-        r.contact,
-        r.bank,
-        r.accountNumber,
-        r.accountName,
-        r.prevSupply?.toLocaleString(),
-        r.prevTax?.toLocaleString(),
-        r.prevDeduction?.toLocaleString(),
-        r.prevTotal?.toLocaleString(),
-        r.currSupply?.toLocaleString(),
-        r.currTax?.toLocaleString(),
-        r.currDeduction?.toLocaleString(),
-        r.currTotal?.toLocaleString(),
-        r.totalSupply?.toLocaleString(),
-        r.totalTax?.toLocaleString(),
-        r.totalDeduction?.toLocaleString(),
-        r.totalTotal?.toLocaleString(),
-      ])
-    })
-
-    // ➍ 용역 소계
-    sheetData.push([
-      '용역소계',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      ...sumOutsourcing.map((v) => v.toLocaleString()),
-    ])
-
-    // ➎ 전체 합계
-    sheetData.push([
-      '합계',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      ...sumTotal.map((v) => v.toLocaleString()),
-    ])
-
-    const ws = XLSX.utils.aoa_to_sheet(sheetData)
-
-    const directSubtotalRow = 2 + rowsDirect.length
-    const outsourcingStartRow = directSubtotalRow + 1
-    const outsourcingSubtotalRow = outsourcingStartRow + rowsOutsourcing.length
-    const totalRow = outsourcingSubtotalRow + 1
-
-    // 병합 설정
-    ws['!merges'] = [
-      // 헤더 1~2줄 병합
-      { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
-      { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } },
-      { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } },
-      { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } },
-      { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } },
-      { s: { r: 0, c: 5 }, e: { r: 1, c: 5 } },
-      { s: { r: 0, c: 6 }, e: { r: 0, c: 8 } },
-      { s: { r: 0, c: 9 }, e: { r: 0, c: 12 } },
-      { s: { r: 0, c: 13 }, e: { r: 0, c: 16 } },
-      { s: { r: 0, c: 17 }, e: { r: 0, c: 20 } },
-
-      // 직영소계 병합
-      { s: { r: directSubtotalRow, c: 0 }, e: { r: directSubtotalRow, c: 8 } },
-
-      // 용역소계 병합
-      { s: { r: outsourcingSubtotalRow, c: 0 }, e: { r: outsourcingSubtotalRow, c: 8 } },
-
-      // 전체 합계 병합
-      { s: { r: totalRow, c: 0 }, e: { r: totalRow, c: 8 } },
-    ]
-
-    // 스타일 적용
-    const range = XLSX.utils.decode_range(ws['!ref']!)
-    for (let R = 0; R <= range.e.r; R++) {
-      for (let C = 0; C <= range.e.c; C++) {
-        const cellRef = XLSX.utils.encode_cell({ r: R, c: C })
-        if (!ws[cellRef]) ws[cellRef] = { v: '' }
-
-        const cellValue = ws[cellRef].v
-        const isHeader = R < 2
-        const isAmount = !isHeader && C >= 9
-        const isSubtotal =
-          typeof cellValue === 'string' && (cellValue.includes('소계') || cellValue === '합계')
-
-        ws[cellRef].s = {
-          border: {
-            top: { style: 'thin', color: { rgb: '000000' } },
-            bottom: { style: 'thin', color: { rgb: '000000' } },
-            left: { style: 'thin', color: { rgb: '000000' } },
-            right: { style: 'thin', color: { rgb: '000000' } },
-          },
-          fill: isHeader ? { patternType: 'solid', fgColor: { rgb: 'C0C0C0' } } : undefined,
-          alignment: {
-            horizontal: isHeader || isSubtotal ? 'center' : isAmount ? 'right' : 'center',
-            vertical: 'center',
-          },
-          font: { bold: isHeader || isSubtotal },
-        }
-      }
-    }
-
-    XLSX.utils.book_append_sheet(wb, ws, '노무비')
-    XLSX.writeFile(wb, '노무비.xlsx')
-  }
-
-  const cellStyle = {
-    border: '1px solid #9ca3af',
-    whiteSpace: 'nowrap',
-    padding: '4px 8px',
-  }
-
-  const headerStyle = {
-    ...cellStyle,
-    fontWeight: 'bold',
-    backgroundColor: '#f3f4f6',
-    minWidth: 100, // 숫자 칸 최소 너비
-  }
-
-  const totalKeys = [
-    'prevSupply',
-    'prevTax',
-    'prevDeduction',
-    'prevTotal',
-    'currSupply',
-    'currTax',
-    'currDeduction',
-    'currTotal',
-    'totalSupply',
-    'totalTax',
-    'totalDeduction',
-    'totalTotal',
-  ]
-
-  const calculateSum = (rows: any[]) =>
-    totalKeys.map((key) => rows.reduce((acc, r) => acc + (r[key] || 0), 0))
-
-  const sumDirect = calculateSum(rowsDirect)
-  const sumOutsourcing = calculateSum(rowsOutsourcing)
-  const sumTotal = calculateSum(allRows)
+  const sumDirect = useMemo(() => sumRows(rowsDirect), [rowsDirect])
+  const sumOutsourcing = useMemo(() => sumRows(rowsOutsourcing), [rowsOutsourcing])
+  const sumTotal = useMemo(() => sumRows(allRows), [allRows])
 
   const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
 
@@ -393,13 +321,28 @@ export default function AggregateLaborCostView() {
   }, [])
 
   const roleId = Number(myInfo?.roles?.[0]?.id)
-
   const rolePermissionStatus = myInfo?.roles?.[0]?.deleted
-
   const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
 
-  // "계정 관리" 메뉴에 대한 권한
   const { hasExcelDownload } = useMenuPermission(roleId, '집계 관리', enabled)
+
+  const handleExcelDownload = () => {
+    const wb = XLSX.utils.book_new()
+    const sheetData = buildSheetData(
+      rowsDirect,
+      rowsOutsourcing,
+      sumDirect,
+      sumOutsourcing,
+      sumTotal,
+    )
+    const ws = XLSX.utils.aoa_to_sheet(sheetData)
+
+    applySheetStyleAndMerge(ws, rowsDirect.length, rowsOutsourcing.length)
+
+    const fileName = `${search.yearMonth}_${search.siteName}_노무비.xlsx`
+    XLSX.utils.book_append_sheet(wb, ws, '노무비')
+    XLSX.writeFile(wb, fileName)
+  }
 
   return (
     <div>
@@ -477,7 +420,7 @@ export default function AggregateLaborCostView() {
             </TableHead>
 
             <TableBody>
-              {rowsDirect.map((r: any) => (
+              {rowsDirect.map((r: LaborRow) => (
                 <TableRow key={`direct-${r.no}`}>
                   <TableCell align="center" sx={cellStyle}>
                     {r.no}
@@ -506,7 +449,7 @@ export default function AggregateLaborCostView() {
                   <TableCell align="center" sx={cellStyle}>
                     {r.accountName}
                   </TableCell>
-                  {totalKeys.map((key) => (
+                  {amountKeys.map((key: AmountKey) => (
                     <TableCell align="right" sx={cellStyle} key={key}>
                       {(r[key] || 0).toLocaleString()}
                     </TableCell>
@@ -525,7 +468,7 @@ export default function AggregateLaborCostView() {
                 ))}
               </TableRow>
 
-              {rowsOutsourcing.map((r: any) => (
+              {rowsOutsourcing.map((r: LaborRow) => (
                 <TableRow key={`outsourcing-${r.no}`}>
                   <TableCell align="center" sx={cellStyle}>
                     {r.no}
@@ -554,7 +497,7 @@ export default function AggregateLaborCostView() {
                   <TableCell align="center" sx={cellStyle}>
                     {r.accountName}
                   </TableCell>
-                  {totalKeys.map((key) => (
+                  {amountKeys.map((key: AmountKey) => (
                     <TableCell align="right" sx={cellStyle} key={key}>
                       {(r[key] || 0).toLocaleString()}
                     </TableCell>
