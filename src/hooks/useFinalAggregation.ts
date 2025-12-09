@@ -196,7 +196,7 @@ export default function useFinalAggregationView({
     enabled: tabName === 'LABOR' && !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
   })
 
-  // 노무비에서 용역 데이터 불러오기
+  // 장비비 데이터 조회
   const EquipmentLaborCostListQuery = useQuery({
     queryKey: ['equipmentLaborInfo', yearMonth, siteId, siteProcessId],
     queryFn: () => {
@@ -218,7 +218,7 @@ export default function useFinalAggregationView({
 
       return EquipmentCostInfoServiceByAggregate(filteredParams)
     },
-    enabled: tabName === 'EQUIPMENT' && !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
+    enabled: !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
   })
 
   // 장비비 가동현황에서 용역 데이터 불러오기

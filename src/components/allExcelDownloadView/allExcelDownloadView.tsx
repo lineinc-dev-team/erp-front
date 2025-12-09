@@ -1268,6 +1268,201 @@ export default function AllExcelDownloadView({
     }
   }
 
+  // 장비비 엑셀다운로드
+
+  const { EquipmentLaborCostListQuery } = useFinalAggregationView({
+    yearMonth: search.yearMonth,
+    siteId: search.siteId,
+    siteProcessId: search.siteProcessId,
+    tabName: 'EQUIPMENT',
+  })
+
+  const eqRowsDirect = (EquipmentLaborCostListQuery.data?.data?.items || []).map(
+    (item: any, index: number) => {
+      const outsourcing = item.outsourcingCompany || {}
+      const prev = item.previousBilling || {}
+      const curr = item.currentBilling || {}
+
+      return {
+        no: index + 1,
+        category: outsourcing.type || '-',
+        businessNumber: outsourcing.businessNumber || '-',
+        company: outsourcing.name || '-',
+        specification: item?.specification || '-',
+        ceo: outsourcing.ceoName || '-',
+        contact: outsourcing.landlineNumber || '-',
+        bank: outsourcing.bankName || '-',
+        accountNumber: outsourcing.accountNumber || '-',
+        accountName: outsourcing.accountHolder || '-',
+        prevSupply: prev.supplyPrice || 0,
+        prevTax: prev.vat || 0,
+        prevDeduction: prev.deductionAmount || 0,
+        prevTotal: prev.total || 0,
+        currSupply: curr.supplyPrice || 0,
+        currTax: curr.vat || 0,
+        currDeduction: curr.deductionAmount || 0,
+        currTotal: curr.total || 0,
+        totalSupply: (prev.supplyPrice || 0) + (curr.supplyPrice || 0),
+        totalTax: (prev.vat || 0) + (curr.vat || 0),
+        totalDeduction: (prev.deductionAmount || 0) + (curr.deductionAmount || 0),
+        totalTotal: (prev.total || 0) + (curr.total || 0),
+      }
+    },
+  )
+
+  // 헤더 1행
+  const eqHeaderRow1 = [
+    'NO.',
+    '사업자등록번호',
+    '규격',
+    '업체명',
+    '대표자',
+    '연락처',
+    '기성청구계좌',
+    '',
+    '',
+    '전회까지 청구내역',
+    '',
+    '',
+    '',
+    '금회 청구내역',
+    '',
+    '',
+    '',
+    '누계 청구내역',
+    '',
+    '',
+    '',
+  ]
+
+  // 헤더 2행
+  const eqHeaderRow2 = [
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '은행',
+    '계좌번호',
+    '계좌명',
+    '공급가',
+    '부가세',
+    '공제금액',
+    '계',
+    '공급가',
+    '부가세',
+    '공제금액',
+    '계',
+    '공급가',
+    '부가세',
+    '공제금액',
+    '계',
+  ]
+
+  const eqSheetData: any[] = []
+  eqSheetData.push(eqHeaderRow1)
+  eqSheetData.push(eqHeaderRow2)
+
+  eqRowsDirect.forEach((r: any) => {
+    eqSheetData.push([
+      r.no,
+      r.businessNumber,
+      r.specification,
+      r.company,
+      r.ceo,
+      r.contact,
+      r.bank,
+      r.accountNumber,
+      r.accountName,
+      r.prevSupply.toLocaleString(),
+      r.prevTax.toLocaleString(),
+      r.prevDeduction.toLocaleString(),
+      r.prevTotal.toLocaleString(),
+      r.currSupply.toLocaleString(),
+      r.currTax.toLocaleString(),
+      r.currDeduction.toLocaleString(),
+      r.currTotal.toLocaleString(),
+      r.totalSupply.toLocaleString(),
+      r.totalTax.toLocaleString(),
+      r.totalDeduction.toLocaleString(),
+      r.totalTotal.toLocaleString(),
+    ])
+  })
+
+  const EqSum = (key: string) => eqRowsDirect.reduce((acc: any, r: any) => acc + (r as any)[key], 0)
+
+  eqSheetData.push([
+    '소계',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    EqSum('prevSupply').toLocaleString(),
+    EqSum('prevTax').toLocaleString(),
+    EqSum('prevDeduction').toLocaleString(),
+    EqSum('prevTotal').toLocaleString(),
+    EqSum('currSupply').toLocaleString(),
+    EqSum('currTax').toLocaleString(),
+    EqSum('currDeduction').toLocaleString(),
+    EqSum('currTotal').toLocaleString(),
+    EqSum('totalSupply').toLocaleString(),
+    EqSum('totalTax').toLocaleString(),
+    EqSum('totalDeduction').toLocaleString(),
+    EqSum('totalTotal').toLocaleString(),
+  ])
+
+  const equipmentCostSheet = XLSX.utils.aoa_to_sheet(eqSheetData)
+
+  // 병합
+  equipmentCostSheet['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
+    { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } },
+    { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } },
+    { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } },
+    { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } },
+    { s: { r: 0, c: 5 }, e: { r: 1, c: 5 } },
+
+    { s: { r: 0, c: 6 }, e: { r: 0, c: 8 } },
+    { s: { r: 0, c: 9 }, e: { r: 0, c: 12 } },
+    { s: { r: 0, c: 13 }, e: { r: 0, c: 16 } },
+    { s: { r: 0, c: 17 }, e: { r: 0, c: 20 } },
+
+    // 소계 병합
+    { s: { r: eqSheetData.length - 1, c: 0 }, e: { r: eqSheetData.length - 1, c: 8 } },
+  ]
+
+  // 스타일 적용 (기존 코드 그대로)
+  const Eqrange = XLSX.utils.decode_range(equipmentCostSheet['!ref']!)
+  for (let R = Eqrange.s.r; R <= Eqrange.e.r; ++R) {
+    for (let C = Eqrange.s.c; C <= Eqrange.e.c; ++C) {
+      const cellRef = XLSX.utils.encode_cell({ r: R, c: C })
+      if (!equipmentCostSheet[cellRef]) equipmentCostSheet[cellRef] = { v: '' }
+
+      const isHeader = R < 2
+      const isAmount = !isHeader && C >= 9
+      const isSubtotalLabel = R === eqSheetData.length - 1 && C === 0
+
+      equipmentCostSheet[cellRef].s = {
+        border: {
+          top: { style: 'thin', color: { rgb: '000000' } },
+          bottom: { style: 'thin', color: { rgb: '000000' } },
+          left: { style: 'thin', color: { rgb: '000000' } },
+          right: { style: 'thin', color: { rgb: '000000' } },
+        },
+        fill: isHeader ? { patternType: 'solid', fgColor: { rgb: 'C0C0C0' } } : undefined,
+        alignment: {
+          vertical: 'center',
+          horizontal: isHeader || isSubtotalLabel ? 'center' : isAmount ? 'right' : 'center',
+        },
+      }
+    }
+  }
+
   useEffect(() => {
     if (!fuelDataReady || !laborDataReady) return // ✅ 기름 데이터 준비 안됐으면 실행 금지
 
@@ -1359,6 +1554,7 @@ export default function AllExcelDownloadView({
     XLSX.utils.book_append_sheet(workbook, fuelSheet, '유류집계')
     XLSX.utils.book_append_sheet(workbook, laborCostSheet, '노무비')
     XLSX.utils.book_append_sheet(workbook, laborPaySheet, '노무비명세서')
+    XLSX.utils.book_append_sheet(workbook, equipmentCostSheet, '장비비')
 
     const fileName = `${search.yearMonth}_${search.siteName}_사기성집계표.xlsx`
 
