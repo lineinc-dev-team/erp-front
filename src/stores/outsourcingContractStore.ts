@@ -833,90 +833,96 @@ export const useContractFormStore = create<OutsourcingContractFormStore>((set, g
       //   })),
       // })),
 
-      constructionsV2: form.contractManagers.map((m) => ({
-        id: m.id || Date.now(),
-        itemName: m.itemName,
-        items: m.items,
-        // item: m.item,
-        // specification: m.specification,
-        // unit: m.unit,
-        // unitPrice: m.unitPrice,
-        // contractQuantity: m.contractQuantity,
-        // contractPrice: m.contractPrice,
-        // outsourcingContractQuantity: m.outsourcingContractQuantity,
-        // outsourcingContractPrice: m.outsourcingContractPrice,
-        // memo: m.memo,
-      })),
+      constructionsV2: form.contractManagers.length
+        ? form.contractManagers.map((m) => ({
+            id: m.id || Date.now(),
+            itemName: m.itemName,
+            items: m.items,
+            // item: m.item,
+            // specification: m.specification,
+            // unit: m.unit,
+            // unitPrice: m.unitPrice,
+            // contractQuantity: m.contractQuantity,
+            // contractPrice: m.contractPrice,
+            // outsourcingContractQuantity: m.outsourcingContractQuantity,
+            // outsourcingContractPrice: m.outsourcingContractPrice,
+            // memo: m.memo,
+          }))
+        : undefined,
 
-      equipments: form.equipmentManagers.map((item) => ({
-        id: item.id || Date.now(),
-        specification: item.specification,
-        vehicleNumber: item.vehicleNumber,
-        category: item.category,
-        unitPrice: item.unitPrice,
-        taskDescription: item.taskDescription,
-        type: item.type == '' ? undefined : item.type,
-        memo: item.memo,
-        subEquipments:
-          item.subEquipments?.map((sub) => ({
-            id: sub.id || Date.now(),
-            type: sub.type == '' ? undefined : sub.type,
-            taskDescription: sub.taskDescription,
-            description: sub.description,
-            unitPrice: sub.unitPrice,
-            memo: sub.memo,
-          })) || [],
-      })),
+      equipments: form.equipmentManagers.length
+        ? form.equipmentManagers.map((item) => ({
+            id: item.id || Date.now(),
+            specification: item.specification,
+            vehicleNumber: item.vehicleNumber,
+            category: item.category,
+            unitPrice: item.unitPrice,
+            taskDescription: item.taskDescription,
+            type: item.type == '' || item.type == 'BASE' ? undefined : item.type,
+            memo: item.memo,
+            subEquipments:
+              item.subEquipments?.map((sub) => ({
+                id: sub.id || Date.now(),
+                type: sub.type == '' ? undefined : sub.type,
+                taskDescription: sub.taskDescription,
+                description: sub.description,
+                unitPrice: sub.unitPrice,
+                memo: sub.memo,
+              })) || [],
+          }))
+        : undefined,
 
       // 우선은 한일 파일만 첨부됌
-      drivers: form.articleManagers.map((item) => {
-        const driverLicenseFiles = item.driverLicense || []
-        const safeEducationFiles = item.safeEducation || []
-        const etcDocumentFiles = item.ETCfiles || []
+      drivers: form.articleManagers.length
+        ? form.articleManagers.map((item) => {
+            const driverLicenseFiles = item.driverLicense || []
+            const safeEducationFiles = item.safeEducation || []
+            const etcDocumentFiles = item.ETCfiles || []
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const files: any = []
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const files: any = []
 
-        driverLicenseFiles.forEach((fileObj) => {
-          if (fileObj.file || fileObj.fileUrl) {
-            files.push({
-              id: fileObj.id || Date.now(),
-              documentType: 'DRIVER_LICENSE',
-              fileUrl: fileObj.fileUrl || '',
-              originalFileName: fileObj.originalFileName || '',
+            driverLicenseFiles.forEach((fileObj) => {
+              if (fileObj.file || fileObj.fileUrl) {
+                files.push({
+                  id: fileObj.id || Date.now(),
+                  documentType: 'DRIVER_LICENSE',
+                  fileUrl: fileObj.fileUrl || '',
+                  originalFileName: fileObj.originalFileName || '',
+                })
+              }
             })
-          }
-        })
 
-        safeEducationFiles.forEach((fileObj) => {
-          if (fileObj.file || fileObj.fileUrl) {
-            files.push({
-              id: fileObj.id || Date.now(),
-              documentType: 'SAFETY_EDUCATION',
-              fileUrl: fileObj.fileUrl || '',
-              originalFileName: fileObj.originalFileName || '',
+            safeEducationFiles.forEach((fileObj) => {
+              if (fileObj.file || fileObj.fileUrl) {
+                files.push({
+                  id: fileObj.id || Date.now(),
+                  documentType: 'SAFETY_EDUCATION',
+                  fileUrl: fileObj.fileUrl || '',
+                  originalFileName: fileObj.originalFileName || '',
+                })
+              }
             })
-          }
-        })
 
-        etcDocumentFiles.forEach((fileObj) => {
-          if (fileObj.file || fileObj.fileUrl) {
-            files.push({
-              id: fileObj.id || Date.now(),
-              documentType: 'ETC_DOCUMENT',
-              fileUrl: fileObj.fileUrl || '',
-              originalFileName: fileObj.originalFileName || '',
+            etcDocumentFiles.forEach((fileObj) => {
+              if (fileObj.file || fileObj.fileUrl) {
+                files.push({
+                  id: fileObj.id || Date.now(),
+                  documentType: 'ETC_DOCUMENT',
+                  fileUrl: fileObj.fileUrl || '',
+                  originalFileName: fileObj.originalFileName || '',
+                })
+              }
             })
-          }
-        })
 
-        return {
-          id: item.id || Date.now(),
-          name: item.name,
-          memo: item.memo,
-          files,
-        }
-      }),
+            return {
+              id: item.id || Date.now(),
+              name: item.name,
+              memo: item.memo,
+              files,
+            }
+          })
+        : undefined,
 
       changeHistories: form.editedHistories ?? [],
     }

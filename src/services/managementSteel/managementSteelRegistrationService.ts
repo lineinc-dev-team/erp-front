@@ -315,3 +315,27 @@ export async function SteelDetailExcelDownload(id: number) {
 
   return res.status
 }
+
+// 규격에 대한  키워드 검색
+
+export async function GetSpecificationsInfoService({ keyword = '' }) {
+  const resData = await fetch(`${API.STEELv2}/specifications?keyword=${keyword}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) {
+      // 로그인 페이지로 이동
+      window.location.href = '/'
+      return // 혹은 throw new Error('권한이 없습니다.') 후 처리를 중단
+    }
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}

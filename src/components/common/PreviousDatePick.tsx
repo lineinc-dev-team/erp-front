@@ -13,6 +13,8 @@ type CommonDatePickerProps = {
   error?: boolean
   helperText?: string
   disabled?: boolean
+  minDate: Date | null
+  maxDate: Date | null
 }
 
 export default function CommonPreviousDatePicker({
@@ -22,9 +24,10 @@ export default function CommonPreviousDatePicker({
   error = false,
   helperText = '',
   disabled = false,
+  minDate,
+  maxDate,
 }: CommonDatePickerProps) {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  console.log('DatePicker 적용 범위:', minDate, maxDate) // ✅ 디버깅용
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ko}>
@@ -45,28 +48,14 @@ export default function CommonPreviousDatePicker({
           onChange(adjustedDate)
         }}
         format="yyyy/MM/dd"
-        maxDate={today} // ⬅️ 오늘 이후는 선택 불가!!
+        minDate={minDate ?? undefined}
+        maxDate={maxDate ?? undefined}
         slotProps={{
           textField: {
             required,
             error,
             helperText,
             size: 'small',
-            sx: {
-              width: '8rem',
-              '@media (min-width:1455px)': {
-                width: '8rem',
-                '& .MuiPickersInputBase-sectionsContainer': {
-                  fontSize: '0.75rem',
-                },
-              },
-              '@media (min-width:1900px)': {
-                width: '9rem',
-                '& .MuiPickersInputBase-sectionsContainer': {
-                  fontSize: '0.9rem',
-                },
-              },
-            },
           },
         }}
       />

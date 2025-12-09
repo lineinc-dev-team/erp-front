@@ -10,8 +10,7 @@ import {
   Paper,
   Button,
 } from '@mui/material'
-import * as XLSX from 'xlsx'
-import { saveAs } from 'file-saver'
+import * as XLSX from 'xlsx-js-style'
 import useFinalAggregationView from '@/hooks/useFinalAggregation'
 import { useFinalAggregationSearchStore } from '@/stores/finalAggregationStore'
 import { myInfoProps } from '@/types/user'
@@ -126,6 +125,7 @@ export default function AggregateManagementOutSourcingView() {
         acc.contractPrice += r.contractPrice || 0
 
         acc.outsourcingQuantity += r.outsourcingQuantity || 0
+        acc.outsourcingUnitPrice += r.outsourcingUnitPrice || 0
         acc.outsourcingPrice += r.outsourcingPrice || 0
 
         acc.prevQuantity += r.prevQuantity || 0
@@ -144,6 +144,7 @@ export default function AggregateManagementOutSourcingView() {
       contractPrice: 0,
 
       outsourcingQuantity: 0,
+      outsourcingUnitPrice: 0,
       outsourcingPrice: 0,
 
       prevQuantity: 0,
@@ -157,147 +158,283 @@ export default function AggregateManagementOutSourcingView() {
     },
   )
 
-  /** ===============================
-   ** 2) 엑셀 다운로드
-   ** =============================== */
   const handleExcelDownload = () => {
-    const flatData: any[] = []
+    const wb = XLSX.utils.book_new()
 
-    // 1. 그룹별 항목
-    groupedRows.forEach((g: any) => {
-      g.rows.forEach((r: any) => {
-        flatData.push({
-          항목명: g.groupName,
-          항목: r.item,
-          규격: r.specification,
-          단위: r.unit,
-          도급단가: r.unitPrice,
-          도급수량: r.contractQuantity,
-          도급금액: r.contractPrice,
-          외주_수량: r.outsourcingQuantity,
-          외주_단가: r.outsourcingUnitPrice,
-          외주_금액: r.outsourcingPrice,
-          전회_수량: r.prevQuantity,
-          전회_금액: r.prevAmount,
-          금회_수량: r.currQuantity,
-          금회_금액: r.currAmount,
-          누계_수량: r.totalQuantity,
-          누계_금액: r.totalAmount,
-        })
+    const headerRow1 = [
+      'NO.',
+      '항목명',
+      '항목',
+      '규격',
+      '단위',
+      '도급단가',
+      '도급금액',
+      '',
+      '외주계약금액',
+      '',
+      '',
+      '전회 청구내역',
+      '',
+      '금회 청구내역',
+      '',
+      '누계 청구내역',
+      '',
+    ]
+    const headerRow2 = [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '수량',
+      '금액',
+      '수량',
+      '단가',
+      '금액',
+      '수량',
+      '금액',
+      '수량',
+      '금액',
+      '수량',
+      '금액',
+    ]
+
+    const sheetData: any[] = []
+    sheetData.push(headerRow1)
+    sheetData.push(headerRow2)
+
+    // 그룹별 데이터
+    groupedRows.forEach((group: any, groupIndex: any) => {
+      group.rows.forEach((r: any, rowIdx: any) => {
+        sheetData.push(
+          [
+            rowIdx === 0 ? groupIndex + 1 : '',
+            rowIdx === 0 ? group.groupName : '',
+            r.item,
+            r.specification,
+            r.unit,
+            r.unitPrice,
+            r.contractQuantity,
+            r.contractPrice,
+            r.outsourcingQuantity,
+            r.outsourcingUnitPrice,
+            r.outsourcingPrice,
+            r.prevQuantity,
+            r.prevAmount,
+            r.currQuantity,
+            r.currAmount,
+            r.totalQuantity,
+            r.totalAmount,
+          ].map((v: any) => (typeof v === 'number' ? v.toLocaleString() : v)),
+        )
       })
     })
 
-    // 2. 외주공사비 합계
-    flatData.push({
-      항목명: '외주공사비',
-      항목: '',
-      규격: '',
-      단위: '',
-      도급단가: '',
-      계약수량: totals.contractQuantity,
-      계약금액: totals.contractPrice,
-      외주_수량: '',
-      외주_단가: '',
-      외주_금액: '',
-      전회_수량: totals.prevQuantity,
-      전회_금액: totals.prevAmount,
-      금회_수량: totals.currQuantity,
-      금회_금액: totals.currAmount,
-      누계_수량: totals.totalQuantity,
-      누계_금액: totals.totalAmount,
-    })
+    // 외주공사비 합계
+    sheetData.push([
+      '외주공사비',
+      '',
+      '',
+      '',
+      '',
+      '',
+      totals.contractQuantity.toLocaleString(),
+      totals.contractPrice.toLocaleString(),
 
-    // 3. 공제합계
+      totals.outsourcingQuantity.toLocaleString(),
+      totals.outsourcingUnitPrice.toLocaleString(),
+      totals.outsourcingPrice.toLocaleString(),
+
+      totals.prevQuantity.toLocaleString(),
+      totals.prevAmount.toLocaleString(),
+      totals.currQuantity.toLocaleString(),
+      totals.currAmount.toLocaleString(),
+      totals.totalQuantity.toLocaleString(),
+      totals.totalAmount.toLocaleString(),
+    ])
+
+    // deductionRows
     deductionRows.forEach((row) => {
-      const previousAmount = getPreviousAmount(row.key) ?? 0
-      const currentAmount = getCurrentAmount(row.key) ?? 0
-      const totalAmount = getTotalAmount(row.key)
-
-      flatData.push({
-        항목명: '공제합계',
-        항목: '공제금액',
-        규격: row.label,
-        단위: '',
-        도급단가: '',
-        계약수량: '',
-        계약금액: '',
-        외주_수량: '',
-        외주_단가: '',
-        외주_금액: '',
-        전회_수량: '',
-        전회_금액: previousAmount,
-        금회_수량: '',
-        금회_금액: currentAmount,
-        누계_수량: '',
-        누계_금액: totalAmount,
-      })
+      const prev = getPreviousAmount(row.key)
+      const curr = getCurrentAmount(row.key)
+      const total = getTotalAmount(row.key)
+      sheetData.push([
+        '',
+        '',
+        '공제금액',
+        row.label,
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        prev.toLocaleString(),
+        '',
+        curr.toLocaleString(),
+        '',
+        total.toLocaleString(),
+      ])
     })
 
-    // 4. 총계(공급가, 부가세, 세금계산서발행본)
-    flatData.push(
-      {
-        항목명: '총계(공급가)',
-        항목: '',
-        규격: '',
-        단위: '',
-        도급단가: '',
-        계약수량: '',
-        계약금액: '',
-        외주_수량: '',
-        외주_단가: '',
-        외주_금액: '',
-        전회_수량: totalPrevSupply,
-        전회_금액: '',
-        금회_수량: totalCurrSupply,
-        금회_금액: '',
-        누계_수량: '',
-        누계_금액: totalFinalSupply,
-      },
-      {
-        항목명: '총계(부가세)',
-        항목: '',
-        규격: '',
-        단위: '',
-        도급단가: '',
-        계약수량: '',
-        계약금액: '',
-        외주_수량: '',
-        외주_단가: '',
-        외주_금액: '',
-        전회_수량: totalPrevTax,
-        전회_금액: '',
-        금회_수량: totalCurrTax,
-        금회_금액: '',
-        누계_수량: '',
-        누계_금액: totalTax,
-      },
-      {
-        항목명: '총계(세금계산서발행본)',
-        항목: '',
-        규격: '',
-        단위: '',
-        도급단가: '',
-        계약수량: '',
-        계약금액: '',
-        외주_수량: '',
-        외주_단가: '',
-        외주_금액: '',
-        전회_수량: totalPrevInvoice,
-        전회_금액: '',
-        금회_수량: totalCurrInvoice,
-        금회_금액: '',
-        누계_수량: '',
-        누계_금액: totalInvoice,
-      },
-    )
+    // 공제합계
+    sheetData.push([
+      '공제합계',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      deductionPrevSum.toLocaleString(),
+      '',
+      deductionCurrSum.toLocaleString(),
+      '',
+      deductionTotalSum.toLocaleString(),
+    ])
 
-    const worksheet = XLSX.utils.json_to_sheet(flatData)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
+    // 총계(공급가, 부가세, 세금계산서발행본)
+    sheetData.push([
+      '총계(소계1 - 소계2 (공제금액))',
+      '',
+      '',
+      '',
+      '',
+      '공급가',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      totalPrevSupply.toLocaleString(),
+      '',
+      totalCurrSupply.toLocaleString(),
 
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
-    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' })
-    saveAs(blob, '외주공사_집계.xlsx')
+      '',
+      totalFinalSupply.toLocaleString(),
+    ])
+    sheetData.push([
+      '',
+      '',
+      '',
+      '',
+      '',
+      '부가세',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      Math.round(totalPrevTax).toLocaleString(),
+
+      '',
+      Math.round(totalCurrTax).toLocaleString(),
+
+      '',
+      Math.round(totalTax).toLocaleString(),
+    ])
+    sheetData.push([
+      '',
+      '',
+      '',
+      '',
+      '',
+      '세금계산서발행본',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      totalPrevInvoice.toLocaleString(),
+
+      '',
+      totalCurrInvoice.toLocaleString(),
+
+      '',
+      totalInvoice.toLocaleString(),
+    ])
+
+    const ws = XLSX.utils.aoa_to_sheet(sheetData)
+
+    // 병합
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
+      { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } },
+      { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } },
+      { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } },
+      { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } },
+      { s: { r: 0, c: 5 }, e: { r: 1, c: 5 } },
+      { s: { r: 0, c: 6 }, e: { r: 0, c: 7 } },
+      { s: { r: 0, c: 8 }, e: { r: 0, c: 10 } },
+      { s: { r: 0, c: 11 }, e: { r: 0, c: 12 } },
+      { s: { r: 0, c: 13 }, e: { r: 0, c: 14 } },
+      { s: { r: 0, c: 15 }, e: { r: 0, c: 16 } },
+    ]
+    const outsourcingRowIndex = sheetData.findIndex((row) => row[0] === '외주공사비')
+    if (outsourcingRowIndex >= 0) {
+      ws['!merges'].push({
+        s: { r: outsourcingRowIndex, c: 0 },
+        e: { r: outsourcingRowIndex, c: 5 },
+      })
+    }
+
+    const deductionRowIndex = sheetData.findIndex((row) => row[0] === '공제합계')
+    if (deductionRowIndex >= 0) {
+      ws['!merges'].push({
+        s: { r: deductionRowIndex, c: 0 },
+        e: { r: deductionRowIndex, c: 5 }, // NO. ~ 도급단가까지 병합
+      })
+    }
+
+    // 총계 병합
+    const totalRowIndex = sheetData.findIndex((row) => row[0]?.startsWith('총계(소계1'))
+    if (totalRowIndex >= 0) {
+      ws['!merges'].push({
+        s: { r: totalRowIndex, c: 0 }, // 시작 셀
+        e: { r: totalRowIndex + 2, c: 4 }, // 아래 3칸, 오른쪽 5칸까지
+      })
+    }
+
+    // 스타일 적용
+    const range = XLSX.utils.decode_range(ws['!ref']!)
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cellRef = XLSX.utils.encode_cell({ r: R, c: C })
+        if (!ws[cellRef]) ws[cellRef] = { v: '' }
+
+        const isHeader = R < 2
+        const isAmount = !isHeader && C >= 6
+        const isSubtotalLabel = R >= sheetData.length - 3 && C === 0
+
+        ws[cellRef].s = {
+          border: {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } },
+          },
+          fill: isHeader ? { patternType: 'solid', fgColor: { rgb: 'C0C0C0' } } : undefined,
+          alignment: {
+            vertical: 'center',
+            horizontal: isHeader || isSubtotalLabel ? 'center' : isAmount ? 'right' : 'center',
+          },
+        }
+      }
+    }
+
+    XLSX.utils.book_append_sheet(wb, ws, '외주_계약')
+    XLSX.writeFile(wb, '외주_계약.xlsx')
   }
 
   const cellStyle = {
@@ -460,14 +597,14 @@ export default function AggregateManagementOutSourcingView() {
                     </TableCell>
 
                     <TableCell align="right" sx={cellStyle}>
-                      {r.contractQuantity}
+                      {r.contractQuantity.toLocaleString()}
                     </TableCell>
                     <TableCell align="right" sx={cellStyle}>
                       {r.contractPrice.toLocaleString()}
                     </TableCell>
 
                     <TableCell align="right" sx={cellStyle}>
-                      {r.outsourcingQuantity}
+                      {r.outsourcingQuantity.toLocaleString()}
                     </TableCell>
                     <TableCell align="right" sx={cellStyle}>
                       {r.outsourcingUnitPrice.toLocaleString()}
@@ -477,21 +614,21 @@ export default function AggregateManagementOutSourcingView() {
                     </TableCell>
 
                     <TableCell align="right" sx={cellStyle}>
-                      {r.prevQuantity}
+                      {r.prevQuantity.toLocaleString()}
                     </TableCell>
                     <TableCell align="right" sx={cellStyle}>
                       {r.prevAmount.toLocaleString()}
                     </TableCell>
 
                     <TableCell align="right" sx={cellStyle}>
-                      {r.currQuantity}
+                      {r.currQuantity.toLocaleString()}
                     </TableCell>
                     <TableCell align="right" sx={cellStyle}>
                       {r.currAmount.toLocaleString()}
                     </TableCell>
 
                     <TableCell align="right" sx={cellStyle}>
-                      {r.totalQuantity}
+                      {r.totalQuantity.toLocaleString()}
                     </TableCell>
                     <TableCell align="right" sx={cellStyle}>
                       {r.totalAmount.toLocaleString()}
@@ -515,11 +652,13 @@ export default function AggregateManagementOutSourcingView() {
               </TableCell>
 
               <TableCell align="right" sx={{ ...cellStyle, fontWeight: 'bold' }}>
-                {/* {totals.outsourcingQuantity.toLocaleString()} */}
+                {totals.outsourcingQuantity.toLocaleString()}
               </TableCell>
-              <TableCell align="center" sx={cellStyle}></TableCell>
               <TableCell align="right" sx={{ ...cellStyle, fontWeight: 'bold' }}>
-                {/* {totals.outsourcingPrice.toLocaleString()} */}
+                {totals.outsourcingUnitPrice.toLocaleString()}
+              </TableCell>
+              <TableCell align="right" sx={{ ...cellStyle, fontWeight: 'bold' }}>
+                {totals.outsourcingPrice.toLocaleString()}
               </TableCell>
 
               {/* 전회 청구내역 */}

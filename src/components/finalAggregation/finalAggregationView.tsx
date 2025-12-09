@@ -18,6 +18,9 @@ import AggregateEquipmentOperationStatusView from '../aggregateEquipmentOperatio
 import AggregateLaborPayRollView from '../aggregateLaborPayRollView/aggregateLaborPayRollView'
 import AggregateManagementCostView from '../aggregateManagementCostView/aggregateManagementCostView'
 import AggregateManagementOutSourcingView from '../aggregateManagementOutSourcingView/aggregateManagementOutSourcingView'
+import { myInfoProps } from '@/types/user'
+import { useMenuPermission } from '../common/MenuPermissionView'
+import AllExcelDownloadView from '../allExcelDownloadView/allExcelDownloadView'
 
 const TAB_CONFIG = [
   { label: '재료비', value: 'MATERIAL' },
@@ -26,12 +29,15 @@ const TAB_CONFIG = [
   { label: '노무비명세서', value: 'LABOR_DETAIL' },
   { label: '장비비', value: 'EQUIPMENT' },
   { label: '장비가동현황', value: 'EQUIPMENT_OPERATION' },
-  { label: '관리비', value: 'MANAGEMENT' },
   { label: '외주', value: 'OUTSOURCING' },
+  { label: '관리비', value: 'MANAGEMENT' },
 ]
 
 export default function FinalAggregationView() {
   const { search } = useFinalAggregationSearchStore()
+
+  // 전체 엑셀 다운로드 상태 관리
+  const [downloadTrigger, setDownloadTrigger] = useState(false)
 
   const {
     useSitePersonNameListInfiniteScroll,
@@ -78,6 +84,26 @@ export default function FinalAggregationView() {
   useEffect(() => {
     setActiveTab('MATERIAL') // 기본 탭 설정
   }, [])
+
+  // 권한에 따른 버튼 활성화
+
+  const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
+
+  useEffect(() => {
+    const headerData = sessionStorage.getItem('myInfo')
+    if (headerData) {
+      setMyInfo(JSON.parse(headerData))
+    }
+  }, [])
+
+  const roleId = Number(myInfo?.roles?.[0]?.id)
+
+  const rolePermissionStatus = myInfo?.roles?.[0]?.deleted
+
+  const enabled = rolePermissionStatus === false && !!roleId && !isNaN(roleId)
+
+  // "계정 관리" 메뉴에 대한 권한
+  const { hasExcelDownload } = useMenuPermission(roleId, '집계 관리', enabled)
 
   return (
     <>
@@ -249,6 +275,23 @@ export default function FinalAggregationView() {
               </Button>
             )
           })}
+        </div>
+        <div className="flex justify-end">
+          <Button
+            variant="contained"
+            disabled={!hasExcelDownload}
+            color="info"
+            onClick={() => setDownloadTrigger(true)}
+            sx={{ mb: 2 }}
+          >
+            모든 집계 엑셀 다운로드
+          </Button>
+
+          {downloadTrigger && (
+            <AllExcelDownloadView
+              onComplete={() => setDownloadTrigger(false)} // 다운로드 후 상태 초기화
+            />
+          )}
         </div>
       </div>
 

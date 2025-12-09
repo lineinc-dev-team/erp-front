@@ -62,7 +62,7 @@ export default function useFinalAggregationView({
 
       return MaterialInfoServiceByAggregate(filteredParams)
     },
-    enabled: tabName === 'MATERIAL' && !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
+    enabled: !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
   })
 
   // 본사 집계 조회

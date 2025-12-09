@@ -3,6 +3,7 @@ import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   CreateManagementSteel,
+  GetSpecificationsInfoService,
   ModifySteelManagement,
   SteelInfoHistoryService,
 } from '@/services/managementSteel/managementSteelRegistrationService'
@@ -178,17 +179,31 @@ export function useManagementSteel() {
   const useSteelHistoryDataQuery = (historyId: number, enabled: boolean) => {
     return useInfiniteQuery({
       queryKey: ['SteelInfo', historyId],
-      queryFn: ({ pageParam = 0 }) => SteelInfoHistoryService(historyId, pageParam, 4, 'id,desc'),
+      queryFn: ({ pageParam = 0 }) =>
+        SteelInfoHistoryService(historyId, pageParam, 4, 'updatedAt,desc'),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
-        const { sliceInfo } = lastPage?.data
-        const nextPage = sliceInfo?.page + 1
+        const { pageInfo } = lastPage?.data
 
-        return sliceInfo?.hasNext ? nextPage : undefined
+        if (!pageInfo) return undefined
+
+        const nextPage = pageInfo.page + 1
+        const hasNext = nextPage < pageInfo.totalPages
+
+        return hasNext ? nextPage : undefined
       },
       enabled: enabled && !!historyId && !isNaN(historyId),
     })
   }
+
+  // 규격 키워드 검색
+  const SpecificationsListQuery = (keyword: string) =>
+    useInfiniteQuery({
+      queryKey: ['SpecificationsNamesInfo', keyword],
+      queryFn: () => GetSpecificationsInfoService({ keyword }),
+      initialPageParam: 0,
+      getNextPageParam: () => undefined,
+    })
 
   // 구분 조회
 
@@ -208,7 +223,7 @@ export function useManagementSteel() {
     SteelListQuery,
     SteelModifyMutation,
     steelCancel,
-
+    SpecificationsListQuery,
     useSteelHistoryDataQuery,
   }
 }

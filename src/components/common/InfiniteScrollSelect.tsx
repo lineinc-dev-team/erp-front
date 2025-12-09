@@ -162,7 +162,7 @@ export function InfiniteScrollSelect<T>({
       {showList && (
         <div
           ref={containerRef}
-          className="absolute left-0 top-12  right-0 text-base  max-h-40 mx-2 overflow-auto  border  rounded px-2 py-2 bg-white shadow z-10"
+          className="absolute left-0 top-12  right-0 text-base  max-h-74 mx-2 overflow-auto  border  rounded px-2 py-2 bg-white shadow z-10"
         >
           {items.map((item, index) => (
             <div

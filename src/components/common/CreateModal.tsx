@@ -2,7 +2,7 @@
 // CreateModal.tsx
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import CommonSelect from '../common/Select'
 import { useDailyFormStore, useDailySearchList } from '@/stores/dailyReportStore'
 import { useFuelAggregation } from '@/hooks/useFuelAggregation'
@@ -20,6 +20,10 @@ type Props = {
 export default function CreateModal({ open, onClose, title }: Props) {
   const { form, setField, reset } = useDailyFormStore()
   const { WeatherTypeMethodOptions } = useFuelAggregation()
+
+  const [siteStartDate, setSiteStartDate] = useState<Date | null>(null)
+  const [siteEndDate, setSiteEndDate] = useState<Date | null>(null)
+
   const {
     sitesOptions,
     siteNameFetchNextPage,
@@ -73,7 +77,12 @@ export default function CreateModal({ open, onClose, title }: Props) {
                   const selectedSite = sitesOptions.find((opt: any) => opt.id === value)
                   if (!selectedSite) return
 
+                  setField('reportDate', null) // ✅ 현장 바꾸면 일자 초기화
+
                   setField('siteId', selectedSite.id)
+
+                  setSiteStartDate(new Date(selectedSite.startedAt))
+                  setSiteEndDate(new Date(selectedSite.endedAt))
 
                   const res = await SitesProcessNameScroll({
                     pageParam: 0,
@@ -117,7 +126,6 @@ export default function CreateModal({ open, onClose, title }: Props) {
             </div>
           </div>
 
-          {/* 일자 */}
           <div className="flex w-[48%]">
             <label className="w-36 text-[14px] flex items-center justify-center bg-gray-300 border border-gray-400 font-bold">
               일자 <span className="text-red-500 ml-1">*</span>
@@ -126,6 +134,9 @@ export default function CreateModal({ open, onClose, title }: Props) {
               <CommonPreviousDatePicker
                 value={form.reportDate || null}
                 onChange={(value) => setField('reportDate', value)}
+                minDate={siteStartDate}
+                maxDate={siteEndDate}
+                disabled={!form.siteId} // 현장 선택 전까지 비활성화
               />
             </div>
           </div>

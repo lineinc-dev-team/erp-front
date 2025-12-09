@@ -124,6 +124,7 @@ export type OutsourcingFormState = {
   accountNumber: string
   accountHolder: string
   memo: string
+  vatType: string | null
   isActive: string
 
   searchTrigger: number

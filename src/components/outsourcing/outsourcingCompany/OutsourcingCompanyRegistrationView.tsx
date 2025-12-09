@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import CommonInput from '../../common/Input'
@@ -19,8 +20,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { AreaCode, bankOptions, UseORnotOptions } from '@/config/erp.confing'
-import { idTypeValueToName, useOutsourcingFormStore } from '@/stores/outsourcingCompanyStore'
+import { AreaCode, UseORnotOptions } from '@/config/erp.confing'
+import { useOutsourcingFormStore } from '@/stores/outsourcingCompanyStore'
 import useOutSourcingCompany from '@/hooks/useOutSourcingCompany'
 import { formatPersonNumber, formatPhoneNumber } from '@/utils/formatPhoneNumber'
 import CommonFileInput from '@/components/common/FileInput'
@@ -28,7 +29,7 @@ import CommonInputnumber from '@/utils/formatBusinessNumber'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { OutsourcingDetailService } from '@/services/outsourcingCompany/outsourcingCompanyRegistrationService'
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ContractHistoryItem,
   OutsourcingAttachedFile,
@@ -38,6 +39,9 @@ import {
 import { formatDateTime, getTodayDateString } from '@/utils/formatters'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
 import { HistoryItem } from '@/types/ordering'
+import { InfiniteScrollSelect } from '@/components/common/InfiniteScrollSelect'
+import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
+import { useLaborInfo } from '@/hooks/useLabor'
 
 export default function OutsourcingCompanyRegistrationView({ isEditMode = false }) {
   const {
@@ -61,7 +65,10 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     useOutsourcingCompanyHistoryDataQuery,
 
     useContractHistoryDataQuery,
+    vatTypeMethodOptions,
   } = useOutSourcingCompany()
+
+  const { useBankNameInfiniteScroll } = useLaborInfo()
 
   console.log('typeMethodOptionstypeMethodOptions', typeMethodOptions)
 
@@ -80,16 +87,29 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
   const params = useParams()
   const outsourcingCompanyId = Number(params?.id)
 
-  // const selectedValues = (form.defaultDeductions?.split(',') || []).filter(Boolean)
+  // const selectedValues = (form.vatType?.split(',') || []).filter(Boolean)
 
   // const handleCheckboxChange = (value: string, checked: boolean) => {
-  //   const current = (form.defaultDeductions?.split(',') || []).filter(Boolean)
+  //   const current = (form.vatType?.split(',') || []).filter(Boolean)
   //   const updated = checked
   //     ? [...new Set([...current, value])]
   //     : current.filter((item) => item !== value)
 
-  //   setField('defaultDeductions', updated.join(','))
+  //   setField('vatType', updated.join(','))
   // }
+
+  const handleCheckboxChange = (value: string, checked: boolean) => {
+    if (checked) {
+      // 체크하면 해당 값만 저장
+      setField('vatType', value)
+    } else {
+      // 해제하면 빈 문자열
+      setField('vatType', null)
+    }
+  }
+
+  // 체크 상태 계산
+  const selectedValues = form.vatType ? [form.vatType] : []
 
   const { data: outsourcingDetailData } = useQuery({
     queryKey: ['OutsourcingInfo'],
@@ -121,7 +141,30 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
     address: '주소',
     department: '부서',
     position: '직급(직책)',
+    vatTypeName: '부가세 여부',
   }
+
+  // 은행명 키워드 검색
+
+  const [isBankNameFocused, setIsBankNameFocused] = useState(false)
+
+  const handleSelectBankName = (selectedUser: any) => {
+    console.log('뱅크 이름', selectedUser)
+    setField('bankName', selectedUser)
+  }
+
+  const debouncedBankNameKeyword = useDebouncedValue(form.bankName, 300)
+
+  const {
+    data: BankNameData,
+    fetchNextPage: BankeNamFetchNextPage,
+    hasNextPage: BankNameHasNextPage,
+    isFetching: BankNameIsFetching,
+    isLoading: BankNameIsLoading,
+  } = useBankNameInfiniteScroll(debouncedBankNameKeyword)
+
+  const BankNameRawList = BankNameData?.pages.flatMap((page) => page.data) ?? []
+  const bankNameList = Array.from(new Map(BankNameRawList.map((user) => [user, user])).values())
 
   const {
     data: outsourcingHistoryList,
@@ -251,6 +294,22 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
         setField('type', 'ETC')
       }
 
+      if (client.type === '식당') {
+        if (client.vatType) {
+          const deductionNames = client.vatType.split(',').map((s: string) => s.trim())
+
+          const matchedCodes = (vatTypeMethodOptions ?? [])
+            .filter((opt) => deductionNames.includes(opt.name))
+            .map((opt) => opt.code)
+
+          setField('vatType', matchedCodes.join(','))
+        } else {
+          setField('vatType', null)
+        }
+      } else {
+        setField('vatType', null) // ✅ 식대 아닐 때 초기화
+      }
+
       setField('typeDescription', client.typeDescription)
       setField('address', client.address)
       setField('phoneNumber', client.phoneNumber)
@@ -270,13 +329,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
       // }
       // setField('defaultDeductionsDescription', client.defaultDeductionsDescription)
 
-      const mappedItemType = idTypeValueToName[client.bankName ?? '']
-
-      if (mappedItemType) {
-        setField('bankName', mappedItemType)
-      } else {
-        setField('bankName', '') // 혹은 기본값 처리
-      }
+      setField('bankName', client.bankName)
 
       setField('accountNumber', client.accountNumber)
 
@@ -404,6 +457,12 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
 
     if (form.memo.length > 500) {
       return '비고는 500자 이하로 입력해주세요.'
+    }
+
+    // 구분 타입이 '식당'일 경우 VAT 타입 최소 1개 체크 필수
+    if (form.type === 'MEAL_FEE') {
+      const selectedVat = form.vatType?.split(',').filter(Boolean) || []
+      if (selectedVat.length === 0) return '부가세 여부 유형을 최소 1개 선택해야 합니다.'
     }
 
     // 담당자 유효성 체크
@@ -665,29 +724,52 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
           </div> */}
 
           <div className="flex">
-            <label className="w-36 text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+            <label
+              className="
+                      w-[120px]                 /* 기본 */
+                      min-[1400px]:w-[119px]   /* 노트북 (1400px 이상) */
+                      min-[1900px]:w-[124px]   /* 큰 모니터 (1900px 이상) */
+                      text-[14px] flex items-center justify-center text-center
+                      border border-gray-400 bg-gray-300 font-bold
+                    "
+            >
               계좌정보
               {/* <span className="text-red-500 ml-1">*</span> */}
             </label>
-            <div className="border flex items-center gap-4 border-gray-400 px-2 w-full">
-              <CommonSelect
-                className="text-2xl"
-                value={form.bankName ?? ''}
-                onChange={(value) => setField('bankName', value)}
-                options={bankOptions}
-              />
+            <div className="flex-1 border border-gray-400">
+              <div className="grid grid-cols-[180px_1fr_0.8fr] gap-3 pr-2 items-center">
+                <InfiniteScrollSelect
+                  placeholder="은행명을 입력해주세요."
+                  keyword={form.bankName ?? ''}
+                  onChangeKeyword={(newKeyword) => setField('bankName', newKeyword)}
+                  items={bankNameList}
+                  hasNextPage={BankNameHasNextPage ?? false}
+                  fetchNextPage={BankeNamFetchNextPage}
+                  renderItem={(item, isHighlighted) => (
+                    <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
+                      {item}
+                    </div>
+                  )}
+                  onSelect={handleSelectBankName}
+                  isLoading={BankNameIsLoading || BankNameIsFetching}
+                  debouncedKeyword={debouncedBankNameKeyword}
+                  shouldShowList={isBankNameFocused}
+                  onFocus={() => setIsBankNameFocused(true)}
+                  onBlur={() => setIsBankNameFocused(false)}
+                />
 
-              <CommonInput
-                value={form.accountNumber ?? ''}
-                onChange={(value) => setField('accountNumber', value)}
-                className=" flex-1"
-              />
+                <CommonInput
+                  value={form.accountNumber ?? ''}
+                  onChange={(value) => setField('accountNumber', value)}
+                  className=" flex-1"
+                />
 
-              <CommonInput
-                value={form.accountHolder ?? ''}
-                onChange={(value) => setField('accountHolder', value)}
-                className=" flex-1"
-              />
+                <CommonInput
+                  value={form.accountHolder ?? ''}
+                  onChange={(value) => setField('accountHolder', value)}
+                  className=" flex-1"
+                />
+              </div>
             </div>
           </div>
 
@@ -704,6 +786,31 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
               />
             </div>
           </div>
+          {form.type === 'MEAL_FEE' && (
+            <>
+              <div className="flex">
+                <label className="w-[119px] 2xl:w-[125px] text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
+                  부가세 여부
+                </label>
+                <div className="flex border  border-gray-400 flex-wrap px-2 items-center gap-4 flex-1">
+                  {vatTypeMethodOptions.map((opt) => (
+                    <label key={opt.code} className="flex items-center gap-1 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={selectedValues.includes(opt.code)}
+                        onChange={(e) => handleCheckboxChange(opt.code, e.target.checked)}
+                      />
+                      {opt.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="flex">
+                <label className="w-36 text-[14px] border border-gray-400  flex items-center justify-center bg-gray-300  font-bold text-center"></label>
+                <div className="border border-gray-400 px-2 w-full h-[54px]"></div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -1106,6 +1213,8 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
               onChange={(_, newPage) => setField('currentPage', newPage)}
               shape="rounded"
               color="primary"
+              siblingCount={3} // 기본 1 → 증가
+              boundaryCount={2} // 기본 1 → 2 정도로
             />
           </div>
         </div>

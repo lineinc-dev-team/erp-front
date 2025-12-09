@@ -120,6 +120,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     outsourcingCompanyName: '소속업체',
     address: '주소',
     gradeName: '직급',
+    foreignName: '외국인등록증상이름',
   }
 
   // useEffect(() => {
@@ -205,6 +206,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
       setField('residentNumber', client.residentNumber)
       setField('residentNumberIsCheck', false)
 
+      setField('foreignName', client.foreignName)
+
       setField('typeDescription', client.typeDescription)
       setField('address', client.address)
       setField('phoneNumber', client.phoneNumber)
@@ -270,6 +273,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     if (form.type === 'OUTSOURCING_CONTRACT' || form.type === 'OUTSOURCING') {
       setField('accountNumber', selectedUser.accountNumber)
       setField('accountHolder', selectedUser.accountHolder)
+      setField('bankName', selectedUser.bankName)
     }
   }
 
@@ -532,6 +536,13 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     if (form.residentNumberIsCheck && !isDuplicateChecked) {
       return '주민등록번호 중복확인을 해주세요.'
     }
+
+    // ⬇️ 7번째 자리 = 5 → 외국인 이름 필수
+    if (form.residentNumber.length >= 7 && form.residentNumber[7] === '5') {
+      if (!form.foreignName?.trim()) {
+        return '외국인등록증상의 이름을 입력해주세요.'
+      }
+    }
     if (!form.address?.trim()) return '주소를 입력하세요.'
     // if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
 
@@ -660,8 +671,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
   const dates = Array.from({ length: 31 }, (_, i) => i + 1)
 
   // 숫자를 그려주는 변수 0 부터 16
-  const firstHalfDates = dates.slice(0, 16) // 1~16
-  const secondHalfDates = dates.slice(16, 31) // 16~31
+  const firstHalfDates = [...dates.slice(0, 15), ''] // 1~15 + 빈칸
+  const secondHalfDates = dates.slice(15, 31) // 16~31
 
   // 스타일 변수
 
@@ -712,6 +723,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
     }
   }, [form.type, setField])
 
+  console.log('form.residentNumber[6]', form.residentNumber[7])
+
   return (
     <>
       <div>
@@ -731,6 +744,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                     setField('typeDescription', '')
                     setField('accountNumber', '')
                     setField('accountHolder', '')
+                    setField('bankName', '')
                     setField('outsourcingCompanyName', '')
                     setField('outsourcingCompanyContractName', '')
                   }}
@@ -784,6 +798,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                     setField('outsourcingCompanyId', 0)
                     setField('accountNumber', '')
                     setField('accountHolder', '')
+                    setField('bankName', '')
                   }
                 }}
                 items={outsourcingList}
@@ -791,7 +806,7 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                 fetchNextPage={OutsourcingeNameFetchNextPage}
                 renderItem={(item, isHighlighted) => (
                   <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
-                    {item.name}
+                    {item.name} | {item.ceoName} | {item.businessNumber}
                   </div>
                 )}
                 onSelect={handleSelectOutsourcing}
@@ -866,6 +881,11 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                 onChange={(val) => {
                   setField('residentNumber', val)
                   setField('residentNumberIsCheck', true)
+
+                  // 주민번호가 없으면 외국인 이름 초기화
+                  if (!val || val.trim() === '') {
+                    setField('foreignName', '')
+                  }
                 }}
                 className="flex-1"
               />
@@ -874,15 +894,40 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                 variant="secondary"
                 className="bg-gray-400 text-white px-3 rounded"
                 onClick={async () => {
-                  if (!form.residentNumber?.trim()) {
-                    showSnackbar('주민등록번호를 입력해주세요.', 'success')
+                  const residentNumber = form.residentNumber?.trim()
+                  if (!residentNumber) {
+                    showSnackbar('주민등록번호를 입력해주세요.', 'warning')
                     return
                   }
 
-                  try {
-                    const result = await CheckReSidentNumberService(form.residentNumber)
+                  const front = residentNumber.slice(0, 6) // 앞자리 6자리 (YYMMDD)
 
-                    lastCheckedNumber.current = form.residentNumber
+                  // 1. 숫자 6자리인지 확인
+                  if (!/^\d{6}$/.test(front)) {
+                    showSnackbar('주민등록번호 앞자리는 숫자 6자리여야 합니다.', 'warning')
+                    return
+                  }
+
+                  // 2. 생년월일 유효성 체크
+                  const year = parseInt(front.slice(0, 2), 10)
+                  const month = parseInt(front.slice(2, 4), 10)
+                  const day = parseInt(front.slice(4, 6), 10)
+
+                  if (month < 1 || month > 12) {
+                    showSnackbar('유효하지 않은 생년월일입니다. 월을 확인해주세요.', 'warning')
+                    return
+                  }
+
+                  const daysInMonth = new Date(year + 2000, month, 0).getDate() // 윤년 계산 포함
+                  if (day < 1 || day > daysInMonth) {
+                    showSnackbar('유효하지 않은 생년월일입니다. 일을 확인해주세요.', 'warning')
+                    return
+                  }
+
+                  // 3. 생년월일이 유효하면 중복 확인
+                  try {
+                    const result = await CheckReSidentNumberService(residentNumber)
+                    lastCheckedNumber.current = residentNumber
 
                     if (result.data.isDuplicate) {
                       setIsDuplicateChecked(false)
@@ -896,6 +941,16 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                     alert(err.message || '서버 오류가 발생했습니다.')
                   }
                 }}
+              />
+
+              <CommonInput
+                placeholder="외국인등록증상이름"
+                value={form.foreignName ?? ''}
+                disabled={!(form.residentNumber?.length >= 7 && form.residentNumber[7] === '5')}
+                onChange={(value) => {
+                  setField('foreignName', value)
+                }}
+                className="flex-1"
               />
             </div>
           </div>
@@ -1382,20 +1437,20 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                   <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 80 }}>
                     소득세
                   </TableCell>
+                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 80 }}>
+                    주민세
+                  </TableCell>
                   <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
                     고용보험
                   </TableCell>
                   <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
                     건강보험
                   </TableCell>
-                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 80 }}>
-                    주민세
+                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
+                    장기요양
                   </TableCell>
                   <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
                     국민연금
-                  </TableCell>
-                  <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 100 }}>
-                    장기요양
                   </TableCell>
                   <TableCell rowSpan={2} align="center" sx={{ ...headerCellStyle, minWidth: 120 }}>
                     차감지급액
@@ -1425,8 +1480,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
               <TableBody>
                 {laborList?.map((row: any) => {
-                  const firstHalf = row.dailyWork.slice(0, 16)
-                  const secondHalf = row.dailyWork.slice(16)
+                  const firstHalf = [...row.dailyWork.slice(0, 15), ''] // 1~15일 + 빈칸
+                  const secondHalf = row.dailyWork.slice(15) // 16일부터 끝까지
 
                   return (
                     <Fragment key={`${row.no}-${Math.random()}`}>
@@ -1466,20 +1521,21 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                           {row.incomeTax}
                         </TableCell>
                         <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
+                          {row.localTax}
+                        </TableCell>
+                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
                           {row.employmentInsurance}
                         </TableCell>
                         <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
                           {row.healthInsurance}
                         </TableCell>
                         <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          {row.localTax}
+                          {row.longTermCareInsurance}
                         </TableCell>
                         <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
                           {row.nationalPension}
                         </TableCell>
-                        <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
-                          {row.longTermCareInsurance}
-                        </TableCell>
+
                         <TableCell rowSpan={2} align="center" sx={contentCellStyle}>
                           {row.netPayment}
                         </TableCell>
@@ -1510,6 +1566,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
               onChange={(_, newPage) => setField('currentPage', newPage)}
               shape="rounded"
               color="primary"
+              siblingCount={3} // 기본 1 → 증가
+              boundaryCount={2} // 기본 1 → 2 정도로
             />
           </div>
         </div>

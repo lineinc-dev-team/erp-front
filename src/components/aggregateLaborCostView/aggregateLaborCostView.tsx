@@ -10,8 +10,7 @@ import {
   Paper,
   Button,
 } from '@mui/material'
-import * as XLSX from 'xlsx'
-import { saveAs } from 'file-saver'
+import * as XLSX from 'xlsx-js-style'
 import useFinalAggregationView from '@/hooks/useFinalAggregation'
 import { useFinalAggregationSearchStore } from '@/stores/finalAggregationStore'
 import { useMenuPermission } from '../common/MenuPermissionView'
@@ -109,146 +108,244 @@ export default function AggregateLaborCostView() {
   const allRows = [...rowsDirect, ...rowsOutsourcing]
 
   const handleExcelDownload = () => {
-    const formattedData: any[] = []
+    const wb = XLSX.utils.book_new()
 
-    // 1️⃣ 직영 데이터 추가
-    rowsDirect.forEach((r: any) => {
-      formattedData.push({
-        NO: r.no,
-        사업자등록번호: r.businessNumber,
-        업체명: r.company,
-        공종명: r.item,
-        대표자: r.ceo,
-        연락처: r.contact,
-        은행: r.bank,
-        계좌번호: r.accountNumber,
-        계좌명: r.accountName,
-        전회_공급가: r.prevSupply,
-        전회_부가세: r.prevTax,
-        전회_공제금액: r.prevDeduction,
-        전회_계: r.prevTotal,
-        금회_공급가: r.currSupply,
-        금회_부가세: r.currTax,
-        금회_공제금액: r.currDeduction,
-        금회_계: r.currTotal,
-        누계_공급가: r.totalSupply,
-        누계_부가세: r.totalTax,
-        누계_공제금액: r.totalDeduction,
-        누계_계: r.totalTotal,
-      })
-    })
+    // 1️⃣ 헤더
+    const headerRow1 = [
+      'NO.',
+      '사업자등록번호',
+      '품명',
+      '업체명',
+      '대표자',
+      '연락처',
+      '기성청구계좌',
+      '',
+      '',
+      '전회까지 청구내역',
+      '',
+      '',
+      '',
+      '금회 청구내역',
+      '',
+      '',
+      '',
+      '누계 청구내역',
+      '',
+      '',
+      '',
+    ]
 
-    // 2️⃣ 직영 소계 추가
-    const sumDirect = calculateSum(rowsDirect) // UI에서 쓰던 calculateSum 재사용
-    formattedData.push({
-      NO: '직영소계',
-      사업자등록번호: '',
-      업체명: '',
-      공종명: '',
-      대표자: '',
-      연락처: '',
-      은행: '',
-      계좌번호: '',
-      계좌명: '',
-      전회_공급가: sumDirect[0],
-      전회_부가세: sumDirect[1],
-      전회_공제금액: sumDirect[2],
-      전회_계: sumDirect[3],
-      금회_공급가: sumDirect[4],
-      금회_부가세: sumDirect[5],
-      금회_공제금액: sumDirect[6],
-      금회_계: sumDirect[7],
-      누계_공급가: sumDirect[8],
-      누계_부가세: sumDirect[9],
-      누계_공제금액: sumDirect[10],
-      누계_계: sumDirect[11],
-    })
+    const headerRow2 = [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '은행',
+      '계좌번호',
+      '계좌명',
+      '공급가',
+      '부가세',
+      '공제금액',
+      '계',
+      '공급가',
+      '부가세',
+      '공제금액',
+      '계',
+      '공급가',
+      '부가세',
+      '공제금액',
+      '계',
+    ]
 
-    // 3️⃣ 용역 데이터 추가
-    rowsOutsourcing.forEach((r: any) => {
-      formattedData.push({
-        NO: r.no,
-        사업자등록번호: r.businessNumber,
-        업체명: r.company,
-        공종명: r.item,
-        대표자: r.ceo,
-        연락처: r.contact,
-        은행: r.bank,
-        계좌번호: r.accountNumber,
-        계좌명: r.accountName,
-        전회_공급가: r.prevSupply,
-        전회_부가세: r.prevTax,
-        전회_공제금액: r.prevDeduction,
-        전회_계: r.prevTotal,
-        금회_공급가: r.currSupply,
-        금회_부가세: r.currTax,
-        금회_공제금액: r.currDeduction,
-        금회_계: r.currTotal,
-        누계_공급가: r.totalSupply,
-        누계_부가세: r.totalTax,
-        누계_공제금액: r.totalDeduction,
-        누계_계: r.totalTotal,
-      })
-    })
+    const sheetData: any[] = []
+    sheetData.push(headerRow1)
+    sheetData.push(headerRow2)
 
-    // 4️⃣ 용역 소계 추가
+    // 총합에 사용할 키 배열 (이 위치에 있어야 calculateSum에서 참조 가능)
+    const totalKeys = [
+      'prevSupply',
+      'prevTax',
+      'prevDeduction',
+      'prevTotal',
+      'currSupply',
+      'currTax',
+      'currDeduction',
+      'currTotal',
+      'totalSupply',
+      'totalTax',
+      'totalDeduction',
+      'totalTotal',
+    ]
+
+    const calculateSum = (arr: any[]) =>
+      totalKeys.map((key) => arr.reduce((acc, r) => acc + (r?.[key] || 0), 0))
+
+    // 합계 계산
+    const sumDirect = calculateSum(rowsDirect)
     const sumOutsourcing = calculateSum(rowsOutsourcing)
-    formattedData.push({
-      NO: '용역소계',
-      사업자등록번호: '',
-      업체명: '',
-      공종명: '',
-      대표자: '',
-      연락처: '',
-      은행: '',
-      계좌번호: '',
-      계좌명: '',
-      전회_공급가: sumOutsourcing[0],
-      전회_부가세: sumOutsourcing[1],
-      전회_공제금액: sumOutsourcing[2],
-      전회_계: sumOutsourcing[3],
-      금회_공급가: sumOutsourcing[4],
-      금회_부가세: sumOutsourcing[5],
-      금회_공제금액: sumOutsourcing[6],
-      금회_계: sumOutsourcing[7],
-      누계_공급가: sumOutsourcing[8],
-      누계_부가세: sumOutsourcing[9],
-      누계_공제금액: sumOutsourcing[10],
-      누계_계: sumOutsourcing[11],
+    const sumTotal = calculateSum([...rowsDirect, ...rowsOutsourcing])
+
+    // ➊ 직영 rows 추가
+    rowsDirect.forEach((r: any) => {
+      sheetData.push([
+        r.no,
+        r.businessNumber,
+        r.item,
+        r.company,
+        r.ceo,
+        r.contact,
+        r.bank,
+        r.accountNumber,
+        r.accountName,
+        r.prevSupply?.toLocaleString(),
+        r.prevTax?.toLocaleString(),
+        r.prevDeduction?.toLocaleString(),
+        r.prevTotal?.toLocaleString(),
+        r.currSupply?.toLocaleString(),
+        r.currTax?.toLocaleString(),
+        r.currDeduction?.toLocaleString(),
+        r.currTotal?.toLocaleString(),
+        r.totalSupply?.toLocaleString(),
+        r.totalTax?.toLocaleString(),
+        r.totalDeduction?.toLocaleString(),
+        r.totalTotal?.toLocaleString(),
+      ])
     })
 
-    // 5️⃣ 최종 합계 추가
-    const sumTotal = calculateSum(allRows)
-    formattedData.push({
-      NO: '합계',
-      사업자등록번호: '',
-      업체명: '',
-      공종명: '',
-      대표자: '',
-      연락처: '',
-      은행: '',
-      계좌번호: '',
-      계좌명: '',
-      전회_공급가: sumTotal[0],
-      전회_부가세: sumTotal[1],
-      전회_공제금액: sumTotal[2],
-      전회_계: sumTotal[3],
-      금회_공급가: sumTotal[4],
-      금회_부가세: sumTotal[5],
-      금회_공제금액: sumTotal[6],
-      금회_계: sumTotal[7],
-      누계_공급가: sumTotal[8],
-      누계_부가세: sumTotal[9],
-      누계_공제금액: sumTotal[10],
-      누계_계: sumTotal[11],
+    // ➋ 직영 소계
+    sheetData.push([
+      '직영소계',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      ...sumDirect.map((v) => v.toLocaleString()),
+    ])
+
+    // ➌ 용역 rows 추가
+    rowsOutsourcing.forEach((r: any) => {
+      sheetData.push([
+        r.no,
+        r.businessNumber,
+        r.item,
+        r.company,
+        r.ceo,
+        r.contact,
+        r.bank,
+        r.accountNumber,
+        r.accountName,
+        r.prevSupply?.toLocaleString(),
+        r.prevTax?.toLocaleString(),
+        r.prevDeduction?.toLocaleString(),
+        r.prevTotal?.toLocaleString(),
+        r.currSupply?.toLocaleString(),
+        r.currTax?.toLocaleString(),
+        r.currDeduction?.toLocaleString(),
+        r.currTotal?.toLocaleString(),
+        r.totalSupply?.toLocaleString(),
+        r.totalTax?.toLocaleString(),
+        r.totalDeduction?.toLocaleString(),
+        r.totalTotal?.toLocaleString(),
+      ])
     })
 
-    const worksheet = XLSX.utils.json_to_sheet(formattedData)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
-    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' })
-    saveAs(blob, '노무비.xlsx')
+    // ➍ 용역 소계
+    sheetData.push([
+      '용역소계',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      ...sumOutsourcing.map((v) => v.toLocaleString()),
+    ])
+
+    // ➎ 전체 합계
+    sheetData.push([
+      '합계',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      ...sumTotal.map((v) => v.toLocaleString()),
+    ])
+
+    const ws = XLSX.utils.aoa_to_sheet(sheetData)
+
+    const directSubtotalRow = 2 + rowsDirect.length
+    const outsourcingStartRow = directSubtotalRow + 1
+    const outsourcingSubtotalRow = outsourcingStartRow + rowsOutsourcing.length
+    const totalRow = outsourcingSubtotalRow + 1
+
+    // 병합 설정
+    ws['!merges'] = [
+      // 헤더 1~2줄 병합
+      { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
+      { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } },
+      { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } },
+      { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } },
+      { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } },
+      { s: { r: 0, c: 5 }, e: { r: 1, c: 5 } },
+      { s: { r: 0, c: 6 }, e: { r: 0, c: 8 } },
+      { s: { r: 0, c: 9 }, e: { r: 0, c: 12 } },
+      { s: { r: 0, c: 13 }, e: { r: 0, c: 16 } },
+      { s: { r: 0, c: 17 }, e: { r: 0, c: 20 } },
+
+      // 직영소계 병합
+      { s: { r: directSubtotalRow, c: 0 }, e: { r: directSubtotalRow, c: 8 } },
+
+      // 용역소계 병합
+      { s: { r: outsourcingSubtotalRow, c: 0 }, e: { r: outsourcingSubtotalRow, c: 8 } },
+
+      // 전체 합계 병합
+      { s: { r: totalRow, c: 0 }, e: { r: totalRow, c: 8 } },
+    ]
+
+    // 스타일 적용
+    const range = XLSX.utils.decode_range(ws['!ref']!)
+    for (let R = 0; R <= range.e.r; R++) {
+      for (let C = 0; C <= range.e.c; C++) {
+        const cellRef = XLSX.utils.encode_cell({ r: R, c: C })
+        if (!ws[cellRef]) ws[cellRef] = { v: '' }
+
+        const cellValue = ws[cellRef].v
+        const isHeader = R < 2
+        const isAmount = !isHeader && C >= 9
+        const isSubtotal =
+          typeof cellValue === 'string' && (cellValue.includes('소계') || cellValue === '합계')
+
+        ws[cellRef].s = {
+          border: {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } },
+          },
+          fill: isHeader ? { patternType: 'solid', fgColor: { rgb: 'C0C0C0' } } : undefined,
+          alignment: {
+            horizontal: isHeader || isSubtotal ? 'center' : isAmount ? 'right' : 'center',
+            vertical: 'center',
+          },
+          font: { bold: isHeader || isSubtotal },
+        }
+      }
+    }
+
+    XLSX.utils.book_append_sheet(wb, ws, '노무비')
+    XLSX.writeFile(wb, '노무비.xlsx')
   }
 
   const cellStyle = {
@@ -261,6 +358,7 @@ export default function AggregateLaborCostView() {
     ...cellStyle,
     fontWeight: 'bold',
     backgroundColor: '#f3f4f6',
+    minWidth: 100, // 숫자 칸 최소 너비
   }
 
   const totalKeys = [

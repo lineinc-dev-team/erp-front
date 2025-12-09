@@ -10,7 +10,7 @@ import {
   Paper,
   Button,
 } from '@mui/material'
-import * as XLSX from 'xlsx'
+import * as XLSX from 'xlsx-js-style'
 import { saveAs } from 'file-saver'
 import useFinalAggregationView from '@/hooks/useFinalAggregation'
 import { useFinalAggregationSearchStore } from '@/stores/finalAggregationStore'
@@ -106,6 +106,7 @@ export default function AggregateEquipmentOperationStatusView() {
     ...cellStyle,
     fontWeight: 'bold',
     backgroundColor: '#f3f4f6',
+    minWidth: 100, // 숫자 칸 최소 너비
   }
 
   // 합계 계산
@@ -217,10 +218,9 @@ export default function AggregateEquipmentOperationStatusView() {
   const handleExcelDownload = () => {
     const formattedRows: any[][] = []
 
-    // 숫자 포맷 함수: 소수점이 없으면 정수, 있으면 2자리까지
     const formatNumber = (num: number) => {
-      if (!num || isNaN(num)) return 0
-      return Number.isInteger(num) ? num : Number(num.toFixed(2))
+      if (num == null || isNaN(num)) return ''
+      return Number(num).toLocaleString('ko-KR')
     }
 
     rows.forEach((r: any) => {
@@ -238,23 +238,19 @@ export default function AggregateEquipmentOperationStatusView() {
         const averageUnitPrice =
           unitPriceDays.length > 0 ? totalUnitPrice / unitPriceDays.length : 0
 
-        // 유류대 단가 계산 (UI 방식 그대로)
-        // 유류대 단가 계산 (UI와 동일, 0으로 나누기 방지)
         let displayUnitPrice: number
-
         if (eq.type === '유류대') {
-          // 유류대 제외 장비들의 총 시간 합계
-          const otherEquipmentsTotalHours = r.allEquipments
-            .filter((e: any) => e.type !== '유류대')
-            .reduce(
-              (sum: number, e: any) =>
-                sum +
-                Object.values(e?.days || {}).reduce((a: number, d: any) => a + (d?.amount || 0), 0),
-              0,
-            )
+          // const otherEquipmentsTotalHours = 0
+          //   .filter((e: any) => e.type !== '유류대')
+          //   .reduce(
+          //     (sum: number, e: any) =>
+          //       sum +
+          //       Object.values(e?.days || {}).reduce((a: number, d: any) => a + (d?.amount || 0), 0),
+          //     0,
+          //   )
 
-          displayUnitPrice =
-            otherEquipmentsTotalHours > 0 ? totalHours / otherEquipmentsTotalHours : 0
+          displayUnitPrice = 0
+          // otherEquipmentsTotalHours > 0 ? totalHours / otherEquipmentsTotalHours : 0
         } else {
           displayUnitPrice = averageUnitPrice
         }
@@ -280,6 +276,9 @@ export default function AggregateEquipmentOperationStatusView() {
       })
     })
 
+    // -----------------------------
+    // 2️⃣ 헤더
+    // -----------------------------
     const headerRowDates = [
       'No',
       '직영',
@@ -313,6 +312,9 @@ export default function AggregateEquipmentOperationStatusView() {
       '',
     ]
 
+    // -----------------------------
+    // 3️⃣ 총합계 행
+    // -----------------------------
     const totalRow = [
       '총합계',
       '',
@@ -328,28 +330,77 @@ export default function AggregateEquipmentOperationStatusView() {
       formatNumber(verticalSums.totalSubtotal),
     ]
 
+    // AoA 생성
     const sheetAoA = [headerRowDates, headerRowWeather, ...formattedRows, totalRow]
     const worksheet = XLSX.utils.aoa_to_sheet(sheetAoA)
 
-    // 병합 설정 (UI rowspan과 동일하게)
+    // 전체 rows 기반 index 계산
+    const totalRowIndex = 2 + formattedRows.length
+
+    // -----------------------------
+    // 4️⃣ 병합(Merge)
+    // -----------------------------
     worksheet['!merges'] = [
-      { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, // No
-      { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } }, // 직영
-      { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } }, // 규격
-      { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } }, // 업체명
-      { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } }, // 대표/기사
-      { s: { r: 0, c: 5 }, e: { r: 1, c: 5 } }, // 차량번호
-      { s: { r: 0, c: 6 }, e: { r: 1, c: 6 } }, // 구분
-      { s: { r: 0, c: 7 + dateColumns.length }, e: { r: 1, c: 7 + dateColumns.length } }, // 총계
-      { s: { r: 0, c: 8 + dateColumns.length }, e: { r: 1, c: 8 + dateColumns.length } }, // 단가
-      { s: { r: 0, c: 9 + dateColumns.length }, e: { r: 1, c: 9 + dateColumns.length } }, // 소계
-      { s: { r: 0, c: 10 + dateColumns.length }, e: { r: 1, c: 10 + dateColumns.length } }, // 총합계
+      { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
+      { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } },
+      { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } },
+      { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } },
+      { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } },
+      { s: { r: 0, c: 5 }, e: { r: 1, c: 5 } },
+      { s: { r: 0, c: 6 }, e: { r: 1, c: 6 } },
+      { s: { r: 0, c: 7 + dateColumns.length }, e: { r: 1, c: 7 + dateColumns.length } },
+      { s: { r: 0, c: 8 + dateColumns.length }, e: { r: 1, c: 8 + dateColumns.length } },
+      { s: { r: 0, c: 9 + dateColumns.length }, e: { r: 1, c: 9 + dateColumns.length } },
+      { s: { r: 0, c: 10 + dateColumns.length }, e: { r: 1, c: 10 + dateColumns.length } },
+
+      // ⭐ 총합계 셀 병합 (1~7열)
+      { s: { r: totalRowIndex, c: 0 }, e: { r: totalRowIndex, c: 6 } },
     ]
 
-    worksheet['!cols'] = Array(headerRowDates.length).fill({ wch: 12 })
+    const range = XLSX.utils.decode_range(worksheet['!ref'] ?? '')
 
+    // 금액 컬럼 index 계산
+    const amountStartCol = 7 + dateColumns.length // 총계
+    const unitPriceCol = amountStartCol + 1 // 단가
+    const subtotalCol = amountStartCol + 2 // 소계
+    const totalSumCol = amountStartCol + 3 // 총합계
+
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cellRef = XLSX.utils.encode_cell({ r: R, c: C })
+        if (!worksheet[cellRef]) worksheet[cellRef] = { v: '' }
+
+        const isHeader = R < 2
+        const isTotalRow = R === totalRowIndex
+
+        // 오른쪽 정렬 대상 컬럼인지 체크
+        const isRightAlign = C === unitPriceCol || C === subtotalCol || C === totalSumCol
+
+        worksheet[cellRef].s = {
+          border: {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } },
+          },
+          fill:
+            isHeader || isTotalRow
+              ? { patternType: 'solid', fgColor: { rgb: 'C0C0C0' } }
+              : undefined,
+          alignment: {
+            vertical: 'center',
+            horizontal: isRightAlign ? 'right' : 'center',
+          },
+        }
+      }
+    }
+
+    // -----------------------------
+    // 6️⃣ Excel 생성
+    // -----------------------------
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, '장비운행집계')
+
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
     const blob = new Blob([excelBuffer], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

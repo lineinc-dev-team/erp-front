@@ -580,7 +580,7 @@ export default function MaterialManagementView() {
                 fetchNextPage={OutsourcingeNameFetchNextPage}
                 renderItem={(item, isHighlighted) => (
                   <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
-                    {item.name}
+                    {item.name} | {item.ceoName} | {item.businessNumber}
                   </div>
                 )}
                 onSelect={handleSelectOutsourcing}
@@ -761,6 +761,8 @@ export default function MaterialManagementView() {
             onChange={(_, newPage) => search.setField('currentPage', newPage)}
             shape="rounded"
             color="primary"
+            siblingCount={3} // 기본 1 → 증가
+            boundaryCount={2} // 기본 1 → 2 정도로
           />
         </div>
       </div>

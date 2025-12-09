@@ -82,6 +82,7 @@ export type MaterialItem = {
   name: string
   specification: string
   weight: number
+  length: number
   count: number
   totalWeight: number
   unitPrice: number

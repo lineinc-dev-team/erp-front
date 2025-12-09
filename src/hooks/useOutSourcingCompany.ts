@@ -3,6 +3,7 @@ import {
   CreateOutsourcingCompany,
   ModifyOutsourcingCompany,
   OutsourcingCompanyInfoHistoryService,
+  OutsourcingCompanyVatTypeService,
   OutsourcingDeductionIdInfoService,
   OutsourcingTypesIdInfoService,
 } from '@/services/outsourcingCompany/outsourcingCompanyRegistrationService'
@@ -208,7 +209,15 @@ export default function useOutSourcingCompany() {
     enabled: !!outsourcingCompanyId && !isNaN(outsourcingCompanyId),
   })
 
+  const { data: vatTypeInfo } = useQuery({
+    queryKey: ['VatInfo'],
+    queryFn: OutsourcingCompanyVatTypeService,
+  })
+
+  const vatTypeMethodOptions = [...(vatTypeInfo?.data ?? [])]
+
   return {
+    vatTypeMethodOptions,
     OutsourcingListQuery,
     createOutSourcingMutation,
     typeMethodOptions,

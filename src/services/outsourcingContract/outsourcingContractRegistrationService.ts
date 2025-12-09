@@ -166,9 +166,9 @@ export async function GetOutSourcingContractInfoService({
 // 업체명 + 자동완성 사업자등록 번호
 export async function GetCompanyNameInfoService({
   pageParam = 0,
-  size = 50,
+  size = 200,
   keyword = '',
-  sort = '',
+  sort = 'name,asc',
   type = '',
   outsourcingCompanyId = 0,
 }) {

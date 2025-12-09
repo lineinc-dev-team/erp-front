@@ -121,6 +121,7 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
           name: 'H Beam',
           specification: '',
           weight: 0,
+          length: 0,
           count: 0,
           totalWeight: 0,
           unitPrice: 0,
@@ -164,21 +165,23 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
               // 변경된 값 적용
               const updatedItem = { ...item, [field]: value }
 
-              if (['weight', 'count', 'unitPrice'].includes(field)) {
+              if (['weight', 'count', 'unitPrice', 'length'].includes(field)) {
                 // 고철 등 총 무게 직접 입력 타입이면 weight*count 계산 건너뛰기
                 const isDirectTotalWeight =
                   field === 'unitPrice' &&
                   updatedItem.totalWeight &&
                   !updatedItem.weight &&
+                  !updatedItem.length &&
                   !updatedItem.count
 
                 if (!isDirectTotalWeight) {
                   const weight = Number(field === 'weight' ? value : updatedItem.weight) || 0
                   const count = Number(field === 'count' ? value : updatedItem.count) || 0
+                  const length = Number(field === 'length' ? value : updatedItem.length) || 0
                   const unitPrice =
                     Number(field === 'unitPrice' ? value : updatedItem.unitPrice) || 0
 
-                  updatedItem.totalWeight = Number((weight * count).toFixed(4) || 0)
+                  updatedItem.totalWeight = Number((weight * count * length).toFixed(4) || 0)
                   updatedItem.amount = Number((updatedItem.totalWeight * unitPrice).toFixed(0))
                 } else {
                   // 총 무게 직접 입력 → 단가 변경 시 amount만 계산
@@ -386,6 +389,7 @@ export const useManagementSteelFormStore = create<SteelFormStore>((set, get) => 
           name: item.name,
           specification: item.specification,
           weight: item.weight,
+          length: item.length,
           count: item.count,
           totalWeight: item.totalWeight,
           unitPrice: item.unitPrice,

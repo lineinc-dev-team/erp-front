@@ -151,6 +151,7 @@ export type SubEquipmentItems = {
   type: string
   typeCode?: string
   workContent: string
+  previousUnitPrice?: number
   unitPrice: number
   workHours: number
   memo: string
@@ -167,6 +168,7 @@ export type EquipmentsItem = {
   specificationName?: string
   type?: string
   workContent: string
+  previousUnitPrice?: number
   unitPrice: number
   workHours: number
   memo: string
