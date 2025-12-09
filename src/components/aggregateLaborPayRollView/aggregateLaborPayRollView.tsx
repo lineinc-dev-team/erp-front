@@ -162,7 +162,7 @@ export default function AggregateLaborPayRollView() {
       '계좌번호',
       '예금주',
     ]
-    const headerRow2 = [...Array(8).fill(''), ...dateColumns.slice(16, 31), ...Array(14).fill('')]
+    const headerRow2 = [...Array(8).fill(''), ...dateColumns.slice(15, 31), ...Array(15).fill('')]
 
     const formatNumberWithComma = (num: number | string) => {
       const n = Number(num) || 0
@@ -199,7 +199,7 @@ export default function AggregateLaborPayRollView() {
         r.account,
         r.accountName,
       ]
-      const row2 = [...Array(8).fill(''), ...r.days.slice(16, 31), ...Array(14).fill('')]
+      const row2 = [...Array(8).fill(''), ...r.days.slice(15, 31), ...Array(15).fill('')]
       dataRows.push(row1, row2)
     })
 
@@ -505,9 +505,9 @@ export default function AggregateLaborPayRollView() {
                   </TableCell>
                 </TableRow>
 
-                {/* 두 번째 행: 17~31일 */}
+                {/* 두 번째 행: 16~31일 */}
                 <TableRow>
-                  {r.days.slice(16, 32).map((v: any, i: number) => (
+                  {r.days.slice(15, 31).map((v: any, i: number) => (
                     <TableCell key={`day2-${i}`} align="center" sx={cellStyle}>
                       {v}
                     </TableCell>
@@ -516,7 +516,6 @@ export default function AggregateLaborPayRollView() {
               </React.Fragment>
             ))}
 
-            {/* ✅ 소계 행 */}
             <TableRow sx={{ backgroundColor: '#f9fafb', fontWeight: 'bold' }}>
               <TableCell align="center" colSpan={8} sx={cellStyle} rowSpan={2}>
                 소계

@@ -628,7 +628,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
       '계좌번호',
       '예금주',
     ]
-    const headerRow2 = [...Array(8).fill(''), ...dateColumns.slice(16, 31), ...Array(14).fill('')]
+    const headerRow2 = [...Array(8).fill(''), ...dateColumns.slice(15, 31), ...Array(15).fill('')]
 
     const formatNumberWithComma = (num: number | string) => {
       const n = Number(num) || 0
@@ -667,7 +667,7 @@ export default function LaborStateMentRegistrationView({ isEditMode = true }) {
         r.account,
         r.accountName,
       ]
-      const row2 = [...Array(8).fill(''), ...r.dailyWork.slice(15, 31), ...Array(14).fill('')]
+      const row2 = [...Array(8).fill(''), ...r.dailyWork.slice(15, 31), ...Array(15).fill('')]
       dataRows.push(row1, row2)
     })
 
