@@ -125,6 +125,7 @@ export default function AggregateManagementOutSourcingView() {
         acc.contractPrice += r.contractPrice || 0
 
         acc.outsourcingQuantity += r.outsourcingQuantity || 0
+        acc.outsourcingUnitPrice += r.outsourcingUnitPrice || 0
         acc.outsourcingPrice += r.outsourcingPrice || 0
 
         acc.prevQuantity += r.prevQuantity || 0
@@ -143,6 +144,7 @@ export default function AggregateManagementOutSourcingView() {
       contractPrice: 0,
 
       outsourcingQuantity: 0,
+      outsourcingUnitPrice: 0,
       outsourcingPrice: 0,
 
       prevQuantity: 0,
@@ -239,9 +241,11 @@ export default function AggregateManagementOutSourcingView() {
       '',
       totals.contractQuantity.toLocaleString(),
       totals.contractPrice.toLocaleString(),
-      '', // 외주계약 수량
-      '', // 외주계약 단가
-      '',
+
+      totals.outsourcingQuantity.toLocaleString(),
+      totals.outsourcingUnitPrice.toLocaleString(),
+      totals.outsourcingPrice.toLocaleString(),
+
       totals.prevQuantity.toLocaleString(),
       totals.prevAmount.toLocaleString(),
       totals.currQuantity.toLocaleString(),
@@ -593,14 +597,14 @@ export default function AggregateManagementOutSourcingView() {
                     </TableCell>
 
                     <TableCell align="right" sx={cellStyle}>
-                      {r.contractQuantity}
+                      {r.contractQuantity.toLocaleString()}
                     </TableCell>
                     <TableCell align="right" sx={cellStyle}>
                       {r.contractPrice.toLocaleString()}
                     </TableCell>
 
                     <TableCell align="right" sx={cellStyle}>
-                      {r.outsourcingQuantity}
+                      {r.outsourcingQuantity.toLocaleString()}
                     </TableCell>
                     <TableCell align="right" sx={cellStyle}>
                       {r.outsourcingUnitPrice.toLocaleString()}
@@ -610,21 +614,21 @@ export default function AggregateManagementOutSourcingView() {
                     </TableCell>
 
                     <TableCell align="right" sx={cellStyle}>
-                      {r.prevQuantity}
+                      {r.prevQuantity.toLocaleString()}
                     </TableCell>
                     <TableCell align="right" sx={cellStyle}>
                       {r.prevAmount.toLocaleString()}
                     </TableCell>
 
                     <TableCell align="right" sx={cellStyle}>
-                      {r.currQuantity}
+                      {r.currQuantity.toLocaleString()}
                     </TableCell>
                     <TableCell align="right" sx={cellStyle}>
                       {r.currAmount.toLocaleString()}
                     </TableCell>
 
                     <TableCell align="right" sx={cellStyle}>
-                      {r.totalQuantity}
+                      {r.totalQuantity.toLocaleString()}
                     </TableCell>
                     <TableCell align="right" sx={cellStyle}>
                       {r.totalAmount.toLocaleString()}
@@ -648,11 +652,13 @@ export default function AggregateManagementOutSourcingView() {
               </TableCell>
 
               <TableCell align="right" sx={{ ...cellStyle, fontWeight: 'bold' }}>
-                {/* {totals.outsourcingQuantity.toLocaleString()} */}
+                {totals.outsourcingQuantity.toLocaleString()}
               </TableCell>
-              <TableCell align="center" sx={cellStyle}></TableCell>
               <TableCell align="right" sx={{ ...cellStyle, fontWeight: 'bold' }}>
-                {/* {totals.outsourcingPrice.toLocaleString()} */}
+                {totals.outsourcingUnitPrice.toLocaleString()}
+              </TableCell>
+              <TableCell align="right" sx={{ ...cellStyle, fontWeight: 'bold' }}>
+                {totals.outsourcingPrice.toLocaleString()}
               </TableCell>
 
               {/* 전회 청구내역 */}
