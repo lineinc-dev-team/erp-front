@@ -506,10 +506,10 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
   }, [contractNameInfo, isEditMode])
 
   useEffect(() => {
-    if (!contractDetailData) return // 상세 데이터가 없으면 스킵
-    if (isEditMode && !outsourcingContractId) return // 수정모드에서 id 없음 → 무시
-
     if (contractDetailData && isEditMode === true) {
+      if (!contractDetailData) return // 상세 데이터가 없으면 스킵
+      if (isEditMode && !outsourcingContractId) return // 수정모드에서 id 없음 → 무시
+
       const client = contractDetailData.data
 
       function parseLandlineNumber(landline: string) {
@@ -1040,7 +1040,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
     )
       return '계약 종료일은 시작일 이후여야 합니다.'
 
-    if (form.type !== 'SERVICE' && !form.contractAmount) {
+    if (form.type === 'CONSTRUCTION' && !form.contractAmount) {
       return '계약금액을 입력해주세요.'
     }
 
@@ -1524,13 +1524,13 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
 
           <div className="flex">
             <label className="w-36 text-[14px] border border-gray-400 flex items-center justify-center bg-gray-300  font-bold text-center">
-              {form.type === 'SERVICE' ? (
-                <>계약금액(총액)</>
-              ) : (
+              {form.type === 'CONSTRUCTION' ? (
                 <>
                   계약금액(총액)
                   <span className="text-red-500 ml-1">*</span>
                 </>
+              ) : (
+                <>계약금액(총액)</>
               )}
             </label>
             <div className="border border-gray-400 p-2 px-2 w-full">
