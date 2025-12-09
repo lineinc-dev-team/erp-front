@@ -104,7 +104,7 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
       setField('vatType', value)
     } else {
       // 해제하면 빈 문자열
-      setField('vatType', '')
+      setField('vatType', null)
     }
   }
 
@@ -294,14 +294,20 @@ export default function OutsourcingCompanyRegistrationView({ isEditMode = false 
         setField('type', 'ETC')
       }
 
-      if (client.vatType) {
-        const deductionNames = client.vatType.split(',').map((s: string) => s.trim())
+      if (client.type === '식당') {
+        if (client.vatType) {
+          const deductionNames = client.vatType.split(',').map((s: string) => s.trim())
 
-        const matchedCodes = vatTypeMethodOptions
-          .filter((opt) => deductionNames.includes(opt.name))
-          .map((opt) => opt.code)
+          const matchedCodes = (vatTypeMethodOptions ?? [])
+            .filter((opt) => deductionNames.includes(opt.name))
+            .map((opt) => opt.code)
 
-        setField('vatType', matchedCodes.join(','))
+          setField('vatType', matchedCodes.join(','))
+        } else {
+          setField('vatType', null)
+        }
+      } else {
+        setField('vatType', null) // ✅ 식대 아닐 때 초기화
       }
 
       setField('typeDescription', client.typeDescription)
