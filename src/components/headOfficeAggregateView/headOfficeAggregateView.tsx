@@ -108,25 +108,68 @@ export default function HeadOfficeAggregateView() {
     sheetData.push(headerRow1)
     sheetData.push(headerRow2)
 
+    const totalSupplySum = rows.reduce((s: any, r: any) => s + r.totalSupply, 0)
+
     rows.forEach((r: any, index: number) => {
-      sheetData.push([
-        index === 0 ? totalConstructionAmount.toLocaleString() : '',
-        r.no,
-        r.processName,
-        r.contractAmount.toLocaleString(),
-        r.prevSupply.toLocaleString(),
-        r.prevTax.toLocaleString(),
-        r.prevDeduction.toLocaleString(),
-        r.prevTotal.toLocaleString(),
-        r.currSupply.toLocaleString(),
-        r.currTax.toLocaleString(),
-        r.currDeduction.toLocaleString(),
-        r.currTotal.toLocaleString(),
-        r.totalSupply.toLocaleString(),
-        r.totalTax.toLocaleString(),
-        r.totalDeduction.toLocaleString(),
-        r.totalTotal.toLocaleString(),
-      ])
+      // r.no가 3 이하일 때만 추가
+      if (r.no <= 3) {
+        sheetData.push([
+          index === 0 ? totalConstructionAmount.toLocaleString() : '',
+          r.no,
+          r.processName,
+          r.contractAmount.toLocaleString(),
+          r.prevSupply.toLocaleString(),
+          r.prevTax.toLocaleString(),
+          r.prevDeduction.toLocaleString(),
+          r.prevTotal.toLocaleString(),
+          r.currSupply.toLocaleString(),
+          r.currTax.toLocaleString(),
+          r.currDeduction.toLocaleString(),
+          r.currTotal.toLocaleString(),
+          r.totalSupply.toLocaleString(),
+          r.totalTax.toLocaleString(),
+          r.totalDeduction.toLocaleString(),
+          r.totalTotal.toLocaleString(),
+        ])
+      } else if (r.no >= 4 && r.no <= 5) {
+        sheetData.push([
+          '잔여 기성',
+          r.no,
+          r.processName,
+          r.contractAmount.toLocaleString(),
+          r.prevSupply.toLocaleString(),
+          r.prevTax.toLocaleString(),
+          r.prevDeduction.toLocaleString(),
+          r.prevTotal.toLocaleString(),
+          r.currSupply.toLocaleString(),
+          r.currTax.toLocaleString(),
+          r.currDeduction.toLocaleString(),
+          r.currTotal.toLocaleString(),
+          r.totalSupply.toLocaleString(),
+          r.totalTax.toLocaleString(),
+          r.totalDeduction.toLocaleString(),
+          r.totalTotal.toLocaleString(),
+        ])
+      } else if (r.no >= 6 && r.no <= 7) {
+        sheetData.push([
+          (totalConstructionAmount - totalSupplySum).toLocaleString(),
+          r.no,
+          r.processName,
+          r.contractAmount.toLocaleString(),
+          r.prevSupply.toLocaleString(),
+          r.prevTax.toLocaleString(),
+          r.prevDeduction.toLocaleString(),
+          r.prevTotal.toLocaleString(),
+          r.currSupply.toLocaleString(),
+          r.currTax.toLocaleString(),
+          r.currDeduction.toLocaleString(),
+          r.currTotal.toLocaleString(),
+          r.totalSupply.toLocaleString(),
+          r.totalTax.toLocaleString(),
+          r.totalDeduction.toLocaleString(),
+          r.totalTotal.toLocaleString(),
+        ])
+      }
     })
 
     // 소계 행
@@ -140,7 +183,6 @@ export default function HeadOfficeAggregateView() {
     const currDeductionSum = rows.reduce((s: any, r: any) => s + r.currDeduction, 0)
     const currTotalSum = rows.reduce((s: any, r: any) => s + r.currTotal, 0)
 
-    const totalSupplySum = rows.reduce((s: any, r: any) => s + r.totalSupply, 0)
     const totalTaxSum = rows.reduce((s: any, r: any) => s + r.totalTax, 0)
     const totalDeductionSum = rows.reduce((s: any, r: any) => s + r.totalDeduction, 0)
     const totalTotalSum = rows.reduce((s: any, r: any) => s + r.totalTotal, 0)
@@ -175,7 +217,9 @@ export default function HeadOfficeAggregateView() {
       { s: { r: 0, c: 4 }, e: { r: 0, c: 7 } },
       { s: { r: 0, c: 8 }, e: { r: 0, c: 11 } },
       { s: { r: 0, c: 12 }, e: { r: 0, c: 15 } },
-      { s: { r: 2, c: 0 }, e: { r: 1 + rows.length, c: 0 } }, // 총 공사금액 실제 값 병합
+      { s: { r: 2, c: 0 }, e: { r: 4, c: 0 } }, // 3칸: 총공사금액
+      { s: { r: 5, c: 0 }, e: { r: 6, c: 0 } }, // 2칸: 잔여기성
+      { s: { r: 7, c: 0 }, e: { r: 8, c: 0 } }, // 2칸: 계산금액
       { s: { r: 2 + rows.length, c: 0 }, e: { r: 2 + rows.length, c: 3 } }, // 소계 텍스트 + 계약금액 포함 4칸 병합
     ]
 
@@ -211,9 +255,6 @@ export default function HeadOfficeAggregateView() {
     XLSX.writeFile(wb, '집계표(본사).xlsx')
   }
 
-  /* ------------------------
-      🔥 Style
-  ------------------------- */
   const cellStyle = {
     border: '1px solid #9ca3af',
     whiteSpace: 'nowrap',
@@ -225,6 +266,8 @@ export default function HeadOfficeAggregateView() {
     fontWeight: 'bold',
     backgroundColor: '#f3f4f6',
   }
+
+  const subtotalTotalSupply = rows.reduce((sum: number, r: any) => sum + r.totalSupply, 0)
 
   return (
     <div>
@@ -290,13 +333,67 @@ export default function HeadOfficeAggregateView() {
               {rows.map((r: any, index: number) => (
                 <TableRow key={r.no}>
                   {index == 0 && (
-                    <TableCell
-                      align="center"
-                      rowSpan={rows.length} // 마지막 소계 제외
-                      sx={cellStyle}
-                    >
-                      {totalConstructionAmount.toLocaleString()}
-                    </TableCell>
+                    <>
+                      <TableCell
+                        align="center"
+                        rowSpan={7} // 전체 세로 7칸 차지
+                        sx={{
+                          ...cellStyle,
+                          verticalAlign: 'top',
+                          padding: 0,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            height: '203px', // TableCell 전체 높이를 차지
+                          }}
+                        >
+                          {/* 위쪽 영역: 3/7 */}
+                          <div
+                            style={{
+                              flex: 3,
+                              display: 'flex',
+                              height: '400px',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              borderBottom: '1px solid #afafaf', // 구분용
+                            }}
+                          >
+                            {totalConstructionAmount.toLocaleString()}
+                          </div>
+
+                          {/* 아래쪽 영역: 4/7 */}
+                          <div
+                            style={{
+                              flex: 2,
+                              display: 'flex',
+                              height: '400px',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              fontWeight: 'bold',
+                              backgroundColor: '#f3f4f6',
+                              borderBottom: '1px solid #afafaf', // 구분용
+                            }}
+                          >
+                            잔여 기성
+                          </div>
+
+                          <div
+                            style={{
+                              flex: 2,
+                              display: 'flex',
+                              height: '400px',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                            }}
+                          >
+                            {(totalConstructionAmount - subtotalTotalSupply).toLocaleString()}
+                          </div>
+                        </div>
+                      </TableCell>
+                    </>
                   )}
 
                   <TableCell align="center" sx={cellStyle}>
