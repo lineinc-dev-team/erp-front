@@ -221,8 +221,10 @@ export default function AggregateEquipmentCostView() {
       }
     }
 
+    const fileName = `${search.yearMonth}_${search.siteName}_장비비.xlsx`
+
     XLSX.utils.book_append_sheet(wb, ws, '장비비')
-    XLSX.writeFile(wb, '장비비.xlsx')
+    XLSX.writeFile(wb, fileName)
   }
 
   const cellStyle = {

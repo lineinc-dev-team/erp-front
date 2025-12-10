@@ -26,7 +26,6 @@ export default function useFinalAggregationView({
   fuelType,
   laborType,
   type,
-  tabName,
   outsourcingCompanyId,
   outsourcingCompanyContractId,
 }: {
@@ -168,7 +167,7 @@ export default function useFinalAggregationView({
 
       return await LaborCostInfoServiceByAggregate(filteredParams)
     },
-    enabled: tabName === 'LABOR' && [yearMonth, siteId, siteProcessId, laborType].every(Boolean),
+    enabled: [yearMonth, siteId, siteProcessId, laborType].every(Boolean),
   })
 
   // 노무비에서 용역 데이터 불러오기
@@ -193,7 +192,7 @@ export default function useFinalAggregationView({
 
       return OutsourcingLaborCostInfoServiceByAggregate(filteredParams)
     },
-    enabled: tabName === 'LABOR' && !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
+    enabled: !!yearMonth && !!siteId && !!siteProcessId, // 필수값 있을 때만 실행
   })
 
   // 장비비 데이터 조회
@@ -320,12 +319,7 @@ export default function useFinalAggregationView({
 
       return ManagementCostInfoServiceByAggregate(filteredParams)
     },
-    enabled:
-      tabName === 'MANAGEMENT' &&
-      !!yearMonth &&
-      !!siteId &&
-      !!siteProcessId &&
-      outsourcingCompanyId === 0, // 필수값 있을 때만 실행
+    enabled: !!yearMonth && !!siteId && !!siteProcessId && outsourcingCompanyId === 0, // 필수값 있을 때만 실행
   })
 
   // 관리비에서 식대 거래처명 조회
@@ -350,12 +344,7 @@ export default function useFinalAggregationView({
 
       return GetMealFeeCompanyServiceByAggregate(filteredParams)
     },
-    enabled:
-      tabName === 'MANAGEMENT' &&
-      !!yearMonth &&
-      !!siteId &&
-      !!siteProcessId &&
-      outsourcingCompanyId === 0, // 필수값 있을 때만 실행
+    enabled: !!yearMonth && !!siteId && !!siteProcessId && outsourcingCompanyId === 0, // 필수값 있을 때만 실행
   })
 
   // 집계 관리비에서 상세 데이터 조회
@@ -382,12 +371,7 @@ export default function useFinalAggregationView({
 
       return GetMealFeeDetailServiceByAggregate(filteredParams)
     },
-    enabled:
-      tabName === 'MANAGEMENT' &&
-      !!yearMonth &&
-      !!siteId &&
-      !!siteProcessId &&
-      !!outsourcingCompanyId, // 필수값 있을 때만 실행
+    enabled: !!yearMonth && !!siteId && !!siteProcessId && !!outsourcingCompanyId, // 필수값 있을 때만 실행
   })
 
   // 외주 조회
@@ -412,12 +396,7 @@ export default function useFinalAggregationView({
 
       return ManagementOutSourcingInfoServiceByAggregate(filteredParams)
     },
-    enabled:
-      tabName === 'OUTSOURCING' &&
-      !!yearMonth &&
-      !!siteId &&
-      !!siteProcessId &&
-      outsourcingCompanyContractId === 0, // 필수값 있을 때만 실행
+    enabled: !!yearMonth && !!siteId && !!siteProcessId && outsourcingCompanyContractId === 0, // 필수값 있을 때만 실행
   })
 
   // 외주에서 거래처명 조회
@@ -438,11 +417,7 @@ export default function useFinalAggregationView({
 
       return GetConstructionServiceByAggregate(filteredParams)
     },
-    enabled:
-      tabName === 'OUTSOURCING' &&
-      !!siteId &&
-      !!siteProcessId &&
-      outsourcingCompanyContractId === 0, // 필수값 있을 때만 실행
+    enabled: !!siteId && !!siteProcessId && outsourcingCompanyContractId === 0, // 필수값 있을 때만 실행
   })
 
   // 집계 관리비에서 상세 데이터 조회
@@ -476,12 +451,7 @@ export default function useFinalAggregationView({
 
       return GetConstructionDetailServiceByAggregate(filteredParams)
     },
-    enabled:
-      tabName === 'OUTSOURCING' &&
-      !!yearMonth &&
-      !!siteId &&
-      !!siteProcessId &&
-      !!outsourcingCompanyContractId, // 필수값 있을 때만 실행
+    enabled: !!yearMonth && !!siteId && !!siteProcessId && !!outsourcingCompanyContractId, // 필수값 있을 때만 실행
   })
 
   // 외주(공사)에서 공제금액의 집계 조회
@@ -515,12 +485,7 @@ export default function useFinalAggregationView({
 
       return GetdeductionAmountServiceByAggregate(filteredParams)
     },
-    enabled:
-      tabName === 'OUTSOURCING' &&
-      !!yearMonth &&
-      !!siteId &&
-      !!siteProcessId &&
-      !!outsourcingCompanyContractId, // 필수값 있을 때만 실행
+    enabled: !!yearMonth && !!siteId && !!siteProcessId && !!outsourcingCompanyContractId, // 필수값 있을 때만 실행
   })
 
   return {

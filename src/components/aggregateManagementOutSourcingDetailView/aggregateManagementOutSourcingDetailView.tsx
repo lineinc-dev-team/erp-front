@@ -433,8 +433,10 @@ export default function AggregateManagementOutSourcingView() {
       }
     }
 
-    XLSX.utils.book_append_sheet(wb, ws, '외주_계약')
-    XLSX.writeFile(wb, '외주_계약.xlsx')
+    const fileName = `${search.yearMonth}_${search.outsourcingCompanyContractName}_외주계약.xlsx`
+
+    XLSX.utils.book_append_sheet(wb, ws, '외주계약')
+    XLSX.writeFile(wb, fileName)
   }
 
   const cellStyle = {

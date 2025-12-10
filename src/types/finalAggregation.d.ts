@@ -8,6 +8,9 @@ export type FinalAggregationSearchState = {
   outsourcingCompanyId: number
   outsourcingCompanyContractId: number
 
+  outsourcingCompanyName: string
+  outsourcingCompanyContractName: string
+
   reset: () => void
 
   setField: <K extends keyof Omit<FinalAggregationSearchState, 'reset' | 'setField'>>(

@@ -55,7 +55,7 @@ export default function AggregateManagementOutSourcingView() {
 
   // 기본 activeTab: AGGREGATE
 
-  const handleTabClick = (value: any) => {
+  const handleTabClick = (value: any, label: any) => {
     if (value === 'AGGREGATE') {
       search.setField('outsourcingCompanyContractId', 0)
       setActiveTab(value)
@@ -63,6 +63,7 @@ export default function AggregateManagementOutSourcingView() {
     }
 
     search.setField('outsourcingCompanyContractId', value)
+    search.setField('outsourcingCompanyContractName', label)
     setActiveTab(value)
   }
 
@@ -260,8 +261,10 @@ export default function AggregateManagementOutSourcingView() {
       }
     }
 
+    const fileName = `${search.yearMonth}_${search.siteName}_외주집계.xlsx`
+
     XLSX.utils.book_append_sheet(wb, ws, '외주집계')
-    XLSX.writeFile(wb, '외주집계.xlsx')
+    XLSX.writeFile(wb, fileName)
   }
 
   const cellStyle = {
@@ -306,7 +309,7 @@ export default function AggregateManagementOutSourcingView() {
             return (
               <Button
                 key={tab.label}
-                onClick={() => handleTabClick(tab.value)}
+                onClick={() => handleTabClick(tab.value, tab.label)}
                 sx={{
                   borderRadius: '10px 10px 0 0',
                   borderBottom: '1px solid #161616',

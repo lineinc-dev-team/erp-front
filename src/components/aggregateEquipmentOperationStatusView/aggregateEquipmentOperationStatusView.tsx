@@ -398,14 +398,17 @@ export default function AggregateEquipmentOperationStatusView() {
     // -----------------------------
     // 6️⃣ Excel 생성
     // -----------------------------
+
     const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, '장비운행집계')
+    const fileName = `${search.yearMonth}_${search.siteName}_장비가동현황.xlsx`
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, '장비가동현황')
 
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
     const blob = new Blob([excelBuffer], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     })
-    saveAs(blob, '장비가동현황_집계표.xlsx')
+    saveAs(blob, fileName)
   }
 
   const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)

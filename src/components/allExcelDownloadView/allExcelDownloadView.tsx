@@ -5,6 +5,11 @@ import * as XLSX from 'xlsx-js-style'
 import useFinalAggregationView from '@/hooks/useFinalAggregation'
 import { useFinalAggregationSearchStore } from '@/stores/finalAggregationStore'
 import { useEffect, useState } from 'react'
+import {
+  GetConstructionDetailServiceByAggregate,
+  GetdeductionAmountServiceByAggregate,
+  GetMealFeeDetailServiceByAggregate,
+} from '@/services/finalAggregation/finalAggregationService'
 
 export default function AllExcelDownloadView({
   onComplete,
@@ -1826,12 +1831,1221 @@ export default function AllExcelDownloadView({
     }
   }
 
+  // 외주 엑셀 다운로드
+
+  const { ManagementOutSourcingListQuery } = useFinalAggregationView({
+    yearMonth: search.yearMonth,
+    siteId: search.siteId,
+    siteProcessId: search.siteProcessId,
+    tabName: 'OUTSOURCING',
+    outsourcingCompanyContractId: search.outsourcingCompanyContractId,
+  })
+
+  const { ConstructionListQuery } = useFinalAggregationView({
+    siteId: search.siteId,
+    siteProcessId: search.siteProcessId,
+    tabName: 'OUTSOURCING',
+  })
+
+  const ConstructionList = ConstructionListQuery?.data?.data ?? []
+
+  const OutSourcingNameMenuList = ManagementOutSourcingListQuery.data ?? []
+
+  const items = OutSourcingNameMenuList?.data?.items || []
+
+  const outRows = items.map((item: any, index: number) => {
+    const contract = item.outsourcingCompanyContract || {}
+    const outsourcing = contract.outsourcingCompany || {}
+
+    const prev = item.previousBilling || {}
+    const curr = item.currentBilling || {}
+
+    const totalSupply = (prev.supplyPrice || 0) + (curr.supplyPrice || 0)
+    const totalTax = (prev.vat || 0) + (curr.vat || 0)
+    const totalDeduction = (prev.deduction || 0) + (curr.deduction || 0)
+    const totalTotal = (prev.total || 0) + (curr.total || 0)
+
+    return {
+      no: index + 1,
+      category: outsourcing.type || '-', // 관리 / 기타 등
+      businessNumber: outsourcing.businessNumber || '-',
+      contractName: contract.contractName || '-', // 계약명
+      company: outsourcing.name || '-',
+      ceo: outsourcing.ceoName || '-',
+      contact: outsourcing.landlineNumber || '-',
+      bank: outsourcing.bankName || '-',
+      accountNumber: outsourcing.accountNumber || '-',
+      accountName: outsourcing.accountHolder || '-',
+
+      prevSupply: prev.supplyPrice || 0,
+      prevTax: prev.vat || 0,
+      prevDeduction: prev.deduction || 0,
+      prevTotal: prev.total || 0,
+
+      currSupply: curr.supplyPrice || 0,
+      currTax: curr.vat || 0,
+      currDeduction: curr.deduction || 0,
+      currTotal: curr.total || 0,
+
+      totalSupply,
+      totalTax,
+      totalDeduction,
+      totalTotal,
+    }
+  })
+
+  const outHeaderRow1 = [
+    'NO.',
+    '사업자등록번호',
+    '계약명',
+    '업체명',
+    '대표자',
+    '연락처',
+    '기성청구계좌',
+    '',
+    '',
+    '전회까지 청구내역',
+    '',
+    '',
+    '',
+    '금회 청구내역',
+    '',
+    '',
+    '',
+    '누계 청구내역',
+    '',
+    '',
+    '',
+  ]
+
+  const outHeaderRow2 = [
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '은행',
+    '계좌번호',
+    '계좌명',
+    '공급가',
+    '부가세',
+    '공제금액',
+    '계',
+    '공급가',
+    '부가세',
+    '공제금액',
+    '계',
+    '공급가',
+    '부가세',
+    '공제금액',
+    '계',
+  ]
+
+  const outSheetData: any[] = [outHeaderRow1, outHeaderRow2]
+
+  outRows.forEach((r: any) => {
+    outSheetData.push([
+      r.no,
+      r.businessNumber,
+      r.contractName, // item 대신 계약명
+      r.company,
+      r.ceo,
+      r.contact,
+      r.bank,
+      r.accountNumber,
+      r.accountName,
+      r.prevSupply.toLocaleString(),
+      r.prevTax.toLocaleString(),
+      r.prevDeduction.toLocaleString(),
+      r.prevTotal.toLocaleString(),
+      r.currSupply.toLocaleString(),
+      r.currTax.toLocaleString(),
+      r.currDeduction.toLocaleString(),
+      r.currTotal.toLocaleString(),
+      r.totalSupply.toLocaleString(),
+      r.totalTax.toLocaleString(),
+      r.totalDeduction.toLocaleString(),
+      r.totalTotal.toLocaleString(),
+    ])
+  })
+
+  // 소계
+  const outSum = (key: string) => outRows.reduce((acc: number, r: any) => acc + (r[key] || 0), 0)
+  outSheetData.push([
+    '소계',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    outSum('prevSupply').toLocaleString(),
+    outSum('prevTax').toLocaleString(),
+    outSum('prevDeduction').toLocaleString(),
+    outSum('prevTotal').toLocaleString(),
+    outSum('currSupply').toLocaleString(),
+    outSum('currTax').toLocaleString(),
+    outSum('currDeduction').toLocaleString(),
+    outSum('currTotal').toLocaleString(),
+    outSum('totalSupply').toLocaleString(),
+    outSum('totalTax').toLocaleString(),
+    outSum('totalDeduction').toLocaleString(),
+    outSum('totalTotal').toLocaleString(),
+  ])
+
+  const outSourcingSheet = XLSX.utils.aoa_to_sheet(outSheetData)
+
+  // 병합
+  outSourcingSheet['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
+    { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } },
+    { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } },
+    { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } },
+    { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } },
+    { s: { r: 0, c: 5 }, e: { r: 1, c: 5 } },
+    { s: { r: 0, c: 6 }, e: { r: 0, c: 8 } },
+    { s: { r: 0, c: 9 }, e: { r: 0, c: 12 } },
+    { s: { r: 0, c: 13 }, e: { r: 0, c: 16 } },
+    { s: { r: 0, c: 17 }, e: { r: 0, c: 20 } },
+    { s: { r: outSheetData.length - 1, c: 0 }, e: { r: outSheetData.length - 1, c: 8 } },
+  ]
+
+  // 스타일
+  const outSourcingRange = XLSX.utils.decode_range(outSourcingSheet['!ref']!)
+  for (let R = outSourcingRange.s.r; R <= outSourcingRange.e.r; ++R) {
+    for (let C = outSourcingRange.s.c; C <= outSourcingRange.e.c; ++C) {
+      const cellRef = XLSX.utils.encode_cell({ r: R, c: C })
+      if (!outSourcingSheet[cellRef]) outSourcingSheet[cellRef] = { v: '' }
+
+      const isHeader = R < 2
+      const isAmount = !isHeader && C >= 9
+      const isSubtotalLabel = R === outSheetData.length - 1 && C === 0
+
+      outSourcingSheet[cellRef].s = {
+        border: {
+          top: { style: 'thin', color: { rgb: '000000' } },
+          bottom: { style: 'thin', color: { rgb: '000000' } },
+          left: { style: 'thin', color: { rgb: '000000' } },
+          right: { style: 'thin', color: { rgb: '000000' } },
+        },
+        fill: isHeader ? { patternType: 'solid', fgColor: { rgb: 'C0C0C0' } } : undefined,
+        alignment: {
+          vertical: 'center',
+          horizontal: isHeader || isSubtotalLabel ? 'center' : isAmount ? 'right' : 'center',
+        },
+      }
+    }
+  }
+
+  // 관리비 엑셀 다운로드
+
+  const { ManagementCostListQuery } = useFinalAggregationView({
+    yearMonth: search.yearMonth,
+    siteId: search.siteId,
+    siteProcessId: search.siteProcessId,
+    tabName: 'MANAGEMENT',
+    outsourcingCompanyId: search.outsourcingCompanyId,
+  })
+
+  const CostMenuList = ManagementCostListQuery.data ?? []
+
+  const Costitems = CostMenuList?.data?.items || []
+
+  const CostRows = Costitems.map((item: any, index: number) => {
+    const outsourcing = item.outsourcingCompany || {}
+    const prev = item.previousBilling || {}
+    const curr = item.currentBilling || {}
+
+    const totalSupply = (prev.supplyPrice || 0) + (curr.supplyPrice || 0)
+    const totalTax = (prev.vat || 0) + (curr.vat || 0)
+    const totalDeduction = (prev.deductionAmount || 0) + (curr.deductionAmount || 0)
+    const totalTotal = (prev.total || 0) + (curr.total || 0)
+
+    return {
+      no: index + 1,
+      category: outsourcing.type || '-',
+      businessNumber: outsourcing.businessNumber || '-',
+      item: item.itemTypeDescription || item.itemType || '-',
+      company: outsourcing.name || '-',
+      ceo: outsourcing.ceoName || '-',
+      contact: outsourcing.landlineNumber || '-',
+      bank: outsourcing.bankName || '-',
+      accountNumber: outsourcing.accountNumber || '-',
+      accountName: outsourcing.accountHolder || '-',
+      prevSupply: prev.supplyPrice || 0,
+      prevTax: prev.vat || 0,
+      prevDeduction: prev.deductionAmount || 0,
+      prevTotal: prev.total || 0,
+      currSupply: curr.supplyPrice || 0,
+      currTax: curr.vat || 0,
+      currDeduction: curr.deductionAmount || 0,
+      currTotal: curr.total || 0,
+      totalSupply,
+      totalTax,
+      totalDeduction,
+      totalTotal,
+    }
+  })
+
+  // 헤더 1행
+  const manageMentCostHeaderRow1 = [
+    'NO.',
+    '사업자등록번호',
+    '품명',
+    '업체명',
+    '대표자',
+    '연락처',
+    '기성청구계좌',
+    '',
+    '',
+    '전회까지 청구내역',
+    '',
+    '',
+    '',
+    '금회 청구내역',
+    '',
+    '',
+    '',
+    '누계 청구내역',
+    '',
+    '',
+    '',
+  ]
+
+  // 헤더 2행
+  const manageMentCostHeaderRow2 = [
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '은행',
+    '계좌번호',
+    '계좌명',
+    '공급가',
+    '부가세',
+    '공제금액',
+    '계',
+    '공급가',
+    '부가세',
+    '공제금액',
+    '계',
+    '공급가',
+    '부가세',
+    '공제금액',
+    '계',
+  ]
+
+  const managementCostSheetData: any[] = []
+  managementCostSheetData.push(manageMentCostHeaderRow1)
+  managementCostSheetData.push(manageMentCostHeaderRow2)
+
+  // 테이블 데이터 추가
+  CostRows.forEach((r: any) => {
+    managementCostSheetData.push([
+      r.no,
+      r.businessNumber,
+      r.item,
+      r.company,
+      r.ceo,
+      r.contact,
+      r.bank,
+      r.accountNumber,
+      r.accountName,
+      r.prevSupply.toLocaleString(),
+      r.prevTax.toLocaleString(),
+      r.prevDeduction.toLocaleString(),
+      r.prevTotal.toLocaleString(),
+      r.currSupply.toLocaleString(),
+      r.currTax.toLocaleString(),
+      r.currDeduction.toLocaleString(),
+      r.currTotal.toLocaleString(),
+      r.totalSupply.toLocaleString(),
+      r.totalTax.toLocaleString(),
+      r.totalDeduction.toLocaleString(),
+      r.totalTotal.toLocaleString(),
+    ])
+  })
+
+  // 소계 계산
+  const managementCostSum = (key: string) =>
+    CostRows.reduce((acc: number, r: any) => acc + (r[key] || 0), 0)
+
+  managementCostSheetData.push([
+    '소계',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    managementCostSum('prevSupply').toLocaleString(),
+    managementCostSum('prevTax').toLocaleString(),
+    managementCostSum('prevDeduction').toLocaleString(),
+    managementCostSum('prevTotal').toLocaleString(),
+    managementCostSum('currSupply').toLocaleString(),
+    managementCostSum('currTax').toLocaleString(),
+    managementCostSum('currDeduction').toLocaleString(),
+    managementCostSum('currTotal').toLocaleString(),
+    managementCostSum('totalSupply').toLocaleString(),
+    managementCostSum('totalTax').toLocaleString(),
+    managementCostSum('totalDeduction').toLocaleString(),
+    managementCostSum('totalTotal').toLocaleString(),
+  ])
+
+  const managementCostSheet = XLSX.utils.aoa_to_sheet(managementCostSheetData)
+
+  // 병합
+  managementCostSheet['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
+    { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } },
+    { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } },
+    { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } },
+    { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } },
+    { s: { r: 0, c: 5 }, e: { r: 1, c: 5 } },
+
+    { s: { r: 0, c: 6 }, e: { r: 0, c: 8 } },
+    { s: { r: 0, c: 9 }, e: { r: 0, c: 12 } },
+    { s: { r: 0, c: 13 }, e: { r: 0, c: 16 } },
+    { s: { r: 0, c: 17 }, e: { r: 0, c: 20 } },
+
+    // 소계 병합 (첫 9칸)
+    {
+      s: { r: managementCostSheetData.length - 1, c: 0 },
+      e: { r: managementCostSheetData.length - 1, c: 8 },
+    },
+  ]
+
+  // 스타일 적용
+  const CostRange = XLSX.utils.decode_range(managementCostSheet['!ref']!)
+  for (let R = CostRange.s.r; R <= CostRange.e.r; ++R) {
+    for (let C = CostRange.s.c; C <= CostRange.e.c; ++C) {
+      const cellRef = XLSX.utils.encode_cell({ r: R, c: C })
+      if (!managementCostSheet[cellRef]) managementCostSheet[cellRef] = { v: '' }
+
+      const isHeader = R < 2
+      const isAmount = !isHeader && C >= 9
+      const isSubtotalLabel = R === managementCostSheetData.length - 1 && C === 0
+
+      managementCostSheet[cellRef].s = {
+        border: {
+          top: { style: 'thin', color: { rgb: '000000' } },
+          bottom: { style: 'thin', color: { rgb: '000000' } },
+          left: { style: 'thin', color: { rgb: '000000' } },
+          right: { style: 'thin', color: { rgb: '000000' } },
+        },
+        fill: isHeader ? { patternType: 'solid', fgColor: { rgb: 'C0C0C0' } } : undefined,
+        alignment: {
+          vertical: 'center',
+          horizontal: isHeader || isSubtotalLabel ? 'center' : isAmount ? 'right' : 'center',
+        },
+      }
+    }
+  }
+
+  // 계약업체별 정보와 ID 매핑
+  const contractInfoMap = ConstructionList.reduce((acc: any, item: any) => {
+    const contractId = item.outsourcingCompanyContract.id
+    const contractName = item.outsourcingCompanyContract.contractName || '계약명없음'
+    acc[contractId] = {
+      id: contractId,
+      contractName,
+      rawGroups: [],
+      amountGroups: {},
+    }
+    return acc
+  }, {})
+
+  const ConstructionIdList = Object.keys(contractInfoMap).map(Number)
+
+  //외주 쪽 상세 엑셀 다운로드 데이터 - 각 계약업체별로 분리
+  const [contractDataMap, setContractDataMap] = useState<Record<number, any>>({})
+
+  // 각 contractId에 대해 순차적으로 API 호출
+  useEffect(() => {
+    const fetchAllData = async () => {
+      if (ConstructionIdList.length === 0) return
+
+      const newContractDataMap: Record<number, any> = {}
+
+      // 각 contractId에 대해 순차적으로 API 호출
+      for (const contractId of ConstructionIdList) {
+        try {
+          // ConstructionDetail 데이터 가져오기
+          const constructionParams = {
+            siteId: search.siteId === 0 ? undefined : search.siteId,
+            siteProcessId: search.siteProcessId === 0 ? undefined : search.siteProcessId,
+            yearMonth: search.yearMonth,
+            outsourcingCompanyContractId: contractId === 0 ? undefined : contractId,
+          }
+
+          const filteredConstructionParams = Object.fromEntries(
+            Object.entries(constructionParams).filter(
+              ([, value]) =>
+                value !== undefined &&
+                value !== null &&
+                value !== '' &&
+                !(typeof value === 'number' && isNaN(value)),
+            ),
+          )
+
+          const constructionResponse = await GetConstructionDetailServiceByAggregate(
+            filteredConstructionParams,
+          )
+          const groups = constructionResponse?.data?.constructionGroups || []
+
+          // DeductionAmount 데이터 가져오기
+          const deductionParams = {
+            siteId: search.siteId === 0 ? undefined : search.siteId,
+            siteProcessId: search.siteProcessId === 0 ? undefined : search.siteProcessId,
+            yearMonth: search.yearMonth,
+            outsourcingCompanyContractId: contractId === 0 ? undefined : contractId,
+          }
+
+          const filteredDeductionParams = Object.fromEntries(
+            Object.entries(deductionParams).filter(
+              ([, value]) =>
+                value !== undefined &&
+                value !== null &&
+                value !== '' &&
+                !(typeof value === 'number' && isNaN(value)),
+            ),
+          )
+
+          const deductionResponse = await GetdeductionAmountServiceByAggregate(
+            filteredDeductionParams,
+          )
+          const amountData = deductionResponse?.data || {}
+
+          // 각 계약업체별로 데이터 저장
+          newContractDataMap[contractId] = {
+            contractId,
+            contractName: contractInfoMap[contractId]?.contractName || '계약명없음',
+            rawGroups: groups,
+            amountGroups: amountData,
+          }
+        } catch (error) {
+          console.error(`contractId ${contractId} 데이터 가져오기 실패:`, error)
+        }
+      }
+
+      setContractDataMap(newContractDataMap)
+    }
+
+    fetchAllData()
+  }, [ConstructionIdList, search.yearMonth, search.siteId, search.siteProcessId])
+
+  // 각 계약업체별 엑셀 시트 생성 함수
+  const createContractDetailSheet = (rawGroups: any[], amountGroups: Record<string, any>) => {
+    const deductionRows = [
+      { label: '식대(공급가)', key: 'mealFee' },
+      { label: '간식대(공급가)', key: 'snackFee' },
+      { label: '유류대(공급가)', key: 'fuelFee' },
+      { label: '재료비(공급가)', key: 'materialCost' },
+    ]
+
+    // 🔥 이전(totalAmount)
+    const getPreviousAmount = (key: string) => {
+      return amountGroups?.[key]?.previousBilling?.totalAmount ?? 0
+    }
+
+    // 🔥 금회(totalAmount)
+    const getCurrentAmount = (key: string) => {
+      return amountGroups?.[key]?.currentBilling?.totalAmount ?? 0
+    }
+
+    const getTotalAmount = (key: string) => {
+      const prev = amountGroups?.[key]?.previousBilling?.totalAmount ?? 0
+      const curr = amountGroups?.[key]?.currentBilling?.totalAmount ?? 0
+      return prev + curr
+    }
+
+    const deductionKeys = deductionRows.map((d: any) => d.key)
+
+    // 전회 합계
+    const deductionPrevSum = deductionKeys.reduce((acc: number, k: string) => {
+      const v = amountGroups?.[k]?.previousBilling?.totalAmount ?? 0
+      return acc + (v || 0)
+    }, 0)
+
+    // 금회 합계
+    const deductionCurrSum = deductionKeys.reduce((acc: number, k: string) => {
+      const v = amountGroups?.[k]?.currentBilling?.totalAmount ?? 0
+      return acc + (v || 0)
+    }, 0)
+
+    // 누계 합계
+    const deductionTotalSum = deductionPrevSum + deductionCurrSum
+
+    const groupedRows = rawGroups.map((group: any) => {
+      const groupName = group.outsourcingCompanyContractConstructionGroup?.itemName || '-'
+      const items = group.items || []
+
+      const formattedItems = items.map((it: any) => {
+        const prev = it.previousBilling || {}
+        const curr = it.currentBilling || {}
+
+        return {
+          id: it.id,
+          item: it.item,
+          specification: it.specification,
+          unit: it.unit,
+          unitPrice: it.unitPrice,
+          contractQuantity: it.contractQuantity,
+          contractPrice: it.contractPrice,
+
+          outsourcingQuantity: it.outsourcingContractQuantity,
+          outsourcingUnitPrice: it.outsourcingContractUnitPrice,
+          outsourcingPrice: it.outsourcingContractPrice,
+
+          prevQuantity: prev.totalQuantity || 0,
+          prevAmount: prev.totalAmount || 0,
+          currQuantity: curr.totalQuantity || 0,
+          currAmount: curr.totalAmount || 0,
+
+          totalQuantity: (prev.totalQuantity || 0) + (curr.totalQuantity || 0),
+          totalAmount: (prev.totalAmount || 0) + (curr.totalAmount || 0),
+        }
+      })
+
+      return {
+        groupName,
+        rowSpan: formattedItems.length,
+        rows: formattedItems,
+      }
+    })
+
+    const totals = groupedRows.reduce(
+      (acc: any, group: any) => {
+        group.rows.forEach((r: any) => {
+          acc.contractQuantity += r.contractQuantity || 0
+          acc.contractPrice += r.contractPrice || 0
+
+          acc.outsourcingQuantity += r.outsourcingQuantity || 0
+          acc.outsourcingUnitPrice += r.outsourcingUnitPrice || 0
+          acc.outsourcingPrice += r.outsourcingPrice || 0
+
+          acc.prevQuantity += r.prevQuantity || 0
+          acc.prevAmount += r.prevAmount || 0
+
+          acc.currQuantity += r.currQuantity || 0
+          acc.currAmount += r.currAmount || 0
+
+          acc.totalQuantity += r.totalQuantity || 0
+          acc.totalAmount += r.totalAmount || 0
+        })
+        return acc
+      },
+      {
+        contractQuantity: 0,
+        contractPrice: 0,
+
+        outsourcingQuantity: 0,
+        outsourcingUnitPrice: 0,
+        outsourcingPrice: 0,
+
+        prevQuantity: 0,
+        prevAmount: 0,
+
+        currQuantity: 0,
+        currAmount: 0,
+
+        totalQuantity: 0,
+        totalAmount: 0,
+      },
+    )
+
+    const outDetailHeaderRow1 = [
+      'NO.',
+      '항목명',
+      '항목',
+      '규격',
+      '단위',
+      '도급단가',
+      '도급금액',
+      '',
+      '외주계약금액',
+      '',
+      '',
+      '전회 청구내역',
+      '',
+      '금회 청구내역',
+      '',
+      '누계 청구내역',
+      '',
+    ]
+    const outDetailHeaderRow2 = [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '수량',
+      '금액',
+      '수량',
+      '단가',
+      '금액',
+      '수량',
+      '금액',
+      '수량',
+      '금액',
+      '수량',
+      '금액',
+    ]
+
+    // ================= 최종 총계 (공급가, 부가세, 세금계산서발행본) =================
+    const totalPrevSupply = totals.prevAmount - deductionPrevSum
+    const totalCurrSupply = totals.currAmount - deductionCurrSum
+    const totalFinalSupply = totals.totalAmount - deductionTotalSum
+
+    const totalPrevTax = totalPrevSupply * 0.1
+    const totalCurrTax = totalCurrSupply * 0.1
+    const totalTax = totalFinalSupply * 0.1
+
+    const totalPrevInvoice = totalPrevSupply + totalPrevTax
+    const totalCurrInvoice = totalCurrSupply + totalCurrTax
+    const totalInvoice = totalFinalSupply + totalTax
+
+    const outDetailSheetData: any[] = []
+    outDetailSheetData.push(outDetailHeaderRow1)
+    outDetailSheetData.push(outDetailHeaderRow2)
+
+    // 그룹별 데이터
+    groupedRows.forEach((group: any, groupIndex: any) => {
+      group.rows.forEach((r: any, rowIdx: any) => {
+        outDetailSheetData.push(
+          [
+            rowIdx === 0 ? groupIndex + 1 : '',
+            rowIdx === 0 ? group.groupName : '',
+            r.item,
+            r.specification,
+            r.unit,
+            r.unitPrice,
+            r.contractQuantity,
+            r.contractPrice,
+            r.outsourcingQuantity,
+            r.outsourcingUnitPrice,
+            r.outsourcingPrice,
+            r.prevQuantity,
+            r.prevAmount,
+            r.currQuantity,
+            r.currAmount,
+            r.totalQuantity,
+            r.totalAmount,
+          ].map((v: any) => (typeof v === 'number' ? v.toLocaleString() : v)),
+        )
+      })
+    })
+
+    // 외주공사비 합계
+    outDetailSheetData.push([
+      '외주공사비',
+      '',
+      '',
+      '',
+      '',
+      '',
+      totals.contractQuantity.toLocaleString(),
+      totals.contractPrice.toLocaleString(),
+
+      totals.outsourcingQuantity.toLocaleString(),
+      totals.outsourcingUnitPrice.toLocaleString(),
+      totals.outsourcingPrice.toLocaleString(),
+
+      totals.prevQuantity.toLocaleString(),
+      totals.prevAmount.toLocaleString(),
+      totals.currQuantity.toLocaleString(),
+      totals.currAmount.toLocaleString(),
+      totals.totalQuantity.toLocaleString(),
+      totals.totalAmount.toLocaleString(),
+    ])
+
+    // deductionRows
+    deductionRows.forEach((row) => {
+      const prev = getPreviousAmount(row.key)
+      const curr = getCurrentAmount(row.key)
+      const total = getTotalAmount(row.key)
+      outDetailSheetData.push([
+        '',
+        '',
+        '공제금액',
+        row.label,
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        prev.toLocaleString(),
+        '',
+        curr.toLocaleString(),
+        '',
+        total.toLocaleString(),
+      ])
+    })
+
+    // 공제합계
+    outDetailSheetData.push([
+      '공제합계',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      deductionPrevSum.toLocaleString(),
+      '',
+      deductionCurrSum.toLocaleString(),
+      '',
+      deductionTotalSum.toLocaleString(),
+    ])
+
+    // 총계(공급가, 부가세, 세금계산서발행본)
+    outDetailSheetData.push([
+      '총계(소계1 - 소계2 (공제금액))',
+      '',
+      '',
+      '',
+      '',
+      '공급가',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      totalPrevSupply.toLocaleString(),
+      '',
+      totalCurrSupply.toLocaleString(),
+
+      '',
+      totalFinalSupply.toLocaleString(),
+    ])
+    outDetailSheetData.push([
+      '',
+      '',
+      '',
+      '',
+      '',
+      '부가세',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      Math.round(totalPrevTax).toLocaleString(),
+
+      '',
+      Math.round(totalCurrTax).toLocaleString(),
+
+      '',
+      Math.round(totalTax).toLocaleString(),
+    ])
+    outDetailSheetData.push([
+      '',
+      '',
+      '',
+      '',
+      '',
+      '세금계산서발행본',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      totalPrevInvoice.toLocaleString(),
+
+      '',
+      totalCurrInvoice.toLocaleString(),
+
+      '',
+      totalInvoice.toLocaleString(),
+    ])
+
+    const outDetailExcelSheet = XLSX.utils.aoa_to_sheet(outDetailSheetData)
+
+    // 병합
+    outDetailExcelSheet['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
+      { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } },
+      { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } },
+      { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } },
+      { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } },
+      { s: { r: 0, c: 5 }, e: { r: 1, c: 5 } },
+      { s: { r: 0, c: 6 }, e: { r: 0, c: 7 } },
+      { s: { r: 0, c: 8 }, e: { r: 0, c: 10 } },
+      { s: { r: 0, c: 11 }, e: { r: 0, c: 12 } },
+      { s: { r: 0, c: 13 }, e: { r: 0, c: 14 } },
+      { s: { r: 0, c: 15 }, e: { r: 0, c: 16 } },
+    ]
+    const outsourcingRowIndex = outDetailSheetData.findIndex((row) => row[0] === '외주공사비')
+    if (outsourcingRowIndex >= 0) {
+      outDetailExcelSheet['!merges'].push({
+        s: { r: outsourcingRowIndex, c: 0 },
+        e: { r: outsourcingRowIndex, c: 5 },
+      })
+    }
+
+    const deductionRowIndex = outDetailSheetData.findIndex((row) => row[0] === '공제합계')
+    if (deductionRowIndex >= 0) {
+      outDetailExcelSheet['!merges'].push({
+        s: { r: deductionRowIndex, c: 0 },
+        e: { r: deductionRowIndex, c: 5 }, // NO. ~ 도급단가까지 병합
+      })
+    }
+
+    // 총계 병합
+    const outDetailTotalRowIndex = outDetailSheetData.findIndex((row) =>
+      row[0]?.startsWith('총계(소계1'),
+    )
+    if (outDetailTotalRowIndex >= 0) {
+      outDetailExcelSheet['!merges'].push({
+        s: { r: outDetailTotalRowIndex, c: 0 }, // 시작 셀
+        e: { r: outDetailTotalRowIndex + 2, c: 4 }, // 아래 3칸, 오른쪽 5칸까지
+      })
+    }
+
+    // 스타일 적용
+    const outDetailRange = XLSX.utils.decode_range(outDetailExcelSheet['!ref']!)
+    for (let R = outDetailRange.s.r; R <= outDetailRange.e.r; ++R) {
+      for (let C = outDetailRange.s.c; C <= outDetailRange.e.c; ++C) {
+        const cellRef = XLSX.utils.encode_cell({ r: R, c: C })
+        if (!outDetailExcelSheet[cellRef]) outDetailExcelSheet[cellRef] = { v: '' }
+
+        const isHeader = R < 2
+        const isAmount = !isHeader && C >= 6
+        const isSubtotalLabel = R >= outDetailSheetData.length - 3 && C === 0
+
+        outDetailExcelSheet[cellRef].s = {
+          border: {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } },
+          },
+          fill: isHeader ? { patternType: 'solid', fgColor: { rgb: 'C0C0C0' } } : undefined,
+          alignment: {
+            vertical: 'center',
+            horizontal: isHeader || isSubtotalLabel ? 'center' : isAmount ? 'right' : 'center',
+          },
+        }
+      }
+    }
+
+    return outDetailExcelSheet
+  }
+
+  // 관리비 상세데이터 엑셀 다운로드
+
+  const { MealFeeCompanyListQuery } = useFinalAggregationView({
+    yearMonth: search.yearMonth,
+    siteId: search.siteId,
+    siteProcessId: search.siteProcessId,
+    tabName: 'MANAGEMENT',
+  })
+
+  const MealFeeCompanyList = MealFeeCompanyListQuery?.data?.data ?? []
+
+  // 업체별 정보와 ID 매핑
+  const companyInfoMap = MealFeeCompanyList.reduce((acc: any, item: any) => {
+    const companyId = item.id
+    const companyName = item.name || '업체명없음'
+    acc[companyId] = {
+      id: companyId,
+      companyName,
+    }
+    return acc
+  }, {})
+
+  const ComPanyIdList = Object.keys(companyInfoMap).map(Number)
+
+  // 관리비 상세 데이터 - 각 업체별로 분리
+  const [companyDataMap, setCompanyDataMap] = useState<Record<number, any>>({})
+
+  // 각 companyId에 대해 순차적으로 API 호출
+  useEffect(() => {
+    const fetchAllCompanyData = async () => {
+      if (ComPanyIdList.length === 0) return
+
+      const newCompanyDataMap: Record<number, any> = {}
+
+      // 각 companyId에 대해 순차적으로 API 호출
+      for (const companyId of ComPanyIdList) {
+        try {
+          const mealFeeParams = {
+            siteId: search.siteId === 0 ? undefined : search.siteId,
+            siteProcessId: search.siteProcessId === 0 ? undefined : search.siteProcessId,
+            yearMonth: search.yearMonth,
+            outsourcingCompanyId: companyId === 0 ? undefined : companyId,
+          }
+
+          const filteredMealFeeParams = Object.fromEntries(
+            Object.entries(mealFeeParams).filter(
+              ([, value]) =>
+                value !== undefined &&
+                value !== null &&
+                value !== '' &&
+                !(typeof value === 'number' && isNaN(value)),
+            ),
+          )
+
+          const mealFeeResponse = await GetMealFeeDetailServiceByAggregate(filteredMealFeeParams)
+          const items = mealFeeResponse?.data?.items || []
+
+          // 각 업체별로 데이터 저장
+          newCompanyDataMap[companyId] = {
+            companyId,
+            companyName: companyInfoMap[companyId]?.companyName || '업체명없음',
+            items,
+          }
+        } catch (error) {
+          console.error(`companyId ${companyId} 데이터 가져오기 실패:`, error)
+        }
+      }
+
+      setCompanyDataMap(newCompanyDataMap)
+    }
+
+    fetchAllCompanyData()
+  }, [ComPanyIdList, search.yearMonth, search.siteId, search.siteProcessId])
+
+  // 각 업체별 관리비 상세 엑셀 시트 생성 함수
+  const createMealFeeDetailSheet = (mealFeeDetailList: any[]) => {
+    const dateColumns = Array.from({ length: 31 }, (_, i) => i + 1)
+
+    const getMealCounts = (
+      item: any,
+      mealType: 'breakfastCount' | 'lunchCount' | 'dinnerCount',
+    ) => {
+      const result: Record<number, { count: number; unitPrice: number; amount: number }> = {}
+      for (let i = 1; i <= 31; i++) {
+        const key = `day${i.toString().padStart(2, '0')}`
+        result[i] = {
+          count: item?.[key]?.[mealType] || 0,
+          unitPrice: item?.[key]?.unitPrice || 0,
+          amount: item?.[key]?.amount || 0,
+        }
+      }
+      return result
+    }
+
+    const rows = mealFeeDetailList.map((item: any, index: number) => ({
+      no: index + 1,
+      jobType: item.workType || '-',
+      name:
+        item.workType === '장비'
+          ? item.driver?.name
+          : item.workType === '용역'
+          ? item.outsourcingCompany?.name
+          : item.workType === '외주'
+          ? item.outsourcingCompanyContract?.contractName
+          : item.labor?.name || '-',
+
+      meals: [
+        { type: '조식', days: getMealCounts(item, 'breakfastCount') },
+        { type: '중식', days: getMealCounts(item, 'lunchCount') },
+        { type: '석식', days: getMealCounts(item, 'dinnerCount') },
+      ],
+    }))
+
+    const formattedRows: any[][] = []
+
+    rows.forEach((r: any) => {
+      const totalMeals = r.meals.reduce(
+        (sum: number, meal: any) =>
+          sum + Object.values(meal.days).reduce((a: number, b: any) => a + b.count, 0),
+        0,
+      )
+
+      const allUnitPrices = r.meals.flatMap((meal: any) =>
+        Object.values(meal.days).map((d: any) => d.unitPrice),
+      )
+      const unitPriceSum = allUnitPrices.reduce((a: any, b: any) => a + b, 0)
+      const unitPriceCount = allUnitPrices.filter((v: any) => v > 0).length
+      const avgUnitPrice = unitPriceCount ? unitPriceSum / unitPriceCount : 0
+
+      const totalAmount = totalMeals * avgUnitPrice
+
+      r.meals.forEach((meal: any, idx: number) => {
+        const dayCounts = dateColumns.map((d) => meal.days[d].count)
+
+        const row = [
+          idx === 0 ? r.no : '',
+          idx === 0 ? r.jobType : '',
+          idx === 0 ? r.name : '',
+          meal.type,
+          ...dayCounts,
+          idx === 0 ? totalMeals.toLocaleString() : '',
+          idx === 0 ? avgUnitPrice.toLocaleString() : '',
+          idx === 0 ? totalAmount.toLocaleString() : '',
+        ]
+
+        formattedRows.push(row)
+      })
+    })
+
+    // 총합계 계산
+    const totalPerDayByMeal = ['조식', '중식', '석식'].map((mealType) =>
+      dateColumns.map((d) =>
+        rows.reduce((sum: number, r: any) => {
+          const meal = r.meals.find((m: any) => m.type === mealType)
+          return sum + (meal?.days[d]?.count || 0)
+        }, 0),
+      ),
+    )
+
+    const totalMealsByMeal = rows
+      .reduce((sum: number, r: any) => {
+        return (
+          sum +
+          r.meals.reduce(
+            (mealSum: number, meal: any) =>
+              mealSum +
+              Object.values(meal.days || {}).reduce((c: number, d: any) => c + (d.count || 0), 0),
+            0,
+          )
+        )
+      }, 0)
+      .toLocaleString()
+
+    const totalUnitPriceByMeal = rows
+      .reduce((sum: number, r: any) => {
+        const allPrices = r.meals.flatMap((meal: any) =>
+          Object.values(meal.days || {}).map((d: any) => d.unitPrice),
+        )
+        const filtered = allPrices.filter((v: any) => v > 0)
+        const avg = filtered.length
+          ? filtered.reduce((a: any, b: any) => a + b, 0) / filtered.length
+          : 0
+        return sum + avg
+      }, 0)
+      .toLocaleString()
+
+    const totalAmountByMeal = (
+      Number(totalMealsByMeal.replace(/,/g, '')) * Number(totalUnitPriceByMeal.replace(/,/g, ''))
+    ).toLocaleString()
+
+    const meals = ['조식', '중식', '석식']
+
+    meals.forEach((mealType: any, idx: any) => {
+      const row: any[] = []
+      if (idx === 0) {
+        row.push('계', '', '')
+      } else {
+        row.push('', '', '')
+      }
+      row.push(mealType)
+      row.push(...totalPerDayByMeal[idx])
+      if (idx === 0) {
+        row.push(totalMealsByMeal, totalUnitPriceByMeal, totalAmountByMeal)
+      } else {
+        row.push('', '', '')
+      }
+      formattedRows.push(row)
+    })
+
+    // 헤더
+    const headerRow = [
+      'No',
+      '직종',
+      '성명',
+      '구분',
+      ...dateColumns.map((d) => `${d}`),
+      '계',
+      '단가',
+      '총합계',
+    ]
+
+    const sheetAoA = [headerRow, ...formattedRows]
+    const worksheet = XLSX.utils.aoa_to_sheet(sheetAoA)
+
+    // 셀 스타일: 테두리, 회색 헤더
+    const borderStyle = {
+      top: { style: 'thin', color: { rgb: '000000' } },
+      bottom: { style: 'thin', color: { rgb: '000000' } },
+      left: { style: 'thin', color: { rgb: '000000' } },
+      right: { style: 'thin', color: { rgb: '000000' } },
+    }
+
+    sheetAoA.forEach((row, rowIndex) => {
+      row.forEach((_, colIndex) => {
+        const cell = worksheet[XLSX.utils.encode_cell({ r: rowIndex, c: colIndex })]
+        if (!cell) return
+        cell.s = {
+          border: borderStyle,
+          alignment: { vertical: 'center', horizontal: 'center' },
+          fill: rowIndex === 0 ? { fgColor: { rgb: 'CCCCCC' } } : undefined,
+        }
+      })
+    })
+
+    // 마지막 계 3x3 병합
+    worksheet['!merges'] = [
+      {
+        s: { r: sheetAoA.length - 3, c: 0 },
+        e: { r: sheetAoA.length - 1, c: 2 },
+      },
+      {
+        s: { r: sheetAoA.length - 3, c: sheetAoA[0].length - 3 },
+        e: { r: sheetAoA.length - 1, c: sheetAoA[0].length - 3 },
+      },
+      {
+        s: { r: sheetAoA.length - 3, c: sheetAoA[0].length - 2 },
+        e: { r: sheetAoA.length - 1, c: sheetAoA[0].length - 2 },
+      },
+      {
+        s: { r: sheetAoA.length - 3, c: sheetAoA[0].length - 1 },
+        e: { r: sheetAoA.length - 1, c: sheetAoA[0].length - 1 },
+      },
+      ...rows.flatMap((_: any, rIdx: any) => {
+        const startRow = 1 + rIdx * 3
+        return [
+          { s: { r: startRow, c: 0 }, e: { r: startRow + 2, c: 0 } },
+          { s: { r: startRow, c: 1 }, e: { r: startRow + 2, c: 1 } },
+          { s: { r: startRow, c: 2 }, e: { r: startRow + 2, c: 2 } },
+          {
+            s: { r: startRow, c: sheetAoA[0].length - 3 },
+            e: { r: startRow + 2, c: sheetAoA[0].length - 3 },
+          },
+          {
+            s: { r: startRow, c: sheetAoA[0].length - 2 },
+            e: { r: startRow + 2, c: sheetAoA[0].length - 2 },
+          },
+          {
+            s: { r: startRow, c: sheetAoA[0].length - 1 },
+            e: { r: startRow + 2, c: sheetAoA[0].length - 1 },
+          },
+        ]
+      }),
+    ]
+
+    return worksheet
+  }
+
   useEffect(() => {
     if (!fuelDataReady || !laborDataReady) return
 
+    if (!contractDataMap || Object.keys(contractDataMap).length === 0) return
+    if (!companyDataMap || Object.keys(companyDataMap).length === 0) return
+
     const workbook = XLSX.utils.book_new()
 
-    // ✅ 여기부터 기존 Fuelrows 생성 코드 그대로 복붙
     const Fuelrows: any[] = []
 
     fuelTypes.forEach((fuelType: any) => {
@@ -1920,6 +3134,37 @@ export default function AllExcelDownloadView({
     XLSX.utils.book_append_sheet(workbook, equipmentCostSheet, '장비비')
     XLSX.utils.book_append_sheet(workbook, equipmentOperationSheet, '장비가동현황')
 
+    XLSX.utils.book_append_sheet(workbook, outSourcingSheet, '외주집계')
+
+    // 각 계약업체별로 별도의 엑셀 시트 생성
+
+    if (Object.keys(contractDataMap) && Object.keys(contractDataMap).length > 0) {
+      Object.values(contractDataMap).forEach((contractData: any) => {
+        if (contractData.rawGroups && contractData.rawGroups.length > 0) {
+          const contractSheet = createContractDetailSheet(
+            contractData.rawGroups,
+            contractData.amountGroups,
+          )
+          const sheetName = `외주_${contractData.contractName}`.substring(0, 31) // 엑셀 시트 이름 최대 31자
+          XLSX.utils.book_append_sheet(workbook, contractSheet, sheetName)
+        }
+      })
+    }
+
+    XLSX.utils.book_append_sheet(workbook, managementCostSheet, '관리비집계')
+
+    // 각 업체별로 별도의 관리비 상세 엑셀 시트 생성
+
+    if (Object.keys(companyDataMap) && Object.keys(companyDataMap).length > 0) {
+      Object.values(companyDataMap).forEach((companyData: any) => {
+        if (companyData.items && companyData.items.length > 0) {
+          const companySheet = createMealFeeDetailSheet(companyData.items)
+          const sheetName = `관리비_${companyData.companyName}`.substring(0, 31) // 엑셀 시트 이름 최대 31자
+          XLSX.utils.book_append_sheet(workbook, companySheet, sheetName)
+        }
+      })
+    }
+
     const fileName = `${search.yearMonth}_${search.siteName}_사기성집계표.xlsx`
 
     XLSX.writeFile(workbook, fileName)
@@ -1927,7 +3172,8 @@ export default function AllExcelDownloadView({
     onComplete()
 
     setReady(true)
-  }, [fuelDataReady, laborDataReady])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fuelDataReady, laborDataReady, contractDataMap, companyDataMap])
 
   return null
 }

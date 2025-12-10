@@ -30,6 +30,7 @@ export default function AggregateManagementCostDetailView() {
   })
 
   const mealFeeDetailList = MealFeeDetailListQuery.data?.data?.items || []
+
   const dateColumns = Array.from({ length: 31 }, (_, i) => i + 1)
 
   const getMealCounts = (item: any, mealType: 'breakfastCount' | 'lunchCount' | 'dinnerCount') => {
@@ -63,14 +64,6 @@ export default function AggregateManagementCostDetailView() {
       { type: '석식', days: getMealCounts(item, 'dinnerCount') },
     ],
   }))
-
-  const cellStyle = {
-    border: '1px solid #9ca3af',
-    whiteSpace: 'nowrap',
-    padding: '4px 6px',
-    textAlign: 'center',
-  }
-  const headerStyle = { ...cellStyle, fontWeight: 'bold', backgroundColor: '#f3f4f6' }
 
   const handleExcelDownload = () => {
     const formattedRows: any[][] = []
@@ -255,14 +248,24 @@ export default function AggregateManagementCostDetailView() {
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, '식대집계')
 
+    const fileName = `${search.yearMonth}_${search.outsourcingCompanyName}_관리비업체.xlsx`
+
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array', cellStyles: true })
     saveAs(
       new Blob([excelBuffer], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       }),
-      '식대집계.xlsx',
+      fileName,
     )
   }
+
+  const cellStyle = {
+    border: '1px solid #9ca3af',
+    whiteSpace: 'nowrap',
+    padding: '4px 6px',
+    textAlign: 'center',
+  }
+  const headerStyle = { ...cellStyle, fontWeight: 'bold', backgroundColor: '#f3f4f6' }
 
   // 권한에 따른 버튼 활성화
 

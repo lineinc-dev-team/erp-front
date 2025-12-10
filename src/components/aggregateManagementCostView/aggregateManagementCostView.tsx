@@ -57,7 +57,7 @@ export default function AggregateManagementCostView() {
 
   // 기본 activeTab: AGGREGATE
 
-  const handleTabClick = (value: any) => {
+  const handleTabClick = (value: any, label: string) => {
     if (value === 'AGGREGATE') {
       search.setField('outsourcingCompanyId', 0)
       setActiveTab(value)
@@ -65,6 +65,7 @@ export default function AggregateManagementCostView() {
     }
 
     search.setField('outsourcingCompanyId', value)
+    search.setField('outsourcingCompanyName', label)
     setActiveTab(value)
   }
 
@@ -264,8 +265,10 @@ export default function AggregateManagementCostView() {
       }
     }
 
+    const fileName = `${search.yearMonth}_${search.siteName}_관리비.xlsx`
+
     XLSX.utils.book_append_sheet(wb, ws, '관리비')
-    XLSX.writeFile(wb, '관리비.xlsx')
+    XLSX.writeFile(wb, fileName)
   }
 
   const cellStyle = {
@@ -310,7 +313,7 @@ export default function AggregateManagementCostView() {
             return (
               <Button
                 key={tab.label}
-                onClick={() => handleTabClick(tab.value)}
+                onClick={() => handleTabClick(tab.value, tab.label)}
                 sx={{
                   borderRadius: '10px 10px 0 0',
                   borderBottom: '1px solid #161616',
