@@ -4,6 +4,7 @@ import { create } from 'zustand'
 export const useReportSearchStore = create<{ search: ReportSearchState }>((set) => ({
   search: {
     siteList: [],
+    costCharts: [],
 
     startMonth: null,
     endMonth: null,
@@ -27,6 +28,7 @@ export const useReportSearchStore = create<{ search: ReportSearchState }>((set) 
           ...state.search,
           searchTrigger: 0,
           siteList: [],
+          costCharts: [],
 
           startMonth: null,
           endMonth: null,

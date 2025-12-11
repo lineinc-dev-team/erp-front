@@ -1,5 +1,6 @@
 export type ReportSearchState = {
   siteList: Array
+  costCharts: Array
   startMonth: Date | null | string
   endMonth: Date | null | string
   allPeriod: boolean

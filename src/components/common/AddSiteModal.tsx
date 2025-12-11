@@ -13,8 +13,8 @@ export default function AddSiteModal({
 }: {
   open: boolean
   onClose: () => void
-  onSelectSites: (sites: string[]) => void
-  initialSelectedSites?: string[]
+  onSelectSites: (sites: { id: number | string; name: string }[]) => void
+  initialSelectedSites?: { id: number | string; name: string }[]
 }) {
   // 카테고리 키(순서 고정)
   const categoryList = ['지역별', '발주처별', '연도별']
@@ -23,7 +23,7 @@ export default function AddSiteModal({
   const { useSiteNameByReportScorll } = useOutSourcingContract()
 
   const [selectedCategory, setSelectedCategory] = useState<string>(categoryList[0])
-  const [selectedSites, setSelectedSites] = useState<string[]>([])
+  const [selectedSites, setSelectedSites] = useState<{ id: number | string; name: string }[]>([])
   const [selectedCategoryItems, setSelectedCategoryItems] = useState<string[]>([])
   const [warningMessage, setWarningMessage] = useState<string>('')
 
@@ -34,6 +34,7 @@ export default function AddSiteModal({
   useEffect(() => {
     if (open) {
       setSelectedSites([...initialSelectedSites])
+      setSiteKeyword('')
     }
   }, [open, initialSelectedSites])
 
@@ -164,8 +165,8 @@ export default function AddSiteModal({
     )
   }, [siteData])
 
-  const handleSelectSite = (site: string) => {
-    if (selectedSites.includes(site)) return
+  const handleSelectSite = (site: { id: number | string; name: string }) => {
+    if (selectedSites.some((s) => s.id === site.id)) return
     if (selectedSites.length >= 5) {
       setWarningMessage('최대 5개의 현장까지 선택 가능합니다.')
       setTimeout(() => setWarningMessage(''), 3000) // 3초 후 메시지 사라짐
@@ -175,7 +176,8 @@ export default function AddSiteModal({
     setWarningMessage('') // 성공적으로 추가되면 경고 메시지 제거
   }
 
-  const handleRemove = (site: string) => setSelectedSites((prev) => prev.filter((x) => x !== site))
+  const handleRemove = (siteId: number | string) =>
+    setSelectedSites((prev) => prev.filter((x) => x.id !== siteId))
 
   const handleSelectCategoryItem = (item: string) => {
     setSelectedCategoryItems((prev) => {
@@ -193,6 +195,11 @@ export default function AddSiteModal({
   }
 
   const handleSubmit = () => {
+    if (selectedSites.length === 0) {
+      alert('현장을 선택하여 주십시오')
+      return
+    }
+
     onSelectSites(selectedSites)
     onClose()
   }
@@ -202,12 +209,12 @@ export default function AddSiteModal({
       <div className="flex gap-6">
         {/* ====== 분류 (왼쪽 컬럼: 카테고리 목록 + 해당 항목) ====== */}
 
-        <div className="w-[574px]  bg-white  rounded-xl p-4 shadow-xl  flex-col">
+        <div className="w-[574px]  bg-white  border border-gray-200   rounded-xl p-4 shadow-xl  flex-col">
           <h2 className="text-[20px] font-bold mb-2">분류</h2>
 
           {/* 카테고리 리스트 (왼쪽 세로) */}
           <div className="flex">
-            <div className="w-[260px]   border-gray-400   border rounded">
+            <div className="w-[260px] bg-[#F9FCFF]   border-gray-400   border rounded">
               <div className="flex flex-col">
                 {categoryList.map((cat) => (
                   <button
@@ -249,19 +256,22 @@ export default function AddSiteModal({
                       <div
                         key={item.id}
                         onClick={() => handleSelectCategoryItem(item.name)}
-                        className={`px-3 py-2 border-b border-gray-400 cursor-pointer flex justify-between items-center hover:bg-gray-100
-                        ${
-                          selectedCategoryItems.includes(item.name)
-                            ? 'bg-blue-100 border-blue-300'
-                            : ''
-                        }`}
+                        className={`px-3 py-2 border-b border-gray-400 text-[16px] hover:bg-gray-100 cursor-pointer
+                            odd:bg-[#E5F3FF] even:bg-[#F9FCFF]
+                              ${
+                                selectedCategoryItems.includes(item.name)
+                                  ? 'bg-blue-100 border-blue-300'
+                                  : ''
+                              }`}
                       >
-                        <span>{item.name}</span>
-                        {selectedCategoryItems.includes(item.name) && (
-                          <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                            <span className="text-white text-xs">✓</span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {selectedCategoryItems.includes(item.name) && (
+                            <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                              <span className="text-white text-xs">✓</span>
+                            </div>
+                          )}
+                          <span>{item.name}</span>
+                        </div>
                       </div>
                     ))}
                     {(isLoading || isFetching) && (
@@ -273,15 +283,18 @@ export default function AddSiteModal({
                     <div
                       key={item}
                       onClick={() => handleSelectCategoryItem(item)}
-                      className={`px-3 py-2 border-b border-gray-400 cursor-pointer flex justify-between items-center hover:bg-gray-100
+                      className={`px-3 py-2 border-b border-gray-400 text-[16px] hover:bg-gray-100 cursor-pointer
+                    odd:bg-[#E5F3FF] even:bg-[#F9FCFF]
                       ${selectedCategoryItems.includes(item) ? 'bg-blue-100 border-blue-300' : ''}`}
                     >
-                      <span>{item}</span>
-                      {selectedCategoryItems.includes(item) && (
-                        <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs">✓</span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {selectedCategoryItems.includes(item) && (
+                          <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs">✓</span>
+                          </div>
+                        )}
+                        <span>{item}</span>
+                      </div>
                     </div>
                   ))
                 ) : (
@@ -290,15 +303,18 @@ export default function AddSiteModal({
                     <div
                       key={item}
                       onClick={() => handleSelectCategoryItem(item)}
-                      className={`px-3 py-2 border-b border-gray-400 cursor-pointer flex justify-between items-center hover:bg-gray-100
-                      ${selectedCategoryItems.includes(item) ? 'bg-blue-100 border-blue-300' : ''}`}
+                      className={`px-3 py-2 border-b border-gray-400 text-[16px] hover:bg-gray-100 cursor-pointer
+                  odd:bg-[#E5F3FF] even:bg-[#F9FCFF]
+                    ${selectedCategoryItems.includes(item) ? 'bg-blue-100 border-blue-300' : ''}`}
                     >
-                      <span>{item}</span>
-                      {selectedCategoryItems.includes(item) && (
-                        <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs">✓</span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {selectedCategoryItems.includes(item) && (
+                          <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs">✓</span>
+                          </div>
+                        )}
+                        <span>{item}</span>
+                      </div>
                     </div>
                   ))
                 )}
@@ -307,7 +323,7 @@ export default function AddSiteModal({
           </div>
         </div>
 
-        <div className="w-[456px] bg-white  rounded-xl p-4 shadow-xl">
+        <div className="w-[456px] bg-white border border-gray-200   rounded-xl p-4 shadow-xl">
           <div className="w-full flex justify-between items-center">
             <h2 className="text-[20px] font-bold mb-2">현장 목록</h2>
             <span className="text-xs text-gray-500">(최대 5개의 현장까지 선택 가능합니다.)</span>
@@ -380,7 +396,7 @@ export default function AddSiteModal({
                     key={site.id}
                     className={`px-3 py-2 border-b  border-gray-400   text-[16px] hover:bg-gray-100 cursor-pointer flex justify-between items-center
                            odd:bg-[#E5F3FF] even:bg-[#F9FCFF]`}
-                    onClick={() => handleSelectSite(site.name)}
+                    onClick={() => handleSelectSite(site)}
                   >
                     <span>{site.name}</span>
                   </div>
@@ -393,7 +409,7 @@ export default function AddSiteModal({
           </div>
         </div>
 
-        <div className="w-[470px] bg-[#ffffff] rounded-xl p-4 shadow-xl">
+        <div className="w-[470px] bg-[#ffffff] border border-gray-200 rounded-xl p-4 shadow-xl">
           <h2 className="text-[20px] font-bold mb-2">
             선택 현장 목록
             <span className="text-xs text-gray-500 ml-1">
@@ -407,13 +423,13 @@ export default function AddSiteModal({
             )}
             {selectedSites.map((site) => (
               <div
-                key={site}
+                key={site.id}
                 className="flex items-center gap-2 b bg-white border px-3 py-1 rounded-[10px] text-sm w-fit mb-2"
               >
-                {site}
+                {site.name}
                 <button
                   className=" text-red-600 hover:text-red-800 cursor-pointer"
-                  onClick={() => handleRemove(site)}
+                  onClick={() => handleRemove(site.id)}
                 >
                   ✕
                 </button>

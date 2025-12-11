@@ -11,6 +11,7 @@ export const API = {
   SITES: `${apiBaseUrl}/sites`,
 
   DASHBOARD: `${apiBaseUrl}/dashboard`,
+  REPORT: `${apiBaseUrl}/reports`,
 
   SITEMANAGEMENT: `${apiBaseUrl}/site-management-costs`,
   AGGREGATE: `${apiBaseUrl}/aggregation`,
