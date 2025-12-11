@@ -783,7 +783,10 @@ export default function LaborRegistrationView({ isEditMode = false }) {
 
           <div className="flex">
             <label className="w-36  text-[14px] flex items-center border border-gray-400  justify-center bg-gray-300  font-bold text-center">
-              소속업체 <span className="text-red-500 ml-1">*</span>
+              소속업체
+              {!['REGULAR_EMPLOYEE', 'DIRECT_CONTRACT'].includes(form.type) && (
+                <span className="text-red-500 ml-1">*</span>
+              )}
             </label>
             <div className="border border-gray-400  w-full flex  py-2 px-1">
               <InfiniteScrollSelect
@@ -900,6 +903,12 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                     return
                   }
 
+                  // 🔥 0. 전체 길이 13자리 체크 추가!!
+                  if (residentNumber.length !== 14) {
+                    showSnackbar('주민등록번호는 13자리여야 합니다.', 'warning')
+                    return
+                  }
+
                   const front = residentNumber.slice(0, 6) // 앞자리 6자리 (YYMMDD)
 
                   // 1. 숫자 6자리인지 확인
@@ -918,13 +927,13 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                     return
                   }
 
-                  const daysInMonth = new Date(year + 2000, month, 0).getDate() // 윤년 계산 포함
+                  const daysInMonth = new Date(year + 2000, month, 0).getDate()
                   if (day < 1 || day > daysInMonth) {
                     showSnackbar('유효하지 않은 생년월일입니다. 일을 확인해주세요.', 'warning')
                     return
                   }
 
-                  // 3. 생년월일이 유효하면 중복 확인
+                  // 3. 중복 확인
                   try {
                     const result = await CheckReSidentNumberService(residentNumber)
                     lastCheckedNumber.current = residentNumber
