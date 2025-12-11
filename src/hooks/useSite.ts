@@ -3,6 +3,7 @@ import {
   CreateSiteInfo,
   ModifySiteService,
   OrderingPersonScroll,
+  RegionInfoScroll,
   SiteIdInfoService,
   SiteInfoHistoryService,
 } from '@/services/sites/siteRegistrationService'
@@ -164,6 +165,16 @@ export default function useSite() {
     })
   }
 
+  // 지역 함수
+  const useRegionListInfiniteScroll = (keyword: string) => {
+    return useInfiniteQuery({
+      queryKey: ['regionInfo', keyword],
+      queryFn: () => RegionInfoScroll({ keyword }),
+      initialPageParam: 0,
+      getNextPageParam: () => undefined,
+    })
+  }
+
   const { data: siteTypeId } = useQuery({
     queryKey: ['siteTypeInfo'],
     queryFn: SiteIdInfoService,
@@ -236,5 +247,7 @@ export default function useSite() {
 
     // 현장 수정이력조회
     useSiteHistoryDataQuery,
+
+    useRegionListInfiniteScroll,
   }
 }

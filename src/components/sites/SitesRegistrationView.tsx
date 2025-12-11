@@ -73,9 +73,12 @@ export default function SitesRegistrationView({ isEditMode = false }) {
 
     useSiteHistoryDataQuery,
     useOrderingNameListInfiniteScroll,
+    useRegionListInfiniteScroll,
   } = useSite()
 
   // 상세페이지 로직
+
+  const [isRegionFocused, setIsRegionFocused] = useState(false)
 
   const [isOrderFocused, setIsOrderFocused] = useState(false)
   const [isUserFocused, setIsUserFocused] = useState(false)
@@ -134,6 +137,8 @@ export default function SitesRegistrationView({ isEditMode = false }) {
       // setField('type', client.typeCode)
       setField('city', client.city)
       setField('district', client.district)
+
+      // setField('region', client.region)
 
       setField('clientCompanyId', client.clientCompany?.id ?? '0')
       setField('clientCompanyName', client.clientCompany?.name ?? '')
@@ -568,6 +573,30 @@ export default function SitesRegistrationView({ isEditMode = false }) {
   const OrderRawList = OrderNameData?.pages.flatMap((page) => page.data.content) ?? []
   const orderList = Array.from(new Map(OrderRawList.map((user) => [user.name, user])).values())
 
+  // 지역검색
+
+  // 유저 선택 시 처리
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleSelectRegion = (selectedUser: any) => {
+    // 예: username 필드에 선택한 유저 이름 넣기
+    setField('region', selectedUser.name)
+  }
+
+  const debouncedRegionKeyword = useDebouncedValue(form.region, 300)
+
+  const {
+    data: RegionNameData,
+    fetchNextPage: RegionNameFetchNextPage,
+    hasNextPage: RegionNameHasNextPage,
+    isFetching: RegionNameIsFetching,
+    isLoading: RegionNameIsLoading,
+  } = useRegionListInfiniteScroll(debouncedRegionKeyword)
+
+  const RegionRawList =
+    RegionNameData?.pages.flatMap((page) => page.data.map((name: string) => ({ name }))) ?? []
+  const regionList = Array.from(new Map(RegionRawList.map((item) => [item, item])).values())
+
+  console.log('regionList', regionList)
   const formatChangeDetail = (getChanges: string, typeCode: string) => {
     try {
       const parsed = JSON.parse(getChanges)
@@ -669,6 +698,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
     if (!form.name?.trim()) return '현장명을 입력하세요.'
     // if (!form.detailAddress?.trim()) return '상세 주소를 입력하세요.'
     if (!form.clientCompanyId || String(form.clientCompanyId) === '0') return '발주처를 선택하세요.'
+    if (!form.region) return '지역을 선택해주세요.'
     if (!form.startedAt) return '착공일을 선택하세요.'
     if (!form.endedAt) return '준공일을 선택하세요.'
     if (!form.userId || String(form.userId) === '0') return '본사 담당자를 선택하세요.'
@@ -830,6 +860,33 @@ export default function SitesRegistrationView({ isEditMode = false }) {
                 shouldShowList={isOrderFocused}
                 onFocus={() => setIsOrderFocused(true)}
                 onBlur={() => setIsOrderFocused(false)}
+              />
+            </div>
+          </div>
+
+          <div className="flex">
+            <label className="w-36  text-[14px] flex items-center border border-gray-400 justify-center bg-gray-300 font-bold text-center">
+              지역 <span className="text-red-500 ml-1">*</span>
+            </label>
+            <div className="border w-full  border-gray-400">
+              <InfiniteScrollSelect
+                placeholder="해당 지역을 입력하세요"
+                keyword={form.region}
+                onChangeKeyword={(newKeyword) => setField('region', newKeyword)} // ★필드명과 값 둘 다 넘겨야 함
+                items={RegionRawList}
+                hasNextPage={RegionNameHasNextPage ?? false}
+                fetchNextPage={RegionNameFetchNextPage}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? 'font-bold text-white p-1  bg-gray-400' : ''}>
+                    {item.name}
+                  </div>
+                )}
+                onSelect={handleSelectRegion}
+                isLoading={RegionNameIsLoading || RegionNameIsFetching}
+                debouncedKeyword={debouncedRegionKeyword}
+                shouldShowList={isRegionFocused}
+                onFocus={() => setIsRegionFocused(true)}
+                onBlur={() => setIsRegionFocused(false)}
               />
             </div>
           </div>
