@@ -884,9 +884,8 @@ export default function LaborRegistrationView({ isEditMode = false }) {
                 onChange={(val) => {
                   setField('residentNumber', val)
                   setField('residentNumberIsCheck', true)
-
                   // 주민번호가 없으면 외국인 이름 초기화
-                  if (!val || val.trim() === '') {
+                  if (!val || val.trim() === '' || form.residentNumber[7] !== '5') {
                     setField('foreignName', '')
                   }
                 }}
