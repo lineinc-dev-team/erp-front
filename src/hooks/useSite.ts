@@ -165,6 +165,36 @@ export default function useSite() {
     })
   }
 
+  // 리포트 현장 조회에서 발주처 조회 렌더링
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const useOrderingNameListByReport = (keyword: string, options?: any) => {
+    return useInfiniteQuery({
+      queryKey: ['orderInfoByReport', keyword],
+      queryFn: ({ pageParam }) => OrderingPersonScroll({ pageParam: pageParam as number, keyword }),
+      initialPageParam: 0,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      getNextPageParam: (lastPage: any) => {
+        const { sliceInfo } = lastPage.data
+        const nextPage = sliceInfo.page + 1
+        return sliceInfo.hasNext ? nextPage : undefined
+      },
+      ...options,
+    })
+  }
+
+  // 지역 함수
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const useRegionListByReport = (keyword: string, options?: any) => {
+    return useInfiniteQuery({
+      queryKey: ['regionInfoByReport', keyword],
+      queryFn: () => RegionInfoScroll({ keyword }),
+      initialPageParam: 0,
+      getNextPageParam: () => undefined,
+      ...options,
+    })
+  }
+
   // 지역 함수
   const useRegionListInfiniteScroll = (keyword: string) => {
     return useInfiniteQuery({
@@ -249,5 +279,7 @@ export default function useSite() {
     useSiteHistoryDataQuery,
 
     useRegionListInfiniteScroll,
+    useOrderingNameListByReport,
+    useRegionListByReport,
   }
 }

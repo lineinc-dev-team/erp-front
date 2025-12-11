@@ -15,6 +15,8 @@ import {
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard'
 import CloseIcon from '@mui/icons-material/Close'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
+import AssessmentIcon from '@mui/icons-material/Assessment'
+
 import {
   Menu as MenuIcon,
   AccountCircle,
@@ -70,6 +72,7 @@ const menuNameToBasePath: Record<string, string> = {
 
 const menuNameToIcon: Record<string, React.ReactNode> = {
   대쉬보드: <SpaceDashboardIcon />,
+  리포트: <AssessmentIcon />,
   '집계 관리': <ManageAccounts />,
   '권한 관리': <ManageAccounts />,
   '발주처 관리': <Business />,
@@ -188,6 +191,8 @@ export default function Header() {
     }
   }, [])
 
+  const isHeadOffice = myInfo?.isHeadOffice
+
   const roleId = Number(myInfo?.roles?.[0]?.id)
 
   const rolePermissionStatus = myInfo?.roles?.[0]?.deleted
@@ -214,7 +219,26 @@ export default function Header() {
     },
   ]
 
-  const menuItemsWithDashboard = [...dashboardMenu, ...menuItemsFromApi]
+  const reportMenu: MenuItem[] = [
+    {
+      title: '리포트',
+      icon: menuNameToIcon['리포트'],
+      path: '/report',
+
+      children: [
+        {
+          label: ' - 이동',
+          path: '/report',
+        },
+      ],
+    },
+  ]
+
+  const menuItemsWithDashboard = [
+    ...dashboardMenu,
+    ...(isHeadOffice ? reportMenu : []),
+    ...menuItemsFromApi,
+  ]
 
   const handleToggleSection = (key: string) => {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))

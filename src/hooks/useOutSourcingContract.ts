@@ -1,4 +1,5 @@
 import {
+  SiteNameByReportScroll,
   SitesPersonScroll,
   SitesProcessNameScroll,
 } from '@/services/managementCost/managementCostRegistrationService'
@@ -363,6 +364,38 @@ export default function useOutSourcingContract() {
     })
   }
 
+  // 리포트 조회에서  현장명 키워드 검색
+
+  const useSiteNameByReportScorll = ({
+    keyword = '',
+    clientCompanyId,
+    year,
+    region,
+  }: {
+    keyword?: string
+    clientCompanyId?: string | number | null
+    year?: string | number | null
+    region?: string | null
+  }) => {
+    return useInfiniteQuery({
+      queryKey: ['ContractsiteInfo', keyword, clientCompanyId, year, region],
+      queryFn: ({ pageParam }) =>
+        SiteNameByReportScroll({
+          pageParam,
+          keyword,
+          clientCompanyId: clientCompanyId ?? undefined,
+          year: year ?? undefined,
+          region: region ?? undefined,
+        }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const { sliceInfo } = lastPage.data
+        const nextPage = sliceInfo.page + 1
+        return sliceInfo.hasNext ? nextPage : undefined
+      },
+    })
+  }
+
   return {
     OutsourcingContractListQuery,
     createOutSourcingContractMutation,
@@ -404,5 +437,7 @@ export default function useOutSourcingContract() {
     processInfoHasNextPage,
     processInfoIsFetching,
     processInfoLoading,
+
+    useSiteNameByReportScorll,
   }
 }

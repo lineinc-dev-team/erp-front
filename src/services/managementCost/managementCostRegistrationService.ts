@@ -196,3 +196,59 @@ export async function CostInfoHistoryService(
   const data = await resData.json()
   return data
 }
+
+// 리포트 조회에서 사용하는 현장명 조회
+
+// 현장명 무한 스크롤 조회
+export async function SiteNameByReportScroll({
+  pageParam = 0,
+  size = 40,
+  keyword = '',
+  sort = 'name, asc',
+  clientCompanyId,
+  year,
+  region,
+}: {
+  pageParam?: number
+  size?: number
+  keyword?: string
+  sort?: string
+  clientCompanyId?: string | number | null
+  year?: string | number | null
+  region?: string | null
+}) {
+  // URL 파라미터 구성
+  const params = new URLSearchParams({
+    page: pageParam.toString(),
+    size: size.toString(),
+    keyword,
+    sort,
+  })
+
+  // 선택적 파라미터들 추가
+  if (clientCompanyId !== null && clientCompanyId !== undefined) {
+    params.append('clientCompanyId', String(clientCompanyId))
+  }
+  if (year !== null && year !== undefined) {
+    params.append('year', String(year))
+  }
+  if (region !== null && region !== undefined) {
+    params.append('region', region)
+  }
+
+  const resData = await fetch(`${API.SITES}/search?${params.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!resData.ok) {
+    if (resData.status === 401) throw new Error('권한이 없습니다.')
+    throw new Error(`서버 에러: ${resData.status}`)
+  }
+
+  const data = await resData.json()
+  return data
+}
