@@ -456,12 +456,14 @@ export default function DailyReportRegistrationView() {
       updateItemField('Employees', id, 'laborId', 0)
       updateItemField('Employees', id, 'laborName', '')
       updateItemField('Employees', id, 'grade', '')
+      updateItemField('Employees', id, 'workContent', '')
       return
     }
 
     updateItemField('Employees', id, 'laborId', selectedCompany.id)
     updateItemField('Employees', id, 'laborName', selectedCompany.name)
     updateItemField('Employees', id, 'grade', selectedCompany.grade)
+    updateItemField('Employees', id, 'workContent', selectedCompany.mainWork)
   }
 
   function DailyEmployeeNameRow({ row }: { row: any }) {
@@ -626,6 +628,8 @@ export default function DailyReportRegistrationView() {
       updateItemField('directContracts', id, 'laborId', 0)
       updateItemField('directContracts', id, 'laborName', '')
       updateItemField('directContracts', id, 'position', '')
+      updateItemField('directContracts', id, 'workContent', '')
+
       updateItemField('directContracts', id, 'previousPrice', 0)
       updateItemField('directContracts', id, 'unitPrice', 0)
       return
@@ -635,8 +639,19 @@ export default function DailyReportRegistrationView() {
     updateItemField('directContracts', id, 'laborId', selectedCompany.id)
     updateItemField('directContracts', id, 'laborName', selectedCompany.name)
     updateItemField('directContracts', id, 'position', selectedCompany.workType ?? '')
-    updateItemField('directContracts', id, 'previousPrice', selectedCompany.previousDailyWage ?? 0)
-    updateItemField('directContracts', id, 'unitPrice', selectedCompany.previousDailyWage ?? 0)
+
+    updateItemField('directContracts', id, 'workContent', selectedCompany.mainWork ?? '')
+
+    const existingPrev = selectedCompany.previousPrice // 기존 저장된 값
+
+    const newPreviousPrice =
+      existingPrev && existingPrev > 0
+        ? existingPrev
+        : selectedCompany.previousDailyWage || selectedCompany.dailyWage || 0
+
+    updateItemField('directContracts', id, 'previousPrice', newPreviousPrice)
+
+    updateItemField('directContracts', id, 'unitPrice', selectedCompany.dailyWage ?? 0)
 
     // 퇴직금 안내
     if (selectedCompany.isSeverancePayEligible) {
@@ -834,7 +849,6 @@ export default function DailyReportRegistrationView() {
     updateItemField('outsourcingByDirectContract', id, 'laborId', 0)
     updateItemField('outsourcingByDirectContract', id, 'laborName', '')
     updateItemField('outsourcingByDirectContract', id, 'position', '')
-    updateItemField('outsourcingByDirectContract', id, 'previousPrice', 0)
   }
 
   function DailyServiceNameRow({ row }: { row: any }) {
@@ -930,18 +944,24 @@ export default function DailyReportRegistrationView() {
     updateItemField('outsourcingByDirectContract', id, 'laborId', selectedCompany.id)
     updateItemField('outsourcingByDirectContract', id, 'laborName', selectedCompany.name)
     updateItemField('outsourcingByDirectContract', id, 'position', selectedCompany.workType ?? '')
+
     updateItemField(
       'outsourcingByDirectContract',
       id,
-      'previousPrice',
-      selectedCompany.previousDailyWage ?? 0,
+      'workContent',
+      selectedCompany.mainWork ?? '',
     )
-    updateItemField(
-      'outsourcingByDirectContract',
-      id,
-      'unitPrice',
-      selectedCompany.previousDailyWage ?? 0,
-    )
+
+    const existingPrev = selectedCompany.previousPrice // 기존 저장된 값
+
+    const newPreviousPrice =
+      existingPrev && existingPrev > 0
+        ? existingPrev
+        : selectedCompany.previousDailyWage || selectedCompany.dailyWage || 0
+
+    updateItemField('outsourcingByDirectContract', id, 'previousPrice', newPreviousPrice)
+
+    updateItemField('outsourcingByDirectContract', id, 'unitPrice', selectedCompany.dailyWage ?? 0)
 
     // 퇴직금 안내
     if (selectedCompany.isSeverancePayEligible) {
