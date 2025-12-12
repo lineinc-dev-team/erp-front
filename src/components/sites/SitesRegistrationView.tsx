@@ -138,7 +138,7 @@ export default function SitesRegistrationView({ isEditMode = false }) {
       setField('city', client.city)
       setField('district', client.district)
 
-      // setField('region', client.region)
+      setField('region', client.region)
 
       setField('clientCompanyId', client.clientCompany?.id ?? '0')
       setField('clientCompanyName', client.clientCompany?.name ?? '')
