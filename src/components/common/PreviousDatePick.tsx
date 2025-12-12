@@ -25,9 +25,22 @@ export default function CommonPreviousDatePicker({
   helperText = '',
   disabled = false,
   minDate,
+  maxDate, // 서버에서 내려오는 제한 날짜
 }: CommonDatePickerProps) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
+
+  // maxDate 기준점도 00:00 으로 맞추기
+  const cleanedMaxDate = maxDate
+    ? new Date(maxDate.getFullYear(), maxDate.getMonth(), maxDate.getDate())
+    : null
+
+  // 👉 "두 날짜 중 더 작은 날짜"를 선택
+  const effectiveMaxDate = cleanedMaxDate && cleanedMaxDate < today ? cleanedMaxDate : today
+
+  console.log('minDate:', minDate)
+  console.log('props maxDate:', maxDate)
+  console.log('effectiveMaxDate:', effectiveMaxDate)
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ko}>
@@ -49,7 +62,7 @@ export default function CommonPreviousDatePicker({
         }}
         format="yyyy/MM/dd"
         minDate={minDate ?? undefined}
-        maxDate={today}
+        maxDate={effectiveMaxDate} // ← 여기만 바뀜
         slotProps={{
           textField: {
             required,
