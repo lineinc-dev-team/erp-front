@@ -2412,16 +2412,26 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                             placeholder="숫자만"
                             value={formatNumber(item.unitPrice)}
                             onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
+                              const raw = e.target.value
 
-                              updateContractDetailField(m.id, item.id, 'unitPrice', numericValue)
-                              const newPrice = numericValue * Number(item.contractQuantity || 0)
+                              // 1) 유저가 입력한 값 → 숫자로 변환 (콤마 제거)
+                              const unitPrice = Number(raw.replace(/,/g, '')) || 0
+
+                              // 2) 단가 업데이트
+                              updateContractDetailField(m.id, item.id, 'unitPrice', unitPrice)
+
+                              // 3) 수량 가져오기
+                              const qty = Number(item.contractQuantity) || 0
+
+                              // 4) 금액 계산 (소수점 버림)
+                              const newPrice = Math.floor(unitPrice * qty)
+
+                              // 5) 금액 저장
                               updateContractDetailField(m.id, item.id, 'contractPrice', newPrice)
                             }}
                             inputProps={{
                               inputMode: 'numeric',
-                              pattern: '[0-9]*',
-                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                              style: { textAlign: 'right' },
                             }}
                             fullWidth
                           />
@@ -2438,26 +2448,31 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                         <div key={item.id} className="flex gap-2 mt-1 items-center">
                           <TextField
                             size="small"
-                            placeholder="숫자만"
-                            value={formatNumber(item.contractQuantity)}
+                            placeholder="소수점 3자리까지"
+                            value={item.contractQuantity}
                             onChange={(e) => {
-                              const numericValue = unformatNumber(e.target.value)
+                              const value = e.target.value
+
+                              // 소수점 3자리까지 허용
+                              const regex = /^\d*\.?\d{0,3}$/
+                              if (!regex.test(value)) return
+
+                              updateContractDetailField(m.id, item.id, 'contractQuantity', value)
+
+                              const numericValue = Number(value.toString().replace(/,/g, '')) // 콤마 제거 후 숫자 변환
+
+                              const newPrice = Math.floor((item.unitPrice || 0) * numericValue)
 
                               updateContractDetailField(
                                 m.id,
                                 item.id,
-                                'contractQuantity',
-                                numericValue,
+                                'contractPrice',
+                                Number(newPrice),
                               )
-
-                              // 금액 자동 재계산
-                              const newPrice = (item.unitPrice || 0) * numericValue
-                              updateContractDetailField(m.id, item.id, 'contractPrice', newPrice)
                             }}
                             inputProps={{
-                              inputMode: 'numeric',
-                              pattern: '[0-9]*',
-                              style: { textAlign: 'right' }, // ← 오른쪽 정렬
+                              inputMode: 'decimal',
+                              style: { textAlign: 'right' },
                             }}
                             fullWidth
                           />
@@ -2497,6 +2512,7 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                       ))}
                     </TableCell>
                     {/* 외주계약금액 수량 */}
+
                     <TableCell
                       align="center"
                       sx={{ border: '1px solid #9CA3AF', verticalAlign: 'top' }}
@@ -2505,12 +2521,12 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                         <div key={item.id} className="flex gap-2 mt-1 items-center">
                           <TextField
                             size="small"
-                            placeholder="숫자만"
+                            placeholder="소수점 3자리까지"
                             value={formatNumber(Number(item.outsourcingContractQuantity) || 0)}
                             onChange={(e) => {
                               const quantity = Number(unformatNumber(e.target.value) || 0)
                               const unitPrice = Number(item.outsourcingContractUnitPrice || 0)
-                              const price = quantity * unitPrice
+                              const price = Math.floor(quantity * unitPrice) // 소수점 절삭
 
                               updateContractDetailField(
                                 m.id,
@@ -2526,8 +2542,8 @@ export default function OutsourcingContractRegistrationView({ isEditMode = false
                               )
                             }}
                             inputProps={{
-                              inputMode: 'numeric',
-                              pattern: '[0-9]*',
+                              inputMode: 'decimal',
+                              pattern: '[0-9]*[.,]?[0-9]{0,3}',
                               style: { textAlign: 'right' },
                             }}
                             fullWidth

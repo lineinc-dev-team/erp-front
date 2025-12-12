@@ -500,7 +500,7 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
             // 다음 입력을 위한 초기화
             justSelectedRef.current = false
             setMaterialItemFocusedId(null)
-          }, 200)
+          }, 120)
         }}
       />
     )
