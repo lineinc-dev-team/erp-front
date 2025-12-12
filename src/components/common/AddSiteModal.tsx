@@ -325,7 +325,7 @@ export default function AddSiteModal({
 
         <div className="w-[456px] bg-white border border-gray-200   rounded-xl p-4 shadow-xl">
           <div className="w-full flex justify-between items-center">
-            <h2 className="text-[20px] font-bold mb-2">현장 목록</h2>
+            <h2 className="text-[20px] font-bold mb-2 whitespace-nowrap">현장 목록</h2>
             <span className="text-xs text-gray-500">(최대 5개의 현장까지 선택 가능합니다.)</span>
           </div>
 
@@ -410,13 +410,12 @@ export default function AddSiteModal({
         </div>
 
         <div className="w-[470px] bg-[#ffffff] border border-gray-200 rounded-xl p-4 shadow-xl">
-          <h2 className="text-[20px] font-bold mb-2">
-            선택 현장 목록
+          <div className="flex justify-between items-center">
+            <h2 className="text-[20px] font-bold mb-2">선택 현장 목록</h2>
             <span className="text-xs text-gray-500 ml-1">
               (최대 5개의 현장까지 선택 가능합니다.)
             </span>
-          </h2>
-
+          </div>
           <div className="border  border-gray-400  bg-[#F9FCFF]  rounded p-3 h-[360px] overflow-y-auto">
             {selectedSites.length === 0 && (
               <div className="text-sm  text-gray-400">선택된 현장이 없습니다.</div>
