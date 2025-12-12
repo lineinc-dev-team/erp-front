@@ -2,7 +2,7 @@ import { API } from '@/api/config/env'
 import { useManagementCostFormStore } from '@/stores/managementCostsStore'
 
 // 현장명 무한 스크롤 조회
-export async function SitesPersonScroll({ pageParam = 0, size = 40, keyword = '', sort = '' }) {
+export async function SitesPersonScroll({ pageParam = 0, size = 200, keyword = '', sort = '' }) {
   const resData = await fetch(
     `${API.SITES}/search?page=${pageParam}&size=${size}&keyword=${keyword}&sort=${sort}`,
     {

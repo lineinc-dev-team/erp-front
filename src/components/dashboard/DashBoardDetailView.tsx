@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
-import { Box, Typography, Paper } from '@mui/material'
+import { Box, Typography, Paper, Select, MenuItem, FormControl, InputLabel } from '@mui/material'
 import {
   LineChart,
   Line,
   XAxis,
+  YAxis,
   Tooltip,
   CartesianGrid,
   ResponsiveContainer,
@@ -16,11 +17,10 @@ import Grid from '@mui/material/Unstable_Grid2' // Grid2 사용
 import { useQuery } from '@tanstack/react-query'
 import { DashBoardDetailInfoService } from '@/services/dashBoard/dashBoardService'
 import useDashBoard from '@/hooks/useDashBoard'
-import { InfiniteScrollSelect } from '../common/InfiniteScrollSelect'
 import { useFinalDashboardSearchStore } from '@/stores/dashboardStore'
 import { useDebouncedValue } from '@/hooks/useDebouncedEffect'
 import { useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 
 const formatMonth = (ym: string) => {
   const [year, month] = ym.split('-')
@@ -44,21 +44,39 @@ export default function DashBoardDetailView({ isHeadOffice }: { isHeadOffice: bo
 
   const { NoHeadOfficeDashBoardListQuery } = useDashBoard()
 
-  const [isSiteFocused, setIsSiteFocused] = useState(false)
+  // 필요 시 검색 기능 추가를 위해 주석 처리
+  // const { setSitesSearch, siteNameFetchNextPage, siteNamehasNextPage, siteNameFetching, siteNameLoading } = usePermission()
+
+  const noHeadOfficeQuery = NoHeadOfficeDashBoardListQuery('')
 
   const debouncedSiteKeyword = useDebouncedValue(search.siteName, 300)
 
-  const {
-    data: SiteNameData,
-    fetchNextPage: SiteNameFetchNextPage,
-    hasNextPage: SiteNameHasNextPage,
-    isFetching: SiteNameIsFetching,
-    isLoading: SiteNameIsLoading,
-  } = NoHeadOfficeDashBoardListQuery(debouncedSiteKeyword)
+  const { data: SiteNameData } = NoHeadOfficeDashBoardListQuery(debouncedSiteKeyword)
 
   const SiteRawList = SiteNameData?.pages.flatMap((page) => page.data) ?? []
 
   const siteList = Array.from(new Map(SiteRawList.map((item) => [item.site.id, item])).values())
+
+  const sitesOptions = useMemo(() => {
+    const defaultOption = {
+      id: '0',
+      name: '선택',
+      siteProcessId: '0',
+      siteProcessName: '선택',
+    }
+
+    const options =
+      noHeadOfficeQuery.data?.pages
+        ?.flatMap((page) => page.data)
+        .map((item) => ({
+          id: item.site?.id,
+          name: item.site?.name,
+          siteProcessId: item.siteProcess.id,
+          siteProcessName: item.siteProcess.name,
+        })) || []
+
+    return [defaultOption, ...options]
+  }, [noHeadOfficeQuery.data])
 
   useEffect(() => {
     if (!isHeadOffice && siteList.length > 0 && !search.siteId) {
@@ -113,35 +131,43 @@ export default function DashBoardDetailView({ isHeadOffice }: { isHeadOffice: bo
       <div className="flex justify-between items-center mb-4">
         <Typography variant="h5">
           <div style={{ width: '340px' }}>
-            <InfiniteScrollSelect
-              placeholder="현장명을 입력하세요"
-              keyword={search.siteName || ''}
-              onChangeKeyword={(newKeyword) => search.setField('siteName', newKeyword)}
-              items={siteList}
-              hasNextPage={SiteNameHasNextPage ?? false}
-              fetchNextPage={SiteNameFetchNextPage}
-              renderItem={(item, isHighlighted) => (
-                <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
-                  {item.site.name}
-                </div>
-              )}
-              onSelect={(selectedItem) => {
-                if (!selectedItem) return
+            <FormControl fullWidth>
+              <InputLabel>현장 선택</InputLabel>
+              <Select
+                value={search.siteId || siteId || '0'}
+                label="현장 선택"
+                onChange={(event) => {
+                  const selectedId = event.target.value
+                  if (selectedId === '0') {
+                    // '선택' 옵션 선택 시 초기화
+                    search.setField('siteId', 0)
+                    search.setField('siteName', '')
+                    search.setField('siteProcessId', 0)
+                    search.setField('siteProcessName', '')
+                    return
+                  }
 
-                const { site, siteProcess } = selectedItem
+                  // 선택된 사이트 정보 찾기 (siteList에서 찾아야 siteProcess 정보도 가져올 수 있음)
+                  const selectedSiteData = sitesOptions.find(
+                    (item) => item.id === Number(selectedId),
+                  )
 
-                search.setField('siteId', site.id)
-                search.setField('siteName', site.name)
-
-                search.setField('siteProcessId', siteProcess.id)
-                search.setField('siteProcessName', siteProcess.name)
-              }}
-              isLoading={SiteNameIsLoading || SiteNameIsFetching}
-              debouncedKeyword={debouncedSiteKeyword}
-              shouldShowList={isSiteFocused}
-              onFocus={() => setIsSiteFocused(true)}
-              onBlur={() => setIsSiteFocused(false)}
-            />
+                  console.log('4424', selectedSiteData)
+                  if (selectedSiteData) {
+                    search.setField('siteId', selectedSiteData.id)
+                    search.setField('siteName', selectedSiteData.name)
+                    search.setField('siteProcessId', selectedSiteData.siteProcessId)
+                    search.setField('siteProcessName', selectedSiteData.siteProcessName)
+                  }
+                }}
+              >
+                {sitesOptions.map((option) => (
+                  <MenuItem key={option.id} value={option.id}>
+                    {option.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </div>
         </Typography>
 
@@ -201,62 +227,95 @@ export default function DashBoardDetailView({ isHeadOffice }: { isHeadOffice: bo
         </Grid>
       </Box>
 
-      <Box sx={{ width: '100%', height: 500 }}>
-        <ResponsiveContainer>
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
+      <Box sx={{ width: '100%', height: 500, minHeight: 400 }}>
+        {chartData.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
 
-            <XAxis
-              dataKey="month"
-              interval={0}
-              padding={{ left: 50, right: 50 }} // 좌우 여백 추가
-            />
+              <XAxis
+                dataKey="month"
+                interval={0}
+                angle={-45}
+                textAnchor="end"
+                height={80}
+                fontSize={12}
+                stroke="#666"
+              />
 
-            <Tooltip formatter={(v: number) => `${v.toLocaleString()}원`} />
-            <Legend />
+              <YAxis
+                fontSize={12}
+                stroke="#666"
+                tickFormatter={(value: number) => `${(value / 10000).toFixed(0)}만원`}
+              />
 
-            <Line
-              type="monotone"
-              dataKey="equipmentCost"
-              name="장비"
-              stroke="#7CB86F"
-              strokeWidth={3}
-              dot
-            />
-            <Line
-              type="monotone"
-              dataKey="laborCost"
-              name="노무"
-              stroke="#4DB6AC"
-              strokeWidth={3}
-              dot
-            />
-            <Line
-              type="monotone"
-              dataKey="managementCost"
-              name="관리"
-              stroke="#F2C94C"
-              strokeWidth={3}
-              dot
-            />
-            <Line
-              type="monotone"
-              dataKey="materialCost"
-              name="재료"
-              stroke="#6D8BFA"
-              strokeWidth={3}
-              dot
-            />
-            <Line
-              type="monotone"
-              dataKey="outsourcingCost"
-              name="외주"
-              stroke="#F27970"
-              strokeWidth={3}
-              dot
-            />
-          </LineChart>
-        </ResponsiveContainer>
+              <Tooltip
+                formatter={(value: number, name: string) => [`${value.toLocaleString()}원`, name]}
+                labelStyle={{ color: '#333' }}
+                contentStyle={{
+                  backgroundColor: '#fff',
+                  border: '1px solid #ddd',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                }}
+              />
+              <Legend wrapperStyle={{ paddingTop: '20px' }} />
+
+              <Line
+                type="monotone"
+                dataKey="equipmentCost"
+                name="장비비"
+                stroke="#7CB86F"
+                strokeWidth={3}
+                dot={{ fill: '#7CB86F', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, stroke: '#7CB86F', strokeWidth: 2 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="laborCost"
+                name="노무비"
+                stroke="#4DB6AC"
+                strokeWidth={3}
+                dot={{ fill: '#4DB6AC', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, stroke: '#4DB6AC', strokeWidth: 2 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="managementCost"
+                name="관리비"
+                stroke="#F2C94C"
+                strokeWidth={3}
+                dot={{ fill: '#F2C94C', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, stroke: '#F2C94C', strokeWidth: 2 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="materialCost"
+                name="재료비"
+                stroke="#6D8BFA"
+                strokeWidth={3}
+                dot={{ fill: '#6D8BFA', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, stroke: '#6D8BFA', strokeWidth: 2 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="outsourcingCost"
+                name="외주비"
+                stroke="#F27970"
+                strokeWidth={3}
+                dot={{ fill: '#F27970', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, stroke: '#F27970', strokeWidth: 2 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            <div className="text-center">
+              <div className="text-lg mb-2">데이터가 없습니다</div>
+              <div className="text-sm">현장을 선택해주세요</div>
+            </div>
+          </div>
+        )}
       </Box>
     </Paper>
   )
