@@ -7,12 +7,13 @@ import {
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 
 // 로그인한 아이디가 본사 인 경우에만 실행
-export default function useDashBoard() {
+export default function useDashBoard(isHeadOffice?: boolean) {
   const DashBoardListQuery = useQuery({
     queryKey: ['mainDashBoardInfo'],
     queryFn: () => {
       return DashBoardInfoService()
     },
+    enabled: isHeadOffice === true, // ← 조건 추가
   })
 
   // 본사가아닌 사람들

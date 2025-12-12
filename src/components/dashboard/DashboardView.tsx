@@ -16,6 +16,8 @@ import {
 import { useRouter } from 'next/navigation'
 import useDashBoard from '@/hooks/useDashBoard'
 import { useFinalDashboardSearchStore } from '@/stores/dashboardStore'
+import { useEffect, useState } from 'react'
+import { myInfoProps } from '@/types/user'
 
 const CustomXAxisTick = (props: any) => {
   const { x, y, payload } = props
@@ -85,7 +87,20 @@ const ClickableCursor = (props: any) => {
 
 export default function ChartPage() {
   const router = useRouter()
-  const { DashBoardListQuery } = useDashBoard()
+
+  const [myInfo, setMyInfo] = useState<myInfoProps | null>(null)
+
+  useEffect(() => {
+    const headerData = sessionStorage.getItem('myInfo')
+    if (headerData) {
+      setMyInfo(JSON.parse(headerData))
+    }
+  }, [])
+
+  const isHeadOffice = myInfo?.isHeadOffice
+
+  const { DashBoardListQuery } = useDashBoard(isHeadOffice)
+
   const { search } = useFinalDashboardSearchStore()
 
   const chartData = DashBoardListQuery?.data?.data.map((item: any) => ({

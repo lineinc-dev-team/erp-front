@@ -10,6 +10,9 @@ import AddSiteModal from '../common/AddSiteModal'
 import { Pie, PieChart, ResponsiveContainer, Cell, Tooltip } from 'recharts'
 import { SiteIdInfoService } from '@/services/report/reportSearchService'
 import { useSnackbarStore } from '@/stores/useSnackbarStore'
+import { Box, Typography } from '@mui/material'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Legend } from 'recharts'
+import Grid from '@mui/material/Unstable_Grid2' // Grid2 사용
 
 export default function ReportView({ isHeadOffice }: { isHeadOffice: boolean }) {
   type SelectedSite = { id: number | string; name: string }
@@ -45,6 +48,26 @@ export default function ReportView({ isHeadOffice }: { isHeadOffice: boolean }) 
   type ApiSiteEntry = {
     site?: { id?: number; name?: string }
     monthlyCosts?: ApiMonthlyCost[]
+  }
+
+  type SiteTrendChart = {
+    siteName: string
+    chartData: Array<{
+      month: string
+      equipmentCost: number
+      laborCost: number
+      managementCost: number
+      materialCost: number
+      outsourcingCost: number
+    }>
+    totals: {
+      totalManagement: number
+      totalEquipment: number
+      totalLabor: number
+      totalMaterial: number
+      totalOutsourcing: number
+      totalCost: number
+    }
   }
 
   type SimpleTooltipPayload = { name?: string; value?: number }
@@ -148,6 +171,7 @@ export default function ReportView({ isHeadOffice }: { isHeadOffice: boolean }) 
       search.setField('allPeriod', true)
     }
     search.setField('costCharts', [])
+    search.setField('trendData', [])
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -217,10 +241,61 @@ export default function ReportView({ isHeadOffice }: { isHeadOffice: boolean }) 
       const apiData = res?.data ?? []
       const nextCharts = buildChartsFromResponse(apiData)
       search.setField('costCharts', nextCharts)
+      search.setField('trendData', apiData)
     } finally {
       setIsLoading(false)
     }
   }
+
+  const trendData = search.trendData || []
+
+  // 현장별로 선 그래프 데이터 생성
+  const siteTrendCharts: SiteTrendChart[] = trendData.map((siteEntry: any) => {
+    const siteName = siteEntry.site?.name || '현장'
+    const monthlyCosts = siteEntry.monthlyCosts || []
+
+    const formatMonth = (ym: string) => {
+      const [year, month] = ym.split('-')
+      return `${year}년 ${Number(month)}월`
+    }
+
+    const chartData = monthlyCosts.map((cost: any) => ({
+      month: formatMonth(cost.yearMonth),
+      equipmentCost: cost.equipmentCost || 0,
+      laborCost: cost.laborCost || 0,
+      managementCost: cost.managementCost || 0,
+      materialCost: cost.materialCost || 0,
+      outsourcingCost: cost.outsourcingCost || 0,
+    }))
+
+    // 총계 계산
+    const totalManagement = monthlyCosts.reduce(
+      (a: number, b: any) => a + (b.managementCost || 0),
+      0,
+    )
+    const totalEquipment = monthlyCosts.reduce((a: number, b: any) => a + (b.equipmentCost || 0), 0)
+    const totalLabor = monthlyCosts.reduce((a: number, b: any) => a + (b.laborCost || 0), 0)
+    const totalMaterial = monthlyCosts.reduce((a: number, b: any) => a + (b.materialCost || 0), 0)
+    const totalOutsourcing = monthlyCosts.reduce(
+      (a: number, b: any) => a + (b.outsourcingCost || 0),
+      0,
+    )
+    const totalCost =
+      totalEquipment + totalLabor + totalManagement + totalMaterial + totalOutsourcing
+
+    return {
+      siteName,
+      chartData,
+      totals: {
+        totalManagement,
+        totalEquipment,
+        totalLabor,
+        totalMaterial,
+        totalOutsourcing,
+        totalCost,
+      },
+    }
+  })
 
   return (
     <Paper
@@ -316,7 +391,18 @@ export default function ReportView({ isHeadOffice }: { isHeadOffice: boolean }) 
                 <label>연월</label>
                 <CommonMonthPicker
                   value={search.endMonth ? new Date(search.endMonth + '-01') : null}
-                  onChange={(date) => handleChangeEndMonth(date)}
+                  onChange={(date) => {
+                    if (
+                      date !== null &&
+                      search.startMonth !== null &&
+                      new Date(date) < new Date(search.startMonth)
+                    ) {
+                      showSnackbar('종료일은 시작일 이후여야 합니다.', 'error')
+                      return
+                    }
+
+                    handleChangeEndMonth(date)
+                  }}
                 />
               </div>
 
@@ -353,59 +439,220 @@ export default function ReportView({ isHeadOffice }: { isHeadOffice: boolean }) 
 
       <div className="bg-white w-full rounded-xl shadow p-6 mt-8">
         <h1 className="font-bold text-xl mb-6">항목별 비용</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {search.costCharts.map((chart: any) => (
-            <div
-              key={chart.title}
-              className="flex flex-col sm:flex-row items-center sm:items-start gap-4 border border-gray-200 rounded-lg p-4"
-            >
-              <div className="w-[180px] h-[180px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Tooltip
-                      content={(props) => renderTooltip(props as SimpleTooltipProps)}
-                      wrapperStyle={{ outline: 'none' }}
-                    />
-                    <Pie
-                      data={chart.data}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={40}
-                      outerRadius={80}
-                      paddingAngle={2}
-                    >
-                      {chart.data.map((entry: any) => (
-                        <Cell key={entry.name} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
 
-              <div className="flex-1">
-                <div className="text-lg font-semibold mb-2">{chart.title}</div>
-                <div className="text-2xl font-bold mb-4">{formatCurrency(chart.total)} 원</div>
-                <ul className="text-sm space-y-1">
-                  {chart.data.map((item: any) => (
-                    <li key={item.name} className="flex items-center gap-2 whitespace-nowrap">
-                      <span
-                        className="inline-block w-3 h-3 rounded-full"
-                        style={{ backgroundColor: item.color }}
-                      />
-                      <span>{item.name}</span>
-                      <span className="text-gray-600">{formatCurrency(item.value)} 원</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+        {siteTrendCharts.length === 0 ? (
+          <div className="flex items-center justify-center h-64 text-gray-500">
+            <div className="text-center">
+              <div className="text-lg mb-2">데이터가 없습니다</div>
+              <div className="text-sm">현장을 선택하고 조회해주세요</div>
             </div>
-          ))}
-        </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {search.costCharts.map((chart: any) => (
+              <div
+                key={chart.title}
+                className="flex flex-col sm:flex-row items-center sm:items-start gap-4 border border-gray-200 rounded-lg p-4"
+              >
+                <div className="w-[180px] h-[180px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Tooltip
+                        content={(props) => renderTooltip(props as SimpleTooltipProps)}
+                        wrapperStyle={{ outline: 'none' }}
+                      />
+                      <Pie
+                        data={chart.data}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={40}
+                        outerRadius={80}
+                        paddingAngle={2}
+                      >
+                        {chart.data.map((entry: any) => (
+                          <Cell key={entry.name} fill={entry.color} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="flex-1">
+                  <div className="text-lg font-semibold mb-2">{chart.title}</div>
+                  <div className="text-2xl font-bold mb-4">{formatCurrency(chart.total)} 원</div>
+                  <ul className="text-sm space-y-1">
+                    {chart.data.map((item: any) => (
+                      <li key={item.name} className="flex items-center gap-2 whitespace-nowrap">
+                        <span
+                          className="inline-block w-3 h-3 rounded-full"
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span>{item.name}</span>
+                        <span className="text-gray-600">{formatCurrency(item.value)} 원</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="bg-white w-full rounded-xl shadow p-6 mt-8">
         <h1 className="font-bold text-xl mb-4">투입비 발생 추이</h1>
-        <p className="text-sm text-gray-600">차트 데이터가 준비되면 이 영역에 표시됩니다.</p>
+
+        {siteTrendCharts.length === 0 ? (
+          <div className="flex items-center justify-center h-64 text-gray-500">
+            <div className="text-center">
+              <div className="text-lg mb-2">데이터가 없습니다</div>
+              <div className="text-sm">현장을 선택하고 조회해주세요</div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {siteTrendCharts.map((siteChart: SiteTrendChart, index: number) => (
+              <div key={index} className="border border-gray-200 rounded-lg p-6">
+                <Box
+                  sx={{
+                    p: 3,
+                    borderRadius: 2,
+                    border: '1px solid #ddd',
+                    background: '#fafafa',
+                    mb: 4,
+                  }}
+                >
+                  <Typography variant="h5" fontWeight="bold" mb={2}>
+                    {siteChart.siteName} - 상세 분석
+                  </Typography>
+                  <Typography fontSize={20} fontWeight="bold" mb={2}>
+                    총 투입비:{' '}
+                    <span style={{ color: 'red' }}>
+                      {siteChart.totals.totalCost.toLocaleString()}원
+                    </span>
+                  </Typography>
+
+                  <Grid container>
+                    <Grid xs={6} md={1.4}>
+                      <Typography fontWeight="bold" color="#F2C94C">
+                        관리비: {siteChart.totals.totalManagement.toLocaleString()}원
+                      </Typography>
+                    </Grid>
+                    <Grid xs={6} md={1.4}>
+                      <Typography fontWeight="bold" color="#4DB6AC">
+                        노무비: {siteChart.totals.totalLabor.toLocaleString()}원
+                      </Typography>
+                    </Grid>
+                    <Grid xs={6} md={1.4}>
+                      <Typography fontWeight="bold" color="#F27970">
+                        외주비: {siteChart.totals.totalOutsourcing.toLocaleString()}원
+                      </Typography>
+                    </Grid>
+
+                    <Grid xs={6} md={1.4}>
+                      <Typography fontWeight="bold" color="#7CB86F">
+                        장비비: {siteChart.totals.totalEquipment.toLocaleString()}원
+                      </Typography>
+                    </Grid>
+                    <Grid xs={6} md={1.4}>
+                      <Typography fontWeight="bold" color="#6D8BFA">
+                        재료비: {siteChart.totals.totalMaterial.toLocaleString()}원
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Box>
+
+                <Box sx={{ width: '100%', height: 500 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={siteChart.chartData}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+
+                      <XAxis
+                        dataKey="month"
+                        interval={0}
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                        fontSize={12}
+                        stroke="#666"
+                      />
+
+                      <YAxis
+                        fontSize={12}
+                        stroke="#666"
+                        tickFormatter={(value: number) => `${(value / 10000).toFixed(0)}만원`}
+                      />
+
+                      <Tooltip
+                        formatter={(value: number, name: string) => [
+                          `${value.toLocaleString()}원`,
+                          name,
+                        ]}
+                        labelStyle={{ color: '#333' }}
+                        contentStyle={{
+                          backgroundColor: '#fff',
+                          border: '1px solid #ddd',
+                          borderRadius: '8px',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                        }}
+                      />
+                      <Legend wrapperStyle={{ paddingTop: '20px' }} />
+
+                      <Line
+                        type="monotone"
+                        dataKey="equipmentCost"
+                        name="장비비"
+                        stroke="#7CB86F"
+                        strokeWidth={3}
+                        dot={{ fill: '#7CB86F', strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, stroke: '#7CB86F', strokeWidth: 2 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="laborCost"
+                        name="노무비"
+                        stroke="#4DB6AC"
+                        strokeWidth={3}
+                        dot={{ fill: '#4DB6AC', strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, stroke: '#4DB6AC', strokeWidth: 2 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="managementCost"
+                        name="관리비"
+                        stroke="#F2C94C"
+                        strokeWidth={3}
+                        dot={{ fill: '#F2C94C', strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, stroke: '#F2C94C', strokeWidth: 2 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="materialCost"
+                        name="재료비"
+                        stroke="#6D8BFA"
+                        strokeWidth={3}
+                        dot={{ fill: '#6D8BFA', strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, stroke: '#6D8BFA', strokeWidth: 2 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="outsourcingCost"
+                        name="외주비"
+                        stroke="#F27970"
+                        strokeWidth={3}
+                        dot={{ fill: '#F27970', strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, stroke: '#F27970', strokeWidth: 2 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </Box>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </Paper>
   )

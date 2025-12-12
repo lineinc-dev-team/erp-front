@@ -5,6 +5,7 @@ export const useReportSearchStore = create<{ search: ReportSearchState }>((set) 
   search: {
     siteList: [],
     costCharts: [],
+    trendData: [],
 
     startMonth: null,
     endMonth: null,
@@ -29,6 +30,7 @@ export const useReportSearchStore = create<{ search: ReportSearchState }>((set) 
           searchTrigger: 0,
           siteList: [],
           costCharts: [],
+          trendData: [],
 
           startMonth: null,
           endMonth: null,
