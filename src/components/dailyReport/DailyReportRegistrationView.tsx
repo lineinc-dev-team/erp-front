@@ -3359,6 +3359,9 @@ export default function DailyReportRegistrationView() {
       } else if (activeTab === '유류') {
         handleFuelRefetch()
         handleFuelEvidenceRefetch()
+        // 유류 탭으로 돌아올 때 가격 정보 다시 불러오기
+        fuelPriceRefetch()
+        fuelCompanyRefetch()
       } else if (activeTab === '현장 사진 등록') {
         handleFileRefetch()
       } else if (activeTab === '공사일보') {
@@ -3416,7 +3419,7 @@ export default function DailyReportRegistrationView() {
     retry: false, // 실패했을 때 자동 재시도 X
   })
 
-  const { data: oilPrice } = detailFuelPrice
+  const { data: oilPrice, refetch: fuelPriceRefetch } = detailFuelPrice
 
   // 출역일보 유류에서 유류 업체명 가져오기
 
@@ -3434,7 +3437,7 @@ export default function DailyReportRegistrationView() {
     retry: false, // 실패했을 때 자동 재시도 X
   })
 
-  const { data: fuelCompany } = detailFuelCompany
+  const { data: fuelCompany, refetch: fuelCompanyRefetch } = detailFuelCompany
 
   console.log('fuelCompanyfuelCompany', detailReport)
 
@@ -4958,7 +4961,7 @@ export default function DailyReportRegistrationView() {
 
             <div className="border border-gray-400 w-full flex items-center">
               <InfiniteScrollSelect
-                disabled={false}
+                disabled={true}
                 placeholder="현장명을 입력하세요"
                 keyword={form.siteName}
                 onChangeKeyword={(newKeyword) => {
@@ -5066,7 +5069,7 @@ export default function DailyReportRegistrationView() {
                 onChange={(value) => setField('reportDate', value)}
                 minDate={siteStartDate}
                 maxDate={siteEndDate}
-                disabled={!form.siteId} // 현장 선택 전까지 비활성화
+                disabled
               />
             </div>
           </div>
