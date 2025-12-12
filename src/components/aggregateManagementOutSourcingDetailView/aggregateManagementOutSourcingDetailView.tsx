@@ -108,6 +108,12 @@ export default function AggregateManagementOutSourcingView() {
 
         totalQuantity: (prev.totalQuantity || 0) + (curr.totalQuantity || 0),
         totalAmount: (prev.totalAmount || 0) + (curr.totalAmount || 0),
+
+        RemainQuantity:
+          it.outsourcingContractQuantity - ((prev.totalQuantity || 0) + (curr.totalQuantity || 0)),
+
+        RemainAmount:
+          it.outsourcingContractPrice - ((prev.totalAmount || 0) + (curr.totalAmount || 0)),
       }
     })
 
@@ -136,6 +142,9 @@ export default function AggregateManagementOutSourcingView() {
 
         acc.totalQuantity += r.totalQuantity || 0
         acc.totalAmount += r.totalAmount || 0
+
+        acc.RemainQuantity += r.RemainQuantity || 0
+        acc.RemainAmount += r.RemainAmount || 0
       })
       return acc
     },
@@ -155,6 +164,9 @@ export default function AggregateManagementOutSourcingView() {
 
       totalQuantity: 0,
       totalAmount: 0,
+
+      RemainQuantity: 0,
+      RemainAmount: 0,
     },
   )
 
@@ -179,6 +191,8 @@ export default function AggregateManagementOutSourcingView() {
       '',
       '누계 청구내역',
       '',
+      '잔여 계약내역',
+      '',
     ]
     const headerRow2 = [
       '',
@@ -191,6 +205,8 @@ export default function AggregateManagementOutSourcingView() {
       '금액',
       '수량',
       '단가',
+      '금액',
+      '수량',
       '금액',
       '수량',
       '금액',
@@ -226,6 +242,8 @@ export default function AggregateManagementOutSourcingView() {
             r.currAmount,
             r.totalQuantity,
             r.totalAmount,
+            r.RemainQuantity,
+            r.RemainAmount,
           ].map((v: any) => (typeof v === 'number' ? v.toLocaleString() : v)),
         )
       })
@@ -252,6 +270,8 @@ export default function AggregateManagementOutSourcingView() {
       totals.currAmount.toLocaleString(),
       totals.totalQuantity.toLocaleString(),
       totals.totalAmount.toLocaleString(),
+      totals.RemainQuantity.toLocaleString(),
+      totals.RemainAmount.toLocaleString(),
     ])
 
     // deductionRows
@@ -380,6 +400,7 @@ export default function AggregateManagementOutSourcingView() {
       { s: { r: 0, c: 11 }, e: { r: 0, c: 12 } },
       { s: { r: 0, c: 13 }, e: { r: 0, c: 14 } },
       { s: { r: 0, c: 15 }, e: { r: 0, c: 16 } },
+      { s: { r: 0, c: 17 }, e: { r: 0, c: 18 } },
     ]
     const outsourcingRowIndex = sheetData.findIndex((row) => row[0] === '외주공사비')
     if (outsourcingRowIndex >= 0) {
@@ -539,6 +560,9 @@ export default function AggregateManagementOutSourcingView() {
                 <TableCell align="center" colSpan={2} sx={headerStyle}>
                   누계 청구내역
                 </TableCell>
+                <TableCell align="center" colSpan={2} sx={headerStyle}>
+                  잔여 계약내역
+                </TableCell>
               </TableRow>
 
               <TableRow>
@@ -547,6 +571,8 @@ export default function AggregateManagementOutSourcingView() {
                   '금액',
                   '수량',
                   '단가',
+                  '금액',
+                  '수량',
                   '금액',
                   '수량',
                   '금액',
@@ -635,6 +661,13 @@ export default function AggregateManagementOutSourcingView() {
                     <TableCell align="right" sx={cellStyle}>
                       {r.totalAmount.toLocaleString()}
                     </TableCell>
+
+                    <TableCell align="right" sx={cellStyle}>
+                      {r.RemainQuantity.toLocaleString()}
+                    </TableCell>
+                    <TableCell align="right" sx={cellStyle}>
+                      {r.RemainAmount.toLocaleString()}
+                    </TableCell>
                   </TableRow>
                 )),
               )}
@@ -685,6 +718,15 @@ export default function AggregateManagementOutSourcingView() {
               </TableCell>
               <TableCell align="right" sx={{ ...cellStyle, fontWeight: 'bold' }}>
                 {totals.totalAmount.toLocaleString()}
+              </TableCell>
+
+              {/* 잔여 계약 내역 */}
+
+              <TableCell align="right" sx={{ ...cellStyle, fontWeight: 'bold' }}>
+                {totals.RemainQuantity.toLocaleString()}
+              </TableCell>
+              <TableCell align="right" sx={{ ...cellStyle, fontWeight: 'bold' }}>
+                {totals.RemainAmount.toLocaleString()}
               </TableCell>
             </TableRow>
 
