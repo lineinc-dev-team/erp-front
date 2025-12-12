@@ -430,22 +430,15 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     const materialItemFocusedId = useFocusStore((s) => s.materialItemFocusedId)
     const setMaterialItemFocusedId = useFocusStore((s) => s.setMaterialItemFocusedId)
 
-    const [localKeyword, setLocalKeyword] = React.useState(row.name ?? '')
+    const [localKeyword, setLocalKeyword] = React.useState(() => row.name ?? '')
+    const justSelectedRef = React.useRef(false)
 
     React.useEffect(() => {
-      if (localKeyword !== row.name) {
-        setLocalKeyword(row.name ?? '')
-      }
-    }, [row.name])
+      setLocalKeyword(row.name ?? '')
+    }, [row.id])
 
     const isFocused = materialItemFocusedId === row.id
 
-    // 입력값이 외부에서 바뀌면 로컬 상태도 업데이트
-    React.useEffect(() => {
-      setLocalKeyword(row.name ?? '')
-    }, [row.name])
-
-    // debounce 적용 (백엔드 호출용)
     const debouncedKeyword = useDebouncedValue(localKeyword, 300)
 
     const {
@@ -459,10 +452,9 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
     const materialItemList = Array.from(
       new Map(
         MaterialItemData?.pages.flatMap((page) => page.data.content).map((u) => [u.name, u]),
-      )?.values() ?? [],
+      ).values() ?? [],
     )
 
-    // onBlur 딜레이용 ref
     const blurTimeout = React.useRef<NodeJS.Timeout | null>(null)
 
     return (
@@ -474,20 +466,41 @@ export default function MaterialManagementRegistrationView({ isEditMode = false 
         hasNextPage={MaterialItemHasNextPage ?? false}
         fetchNextPage={MaterialItemFetchNextPage}
         isLoading={MaterialItemIsLoading || MaterialItemIsFetching}
-        onChangeKeyword={(newKeyword) => setLocalKeyword(newKeyword)} // 로컬 상태 변경
+        // ✔ 타이핑 시 로컬 상태만 업데이트
+        onChangeKeyword={(newKeyword) => {
+          setLocalKeyword(newKeyword)
+          justSelectedRef.current = false
+        }}
         renderItem={(item, isHighlighted) => (
           <div className={isHighlighted ? 'font-bold text-white p-1 bg-gray-400' : ''}>
             {item.name}
           </div>
         )}
-        onSelect={(selectedCompany) => handleSelectMaterial(row.id ?? 0, selectedCompany)}
-        shouldShowList={isFocused} // 포커스 기반 리스트 표시
+        // ✔ 셀렉트 선택 시 row에 반영 + onBlur에서 덮어쓰기 방지
+        onSelect={(selectedMaterial) => {
+          justSelectedRef.current = true
+          handleSelectMaterial(row.id, selectedMaterial)
+          setLocalKeyword(selectedMaterial.name)
+        }}
+        shouldShowList={isFocused}
         onFocus={() => {
           if (blurTimeout.current) clearTimeout(blurTimeout.current)
           setMaterialItemFocusedId(row.id)
         }}
         onBlur={() => {
-          blurTimeout.current = setTimeout(() => setMaterialItemFocusedId(null), 200) // 200ms 딜레이
+          blurTimeout.current = setTimeout(() => {
+            // ✔ 선택한 경우라면 row.name을 덮어쓰지 않음
+            if (!justSelectedRef.current) {
+              handleSelectMaterial(row.id, {
+                id: null,
+                name: localKeyword,
+              })
+            }
+
+            // 다음 입력을 위한 초기화
+            justSelectedRef.current = false
+            setMaterialItemFocusedId(null)
+          }, 200)
         }}
       />
     )
