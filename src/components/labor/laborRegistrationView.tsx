@@ -319,7 +319,6 @@ export default function LaborRegistrationView({ isEditMode = false }) {
   const [isWorkTypeNameFocused, setIsWorkTypeNameFocused] = useState(false)
 
   const handleSelectWorkTypeName = (selectedUser: any) => {
-    console.log('공종명 24', selectedUser)
     setField('workType', selectedUser.name)
     setField('workTypeCode', selectedUser.code)
   }

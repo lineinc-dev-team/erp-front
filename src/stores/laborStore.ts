@@ -297,7 +297,7 @@ export const useLaborFormStore = create<LaborInfoFormStore>((set, get) => ({
         resignationDateStr !== form.initialResignationDateAt
           ? resignationDateStr
           : form.initialResignationDateAt,
-      workType: form.workTypeCode,
+      workType: form.workTypeCode === '' ? null : form.workTypeCode,
 
       outsourcingCompanyContractId:
         form.outsourcingCompanyContractId === 0 ? null : form.outsourcingCompanyContractId,
